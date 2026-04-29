@@ -1,12 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+
+// IMPORTACIONES DE COMPONENTES EXTERNOS
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
+import Cookies from '../components/Cookies';
+
 import { 
   Star, Clock, ChevronLeft, Filter, Search, ShieldCheck,
-  FileText, CheckCircle2, PlayCircle, Plus, MessageCircle, Menu, ExternalLink, ChevronRight, Monitor, MapPin, Check, Info,
+  FileText, CheckCircle2, PlayCircle, Plus, MessageCircle, ExternalLink, ChevronRight, Monitor, MapPin, Check,
   Award, BookOpen, Users, Globe, Share2, Tag,
   Facebook, Instagram, Linkedin, Mail, Heart,
-  Home, User, Edit3, LayoutGrid, X, Briefcase as BriefcaseIcon,
-  UploadCloud, Save, Loader2, Trash2, Download, Activity, AlertCircle, Sparkles,
+  UploadCloud, Save, Loader2, Trash2, Download, Activity, AlertCircle,
   Truck, Settings2, Shield, Smartphone, Send, Building
 } from 'lucide-react';
 
@@ -127,7 +132,7 @@ const PARTNERS = [
     descripcionCorta: "La mejor resolución para diagnóstico en campo. 10% OFF con el código PORTAL10.",
     descripcionLarga: "El Mindray V1 es la solución definitiva para el veterinario moderno que requiere movilidad sin sacrificar calidad de imagen. Su diseño ultraportátil y resistente al agua lo hace ideal tanto para el consultorio como para el trabajo de campo con grandes animales (equinos, bovinos). Cuenta con tecnología de procesamiento de imágenes avanzada que garantiza diagnósticos precisos en ecografía abdominal, cardíaca y reproductiva.",
     color: "#2D6A6A",
-    precio: 2500000, // Precio ficticio en ARS
+    precio: 2500000,
     codigoDescuento: "PORTAL10",
     porcentajeDescuento: 10,
     caracteristicas: [
@@ -181,25 +186,19 @@ export default function Repertorio() {
   const [filtroCategoria, setFiltroCategoria] = useState(null);
   const [modalidadesSeleccionadas, setModalidadesSeleccionadas] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('about'); // Para detalle de curso
-  const [activeGridTab, setActiveGridTab] = useState('cursos'); // Nuevo: Para vista principal ('cursos' | 'proveedores')
+  const [activeTab, setActiveTab] = useState('about');
+  const [activeGridTab, setActiveGridTab] = useState('cursos'); 
   const [activeInsumoTab, setActiveInsumoTab] = useState('features');
-  const [mobileFilterOpen, setMobileFilterOpen] = useState(null);
-  const [isNavbarScrolled, setIsNavbarScrolled] = useState(false);
   const [openFaq, setOpenFaq] = useState(null);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
-  const [showCookieBanner, setShowCookieBanner] = useState(true);
   const [isFooterVisible, setIsFooterVisible] = useState(false);
   
-  // Estados nuevos de repertorio hoy.jsx
   const [favoritos, setFavoritos] = useState([]);
   const [visibleCourses, setVisibleCourses] = useState(6);
   const [visibleProviders, setVisibleProviders] = useState(6);
   const [proveedorSearchTerm, setProveedorSearchTerm] = useState('');
   const [proveedorFiltroCategoria, setProveedorFiltroCategoria] = useState(null);
 
-  // States Formulario Wizard (Cursos)
   const [wizardStep, setWizardStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
@@ -210,7 +209,6 @@ export default function Repertorio() {
     email: '', password: ''
   });
 
-  // States Formulario Contacto Ventas (Insumos)
   const [isInsumoSubmitting, setIsInsumoSubmitting] = useState(false);
   const [insumoFormState, setInsumoFormState] = useState({
     empresa: '', contacto: '', email: '', telefono: '', 
@@ -224,7 +222,6 @@ export default function Repertorio() {
   const bannerRef = useRef(null);
   const footerRef = useRef(null);
 
-  // Efecto para tipografías y Observer Footer
   useEffect(() => {
     const link = document.createElement('link');
     link.href = 'https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=Inter:wght@400;500;600;700&display=swap';
@@ -257,15 +254,6 @@ export default function Repertorio() {
       document.head.removeChild(style);
       if (footerRef.current) observer.unobserve(footerRef.current);
     };
-  }, []);
-
-  // Efecto para scroll del Navbar
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsNavbarScrolled(window.scrollY > 10);
-    };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const handleMouseMove = (e) => {
@@ -324,7 +312,6 @@ export default function Repertorio() {
     }
   };
 
-  // Manejadores del Formulario de Insumos
   const handleInsumoFormChange = (field, value) => {
     setInsumoFormState(prev => ({ ...prev, [field]: value }));
   };
@@ -345,8 +332,6 @@ export default function Repertorio() {
   const addEspecificacion = () => handleInsumoFormChange('especificaciones', [...insumoFormState.especificaciones, { label: '', value: '' }]);
   const removeEspecificacion = (index) => handleInsumoFormChange('especificaciones', insumoFormState.especificaciones.filter((_, i) => i !== index));
 
-
-  // Manejadores del Formulario de Cursos
   const updateIncluyeItem = (index, value) => {
     const newIncluye = [...courseForm.incluye];
     newIncluye[index] = value;
@@ -827,10 +812,6 @@ export default function Repertorio() {
 
   const renderPropuesta = () => (
     <article className="max-w-[1000px] mx-auto animate-in fade-in duration-500 pb-24 relative">
-      
-      {/* ========================================================= */}
-      {/* CONTENEDOR OCULTO PARA EXPORTAR EL PDF (DISEÑO EDITORIAL A4) */}
-      {/* ========================================================= */}
       <div style={{ position: 'absolute', top: '-9999px', left: '-9999px', pointerEvents: 'none' }}>
         <div id="dossier-pdf-export" style={{ backgroundColor: '#ffffff', padding: '0', width: '210mm' }}>
            <style>{`
@@ -857,7 +838,6 @@ export default function Repertorio() {
               .pdf-email { font-size: 12pt; font-weight: 700; color: #2D6A6A; text-decoration: none; font-family: 'Inter', sans-serif; }
            `}</style>
            
-           {/* PÁGINA 1 PDF */}
            <div className="pdf-page">
                <div className="pdf-header">
                    <div className="pdf-logo">El Portal<span>.</span></div>
@@ -880,7 +860,6 @@ export default function Repertorio() {
                <div className="pdf-page-number">Página 1 de 3</div>
            </div>
 
-           {/* PÁGINA 2 PDF */}
            <div className="pdf-page">
                <div className="pdf-header">
                    <div className="pdf-logo">El Portal<span>.</span></div>
@@ -905,7 +884,6 @@ export default function Repertorio() {
                <div className="pdf-page-number">Página 2 de 3</div>
            </div>
 
-           {/* PÁGINA 3 PDF */}
            <div className="pdf-page">
                <div className="pdf-header">
                    <div className="pdf-logo">El Portal<span>.</span></div>
@@ -943,9 +921,7 @@ export default function Repertorio() {
            </div>
         </div>
       </div>
-      {/* ========================================================= */}
 
-      {/* Controles Superiores Web */}
       <div className="flex justify-between items-center mb-8">
         <button 
           onClick={() => { setView('publicitar'); setOpenFaq(null); window.scrollTo(0,0); }} 
@@ -964,7 +940,6 @@ export default function Repertorio() {
       </div>
 
       <div className="space-y-8">
-        {/* Portada */}
         <section className="bg-white rounded-[40px] p-12 md:p-20 text-center shadow-sm border border-gray-100 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-[#2D6A6A]/5 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/3"></div>
           <div className="relative z-10">
@@ -980,7 +955,6 @@ export default function Repertorio() {
           </div>
         </section>
 
-        {/* El Desafío */}
         <section className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center bg-white rounded-[40px] p-8 md:p-12 shadow-sm border border-gray-100">
           <div className="order-2 md:order-1">
             <div className="inline-flex items-center gap-2 bg-gray-50 border border-gray-200 px-4 py-2 rounded-full mb-6">
@@ -998,7 +972,6 @@ export default function Repertorio() {
           </div>
         </section>
 
-        {/* Sinergia */}
         <section className="bg-white rounded-[40px] p-8 md:p-12 shadow-sm border border-gray-100">
           <h2 className="text-3xl font-black text-[#1A3D3D] font-['Montserrat'] mb-10 tracking-tight text-center">Sinergia a resultados</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -1020,7 +993,6 @@ export default function Repertorio() {
           </div>
         </section>
 
-        {/* Beneficio Comunidad */}
         <section className="bg-[#1A3D3D] rounded-[40px] p-8 md:p-12 shadow-xl relative overflow-hidden">
           <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-white/5 rounded-full blur-[80px]"></div>
           <div className="relative z-10 flex flex-col md:flex-row items-center gap-10">
@@ -1038,7 +1010,6 @@ export default function Repertorio() {
           </div>
         </section>
 
-        {/* FAQ */}
         <section className="bg-white rounded-[40px] p-10 md:p-16 border border-gray-100 shadow-sm flex flex-col lg:flex-row gap-12 lg:gap-20 items-start">
           <div className="lg:w-1/3 shrink-0 lg:sticky lg:top-28 text-center lg:text-left w-full">
             <h3 className="text-3xl md:text-4xl font-black font-['Montserrat'] text-[#1A3D3D] tracking-tight uppercase mb-4 leading-none">
@@ -1100,7 +1071,6 @@ export default function Repertorio() {
           </div>
         </section>
 
-        {/* CTA Final */}
         <section className="bg-[#2D6A6A] rounded-[40px] p-12 md:p-16 text-center shadow-xl relative overflow-hidden text-white">
            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-white/5 rounded-full blur-[100px] pointer-events-none"></div>
            <div className="relative z-10">
@@ -1134,7 +1104,6 @@ export default function Repertorio() {
       </div>
 
       <div className="bg-white rounded-[32px] border border-gray-100 shadow-xl overflow-hidden">
-        {/* Header del form */}
         <div className="bg-[#1A3D3D] p-8 md:p-12 text-center relative overflow-hidden">
           <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-white/5 rounded-full blur-[60px] -translate-y-1/2 translate-x-1/3"></div>
           <div className="relative z-10">
@@ -1148,10 +1117,7 @@ export default function Repertorio() {
           </div>
         </div>
 
-        {/* Body del form */}
         <form onSubmit={handleInsumoSubmit} className="p-6 md:p-10 space-y-8">
-          
-          {/* Sección 1: Datos de la Empresa */}
           <div>
             <h3 className="text-lg font-black font-['Montserrat'] text-[#1A3D3D] mb-4 border-b border-gray-100 pb-2 flex items-center gap-2">
               <ShieldCheck className="w-5 h-5 text-[#2D6A6A]" /> Datos de la Empresa
@@ -1159,48 +1125,23 @@ export default function Repertorio() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-xs md:text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2" htmlFor="empresa">Nombre de la Empresa *</label>
-                <input 
-                  id="empresa" required type="text" 
-                  value={insumoFormState.empresa}
-                  onChange={(e) => handleInsumoFormChange('empresa', e.target.value)}
-                  placeholder="Ej: MedVet Insumos" 
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-base md:text-sm font-medium focus:outline-none focus:bg-white focus:border-[#2D6A6A] transition-all text-[#1A3D3D]" 
-                />
+                <input id="empresa" required type="text" value={insumoFormState.empresa} onChange={(e) => handleInsumoFormChange('empresa', e.target.value)} placeholder="Ej: MedVet Insumos" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-base md:text-sm font-medium focus:outline-none focus:bg-white focus:border-[#2D6A6A] transition-all text-[#1A3D3D]" />
               </div>
               <div>
                 <label className="block text-xs md:text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2" htmlFor="contacto">Persona de Contacto *</label>
-                <input 
-                  id="contacto" required type="text" 
-                  value={insumoFormState.contacto}
-                  onChange={(e) => handleInsumoFormChange('contacto', e.target.value)}
-                  placeholder="Ej: Lic. Martín Perez" 
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-base md:text-sm font-medium focus:outline-none focus:bg-white focus:border-[#2D6A6A] transition-all text-[#1A3D3D]" 
-                />
+                <input id="contacto" required type="text" value={insumoFormState.contacto} onChange={(e) => handleInsumoFormChange('contacto', e.target.value)} placeholder="Ej: Lic. Martín Perez" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-base md:text-sm font-medium focus:outline-none focus:bg-white focus:border-[#2D6A6A] transition-all text-[#1A3D3D]" />
               </div>
               <div>
                 <label className="block text-xs md:text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2" htmlFor="emailContacto">Email Corporativo *</label>
-                <input 
-                  id="emailContacto" required type="email" 
-                  value={insumoFormState.email}
-                  onChange={(e) => handleInsumoFormChange('email', e.target.value)}
-                  placeholder="ventas@tuempresa.com" 
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-base md:text-sm font-medium focus:outline-none focus:bg-white focus:border-[#2D6A6A] transition-all text-[#1A3D3D]" 
-                />
+                <input id="emailContacto" required type="email" value={insumoFormState.email} onChange={(e) => handleInsumoFormChange('email', e.target.value)} placeholder="ventas@tuempresa.com" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-base md:text-sm font-medium focus:outline-none focus:bg-white focus:border-[#2D6A6A] transition-all text-[#1A3D3D]" />
               </div>
               <div>
                 <label className="block text-xs md:text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2" htmlFor="telefono">Teléfono / WhatsApp *</label>
-                <input 
-                  id="telefono" required type="tel" 
-                  value={insumoFormState.telefono}
-                  onChange={(e) => handleInsumoFormChange('telefono', e.target.value)}
-                  placeholder="+54 9 11 1234 5678" 
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-base md:text-sm font-medium focus:outline-none focus:bg-white focus:border-[#2D6A6A] transition-all text-[#1A3D3D]" 
-                />
+                <input id="telefono" required type="tel" value={insumoFormState.telefono} onChange={(e) => handleInsumoFormChange('telefono', e.target.value)} placeholder="+54 9 11 1234 5678" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-base md:text-sm font-medium focus:outline-none focus:bg-white focus:border-[#2D6A6A] transition-all text-[#1A3D3D]" />
               </div>
             </div>
           </div>
 
-          {/* Sección 2: Datos del Producto */}
           <div>
             <h3 className="text-lg font-black font-['Montserrat'] text-[#1A3D3D] mb-4 border-b border-gray-100 pb-2 flex items-center gap-2">
               <Monitor className="w-5 h-5 text-[#2D6A6A]" /> Detalles del Producto
@@ -1208,35 +1149,18 @@ export default function Repertorio() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div className="md:col-span-2">
                 <label className="block text-xs md:text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2" htmlFor="tituloProducto">Nombre del Equipo / Insumo *</label>
-                <input 
-                  id="tituloProducto" required type="text" 
-                  value={insumoFormState.tituloProducto}
-                  onChange={(e) => handleInsumoFormChange('tituloProducto', e.target.value)}
-                  placeholder="Ej: Ecógrafo Portátil Mindray V1" 
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-base md:text-sm font-medium focus:outline-none focus:bg-white focus:border-[#2D6A6A] transition-all text-[#1A3D3D]" 
-                />
+                <input id="tituloProducto" required type="text" value={insumoFormState.tituloProducto} onChange={(e) => handleInsumoFormChange('tituloProducto', e.target.value)} placeholder="Ej: Ecógrafo Portátil Mindray V1" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-base md:text-sm font-medium focus:outline-none focus:bg-white focus:border-[#2D6A6A] transition-all text-[#1A3D3D]" />
               </div>
               <div>
                 <label className="block text-xs md:text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2" htmlFor="precioInsumo">Precio (ARS) *</label>
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">$</span>
-                  <input 
-                    id="precioInsumo" required type="number" 
-                    value={insumoFormState.precio}
-                    onChange={(e) => handleInsumoFormChange('precio', e.target.value)}
-                    placeholder="2500000" 
-                    className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-8 pr-4 py-3.5 text-base md:text-sm font-medium focus:outline-none focus:bg-white focus:border-[#2D6A6A] transition-all text-[#1A3D3D]" 
-                  />
+                  <input id="precioInsumo" required type="number" value={insumoFormState.precio} onChange={(e) => handleInsumoFormChange('precio', e.target.value)} placeholder="2500000" className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-8 pr-4 py-3.5 text-base md:text-sm font-medium focus:outline-none focus:bg-white focus:border-[#2D6A6A] transition-all text-[#1A3D3D]" />
                 </div>
               </div>
               <div>
                 <label className="block text-xs md:text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2" htmlFor="categoriaInsumo">Categoría *</label>
-                <select 
-                  id="categoriaInsumo"
-                  value={insumoFormState.categoria}
-                  onChange={(e) => handleInsumoFormChange('categoria', e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-base md:text-sm font-medium focus:outline-none focus:border-[#2D6A6A] focus:bg-white transition-all text-[#1A3D3D]"
-                >
+                <select id="categoriaInsumo" value={insumoFormState.categoria} onChange={(e) => handleInsumoFormChange('categoria', e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-base md:text-sm font-medium focus:outline-none focus:border-[#2D6A6A] focus:bg-white transition-all text-[#1A3D3D]">
                   <option value="Ecografía y Diagnóstico">Ecografía y Diagnóstico por Imágenes</option>
                   <option value="Equipamiento Quirófano">Equipamiento Quirófano (Anestesia, Monitores)</option>
                   <option value="Laboratorio">Analizadores de Laboratorio</option>
@@ -1250,46 +1174,26 @@ export default function Repertorio() {
             {insumoFormState.categoria === 'Otro' && (
               <div className="mb-6 animate-in fade-in slide-in-from-top-2">
                 <label className="block text-xs md:text-[11px] font-bold text-[#2D6A6A] uppercase tracking-widest mb-2" htmlFor="categoriaOtra">Especificar Categoría *</label>
-                <input 
-                  id="categoriaOtra" required type="text" 
-                  value={insumoFormState.categoriaOtra}
-                  onChange={(e) => handleInsumoFormChange('categoriaOtra', e.target.value)}
-                  placeholder="Ej: Mobiliario Clínico" 
-                  className="w-full bg-[#2D6A6A]/5 border border-[#2D6A6A]/30 rounded-xl px-4 py-3.5 text-base md:text-sm font-medium focus:outline-none focus:bg-white focus:border-[#2D6A6A] transition-all text-[#1A3D3D]" 
-                />
+                <input id="categoriaOtra" required type="text" value={insumoFormState.categoriaOtra} onChange={(e) => handleInsumoFormChange('categoriaOtra', e.target.value)} placeholder="Ej: Mobiliario Clínico" className="w-full bg-[#2D6A6A]/5 border border-[#2D6A6A]/30 rounded-xl px-4 py-3.5 text-base md:text-sm font-medium focus:outline-none focus:bg-white focus:border-[#2D6A6A] transition-all text-[#1A3D3D]" />
               </div>
             )}
 
             <div className="mb-6">
               <label className="block text-xs md:text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2" htmlFor="website">Sitio Web / Catálogo / PDF</label>
-              <input 
-                id="website" type="url" 
-                value={insumoFormState.website}
-                onChange={(e) => handleInsumoFormChange('website', e.target.value)}
-                placeholder="https://www.tuempresa.com/producto" 
-                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-base md:text-sm font-medium focus:outline-none focus:bg-white focus:border-[#2D6A6A] transition-all text-[#1A3D3D]" 
-              />
+              <input id="website" type="url" value={insumoFormState.website} onChange={(e) => handleInsumoFormChange('website', e.target.value)} placeholder="https://www.tuempresa.com/producto" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-base md:text-sm font-medium focus:outline-none focus:bg-white focus:border-[#2D6A6A] transition-all text-[#1A3D3D]" />
             </div>
 
             <div>
               <label className="block text-xs md:text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2" htmlFor="mensaje">Descripción General del Equipo</label>
-              <textarea 
-                id="mensaje" rows="4"
-                value={insumoFormState.mensaje}
-                onChange={(e) => handleInsumoFormChange('mensaje', e.target.value)}
-                placeholder="Describí las funciones principales y ventajas competitivas del equipo..." 
-                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-base md:text-sm font-medium focus:outline-none focus:bg-white focus:border-[#2D6A6A] transition-all text-[#1A3D3D] resize-none" 
-              ></textarea>
+              <textarea id="mensaje" rows="4" value={insumoFormState.mensaje} onChange={(e) => handleInsumoFormChange('mensaje', e.target.value)} placeholder="Describí las funciones principales y ventajas competitivas del equipo..." className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-base md:text-sm font-medium focus:outline-none focus:bg-white focus:border-[#2D6A6A] transition-all text-[#1A3D3D] resize-none" ></textarea>
             </div>
           </div>
 
-          {/* Sección 3: Ficha Técnica (Características y Especificaciones) */}
           <div>
             <h3 className="text-lg font-black font-['Montserrat'] text-[#1A3D3D] mb-4 border-b border-gray-100 pb-2 flex items-center gap-2">
               <FileText className="w-5 h-5 text-[#2D6A6A]" /> Ficha Técnica
             </h3>
             
-            {/* Características Destacadas */}
             <div className="mb-8">
               <label className="block text-xs md:text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Puntos Destacados / Características *</label>
               <div className="space-y-3">
@@ -1297,13 +1201,7 @@ export default function Repertorio() {
                   <div key={index} className="flex items-center gap-2">
                     <div className="flex-1 relative">
                       <Check className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#2D6A6A]" aria-hidden="true" />
-                      <input 
-                        type="text" 
-                        value={item}
-                        onChange={(e) => updateCaracteristica(index, e.target.value)}
-                        placeholder="Ej: Pantalla táctil de 15 pulgadas anti-reflejo..." 
-                        className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-10 pr-4 py-3 text-base md:text-sm font-medium focus:outline-none focus:border-[#2D6A6A] focus:bg-white transition-all text-[#1A3D3D]" 
-                      />
+                      <input type="text" value={item} onChange={(e) => updateCaracteristica(index, e.target.value)} placeholder="Ej: Pantalla táctil de 15 pulgadas anti-reflejo..." className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-10 pr-4 py-3 text-base md:text-sm font-medium focus:outline-none focus:border-[#2D6A6A] focus:bg-white transition-all text-[#1A3D3D]" />
                     </div>
                     {insumoFormState.caracteristicas.length > 1 && (
                       <button type="button" onClick={() => removeCaracteristica(index)} className="p-3 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all">
@@ -1312,37 +1210,20 @@ export default function Repertorio() {
                     )}
                   </div>
                 ))}
-                <button 
-                  type="button"
-                  onClick={addCaracteristica}
-                  className="flex items-center gap-2 text-[#2D6A6A] font-bold text-xs md:text-xs uppercase tracking-widest mt-2 hover:bg-[#2D6A6A]/10 px-4 py-2 rounded-lg transition-colors"
-                >
+                <button type="button" onClick={addCaracteristica} className="flex items-center gap-2 text-[#2D6A6A] font-bold text-xs md:text-xs uppercase tracking-widest mt-2 hover:bg-[#2D6A6A]/10 px-4 py-2 rounded-lg transition-colors">
                   <Plus className="w-4 h-4" /> Agregar característica
                 </button>
               </div>
             </div>
 
-            {/* Especificaciones Duras */}
             <div>
               <label className="block text-xs md:text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Especificaciones Técnicas (Ej: Peso, Dimensiones)</label>
               <div className="space-y-3">
                 {insumoFormState.especificaciones.map((spec, index) => (
                   <div key={index} className="flex items-center gap-2">
                     <div className="grid grid-cols-3 gap-2 flex-1">
-                      <input 
-                        type="text" 
-                        value={spec.label}
-                        onChange={(e) => updateEspecificacion(index, 'label', e.target.value)}
-                        placeholder="Ej: Peso" 
-                        className="col-span-1 w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-base md:text-sm font-bold focus:outline-none focus:border-[#2D6A6A] focus:bg-white transition-all text-[#1A3D3D]" 
-                      />
-                      <input 
-                        type="text" 
-                        value={spec.value}
-                        onChange={(e) => updateEspecificacion(index, 'value', e.target.value)}
-                        placeholder="Ej: 2.5 kg (con batería)" 
-                        className="col-span-2 w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-base md:text-sm font-medium focus:outline-none focus:border-[#2D6A6A] focus:bg-white transition-all text-[#1A3D3D]" 
-                      />
+                      <input type="text" value={spec.label} onChange={(e) => updateEspecificacion(index, 'label', e.target.value)} placeholder="Ej: Peso" className="col-span-1 w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-base md:text-sm font-bold focus:outline-none focus:border-[#2D6A6A] focus:bg-white transition-all text-[#1A3D3D]" />
+                      <input type="text" value={spec.value} onChange={(e) => updateEspecificacion(index, 'value', e.target.value)} placeholder="Ej: 2.5 kg (con batería)" className="col-span-2 w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-base md:text-sm font-medium focus:outline-none focus:border-[#2D6A6A] focus:bg-white transition-all text-[#1A3D3D]" />
                     </div>
                     {insumoFormState.especificaciones.length > 1 && (
                       <button type="button" onClick={() => removeEspecificacion(index)} className="p-3 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all shrink-0">
@@ -1351,18 +1232,13 @@ export default function Repertorio() {
                     )}
                   </div>
                 ))}
-                <button 
-                  type="button"
-                  onClick={addEspecificacion}
-                  className="flex items-center gap-2 text-[#2D6A6A] font-bold text-xs md:text-xs uppercase tracking-widest mt-2 hover:bg-[#2D6A6A]/10 px-4 py-2 rounded-lg transition-colors"
-                >
+                <button type="button" onClick={addEspecificacion} className="flex items-center gap-2 text-[#2D6A6A] font-bold text-xs md:text-xs uppercase tracking-widest mt-2 hover:bg-[#2D6A6A]/10 px-4 py-2 rounded-lg transition-colors">
                   <Plus className="w-4 h-4" /> Agregar especificación
                 </button>
               </div>
             </div>
           </div>
 
-          {/* Sección 4: Imágenes */}
           <div>
             <h3 className="text-lg font-black font-['Montserrat'] text-[#1A3D3D] mb-4 border-b border-gray-100 pb-2 flex items-center gap-2">
               <UploadCloud className="w-5 h-5 text-[#2D6A6A]" /> Fotos del Producto
@@ -1377,16 +1253,8 @@ export default function Repertorio() {
           </div>
 
           <div className="pt-6 border-t border-gray-100 flex justify-end">
-            <button 
-              type="submit"
-              disabled={isInsumoSubmitting}
-              className="w-full md:w-auto px-10 py-4 bg-[#2D6A6A] text-white font-black text-xs md:text-[11px] uppercase tracking-widest hover:bg-[#1A3D3D] rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isInsumoSubmitting ? (
-                <><Loader2 className="w-4 h-4 animate-spin" /> Procesando...</>
-              ) : (
-                <><ShieldCheck className="w-4 h-4" /> Enviar y Proceder al Pago</>
-              )}
+            <button type="submit" disabled={isInsumoSubmitting} className="w-full md:w-auto px-10 py-4 bg-[#2D6A6A] text-white font-black text-xs md:text-[11px] uppercase tracking-widest hover:bg-[#1A3D3D] rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+              {isInsumoSubmitting ? (<><Loader2 className="w-4 h-4 animate-spin" /> Procesando...</>) : (<><ShieldCheck className="w-4 h-4" /> Enviar y Proceder al Pago</>)}
             </button>
           </div>
         </form>
@@ -1397,10 +1265,7 @@ export default function Repertorio() {
   const renderCourseWizard = () => (
     <section className="max-w-[800px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500 pb-24">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-        <button 
-          onClick={() => { setView('publicitar'); setWizardStep(1); setErrors({}); }} 
-          className="flex items-center gap-2 text-gray-400 hover:text-[#1A3D3D] font-bold text-xs md:text-[10px] uppercase tracking-[0.3em] transition-colors group"
-        >
+        <button onClick={() => { setView('publicitar'); setWizardStep(1); setErrors({}); }} className="flex items-center gap-2 text-gray-400 hover:text-[#1A3D3D] font-bold text-xs md:text-[10px] uppercase tracking-[0.3em] transition-colors group">
           <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" aria-hidden="true" /> Cancelar
         </button>
         <div className="flex items-center gap-2 text-[#2D6A6A] bg-[#2D6A6A]/10 px-3 py-1.5 rounded-full self-start md:self-auto">
@@ -1412,18 +1277,11 @@ export default function Repertorio() {
       <div className="bg-white rounded-[32px] border border-gray-100 shadow-xl overflow-hidden">
         <div className="bg-gray-50 border-b border-gray-100 p-6 md:p-8 flex items-center justify-between relative" aria-label={`Paso ${wizardStep} de 4`}>
           <div className="absolute top-1/2 left-8 right-8 h-1 bg-gray-200 -translate-y-1/2 rounded-full z-0 hidden md:block">
-            <div 
-              className="h-full bg-[#2D6A6A] rounded-full transition-all duration-500" 
-              style={{ width: `${((wizardStep - 1) / 3) * 100}%` }}
-            ></div>
+            <div className="h-full bg-[#2D6A6A] rounded-full transition-all duration-500" style={{ width: `${((wizardStep - 1) / 3) * 100}%` }}></div>
           </div>
-          
           {[1, 2, 3, 4].map((step) => (
             <div key={step} className="relative z-10 flex flex-col items-center gap-2">
-              <div className={`w-10 h-10 md:w-10 md:h-10 rounded-full flex items-center justify-center font-bold text-sm md:text-xs transition-all duration-300 ${
-                wizardStep === step ? 'bg-[#1A3D3D] text-white shadow-lg scale-110' : 
-                wizardStep > step ? 'bg-[#2D6A6A] text-white' : 'bg-white border-2 border-gray-200 text-gray-400'
-              }`}>
+              <div className={`w-10 h-10 md:w-10 md:h-10 rounded-full flex items-center justify-center font-bold text-sm md:text-xs transition-all duration-300 ${wizardStep === step ? 'bg-[#1A3D3D] text-white shadow-lg scale-110' : wizardStep > step ? 'bg-[#2D6A6A] text-white' : 'bg-white border-2 border-gray-200 text-gray-400'}`}>
                 {wizardStep > step ? <Check className="w-5 h-5 md:w-5 md:h-5" /> : step}
               </div>
               <span className={`text-[10px] uppercase tracking-widest font-bold hidden md:block ${wizardStep >= step ? 'text-[#1A3D3D]' : 'text-gray-400'}`}>
@@ -1434,37 +1292,22 @@ export default function Repertorio() {
         </div>
 
         <div className="p-6 md:p-10">
-          
           {wizardStep === 1 && (
             <div className="space-y-6 animate-in fade-in">
               <div>
                 <h2 className="text-2xl font-black font-['Montserrat'] text-[#1A3D3D] mb-1">Información Básica</h2>
                 <p className="text-gray-500 text-base md:text-sm font-medium">Atraé a tus colegas con un título claro y conciso.</p>
               </div>
-              
               <div className="space-y-4">
                 <div>
                   <label className="block text-xs md:text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2" htmlFor="titulo">Título del Curso *</label>
-                  <input 
-                    id="titulo"
-                    type="text" 
-                    value={courseForm.titulo}
-                    onChange={(e) => handleWizardChange('titulo', e.target.value)}
-                    placeholder="Ej: Cirugía de Tejidos Blandos: Procedimientos Avanzados" 
-                    className={`w-full bg-gray-50 border rounded-xl px-4 py-3.5 text-base md:text-sm font-medium focus:outline-none focus:bg-white transition-all text-[#1A3D3D] ${errors.titulo ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-[#2D6A6A]'}`} 
-                  />
+                  <input id="titulo" type="text" value={courseForm.titulo} onChange={(e) => handleWizardChange('titulo', e.target.value)} placeholder="Ej: Cirugía de Tejidos Blandos: Procedimientos Avanzados" className={`w-full bg-gray-50 border rounded-xl px-4 py-3.5 text-base md:text-sm font-medium focus:outline-none focus:bg-white transition-all text-[#1A3D3D] ${errors.titulo ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-[#2D6A6A]'}`} />
                   {errors.titulo && <p className="text-red-500 text-[11px] md:text-[10px] font-bold mt-1.5 flex items-center gap-1"><AlertCircle className="w-3 h-3" />{errors.titulo}</p>}
                 </div>
-                
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs md:text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2" htmlFor="modalidad">Modalidad</label>
-                    <select 
-                      id="modalidad"
-                      value={courseForm.modalidad}
-                      onChange={(e) => handleWizardChange('modalidad', e.target.value)}
-                      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-base md:text-sm font-medium focus:outline-none focus:border-[#2D6A6A] focus:bg-white transition-all text-[#1A3D3D]"
-                    >
+                    <select id="modalidad" value={courseForm.modalidad} onChange={(e) => handleWizardChange('modalidad', e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-base md:text-sm font-medium focus:outline-none focus:border-[#2D6A6A] focus:bg-white transition-all text-[#1A3D3D]">
                       {MODALIDADES.map(m => <option key={m} value={m}>{m}</option>)}
                     </select>
                   </div>
@@ -1472,28 +1315,15 @@ export default function Repertorio() {
                     <label className="block text-xs md:text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2" htmlFor="precio">Precio de lista (ARS) *</label>
                     <div className="relative">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">$</span>
-                      <input 
-                        id="precio"
-                        type="number" 
-                        value={courseForm.precio}
-                        onChange={(e) => handleWizardChange('precio', e.target.value)}
-                        placeholder="45000" 
-                        className={`w-full bg-gray-50 border rounded-xl pl-8 pr-4 py-3.5 text-base md:text-sm font-medium focus:outline-none focus:bg-white transition-all text-[#1A3D3D] ${errors.precio ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-[#2D6A6A]'}`} 
-                      />
+                      <input id="precio" type="number" value={courseForm.precio} onChange={(e) => handleWizardChange('precio', e.target.value)} placeholder="45000" className={`w-full bg-gray-50 border rounded-xl pl-8 pr-4 py-3.5 text-base md:text-sm font-medium focus:outline-none focus:bg-white transition-all text-[#1A3D3D] ${errors.precio ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-[#2D6A6A]'}`} />
                     </div>
                     {errors.precio && <p className="text-red-500 text-[11px] md:text-[10px] font-bold mt-1.5 flex items-center gap-1"><AlertCircle className="w-3 h-3" />{errors.precio}</p>}
                   </div>
                 </div>
-
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs md:text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2" htmlFor="nivel">Nivel</label>
-                    <select 
-                      id="nivel"
-                      value={courseForm.nivel}
-                      onChange={(e) => handleWizardChange('nivel', e.target.value)}
-                      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-base md:text-sm font-medium focus:outline-none focus:border-[#2D6A6A] focus:bg-white transition-all text-[#1A3D3D]"
-                    >
+                    <select id="nivel" value={courseForm.nivel} onChange={(e) => handleWizardChange('nivel', e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-base md:text-sm font-medium focus:outline-none focus:border-[#2D6A6A] focus:bg-white transition-all text-[#1A3D3D]">
                       <option value="Principiante">Principiante (Estudiantes/Recibidos)</option>
                       <option value="Intermedio">Intermedio (Clínica General)</option>
                       <option value="Avanzado">Avanzado (Especialistas)</option>
@@ -1501,14 +1331,7 @@ export default function Repertorio() {
                   </div>
                   <div>
                     <label className="block text-xs md:text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2" htmlFor="duracion">Duración aprox.</label>
-                    <input 
-                      id="duracion"
-                      type="text" 
-                      value={courseForm.duracion}
-                      onChange={(e) => handleWizardChange('duracion', e.target.value)}
-                      placeholder="Ej: 12h 30m / 4 Semanas" 
-                      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-base md:text-sm font-medium focus:outline-none focus:border-[#2D6A6A] focus:bg-white transition-all text-[#1A3D3D]" 
-                    />
+                    <input id="duracion" type="text" value={courseForm.duracion} onChange={(e) => handleWizardChange('duracion', e.target.value)} placeholder="Ej: 12h 30m / 4 Semanas" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-base md:text-sm font-medium focus:outline-none focus:border-[#2D6A6A] focus:bg-white transition-all text-[#1A3D3D]" />
                   </div>
                 </div>
               </div>
@@ -1521,21 +1344,12 @@ export default function Repertorio() {
                 <h2 className="text-2xl font-black font-['Montserrat'] text-[#1A3D3D] mb-1">Detalles y Temario</h2>
                 <p className="text-gray-500 text-base md:text-sm font-medium">Contale a los colegas por qué este curso es imperdible.</p>
               </div>
-              
               <div className="space-y-6">
                 <div>
                   <label className="block text-xs md:text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2" htmlFor="descripcion">Descripción general *</label>
-                  <textarea 
-                    id="descripcion"
-                    value={courseForm.descripcion}
-                    onChange={(e) => handleWizardChange('descripcion', e.target.value)}
-                    placeholder="Escribí un resumen atrapante sobre los objetivos principales del curso..." 
-                    rows="4"
-                    className={`w-full bg-gray-50 border rounded-xl px-4 py-3.5 text-base md:text-sm font-medium focus:outline-none focus:bg-white transition-all text-[#1A3D3D] resize-none ${errors.descripcion ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-[#2D6A6A]'}`} 
-                  ></textarea>
+                  <textarea id="descripcion" value={courseForm.descripcion} onChange={(e) => handleWizardChange('descripcion', e.target.value)} placeholder="Escribí un resumen atrapante sobre los objetivos principales del curso..." rows="4" className={`w-full bg-gray-50 border rounded-xl px-4 py-3.5 text-base md:text-sm font-medium focus:outline-none focus:bg-white transition-all text-[#1A3D3D] resize-none ${errors.descripcion ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-[#2D6A6A]'}`} ></textarea>
                   {errors.descripcion && <p className="text-red-500 text-[11px] md:text-[10px] font-bold mt-1.5 flex items-center gap-1"><AlertCircle className="w-3 h-3" />{errors.descripcion}</p>}
                 </div>
-                
                 <div>
                   <label className="block text-xs md:text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">¿Qué van a aprender? (Puntos clave) *</label>
                   <div className="space-y-3">
@@ -1543,14 +1357,7 @@ export default function Repertorio() {
                       <div key={index} className="flex items-center gap-2">
                         <div className="flex-1 relative">
                           <Check className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#2D6A6A]" aria-hidden="true" />
-                          <input 
-                            type="text" 
-                            value={item}
-                            aria-label={`Punto de aprendizaje ${index + 1}`}
-                            onChange={(e) => updateIncluyeItem(index, e.target.value)}
-                            placeholder="Ej: Análisis de casos clínicos reales..." 
-                            className={`w-full bg-gray-50 border rounded-xl pl-10 pr-4 py-3 text-base md:text-sm font-medium focus:outline-none focus:bg-white transition-all text-[#1A3D3D] ${errors.incluye ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-[#2D6A6A]'}`} 
-                          />
+                          <input type="text" value={item} aria-label={`Punto de aprendizaje ${index + 1}`} onChange={(e) => updateIncluyeItem(index, e.target.value)} placeholder="Ej: Análisis de casos clínicos reales..." className={`w-full bg-gray-50 border rounded-xl pl-10 pr-4 py-3 text-base md:text-sm font-medium focus:outline-none focus:bg-white transition-all text-[#1A3D3D] ${errors.incluye ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-[#2D6A6A]'}`} />
                         </div>
                         {courseForm.incluye.length > 1 && (
                           <button onClick={() => removeIncluyeItem(index)} aria-label="Eliminar punto" className="p-3 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all">
@@ -1560,11 +1367,7 @@ export default function Repertorio() {
                       </div>
                     ))}
                     {errors.incluye && <p className="text-red-500 text-[11px] md:text-[10px] font-bold mt-1.5 flex items-center gap-1"><AlertCircle className="w-3 h-3" />{errors.incluye}</p>}
-                    
-                    <button 
-                      onClick={addIncluyeItem}
-                      className="flex items-center gap-2 text-[#2D6A6A] font-bold text-xs md:text-xs uppercase tracking-widest mt-2 hover:bg-[#2D6A6A]/10 px-4 py-2 rounded-lg transition-colors"
-                    >
+                    <button onClick={addIncluyeItem} className="flex items-center gap-2 text-[#2D6A6A] font-bold text-xs md:text-xs uppercase tracking-widest mt-2 hover:bg-[#2D6A6A]/10 px-4 py-2 rounded-lg transition-colors">
                       <Plus className="w-4 h-4" /> Agregar otro punto
                     </button>
                   </div>
@@ -1579,34 +1382,17 @@ export default function Repertorio() {
                 <h2 className="text-2xl font-black font-['Montserrat'] text-[#1A3D3D] mb-1">Docente / Instructorx</h2>
                 <p className="text-gray-500 text-base md:text-sm font-medium">Humanizá tu curso presentando al especialista a cargo.</p>
               </div>
-              
               <div className="space-y-6">
                 <div>
                   <label className="block text-xs md:text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2" htmlFor="instructorNombre">Nombre completo con título *</label>
-                  <input 
-                    id="instructorNombre"
-                    type="text" 
-                    value={courseForm.instructorNombre}
-                    onChange={(e) => handleWizardChange('instructorNombre', e.target.value)}
-                    placeholder="Ej: Dr. Julián Martínez" 
-                    className={`w-full bg-gray-50 border rounded-xl px-4 py-3.5 text-base md:text-sm font-medium focus:outline-none focus:bg-white transition-all text-[#1A3D3D] ${errors.instructorNombre ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-[#2D6A6A]'}`} 
-                  />
+                  <input id="instructorNombre" type="text" value={courseForm.instructorNombre} onChange={(e) => handleWizardChange('instructorNombre', e.target.value)} placeholder="Ej: Dr. Julián Martínez" className={`w-full bg-gray-50 border rounded-xl px-4 py-3.5 text-base md:text-sm font-medium focus:outline-none focus:bg-white transition-all text-[#1A3D3D] ${errors.instructorNombre ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-[#2D6A6A]'}`} />
                   {errors.instructorNombre && <p className="text-red-500 text-[11px] md:text-[10px] font-bold mt-1.5 flex items-center gap-1"><AlertCircle className="w-3 h-3" />{errors.instructorNombre}</p>}
                 </div>
-
                 <div>
                   <label className="block text-xs md:text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2" htmlFor="instructorBio">Mini Bio del Docente *</label>
-                  <textarea 
-                    id="instructorBio"
-                    value={courseForm.instructorBio}
-                    onChange={(e) => handleWizardChange('instructorBio', e.target.value)}
-                    placeholder="Resumí su experiencia, especialidades y reconocimientos (máx. 300 caracteres)..." 
-                    rows="3"
-                    className={`w-full bg-gray-50 border rounded-xl px-4 py-3.5 text-base md:text-sm font-medium focus:outline-none focus:bg-white transition-all text-[#1A3D3D] resize-none ${errors.instructorBio ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-[#2D6A6A]'}`} 
-                  ></textarea>
+                  <textarea id="instructorBio" value={courseForm.instructorBio} onChange={(e) => handleWizardChange('instructorBio', e.target.value)} placeholder="Resumí su experiencia, especialidades y reconocimientos (máx. 300 caracteres)..." rows="3" className={`w-full bg-gray-50 border rounded-xl px-4 py-3.5 text-base md:text-sm font-medium focus:outline-none focus:bg-white transition-all text-[#1A3D3D] resize-none ${errors.instructorBio ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-[#2D6A6A]'}`} ></textarea>
                   {errors.instructorBio && <p className="text-red-500 text-[11px] md:text-[10px] font-bold mt-1.5 flex items-center gap-1"><AlertCircle className="w-3 h-3" />{errors.instructorBio}</p>}
                 </div>
-
                 <div>
                   <label className="block text-xs md:text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Foto de perfil del docente</label>
                   <div className="w-full border-2 border-dashed border-gray-300 rounded-2xl bg-gray-50 hover:bg-white hover:border-[#2D6A6A] transition-all p-8 flex flex-col items-center justify-center text-center cursor-pointer group">
@@ -1632,30 +1418,15 @@ export default function Repertorio() {
                   Creá tu cuenta institucional para gestionar las ventas y proceder al pago de la publicación.
                 </p>
               </div>
-              
               <div className="bg-gray-50 p-6 md:p-8 rounded-[24px] border border-gray-100 space-y-4 max-w-md mx-auto">
                 <div>
                   <label className="block text-xs md:text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2" htmlFor="email">Email Institucional *</label>
-                  <input 
-                    id="email"
-                    type="email" 
-                    value={courseForm.email}
-                    onChange={(e) => handleWizardChange('email', e.target.value)}
-                    placeholder="contacto@tuinstitucion.com" 
-                    className={`w-full bg-white border rounded-xl px-4 py-3.5 text-base md:text-sm font-medium focus:outline-none transition-all text-[#1A3D3D] ${errors.email ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-[#2D6A6A]'}`} 
-                  />
+                  <input id="email" type="email" value={courseForm.email} onChange={(e) => handleWizardChange('email', e.target.value)} placeholder="contacto@tuinstitucion.com" className={`w-full bg-white border rounded-xl px-4 py-3.5 text-base md:text-sm font-medium focus:outline-none transition-all text-[#1A3D3D] ${errors.email ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-[#2D6A6A]'}`} />
                   {errors.email && <p className="text-red-500 text-[11px] md:text-[10px] font-bold mt-1.5 flex items-center gap-1"><AlertCircle className="w-3 h-3" />{errors.email}</p>}
                 </div>
                 <div>
                   <label className="block text-xs md:text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2" htmlFor="password">Contraseña *</label>
-                  <input 
-                    id="password"
-                    type="password" 
-                    value={courseForm.password}
-                    onChange={(e) => handleWizardChange('password', e.target.value)}
-                    placeholder="••••••••" 
-                    className={`w-full bg-white border rounded-xl px-4 py-3.5 text-base md:text-sm font-medium focus:outline-none transition-all text-[#1A3D3D] ${errors.password ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-[#2D6A6A]'}`} 
-                  />
+                  <input id="password" type="password" value={courseForm.password} onChange={(e) => handleWizardChange('password', e.target.value)} placeholder="••••••••" className={`w-full bg-white border rounded-xl px-4 py-3.5 text-base md:text-sm font-medium focus:outline-none transition-all text-[#1A3D3D] ${errors.password ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-[#2D6A6A]'}`} />
                   {errors.password && <p className="text-red-500 text-[11px] md:text-[10px] font-bold mt-1.5 flex items-center gap-1"><AlertCircle className="w-3 h-3" />{errors.password}</p>}
                 </div>
               </div>
@@ -1666,32 +1437,18 @@ export default function Repertorio() {
 
         <div className="bg-gray-50 border-t border-gray-100 p-6 md:px-10 md:py-8 flex items-center justify-between">
           {wizardStep > 1 ? (
-            <button 
-              onClick={() => { setWizardStep(prev => prev - 1); setErrors({}); window.scrollTo(0,0); }}
-              className="px-6 py-3.5 text-[#1A3D3D] font-bold text-xs md:text-[11px] uppercase tracking-widest hover:bg-gray-200 rounded-xl transition-all"
-            >
+            <button onClick={() => { setWizardStep(prev => prev - 1); setErrors({}); window.scrollTo(0,0); }} className="px-6 py-3.5 text-[#1A3D3D] font-bold text-xs md:text-[11px] uppercase tracking-widest hover:bg-gray-200 rounded-xl transition-all">
               Anterior
             </button>
           ) : <div></div>}
 
           {wizardStep < 4 ? (
-            <button 
-              onClick={handleNextStep}
-              className="px-8 py-3.5 bg-[#1A3D3D] text-white font-black text-xs md:text-[11px] uppercase tracking-widest hover:bg-[#2D6A6A] rounded-xl transition-all shadow-lg flex items-center gap-2"
-            >
+            <button onClick={handleNextStep} className="px-8 py-3.5 bg-[#1A3D3D] text-white font-black text-xs md:text-[11px] uppercase tracking-widest hover:bg-[#2D6A6A] rounded-xl transition-all shadow-lg flex items-center gap-2">
               Siguiente <ChevronRight className="w-4 h-4" />
             </button>
           ) : (
-            <button 
-              onClick={submitWizard}
-              disabled={isSubmitting}
-              className="px-8 py-3.5 bg-[#2D6A6A] text-white font-black text-xs md:text-[11px] uppercase tracking-widest hover:bg-[#1A3D3D] rounded-xl transition-all shadow-lg flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSubmitting ? (
-                <><Loader2 className="w-4 h-4 animate-spin" /> Procesando...</>
-              ) : (
-                <><ShieldCheck className="w-4 h-4" /> Crear cuenta y Pagar</>
-              )}
+            <button onClick={submitWizard} disabled={isSubmitting} className="px-8 py-3.5 bg-[#2D6A6A] text-white font-black text-xs md:text-[11px] uppercase tracking-widest hover:bg-[#1A3D3D] rounded-xl transition-all shadow-lg flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+              {isSubmitting ? (<><Loader2 className="w-4 h-4 animate-spin" /> Procesando...</>) : (<><ShieldCheck className="w-4 h-4" /> Crear cuenta y Pagar</>)}
             </button>
           )}
         </div>
@@ -1701,26 +1458,20 @@ export default function Repertorio() {
 
   const renderAdvertise = () => (
     <section className="max-w-[1000px] mx-auto animate-in fade-in duration-500 pb-24">
-      <button 
-        onClick={() => setView('grid')} 
-        className="flex items-center gap-2 text-gray-400 hover:text-[#1A3D3D] font-bold text-xs md:text-[10px] uppercase tracking-[0.3em] mb-8 transition-colors group"
-      >
+      <button onClick={() => setView('grid')} className="flex items-center gap-2 text-gray-400 hover:text-[#1A3D3D] font-bold text-xs md:text-[10px] uppercase tracking-[0.3em] mb-8 transition-colors group">
         <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Volver al Repertorio
       </button>
 
       <div className="bg-[#1A3D3D] rounded-[32px] pt-12 pb-28 md:pt-16 md:pb-32 px-8 text-center relative overflow-hidden shadow-2xl">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-white opacity-5 rounded-full blur-[100px] pointer-events-none"></div>
         <div className="relative z-10 max-w-2xl mx-auto flex flex-col items-center">
-          
           <span className="bg-[#2D6A6A] text-white text-xs md:text-[10px] font-bold px-4 py-2 rounded-full uppercase tracking-widest mb-6">
             Alianzas Estratégicas
           </span>
-          
           <h1 className="text-3xl md:text-5xl font-black font-['Montserrat'] leading-[1.1] uppercase tracking-tighter mb-6 text-white flex items-center justify-center flex-wrap">
             <span>Conectá tu marca con la élite veterinaria</span>
             <span className="inline-block w-[4px] md:w-[6px] h-[0.9em] bg-[#2D6A6A] animate-pulse ml-2 align-baseline -mb-1 shadow-[0_0_10px_rgba(45,106,106,0.5)]"></span>
           </h1>
-          
           <p className="text-white/60 text-base md:text-base font-medium leading-relaxed max-w-xl mx-auto">
             El Portal es la red exclusiva para profesionales de alta complejidad. Posicioná tus cursos, seminarios o equipamiento médico frente a una audiencia altamente segmentada y calificada.
           </p>
@@ -1728,7 +1479,6 @@ export default function Repertorio() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 px-4 md:px-8 relative z-20 -mt-20 mb-8">
-        
         <article className="bg-white p-8 md:p-10 rounded-[32px] border border-gray-100 shadow-xl flex flex-col items-center text-center hover:-translate-y-2 transition-transform duration-300">
           <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center mb-6 shadow-sm">
             <BookOpen className="w-8 h-8 text-[#2D6A6A]" />
@@ -1737,18 +1487,11 @@ export default function Repertorio() {
           <p className="text-gray-500 text-[15px] md:text-sm leading-relaxed mb-8 flex-grow">
             Publicá tus cursos y seminarios usando nuestra plantilla optimizada. Mostrá el temario, instructorxs y recibí inscripciones directas de colegas buscando especializarse.
           </p>
-          
           <div className="w-full flex flex-col gap-3 mt-auto">
-            <button 
-              onClick={() => { setView('wizard'); window.scrollTo(0,0); }}
-              className="w-full py-4 bg-[#1A3D3D] text-white rounded-[20px] font-black text-xs md:text-[10px] uppercase tracking-[0.2em] hover:bg-[#2D6A6A] transition-all shadow-md active:scale-95"
-            >
+            <button onClick={() => { setView('wizard'); window.scrollTo(0,0); }} className="w-full py-4 bg-[#1A3D3D] text-white rounded-[20px] font-black text-xs md:text-[10px] uppercase tracking-[0.2em] hover:bg-[#2D6A6A] transition-all shadow-md active:scale-95">
               Publicar un curso
             </button>
-            <button 
-              onClick={() => { setView('propuesta'); window.scrollTo(0,0); }}
-              className="w-full py-4 bg-white text-[#2D6A6A] border border-[#2D6A6A]/30 rounded-[20px] font-bold text-xs md:text-[10px] uppercase tracking-[0.2em] hover:bg-[#2D6A6A]/5 transition-all flex items-center justify-center gap-2"
-            >
+            <button onClick={() => { setView('propuesta'); window.scrollTo(0,0); }} className="w-full py-4 bg-white text-[#2D6A6A] border border-[#2D6A6A]/30 rounded-[20px] font-bold text-xs md:text-[10px] uppercase tracking-[0.2em] hover:bg-[#2D6A6A]/5 transition-all flex items-center justify-center gap-2">
               ¿Por qué publicar acá? <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -1763,10 +1506,7 @@ export default function Repertorio() {
             Destacá tu equipamiento (ecógrafos, instrumental quirúrgico, anestesia) en un entorno donde los profesionales entran específicamente a buscar mejorar su clínica diaria.
           </p>
           <div className="w-full flex flex-col gap-3 mt-auto">
-            <button 
-              onClick={() => { setView('insumoForm'); window.scrollTo(0,0); }}
-              className="w-full py-4 bg-gray-50 text-[#1A3D3D] border border-gray-200 rounded-[20px] font-black text-xs md:text-[10px] uppercase tracking-[0.2em] hover:bg-gray-100 transition-all shadow-sm active:scale-95"
-            >
+            <button onClick={() => { setView('insumoForm'); window.scrollTo(0,0); }} className="w-full py-4 bg-gray-50 text-[#1A3D3D] border border-gray-200 rounded-[20px] font-black text-xs md:text-[10px] uppercase tracking-[0.2em] hover:bg-gray-100 transition-all shadow-sm active:scale-95">
               Publicar equipamiento
             </button>
           </div>
@@ -1776,16 +1516,10 @@ export default function Repertorio() {
   );
 
   const renderDetail = () => {
-    if (!selectedCourse) {
-      // Esto previene un crash si la vista es 'detail' pero no hay curso seleccionado.
-      return null; 
-    }
+    if (!selectedCourse) return null; 
     return (
     <article className="max-w-[1200px] mx-auto animate-in fade-in duration-500 pb-24">
-      <button 
-        onClick={() => setView('grid')} 
-        className="flex items-center gap-2 text-gray-400 hover:text-[#1A3D3D] font-bold text-[10px] uppercase tracking-[0.3em] mb-8 transition-colors group"
-      >
+      <button onClick={() => setView('grid')} className="flex items-center gap-2 text-gray-400 hover:text-[#1A3D3D] font-bold text-[10px] uppercase tracking-[0.3em] mb-8 transition-colors group">
         <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Volver al Repertorio
       </button>
 
@@ -1807,25 +1541,13 @@ export default function Repertorio() {
           </div>
 
           <nav className="flex flex-wrap gap-x-6 gap-y-3 md:gap-12 border-b border-gray-200 mb-8" aria-label="Pestañas del curso">
-            <button 
-              onClick={() => setActiveTab('about')} 
-              aria-current={activeTab === 'about' ? 'page' : undefined}
-              className={`pb-3 md:pb-4 text-[11px] md:text-[13px] font-bold uppercase tracking-widest transition-all ${activeTab === 'about' ? 'border-b-2 border-[#2D6A6A] text-[#1A3D3D]' : 'text-gray-400 hover:text-[#1A3D3D]'}`}
-            >
+            <button onClick={() => setActiveTab('about')} aria-current={activeTab === 'about' ? 'page' : undefined} className={`pb-3 md:pb-4 text-[11px] md:text-[13px] font-bold uppercase tracking-widest transition-all ${activeTab === 'about' ? 'border-b-2 border-[#2D6A6A] text-[#1A3D3D]' : 'text-gray-400 hover:text-[#1A3D3D]'}`}>
               Acerca del curso
             </button>
-            <button 
-              onClick={() => setActiveTab('speaker')} 
-              aria-current={activeTab === 'speaker' ? 'page' : undefined}
-              className={`pb-3 md:pb-4 text-[11px] md:text-[13px] font-bold uppercase tracking-widest transition-all ${activeTab === 'speaker' ? 'border-b-2 border-[#2D6A6A] text-[#1A3D3D]' : 'text-gray-400 hover:text-[#1A3D3D]'}`}
-            >
+            <button onClick={() => setActiveTab('speaker')} aria-current={activeTab === 'speaker' ? 'page' : undefined} className={`pb-3 md:pb-4 text-[11px] md:text-[13px] font-bold uppercase tracking-widest transition-all ${activeTab === 'speaker' ? 'border-b-2 border-[#2D6A6A] text-[#1A3D3D]' : 'text-gray-400 hover:text-[#1A3D3D]'}`}>
               Instructorxs
             </button>
-            <button 
-              onClick={() => setActiveTab('reviews')} 
-              aria-current={activeTab === 'reviews' ? 'page' : undefined}
-              className={`pb-3 md:pb-4 text-[11px] md:text-[13px] font-bold uppercase tracking-widest transition-all ${activeTab === 'reviews' ? 'border-b-2 border-[#2D6A6A] text-[#1A3D3D]' : 'text-gray-400 hover:text-[#1A3D3D]'}`}
-            >
+            <button onClick={() => setActiveTab('reviews')} aria-current={activeTab === 'reviews' ? 'page' : undefined} className={`pb-3 md:pb-4 text-[11px] md:text-[13px] font-bold uppercase tracking-widest transition-all ${activeTab === 'reviews' ? 'border-b-2 border-[#2D6A6A] text-[#1A3D3D]' : 'text-gray-400 hover:text-[#1A3D3D]'}`}>
               Reseñas (4.9)
             </button>
           </nav>
@@ -1838,7 +1560,6 @@ export default function Repertorio() {
                   {selectedCourse.descripcion}
                 </p>
               </div>
-
               <div>
                 <h3 className="text-2xl font-black font-['Montserrat'] text-[#1A3D3D] mb-6">¿Qué vas a aprender?</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1940,17 +1661,12 @@ export default function Repertorio() {
 
     return (
       <article className="max-w-[1200px] mx-auto animate-in fade-in duration-500 pb-24">
-        <button 
-          onClick={() => setView('grid')} 
-          className="flex items-center gap-2 text-gray-400 hover:text-[#1A3D3D] font-bold text-xs md:text-[10px] uppercase tracking-[0.3em] mb-8 transition-colors group"
-        >
+        <button onClick={() => setView('grid')} className="flex items-center gap-2 text-gray-400 hover:text-[#1A3D3D] font-bold text-xs md:text-[10px] uppercase tracking-[0.3em] mb-8 transition-colors group">
           <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Volver a Insumos
         </button>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
-          {/* Columna Izquierda: Imagen y Detalles */}
           <section className="lg:col-span-8 flex flex-col gap-8">
-            {/* Encabezado */}
             <div>
               <div className="flex items-center gap-3 mb-4">
                 <img src={selectedInsumo.logoMarca} alt={selectedInsumo.marca} className="w-8 h-8 rounded-full border border-gray-100" />
@@ -1964,28 +1680,19 @@ export default function Repertorio() {
               </p>
             </div>
 
-            {/* Imagen Principal */}
             <div className="w-full aspect-video md:aspect-[16/10] bg-white rounded-[32px] border border-gray-100 p-4 md:p-8 flex items-center justify-center shadow-sm relative overflow-hidden group">
                <img src={selectedInsumo.imagen} alt={selectedInsumo.titulo} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-700" />
             </div>
 
-            {/* Navegación Interna */}
             <nav className="flex flex-wrap gap-x-6 gap-y-3 md:gap-12 border-b border-gray-200" aria-label="Pestañas del producto">
-              <button 
-                onClick={() => setActiveInsumoTab('features')} 
-                className={`pb-3 md:pb-4 text-xs md:text-[13px] font-bold uppercase tracking-widest transition-all ${activeInsumoTab === 'features' ? 'border-b-2 border-[#2D6A6A] text-[#1A3D3D]' : 'text-gray-400 hover:text-[#1A3D3D]'}`}
-              >
+              <button onClick={() => setActiveInsumoTab('features')} className={`pb-3 md:pb-4 text-xs md:text-[13px] font-bold uppercase tracking-widest transition-all ${activeInsumoTab === 'features' ? 'border-b-2 border-[#2D6A6A] text-[#1A3D3D]' : 'text-gray-400 hover:text-[#1A3D3D]'}`}>
                 Características
               </button>
-              <button 
-                onClick={() => setActiveInsumoTab('specs')} 
-                className={`pb-3 md:pb-4 text-xs md:text-[13px] font-bold uppercase tracking-widest transition-all ${activeInsumoTab === 'specs' ? 'border-b-2 border-[#2D6A6A] text-[#1A3D3D]' : 'text-gray-400 hover:text-[#1A3D3D]'}`}
-              >
+              <button onClick={() => setActiveInsumoTab('specs')} className={`pb-3 md:pb-4 text-xs md:text-[13px] font-bold uppercase tracking-widest transition-all ${activeInsumoTab === 'specs' ? 'border-b-2 border-[#2D6A6A] text-[#1A3D3D]' : 'text-gray-400 hover:text-[#1A3D3D]'}`}>
                 Especificaciones
               </button>
             </nav>
 
-            {/* Contenido Pestañas */}
             <div className="min-h-[300px]">
               {activeInsumoTab === 'features' && (
                 <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2">
@@ -2025,12 +1732,9 @@ export default function Repertorio() {
             </div>
           </section>
 
-          {/* Columna Derecha: Sticky Pricing y CTA */}
           <aside className="lg:col-span-4">
             <div className="sticky top-28 space-y-6">
-              {/* Tarjeta de Compra */}
               <div className="bg-white p-8 rounded-[32px] shadow-[0_20px_50px_rgba(0,0,0,0.06)] border border-gray-100 flex flex-col gap-6">
-                
                 <div>
                   <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Inversión sugerida</p>
                   <div className="flex items-baseline gap-2">
@@ -2042,7 +1746,6 @@ export default function Repertorio() {
                   <p className="text-[11px] text-gray-400 font-medium mt-1">Precio referencial, sujeto a cotización oficial.</p>
                 </div>
 
-                {/* Cupón de descuento */}
                 <div className="bg-[#2D6A6A]/5 border border-[#2D6A6A]/20 rounded-2xl p-5 relative overflow-hidden">
                   <div className="absolute -right-4 -top-4 w-16 h-16 bg-[#2D6A6A]/10 rounded-full blur-xl"></div>
                   <p className="text-[10px] font-black uppercase tracking-widest text-[#2D6A6A] mb-2 flex items-center gap-1.5">
@@ -2065,7 +1768,6 @@ export default function Repertorio() {
                 </div>
               </div>
 
-              {/* Tarjetas de Confianza */}
               <div className="grid grid-cols-1 gap-3">
                 <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 flex items-center gap-4">
                   <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm shrink-0">
@@ -2095,7 +1797,6 @@ export default function Repertorio() {
                   </div>
                 </div>
               </div>
-
             </div>
           </aside>
         </div>
@@ -2115,22 +1816,11 @@ export default function Repertorio() {
           </p>
         </div>
 
-        {/* CONTROLES DE PESTAÑAS (TABS) */}
         <div className="flex bg-white p-1.5 rounded-[16px] md:rounded-full border border-gray-100 shadow-sm w-full md:w-auto overflow-x-auto">
-          <button 
-            onClick={() => setActiveGridTab('cursos')} 
-            className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2.5 md:py-3 rounded-[12px] md:rounded-full text-[11px] font-bold uppercase tracking-widest transition-all whitespace-nowrap ${
-              activeGridTab === 'cursos' ? 'bg-[#2D6A6A] text-white shadow-md' : 'text-gray-400 hover:text-[#1A3D3D] hover:bg-gray-50'
-            }`}
-          >
+          <button onClick={() => setActiveGridTab('cursos')} className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2.5 md:py-3 rounded-[12px] md:rounded-full text-[11px] font-bold uppercase tracking-widest transition-all whitespace-nowrap ${activeGridTab === 'cursos' ? 'bg-[#2D6A6A] text-white shadow-md' : 'text-gray-400 hover:text-[#1A3D3D] hover:bg-gray-50'}`}>
             <BookOpen className="w-4 h-4" /> Seminarios
           </button>
-          <button 
-            onClick={() => setActiveGridTab('proveedores')} 
-            className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2.5 md:py-3 rounded-[12px] md:rounded-full text-[11px] font-bold uppercase tracking-widest transition-all whitespace-nowrap ${
-              activeGridTab === 'proveedores' ? 'bg-[#2D6A6A] text-white shadow-md' : 'text-gray-400 hover:text-[#1A3D3D] hover:bg-gray-50'
-            }`}
-          >
+          <button onClick={() => setActiveGridTab('proveedores')} className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2.5 md:py-3 rounded-[12px] md:rounded-full text-[11px] font-bold uppercase tracking-widest transition-all whitespace-nowrap ${activeGridTab === 'proveedores' ? 'bg-[#2D6A6A] text-white shadow-md' : 'text-gray-400 hover:text-[#1A3D3D] hover:bg-gray-50'}`}>
             <Building className="w-4 h-4" /> Marcas y Proveedores
           </button>
         </div>
@@ -2150,169 +1840,24 @@ export default function Repertorio() {
 
   return (
     <div className="bg-[#F4F7F7] min-h-screen font-['Inter'] antialiased relative">
-      <nav className={`sticky top-0 w-full z-50 h-[80px] flex items-center px-6 md:px-12 lg:px-24 transition-all duration-300 print:hidden ${isNavbarScrolled ? 'bg-white/85 backdrop-blur-md shadow-md border-b border-gray-200' : 'bg-white border-b border-gray-100 shadow-sm'}`}>
-        <div className="max-w-[1440px] mx-auto w-full flex justify-between items-center">
-          <button onClick={() => navigate('/')} aria-label="Volver a Inicio" className="text-[#1A3D3D] font-['Montserrat'] font-black text-2xl tracking-tighter cursor-pointer hover:opacity-80 transition-opacity">
-            El Portal<span className="text-[#2D6A6A]">.</span>
-          </button>
-          
-          <div className="flex items-center gap-4">
-            <div className="hidden md:flex items-center gap-10 text-[11px] font-black text-gray-400 uppercase tracking-widest">
-              <button className="text-[#1A3D3D] border-b-2 border-[#2D6A6A] pb-1 cursor-pointer" onClick={() => { setView('grid'); window.scrollTo(0,0); }}>Ecosistema</button>
-              <button onClick={() => navigate('/bolsa-de-trabajo')} className="hover:text-[#1A3D3D] cursor-pointer transition-colors">Empleos</button>
-              <button onClick={() => navigate('/novedades')} className="hover:text-[#1A3D3D] cursor-pointer transition-colors">Novedades</button>
-              <button onClick={() => { setView('publicitar'); window.scrollTo(0,0); }} className="bg-[#1A3D3D] text-white px-8 py-3 rounded-full hover:bg-[#2D6A6A] transition-all">Publicar</button>
-            </div>
+      
+      {/* NAVBAR IMPORTADO DESDE EL COMPONENTE EXTERNO */}
+      <div className="print:hidden">
+        <Navbar onNavigate={(path) => navigate(path)} />
+      </div>
 
-            <div className="relative">
-              <button 
-                onClick={() => setIsMenuOpen(!isMenuOpen)} 
-                aria-label={isMenuOpen ? "Cerrar menú principal" : "Abrir menú principal"}
-                aria-expanded={isMenuOpen}
-                className="w-12 h-12 bg-white rounded-2xl border border-gray-100 shadow-sm flex items-center justify-center text-[#1A3D3D] hover:bg-[#F4F7F7] transition-all active:scale-95"
-              >
-                {isMenuOpen ? <X className="w-6 h-6" aria-hidden="true" /> : <Menu className="w-6 h-6" aria-hidden="true" />}
-              </button>
-              {isMenuOpen && (
-                <>
-                  <div className="fixed inset-0 z-[-1]" onClick={() => setIsMenuOpen(false)}></div>
-                  <nav className="absolute right-0 mt-4 w-64 bg-white rounded-[32px] shadow-[0_20px_50px_rgba(26,61,61,0.15)] border border-gray-100 overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
-                    <div className="p-3">
-                      <p className="text-[11px] md:text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] px-4 py-3 border-b border-gray-50 mb-2 text-left">Navegación</p>
-                      <button onClick={() => { navigate('/inicio'); setIsMenuOpen(false); }} className="w-full flex items-center gap-3 px-4 py-4 hover:bg-[#F4F7F7] rounded-2xl transition-colors group"><Home className="w-4 h-4 text-gray-400 group-hover:text-[#1A3D3D]" /><span className="text-[15px] md:text-sm font-bold text-[#1A3D3D]">Inicio</span></button>
-                      <button onClick={() => { navigate('/'); setIsMenuOpen(false); }} className="w-full flex items-center gap-3 px-4 py-4 hover:bg-[#F4F7F7] rounded-2xl transition-colors group"><Info className="w-4 h-4 text-gray-400 group-hover:text-[#1A3D3D]" /><span className="text-[15px] md:text-sm font-bold text-[#1A3D3D]">Entrada</span></button>
-                      <button onClick={() => { navigate('/perfil'); setIsMenuOpen(false); }} className="w-full flex items-center justify-between px-4 py-4 hover:bg-[#F4F7F7] rounded-2xl transition-colors group"><div className="flex items-center gap-3"><User className="w-4 h-4 text-[#2D6A6A]" /><span className="text-[15px] md:text-sm font-bold text-[#1A3D3D]">Mi Perfil Público</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
-                      <button onClick={() => { setView('grid'); setIsMenuOpen(false); }} className="w-full flex items-center justify-between px-4 py-4 hover:bg-[#F4F7F7] rounded-2xl transition-colors group"><div className="flex items-center gap-3"><LayoutGrid className="w-4 h-4 text-[#1A3D3D]" /><span className="text-[15px] md:text-sm font-bold text-[#1A3D3D]">Repertorio Clínico</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
-                      <button onClick={() => { navigate('/novedades'); setIsMenuOpen(false); }} className="w-full flex items-center justify-between px-4 py-4 hover:bg-[#F4F7F7] rounded-2xl transition-colors group"><div className="flex items-center gap-3"><Sparkles className="w-4 h-4 text-[#1A3D3D]" /><span className="text-[15px] md:text-sm font-bold text-[#1A3D3D]">Novedades</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
-                      <button onClick={() => { navigate('/bolsa-de-trabajo'); setIsMenuOpen(false); }} className="w-full flex items-center justify-between px-4 py-4 hover:bg-[#F4F7F7] rounded-2xl transition-colors group"><div className="flex items-center gap-3"><BriefcaseIcon className="w-4 h-4 text-[#1A3D3D]" /><span className="text-[15px] md:text-sm font-bold text-[#1A3D3D]">Bolsa de Trabajo</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
-                      <button onClick={() => { navigate('/editor'); setIsMenuOpen(false); }} className="w-full flex items-center justify-between px-4 py-4 hover:bg-[#F4F7F7] rounded-2xl transition-colors group"><div className="flex items-center gap-3"><Edit3 className="w-4 h-4 text-[#1A3D3D]" /><span className="text-[15px] md:text-sm font-bold text-[#1A3D3D]">Ir al Editor</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
-                    </div>
-                  </nav>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      <main id="main-content" className="max-w-[1440px] mx-auto pt-6 px-6 md:px-12 lg:px-24">
+      <main id="main-content" className="max-w-[1440px] mx-auto pt-28 md:pt-36 pb-12 px-6 md:px-12 lg:px-24 flex-grow">
         {view === 'grid' ? renderGrid() : view === 'detail' ? renderDetail() : view === 'insumoDetail' ? renderInsumoDetail() : view === 'wizard' ? renderCourseWizard() : view === 'insumoForm' ? renderInsumoForm() : view === 'propuesta' ? renderPropuesta() : renderAdvertise()}
       </main>
 
-      {/* FOOTER COMPACTO (Definitivo) */}
-      <footer ref={footerRef} className="w-full bg-gradient-to-br from-[#1A3D3D] to-[#2D6A6A] relative overflow-hidden mt-12 pt-12 pb-8 text-left print:hidden">
-        <div className="absolute top-0 left-0 w-full h-px bg-white/10"></div>
-        <div className="max-w-[1100px] mx-auto px-8 md:px-10 relative z-10 text-left">
-          
-          {/* BLOQUE DE CONTENIDO SUPERIOR */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-x-8 gap-y-8 mb-6 text-left">
-            
-            {/* COLUMNA 1: Branding */}
-            <div className="md:col-span-1 text-left">
-              <button onClick={() => navigate('/')} className="text-white font-['Montserrat'] font-bold text-2xl mb-4 text-left leading-none cursor-pointer block hover:opacity-80 transition-opacity">
-                El Portal<span className="text-white/40">.</span>
-              </button>
-              <p className="text-white/50 text-sm md:text-[13px] leading-relaxed font-medium text-left">
-                La red profesional exclusiva para medicina veterinaria de alta complejidad. Conectando talento con vocación.
-              </p>
-            </div>
+      {/* FOOTER IMPORTADO DESDE EL COMPONENTE EXTERNO */}
+      <div ref={footerRef} className="mt-auto shrink-0 w-full print:hidden">
+        <Footer onNavigate={(path) => navigate(path)} />
+      </div>
 
-            {/* COLUMNA 2: Repertorio */}
-            <div>
-              <h4 className="text-white font-bold text-[11px] md:text-[10px] uppercase tracking-[0.3em] mb-4">Repertorio</h4>
-              <ul className="space-y-2 text-white/40 text-sm">
-                <li><button onClick={() => { setView('grid'); window.scrollTo(0,0); }} className="hover:text-white transition-colors">Cursos y Seminarios</button></li>
-                <li><button onClick={() => { setView('grid'); window.scrollTo(0,0); }} className="hover:text-white transition-colors">Insumos</button></li>
-              </ul>
-            </div>
-
-            {/* COLUMNA 3: Comunidad */}
-            <div>
-              <h4 className="text-white font-bold text-[11px] md:text-[10px] uppercase tracking-[0.3em] mb-4">Comunidad</h4>
-              <ul className="space-y-2 text-white/40 text-sm">
-                <li><button onClick={() => navigate('/bolsa-de-trabajo')} className="hover:text-white transition-colors">Bolsa de Trabajo</button></li>
-                <li><button onClick={() => navigate('/inicio')} className="hover:text-white transition-colors">Foro de Discusión</button></li>
-              </ul>
-            </div>
-
-            {/* COLUMNA 4: Contacto */}
-            <div>
-              <h4 className="text-white font-bold text-[11px] md:text-[10px] uppercase tracking-[0.3em] mb-4">Contacto</h4>
-              <ul className="space-y-2 text-white/40 text-sm leading-none">
-                <li>
-                  <a href="mailto:elportalveterinario.arg@gmail.com" className="flex items-center gap-3 hover:text-white transition-colors">
-                    <Mail className="w-4 h-4 shrink-0" /> 
-                    <span className="truncate">elportalveterinario.arg@gmail.com</span>
-                  </a>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Globe className="w-4 h-4" /> elportal.vet
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          {/* FILA DE CRÉDITOS UNIFICADA */}
-          <div className="flex flex-row items-center justify-center gap-x-8 mb-10 pt-4">
-            
-            {/* Iconos Redes */}
-            <div className="flex gap-3 shrink-0">
-              <a href="#" aria-label="Facebook" className="w-9 h-9 bg-white/5 rounded-lg flex items-center justify-center text-white/70 hover:bg-white hover:text-[#1A3D3D] transition-all">
-                <Facebook className="w-4 h-4" />
-              </a>
-              <a href="#" aria-label="Instagram" className="w-9 h-9 bg-white/5 rounded-lg flex items-center justify-center text-white/70 hover:bg-white hover:text-[#1A3D3D] transition-all">
-                <Instagram className="w-4 h-4" />
-              </a>
-              <a href="#" aria-label="Linkedin" className="w-9 h-9 bg-white/5 rounded-lg flex items-center justify-center text-white/70 hover:bg-white hover:text-[#1A3D3D] transition-all">
-                <Linkedin className="w-4 h-4" />
-              </a>
-            </div>
-            
-            {/* Copyright */}
-            <div className="text-white/40 text-[11px] md:text-xs font-medium leading-relaxed whitespace-nowrap shrink-0">
-              <p>&copy; {new Date().getFullYear()} El Portal. Todos los derechos reservados.</p>
-            </div>
-
-            {/* Legales */}
-            <div className="text-white/40 text-[11px] md:text-xs font-medium flex items-center gap-2 shrink-0">
-              <button onClick={() => navigate('/terminos-y-condiciones')} className="underline hover:text-white transition-colors">Términos</button>
-              <span className="opacity-20">•</span>
-              <button onClick={() => navigate('/politica-de-privacidad')} className="underline hover:text-white transition-colors">Privacidad</button>
-            </div>
-          </div>
-
-          {/* BARRA INFERIOR FINAL - Letras en blanco */}
-          <div className="pt-6 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-white font-bold text-[11px] md:text-[10px] uppercase tracking-[0.3em]">creado por Belén M. Arenas</p>
-            <div className="text-white text-[11px] md:text-[10px] uppercase tracking-[0.3em] font-medium flex items-center gap-1.5 group cursor-default">
-              <span>Hecho con</span>
-              <Heart className="w-3 h-3 text-red-400/80 group-hover:text-red-400 group-hover:scale-110 transition-all duration-300 fill-current" aria-hidden="true" />
-              <span>en Argentina.</span>
-            </div>
-            <div className="flex items-center gap-2 text-white">
-              <ShieldCheck className="w-3.5 h-3.5" aria-hidden="true" />
-              <span className="text-[11px] md:text-[10px] font-bold uppercase tracking-[0.3em] leading-none">Única plataforma veterinaria oficial</span>
-            </div>
-          </div>
-        </div>
-      </footer>
-
-      {/* BANNER DE COOKIES */}
-      {showCookieBanner && !isFooterVisible && (
-        <div className="fixed bottom-0 left-0 w-full bg-[#0a1e1e]/95 backdrop-blur-md border-t border-white/10 z-[100] py-4 px-8 flex flex-col md:flex-row items-center justify-between gap-4 animate-slide-up shadow-2xl">
-          <div className="flex items-center gap-3 text-white/60 text-[11px] font-medium text-center md:text-left">
-            <Info size={14} className="text-[#2D6A6A] shrink-0" />
-            <p>Utilizamos cookies para mejorar tu experiencia. Al continuar navegando, aceptás nuestros términos.</p>
-          </div>
-          <button 
-            onClick={() => setShowCookieBanner(false)}
-            className="bg-[#2D6A6A] hover:bg-white text-white hover:text-[#1A3D3D] px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg"
-          >
-            Entendido
-          </button>
-        </div>
-      )}
+      {/* BANNER DE COOKIES EXTERNO */}
+      <Cookies isFooterVisible={isFooterVisible} />
 
     </div>
   );
-}             
+}

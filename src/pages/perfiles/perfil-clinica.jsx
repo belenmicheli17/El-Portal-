@@ -175,10 +175,10 @@ export default function App() {
 
             <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
               <a href={`https://wa.me/${data.clinica.whatsapp}`} className="flex items-center justify-center gap-2.5 bg-[#25D366] text-white px-8 py-4 rounded-2xl font-black uppercase text-[11px] shadow-lg tracking-widest">
-                <Phone className="w-4 h-4" /> WhatsApp Directo
+                <Phone className="w-4 h-4" /> Enviar WhatsApp 
               </a>
               <a href="#servicios" className="flex items-center justify-center gap-2.5 bg-white border-2 border-gray-100 text-[#1A3D3D] px-8 py-4 rounded-2xl font-black uppercase text-[11px] hover:border-[#2D6A6A]/30 transition-all tracking-widest">
-                Ver Especialidades
+                Ver Servicios
               </a>
             </div>
           </div>
@@ -220,31 +220,7 @@ export default function App() {
           </div>
         </div>
 
-        {/* HIGHLIGHTS BAR */}
-        <div className="max-w-[1100px] mx-auto px-6 md:px-10 pb-6 md:pb-8">
-           <div className="bg-[#F4F7F7] border border-gray-100 rounded-[24px] p-5 grid grid-cols-2 md:grid-cols-4 gap-4 divide-x divide-gray-200">
-              <div className="flex flex-col items-center text-center px-2">
-                 <Building2 className="w-6 h-6 text-[#2D6A6A] mb-2" />
-                 <p className="text-sm font-black text-[#1A3D3D] font-['Montserrat'] uppercase tracking-tight">Quirófano Propio</p>
-                 <p className="text-[9px] font-bold text-gray-400 uppercase mt-1">Alta Complejidad</p>
-              </div>
-              <div className="flex flex-col items-center text-center px-2">
-                 <Users className="w-6 h-6 text-[#2D6A6A] mb-2" />
-                 <p className="text-sm font-black text-[#1A3D3D] font-['Montserrat'] uppercase tracking-tight">Especialistas</p>
-                 <p className="text-[9px] font-bold text-gray-400 uppercase mt-1">Atención Integral</p>
-              </div>
-              <div className="flex flex-col items-center text-center px-2">
-                 <Microscope className="w-6 h-6 text-[#2D6A6A] mb-2" />
-                 <p className="text-sm font-black text-[#1A3D3D] font-['Montserrat'] uppercase tracking-tight">Laboratorio 24h</p>
-                 <p className="text-[9px] font-bold text-gray-400 uppercase mt-1">Resultados en el día</p>
-              </div>
-              <div className="flex flex-col items-center text-center px-2">
-                 <Activity className="w-6 h-6 text-[#2D6A6A] mb-2" />
-                 <p className="text-sm font-black text-[#1A3D3D] font-['Montserrat'] uppercase tracking-tight">Internación</p>
-                 <p className="text-[9px] font-bold text-gray-400 uppercase mt-1">Monitoreo Continuo</p>
-              </div>
-           </div>
-        </div>
+      
       </main>
 
       {/* NUESTRA HISTORIA */}

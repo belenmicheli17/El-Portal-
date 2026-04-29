@@ -953,17 +953,13 @@ export default function EditorClinico() {
         </div>
       </div>
 
-      <footer className="w-full bg-[#1A3D3D] relative overflow-hidden pt-16 pb-12 text-left print:hidden mt-16 border-t-[6px] border-[#2D6A6A]">
+      <footer className="w-full bg-[#1A3D3D] relative overflow-hidden pt-5 pb-5 text-left print:hidden mt-16 border-t-[6px] ">
         <div className="max-w-[1200px] mx-auto px-8 md:px-10 relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
            <div className="flex items-center gap-3 opacity-60">
               <ShieldCheck className="w-6 h-6 text-white" />
               <p className="text-[12px] font-bold uppercase tracking-widest text-white">Gestión Segura · El Portal</p>
            </div>
-           <div className="text-white/50 text-[11px] uppercase tracking-[0.3em] font-medium flex items-center gap-2">
-              <span>Hecho con</span>
-              <Heart className="w-4 h-4 text-red-400/80 fill-current" />
-              <span>en Argentina.</span>
-           </div>
+           
         </div>
       </footer>
     </div>

@@ -1,12 +1,33 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Camera, Info, AlertCircle, Save, X, Plus, Trash2, 
-  MapPin, ShieldCheck, Check,
+  MapPin, ShieldCheck, Check, Video,
   Smartphone, Home, Mail, Award, ChevronDown, ChevronRight,
   ExternalLink, Heart, Undo2, Redo2, FileCheck, 
   Building2, AlertTriangle, Building, PackageSearch, ImagePlus,
-  Globe, Truck, FileText, CreditCard, Wrench, Crop, Briefcase, User, Lock, Eye, EyeOff, Box, ArrowLeft, Tag, DollarSign, List
+  Globe, Truck, FileText, CreditCard, Wrench, Crop, Briefcase, User, Lock, Eye, EyeOff, Box, ArrowLeft, Tag, DollarSign, List, Clock, Loader2
 } from 'lucide-react';
+
+// ==========================================
+// FIREBASE IMPORTS (Conectado a tu archivo central)
+// ==========================================
+import { signInAnonymously, onAuthStateChanged, getAuth } from 'firebase/auth';
+import { doc, setDoc, getDoc, getFirestore } from 'firebase/firestore';
+import { initializeApp } from 'firebase/app';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA9DsYU4-LEelrXFIiPpk9_nYErpZSqYTM",
+  authDomain: "el-portal-veterinario-3ab72.firebaseapp.com",
+  projectId: "el-portal-veterinario-3ab72",
+  storageBucket: "el-portal-veterinario-3ab72.firebasestorage.app",
+  messagingSenderId: "939343810474",
+  appId: "1:939343810474:web:8e31c0f498330e85cfe5d3",
+  measurementId: "G-6VQ6GT3ZQ9"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
 // ==========================================
 // CONSTANTES
@@ -141,7 +162,7 @@ const SelectGroup = ({ label, id, value, onChange, options, tooltip, required })
         id={id} name={id} value={value} onChange={onChange}
         className="w-full bg-gray-50/50 border border-gray-200 focus:border-[#2D6A6A] rounded-2xl px-5 py-3.5 text-base font-medium focus:outline-none transition-all text-[#1A3D3D] appearance-none"
       >
-        <option value="" disabled>Seleccionar opción...</option>
+        <option value="" disabled className="text-gray-400">Seleccionar opción...</option>
         {options.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
       </select>
       <ChevronDown className="w-5 h-5 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -198,11 +219,12 @@ const SimpleCropper = ({ imageSrc, onCrop, onCancel, type }) => {
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const imgRef = useRef(null);
   
-  // Para logos y productos usamos 256x256 (1:1), para banners usamos 600x200 (3:1)
   const isBanner = type === 'banner';
-  const CROP_WIDTH = isBanner ? 600 : 256;
-  const CROP_HEIGHT = isBanner ? 200 : 256;
-  const borderRadius = isBanner ? '1.5rem' : (type === 'logo' ? '1.5rem' : '1.5rem'); // Productos también con bordes redondeados
+  const isNosotros = type === 'imagenNosotros';
+  // Tamaños base de recorte en la UI
+  const CROP_WIDTH = isBanner ? 600 : (isNosotros ? 400 : 256);
+  const CROP_HEIGHT = isBanner ? 200 : (isNosotros ? 300 : 256);
+  const borderRadius = isBanner ? '1.5rem' : '1.5rem';
 
   const handlePointerDown = (e) => {
     if (e.cancelable !== false) e.preventDefault();
@@ -223,9 +245,9 @@ const SimpleCropper = ({ imageSrc, onCrop, onCancel, type }) => {
 
   const handleCropClick = () => {
     const canvas = document.createElement('canvas');
-    // Generar imagen final en alta resolucion
-    canvas.width = isBanner ? 1200 : 800; // 800x800 para productos
-    canvas.height = isBanner ? 400 : 800;
+    // Generar imagen final en alta resolucion según el tipo
+    canvas.width = isBanner ? 1200 : (isNosotros ? 800 : 800); 
+    canvas.height = isBanner ? 400 : (isNosotros ? 600 : 800);
     const ctx = canvas.getContext('2d');
 
     const img = imgRef.current;
@@ -305,8 +327,12 @@ const CustomGrip = () => (
 // APLICACIÓN PRINCIPAL
 // ==========================================
 export default function EditorEmpresa() { 
+  const [user, setUser] = useState(null);
+  const [isDataLoading, setIsDataLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+
   const [modalConfig, setModalConfig] = useState({ isOpen: false, title: '', message: '', type: 'info' });
-  const [openSection, setOpenSection] = useState(null); // Iniciado en null para que todos los acordeones arranquen cerrados
+  const [openSection, setOpenSection] = useState(null);
   const [cropModal, setCropModal] = useState({ isOpen: false, imageSrc: null, type: null });
 
   // ESTADOS PARA EL CATÁLOGO MODAL (Con UX fluida)
@@ -323,6 +349,9 @@ export default function EditorEmpresa() {
   const scrollInterval = useRef(null);
   
   const productoInputRef = useRef(null);
+  const logoInputRef = useRef(null);
+  const bannerInputRef = useRef(null);
+  const imagenNosotrosInputRef = useRef(null);
 
   const initialData = {
     // Datos de Cuenta
@@ -335,13 +364,30 @@ export default function EditorEmpresa() {
     nombreEmpresa: 'VetSur Insumos Médicos',
     razonSocial: 'VetSur S.R.L.',
     cuit: '30-12345678-9',
-    categoria: 'Distribuidor Oficial', 
-    bioCorta: 'Líderes en insumos hospitalarios y equipamiento quirúrgico para clínicas de alta complejidad en todo el país.',
-    descripcion: 'Fundada en 2010, VetSur nace con el objetivo de proveer tecnología médica de vanguardia. Nuestro equipo técnico garantiza un servicio post-venta inigualable y capacitaciones constantes para el uso de nuestro equipamiento.',
+    categoria: 'Distribuidor Oficial Nacional', 
+    bioCorta: 'Más de 15 años equipando quirófanos y consultorios veterinarios en toda la Argentina con tecnología de punta.',
+    descripcion: 'Entendemos que el equipamiento de tu clínica es el corazón de tus diagnósticos y cirugías. Por eso, en VetSur no solo somos distribuidores, somos socios estratégicos del profesional veterinario.',
+    
+    // Multimedia Trayectoria (NUEVO)
+    imagenNosotros: '',
+    videoNosotros: '',
+
+    // Ubicacion y Horarios (NUEVO)
+    direccion: 'Parque Industrial Morón, Nave 4, Buenos Aires',
+    mapaUrl: 'https://maps.google.com',
+    horariosAtencion: 'Lunes a Viernes de 09:00 a 17:00 hs',
+    modalidadAtencion: 'Atención presencial exclusiva con cita previa.',
     zonaCobertura: ['CABA', 'Buenos Aires', 'Córdoba', 'Santa Fe'], 
+    
+    // Contacto y Redes (NUEVO)
     whatsappVentas: '5491145678901',
     emailVentas: 'ventas@vetsur.com.ar',
     web: 'https://vetsur.com.ar',
+    instagram: '',
+    facebook: '',
+    linkedin: '',
+
+    // Catálogo y Condiciones
     linkCatalogo: 'https://drive.google.com/catalogo-vetsur', 
     marcasRepresentadas: 'Mindray, Zoetis, Braun, 3M',
     categorias: { alimentos: false, farmacia: true, equipamiento: true, descartables: true, instrumental: true, software: false },
@@ -350,41 +396,89 @@ export default function EditorEmpresa() {
     garantia: { oficial: true, tecnicoPropio: true, repuestos: true, asesoramiento: true },
     
     // Array de productos destacados
-    productosDestacados: [
-      { 
-        id: 1, 
-        titulo: "Ecógrafo Portátil Mindray V1", 
-        categoria: "Imágenes", 
-        precio: "2.500.000", 
-        imagenes: [
-          "https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=800&q=80"
-        ],
-        descripcionLarga: "Sistema de ultrasonido Doppler a color, diseñado específicamente para uso veterinario. Su diseño ultraligero y batería de larga duración lo hacen ideal tanto para consultorio como para salidas a campo.",
-        caracteristicas: ["Pantalla LED 15 pulgadas", "Batería con 90 min de autonomía", "Sondas microconvex y lineal incluidas"]
-      },
-      { 
-        id: 2, 
-        titulo: "Monitor Multiparamétrico Vet", 
-        categoria: "Quirófano", 
-        precio: "850.000", 
-        imagenes: [
-          "https://images.unsplash.com/photo-1551076805-e1869033e561?auto=format&fit=crop&w=800&q=80"
-        ],
-        descripcionLarga: "Monitor preconfigurado para parámetros vitales en pequeños y grandes animales. Algoritmos optimizados para detectar frecuencias cardíacas elevadas.",
-        caracteristicas: ["Medición de ECG, SpO2, NIBP", "Pantalla táctil de 12.1\"", "Alarmas configurables"]
-      }
-    ]
+    productosDestacados: []
   };
 
   const [_formData, _setFormData] = useState(initialData);
   const [past, setPast] = useState([]);
   const [future, setFuture] = useState([]);
   const isUndoRedAction = useRef(false);
-  
-  const logoInputRef = useRef(null);
-  const bannerInputRef = useRef(null);
 
   const formData = _formData;
+
+  // 1. INICIALIZAR USUARIO ANONIMO Y CONECTAR
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        await signInAnonymously(auth);
+      } catch (error) {
+        console.error("Error de autenticación:", error);
+        setIsDataLoading(false);
+      }
+    };
+    initAuth();
+
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // 2. CARGAR DATOS DE FIRESTORE
+  useEffect(() => {
+    const loadDataFromCloud = async () => {
+      try {
+        const userId = user ? user.uid : "proveedor_prueba_123";
+        const docRef = doc(db, 'proveedores', userId);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          _setFormData({ ...initialData, ...docSnap.data() }); 
+        } else {
+          _setFormData({
+            ...initialData,
+            nombreEmpresa: "Mi Empresa Veterinaria",
+            categoria: "Distribuidor Oficial Nacional",
+            zonaCobertura: ['CABA', 'Buenos Aires']
+          });
+        }
+      } catch (error) {
+        console.error("Error cargando perfil:", error);
+      } finally {
+        setIsDataLoading(false);
+      }
+    };
+
+    setTimeout(loadDataFromCloud, 1000);
+  }, [user]);
+
+  // 3. GUARDAR DATOS EN FIRESTORE
+  const handleGuardarEnLaNube = async () => {
+    setIsSaving(true);
+    try {
+      const userId = user ? user.uid : "proveedor_prueba_123";
+      const docRef = doc(db, 'proveedores', userId);
+      await setDoc(docRef, formData);
+
+      setModalConfig({ 
+        isOpen: true, 
+        title: '¡Guardado Exitoso!', 
+        message: 'Tus datos se subieron a tu Base de Datos oficial en Firebase. Revisá tu consola.', 
+        type: 'success' 
+      });
+    } catch (error) {
+      console.error("Error guardando:", error);
+      setModalConfig({ 
+        isOpen: true, 
+        title: 'Error de Conexión', 
+        message: `Firebase dice: ${error.message}`, 
+        type: 'error' 
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
   
   const setFormData = (action) => {
     _setFormData((prev) => {
@@ -403,10 +497,11 @@ export default function EditorEmpresa() {
     [
       formData.nombreEmpresa, formData.categoria, formData.bioCorta, 
       formData.descripcion, formData.whatsappVentas, formData.emailVentas,
+      formData.direccion,
       Object.values(formData.categorias).some(v => v),
       Object.values(formData.logistica).some(v => v),
       formData.productosDestacados.length > 0 
-    ].filter(Boolean).length / 9 * 100
+    ].filter(Boolean).length / 10 * 100
   );
 
   const undo = () => {
@@ -479,6 +574,8 @@ export default function EditorEmpresa() {
       setFormData(prev => ({ ...prev, foto: croppedBase64 }));
     } else if (cropModal.type === 'banner') {
       setFormData(prev => ({ ...prev, banner: croppedBase64 }));
+    } else if (cropModal.type === 'imagenNosotros') {
+      setFormData(prev => ({ ...prev, imagenNosotros: croppedBase64 }));
     } else if (cropModal.type === 'producto' && productoEnEdicion) {
       setProductoEnEdicion(prev => ({ ...prev, imagenes: [...prev.imagenes, croppedBase64].slice(0, 4) }));
     }
@@ -513,6 +610,7 @@ export default function EditorEmpresa() {
       id: Date.now(),
       titulo: '',
       categoria: '',
+      etiqueta: '', // NUEVO
       precio: '',
       imagenes: [],
       descripcionLarga: '',
@@ -579,7 +677,7 @@ export default function EditorEmpresa() {
       if (scrollContainerRef.current) {
         scrollContainerRef.current.scrollTop += amount;
       }
-    }, 16); // Aproximadamente 60fps
+    }, 16);
   };
 
   const stopScrolling = () => {
@@ -593,19 +691,19 @@ export default function EditorEmpresa() {
     if (!scrollContainerRef.current) return;
     const container = scrollContainerRef.current;
     const rect = container.getBoundingClientRect();
-    const edge = 80; // Zona de detección (80px desde el borde)
+    const edge = 80; 
     
     if (clientY >= rect.top && clientY <= rect.top + edge) {
-      startScrolling(-10); // Deslizar hacia arriba
+      startScrolling(-10); 
     } else if (clientY <= rect.bottom && clientY >= rect.bottom - edge) {
-      startScrolling(10); // Deslizar hacia abajo
+      startScrolling(10); 
     } else {
       stopScrolling();
     }
   };
 
   // ==========================================
-  // LÓGICA DRAG & DROP PARA PRODUCTOS (Desktop & Mobile)
+  // LÓGICA DRAG & DROP PARA PRODUCTOS
   // ==========================================
   const handleDragStart = (e, index) => {
     setDraggedItem(index);
@@ -651,7 +749,6 @@ export default function EditorEmpresa() {
     setDraggedItem(null);
   };
 
-  // Lógica específica para D&D Táctil (Móvil)
   const handleTouchMove = (e) => {
     const touch = e.touches[0];
     checkAutoScroll(touch.clientY);
@@ -675,19 +772,16 @@ export default function EditorEmpresa() {
     }
   };
 
-  // Limpiar auto-scroll si el componente se desmonta inesperadamente
   useEffect(() => {
     return () => stopScrolling();
   }, []);
 
-  // Función útil para asegurar que el precio tenga $ sin duplicarlo
   const formatearPrecio = (precioText) => {
     if (!precioText) return '';
-    const numLimpiado = precioText.replace(/^\$\s*/, ''); // Quita el $ si ya lo tiene al principio
+    const numLimpiado = precioText.replace(/^\$\s*/, '');
     return `$ ${numLimpiado}`;
   };
 
-  // Controlar scroll del body cuando el modal de catálogo está abierto
   useEffect(() => {
     if (isCatalogoMounted) {
       document.body.style.overflow = 'hidden';
@@ -705,22 +799,29 @@ export default function EditorEmpresa() {
     return () => document.head.removeChild(link);
   }, []);
 
+  if (isDataLoading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#F4F7F7] font-['Montserrat']">
+        <Loader2 className="w-12 h-12 text-[#2D6A6A] animate-spin mb-4" />
+        <h2 className="text-xl font-black text-[#1A3D3D]">Conectando con la base de datos...</h2>
+        <p className="text-gray-500 font-medium">Buscando perfil de Firebase</p>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-[#F4F7F7] min-h-screen font-['Inter'] antialiased text-left text-[#1A3D3D] selection:bg-[#2D6A6A] selection:text-white relative w-full overflow-x-hidden">
       
-      {/* PANEL LATERAL (DRAWER) DEL CATÁLOGO DE PRODUCTOS (Transición Fluida) */}
+      {/* PANEL LATERAL (DRAWER) DEL CATÁLOGO DE PRODUCTOS */}
       {isCatalogoMounted && (
         <div className="fixed inset-0 z-[100] flex justify-end">
-          {/* Overlay Oscuro con Fade */}
           <div 
             className={`absolute inset-0 bg-[#1A3D3D]/80 backdrop-blur-sm transition-opacity duration-400 ease-in-out ${isCatalogoVisible ? 'opacity-100' : 'opacity-0'}`}
             onClick={closeDrawer}
           ></div>
 
-          {/* Panel Lateral Animado */}
           <div className={`relative w-full md:w-[60%] lg:w-[50%] h-full bg-[#F4F7F7] shadow-[-20px_0_60px_rgba(26,61,61,0.3)] z-[101] flex flex-col transition-transform duration-400 ease-out ${isCatalogoVisible ? 'translate-x-0' : 'translate-x-full'}`}>
             
-            {/* HEADER DRAWER CATÁLOGO */}
             <div className="bg-white px-8 py-6 border-b border-gray-100 flex justify-between items-center shrink-0 z-10 shadow-sm relative">
                <div>
                  <h2 className="text-2xl font-black font-['Montserrat'] text-[#1A3D3D] tracking-tight">Catálogo de Productos</h2>
@@ -738,7 +839,6 @@ export default function EditorEmpresa() {
                </div>
             </div>
 
-            {/* CONTENIDO DRAWER CATÁLOGO */}
             <div ref={scrollContainerRef} className="p-6 md:p-8 overflow-y-auto flex-1 relative custom-scrollbar">
               {productoEnEdicion ? (
                 /* EDITOR DE UN PRODUCTO */
@@ -750,12 +850,30 @@ export default function EditorEmpresa() {
                   <div className="bg-white p-6 md:p-8 rounded-[32px] border border-gray-200 shadow-sm relative">
                      <h4 className="font-black text-[#1A3D3D] text-xl mb-6">{productoEnEdicion.titulo ? "Editar Producto" : "Nuevo Producto"}</h4>
                      
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
-                        <InputGroup label="Título del Producto" id="titulo" value={productoEnEdicion.titulo} onChange={handleProductoChange} required />
-                        <InputGroup label="Categoría / Rubro" id="categoria" value={productoEnEdicion.categoria} onChange={handleProductoChange} placeholder="Ej: Quirófano, Insumos..." />
+                     <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6">
+                        <div className="md:col-span-2">
+                           <InputGroup label="Título del Producto" id="titulo" value={productoEnEdicion.titulo} onChange={handleProductoChange} required />
+                        </div>
+                        <InputGroup label="Categoría / Rubro" id="categoria" value={productoEnEdicion.categoria} onChange={handleProductoChange} placeholder="Ej: Quirófano..." />
                      </div>
 
-                     <InputGroup label="Precio de Referencia (Opcional)" id="precio" value={productoEnEdicion.precio} onChange={handleProductoChange} placeholder="Ej: 2.500.000, 1.500 USD, Consultar" tooltip="El símbolo $ se agregará automáticamente en tu perfil público." />
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+                        <InputGroup label="Precio de Referencia (Opcional)" id="precio" value={productoEnEdicion.precio} onChange={handleProductoChange} placeholder="Ej: 2.500.000, Consultar" tooltip="El símbolo $ se agregará automáticamente en tu perfil público." />
+                        
+                        {/* NUEVO CAMPO DE ETIQUETAS */}
+                        <SelectGroup 
+                           label="Etiqueta Especial" 
+                           id="etiqueta" 
+                           value={productoEnEdicion.etiqueta || ""} 
+                           onChange={handleProductoChange}
+                           options={[
+                             { value: "", label: "Ninguna" },
+                             { value: "Nuevo", label: "Nuevo (Lanzamiento)" },
+                             { value: "Promo", label: "Promo (Destacado)" }
+                           ]}
+                           tooltip="Añade un badge visual en la foto del producto para llamar la atención."
+                        />
+                     </div>
 
                      {/* IMÁGENES DEL PRODUCTO */}
                      <div className="mb-8 w-full bg-gray-50/50 p-6 rounded-3xl border border-gray-100">
@@ -833,7 +951,7 @@ export default function EditorEmpresa() {
                   </div>
                 </div>
               ) : (
-                /* LISTA DE PRODUCTOS (VISTA PRINCIPAL DEL DRAWER) */
+                /* LISTA DE PRODUCTOS */
                 <div className="mx-auto w-full max-w-3xl">
                   {!productoEnEdicion && (
                      <button onClick={iniciarNuevoProducto} className="w-full mb-6 sm:hidden bg-[#1A3D3D] text-white px-6 py-4 rounded-xl font-bold text-sm hover:bg-[#2D6A6A] transition-all flex items-center justify-center gap-2 shadow-md">
@@ -864,7 +982,6 @@ export default function EditorEmpresa() {
                       </div>
 
                       {formData.productosDestacados.map((prod, idx) => {
-                         // Lógica visual del Drop
                          const isDragOverTop = dragOverItem === idx && draggedItem > idx;
                          const isDragOverBottom = dragOverItem === idx && draggedItem < idx;
                          const isBeingDragged = draggedItem === idx;
@@ -886,7 +1003,6 @@ export default function EditorEmpresa() {
                                 ${isDragOverBottom ? 'border-b-[4px] border-b-[#2D6A6A] translate-y-2 shadow-xl' : ''}
                               `}
                             >
-                              {/* Drag Handle: Visible siempre (Desktop & Mobile) */}
                               <div 
                                 className="flex items-center justify-center shrink-0 w-8 md:w-6 h-12 text-gray-300 hover:text-[#2D6A6A] cursor-grab active:cursor-grabbing transition-colors touch-none"
                                 title="Arrastrar para ordenar"
@@ -913,6 +1029,11 @@ export default function EditorEmpresa() {
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-1.5 flex-wrap pointer-events-none">
                                     <span className="bg-[#2D6A6A]/10 text-[#2D6A6A] text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider">{prod.categoria || 'General'}</span>
+                                    {prod.etiqueta && (
+                                      <span className={`text-white text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md ${prod.etiqueta === 'Nuevo' ? 'bg-[#E4405F]' : 'bg-amber-500'}`}>
+                                        {prod.etiqueta}
+                                      </span>
+                                    )}
                                 </div>
                                 <h4 className="font-black text-[#1A3D3D] text-base leading-tight mb-1 pointer-events-none">{prod.titulo}</h4>
                                 {prod.precio ? (
@@ -948,7 +1069,7 @@ export default function EditorEmpresa() {
           <div className="bg-white rounded-[32px] w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col animate-in zoom-in duration-200">
             <div className="p-6 border-b border-gray-100 flex justify-between items-center">
               <div>
-                <h3 className="font-bold font-['Montserrat'] text-xl text-[#1A3D3D]">Encuadre de Imagen ({cropModal.type === 'logo' ? 'Logo' : cropModal.type === 'producto' ? 'Producto' : 'Portada'})</h3>
+                <h3 className="font-bold font-['Montserrat'] text-xl text-[#1A3D3D]">Encuadre de Imagen ({cropModal.type === 'logo' ? 'Logo' : cropModal.type === 'producto' ? 'Producto' : cropModal.type === 'imagenNosotros' ? 'Empresa' : 'Portada'})</h3>
                 <p className="text-sm text-gray-500 mt-1">Arrastra para mover la imagen o utiliza el zoom.</p>
               </div>
               <button onClick={() => setCropModal({ isOpen: false })} className="p-2.5 bg-gray-100 rounded-full hover:bg-red-100 hover:text-red-500 transition-colors"><X className="w-6 h-6" /></button>
@@ -1072,7 +1193,7 @@ export default function EditorEmpresa() {
                 </div>
               </div>
 
-              <InputGroup label="Nombre" id="nombreEmpresa" value={formData.nombreEmpresa} onChange={handleChange} required />
+              <InputGroup label="Nombre de la Empresa" id="nombreEmpresa" value={formData.nombreEmpresa} onChange={handleChange} required />
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
                  <InputGroup label="Razón Social" id="razonSocial" value={formData.razonSocial} onChange={handleChange} />
@@ -1082,7 +1203,7 @@ export default function EditorEmpresa() {
               <SelectGroup 
                 label="Etiqueta de Categoría Principal" id="categoria" value={formData.categoria} onChange={handleChange} required
                 options={[
-                  { value: "Distribuidor Oficial", label: "Distribuidor Oficial" },
+                  { value: "Distribuidor Oficial Nacional", label: "Distribuidor Oficial Nacional" },
                   { value: "Fabricante Nacional", label: "Fabricante Nacional" },
                   { value: "Importador Directo", label: "Importador Directo" },
                   { value: "Laboratorio Veterinario", label: "Laboratorio Veterinario" }
@@ -1092,6 +1213,27 @@ export default function EditorEmpresa() {
               <InputGroup type="textarea" rows="2" label="Slogan o Bio Corta" id="bioCorta" value={formData.bioCorta} onChange={handleChange} maxLength={150} tooltip="Frase gancho para destacar en el directorio." />
               
               <InputGroup type="textarea" rows="4" label="Descripción Completa" id="descripcion" value={formData.descripcion} onChange={handleChange} required tooltip="Detalla la trayectoria, propuesta de valor y diferenciales de tu empresa." />
+
+              {/* NUEVO BLOQUE: MULTIMEDIA DE LA EMPRESA */}
+              <div className="pt-4 mt-6 border-t border-gray-100">
+                 <h4 className="flex items-center text-xs font-bold text-[#1A3D3D] uppercase tracking-widest leading-none mb-4">
+                   Multimedia de Trayectoria
+                 </h4>
+                 <div className="flex flex-col sm:flex-row gap-6 mb-4">
+                    <div className="relative group cursor-pointer w-full sm:w-[220px] h-[150px] shrink-0 text-left">
+                       <div onClick={() => triggerFileInput(imagenNosotrosInputRef)} className={`w-full h-full rounded-2xl overflow-hidden border-2 border-dashed ${formData.imagenNosotros ? 'border-transparent' : 'border-gray-200'} transition-all flex items-center justify-center bg-gray-50 block cursor-pointer relative group/img shadow-sm hover:border-[#2D6A6A]`}>
+                         {formData.imagenNosotros ? <img src={formData.imagenNosotros} className="w-full h-full object-cover" alt="Nosotros" /> : <div className="text-center"><ImagePlus className="w-6 h-6 text-gray-300 mx-auto mb-2" /><span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Foto Equipo/Sede</span></div>}
+                         <div className="absolute inset-0 bg-black/50 opacity-0 group-hover/img:opacity-100 flex items-center justify-center transition-opacity">
+                           <Camera className="w-6 h-6 text-white" />
+                         </div>
+                       </div>
+                       <input type="file" ref={imagenNosotrosInputRef} className="hidden" accept="image/*" onChange={(e) => handleFileSelect(e, 'imagenNosotros')} />
+                    </div>
+                    <div className="flex-1">
+                       <InputGroup label="Video Corporativo (YouTube/Vimeo)" id="videoNosotros" type="url" value={formData.videoNosotros} onChange={handleChange} canTest tooltip="Si tenés un video de presentación, añadí el link acá. Las clínicas verán un ícono de 'Play' sobre tu imagen." />
+                    </div>
+                 </div>
+              </div>
             </Accordion>
 
             {/* 2. CATÁLOGO GENERAL (LINKS) */}
@@ -1206,10 +1348,10 @@ export default function EditorEmpresa() {
               </div>
             </Accordion>
 
-            {/* 4. CONTACTO Y COBERTURA */}
-            <Accordion title="Contacto B2B y Cobertura" icon={MapPin} isOpen={openSection === 'contacto'} onToggle={() => setOpenSection(openSection === 'contacto' ? null : 'contacto')}>
+            {/* 4. CONTACTO Y UBICACIÓN (MODIFICADO) */}
+            <Accordion title="Ubicación, Contacto y Redes" icon={MapPin} isOpen={openSection === 'contacto'} onToggle={() => setOpenSection(openSection === 'contacto' ? null : 'contacto')}>
               
-              {/* GRILLA DE PROVINCIAS */}
+              {/* ZONA COBERTURA */}
               <div className="mb-8 w-full bg-gray-50/50 border border-gray-200 rounded-3xl p-6">
                  <div className="flex justify-between items-end mb-5">
                    <label className="flex items-center text-xs font-bold text-gray-500 uppercase tracking-widest leading-none">
@@ -1234,13 +1376,46 @@ export default function EditorEmpresa() {
                    })}
                  </div>
               </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
-                 <InputGroup label="WhatsApp Ventas (Sin '+')" id="whatsappVentas" value={formData.whatsappVentas} onChange={handleChange} required tooltip="Número principal para recibir cotizaciones o consultas de clínicas." />
-                 <InputGroup label="Email Comercial" id="emailVentas" type="email" value={formData.emailVentas} onChange={handleChange} />
+
+              {/* SEDE CENTRAL */}
+              <div className="pt-2 border-t border-gray-100">
+                 <h4 className="flex items-center gap-2 text-xs font-bold text-[#1A3D3D] uppercase tracking-widest leading-none mb-5 mt-6">
+                   <Building2 className="w-4 h-4 text-[#2D6A6A]" /> Sede Central y Atención
+                 </h4>
+                 <InputGroup label="Dirección Física" id="direccion" value={formData.direccion} onChange={handleChange} required />
+                 
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+                   <InputGroup label="Link a Google Maps" id="mapaUrl" type="url" value={formData.mapaUrl} onChange={handleChange} canTest />
+                   <InputGroup label="Horarios de Atención" id="horariosAtencion" value={formData.horariosAtencion} onChange={handleChange} placeholder="Ej: Lunes a Viernes de 9 a 18 hs" />
+                 </div>
+                 
+                 <InputGroup label="Modalidad de Atención" id="modalidadAtencion" value={formData.modalidadAtencion} onChange={handleChange} placeholder="Ej: Venta online 24/7. Showroom con cita previa." />
               </div>
               
-              <InputGroup label="Sitio Web Corporativo" id="web" type="url" value={formData.web} onChange={handleChange} canTest />
+              {/* CANALES DIGITALES */}
+              <div className="pt-2 border-t border-gray-100">
+                 <h4 className="flex items-center gap-2 text-xs font-bold text-[#1A3D3D] uppercase tracking-widest leading-none mb-5 mt-6">
+                   <Mail className="w-4 h-4 text-[#2D6A6A]" /> Canales Comerciales
+                 </h4>
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+                    <InputGroup label="WhatsApp Ventas (Sin '+')" id="whatsappVentas" value={formData.whatsappVentas} onChange={handleChange} required tooltip="Número principal para recibir cotizaciones o consultas de clínicas." />
+                    <InputGroup label="Email Comercial" id="emailVentas" type="email" value={formData.emailVentas} onChange={handleChange} />
+                 </div>
+                 <InputGroup label="Sitio Web Corporativo" id="web" type="url" value={formData.web} onChange={handleChange} canTest />
+              </div>
+
+              {/* REDES SOCIALES */}
+              <div className="pt-2 border-t border-gray-100">
+                 <h4 className="flex items-center gap-2 text-xs font-bold text-[#1A3D3D] uppercase tracking-widest leading-none mb-5 mt-6">
+                   <Globe className="w-4 h-4 text-[#2D6A6A]" /> Redes Sociales
+                 </h4>
+                 <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6">
+                    <InputGroup label="Instagram" id="instagram" type="url" value={formData.instagram} onChange={handleChange} canTest placeholder="https://instagram.com/..." />
+                    <InputGroup label="Facebook" id="facebook" type="url" value={formData.facebook} onChange={handleChange} canTest placeholder="https://facebook.com/..." />
+                    <InputGroup label="LinkedIn" id="linkedin" type="url" value={formData.linkedin} onChange={handleChange} canTest placeholder="https://linkedin.com/..." />
+                 </div>
+              </div>
+
             </Accordion>
           </div>
 
@@ -1271,10 +1446,12 @@ export default function EditorEmpresa() {
           {/* BOTÓN GUARDAR */}
           <div className="flex flex-col items-center gap-6 pb-16 w-full px-5 md:px-0">
             <button 
-              onClick={() => setModalConfig({ isOpen: true, title: 'Perfil Publicado', message: 'Los datos de tu empresa ya están visibles en la red.', type: 'info' })} 
-              className="w-full sm:w-auto bg-[#1A3D3D] text-white px-16 py-5 rounded-[20px] font-bold text-[13px] uppercase tracking-[0.2em] shadow-xl hover:bg-[#2D6A6A] hover:-translate-y-1 transition-all flex items-center justify-center gap-3 active:scale-95"
+              onClick={handleGuardarEnLaNube} 
+              disabled={isSaving}
+              className={`w-full sm:w-auto bg-[#1A3D3D] text-white px-16 py-5 rounded-[20px] font-bold text-[13px] uppercase tracking-[0.2em] shadow-xl transition-all flex items-center justify-center gap-3 ${isSaving ? 'opacity-70 cursor-not-allowed' : 'hover:bg-[#2D6A6A] hover:-translate-y-1 active:scale-95'}`}
             >
-              <Save className="w-5 h-5" /> Guardar Todo
+              {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />} 
+              {isSaving ? 'Guardando en la nube...' : 'Guardar Todo'}
             </button>
           </div>
         </div>
@@ -1309,7 +1486,7 @@ export default function EditorEmpresa() {
             <div className="mt-5 flex items-start gap-3 text-left">
               <div className="w-1.5 h-1.5 rounded-full bg-[#2D6A6A] mt-1.5 shrink-0"></div>
               <p className="text-gray-500 text-[13px] leading-relaxed font-medium italic">
-                {progress < 100 ? "Completá todas las secciones, incluyendo productos, para destacar en las búsquedas de las clínicas." : "¡Tu perfil está completamente optimizado para B2B!"}
+                {progress < 100 ? "Completá todas las secciones (incluida la dirección de tu sede) para destacar en las búsquedas." : "¡Tu perfil está completamente optimizado para B2B!"}
               </p>
             </div>
           </div>
@@ -1370,8 +1547,13 @@ export default function EditorEmpresa() {
                   <h4 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3 px-1">Productos Destacados</h4>
                   <div className="flex gap-3 overflow-x-auto pb-4 snap-x hide-scrollbar" style={{scrollbarWidth: 'none'}}>
                     {formData.productosDestacados.map(prod => (
-                      <div key={prod.id} className="min-w-[200px] w-[200px] bg-white border border-gray-100 rounded-[20px] p-3 shadow-sm snap-start shrink-0 flex flex-col transition-all duration-300">
-                        <div className="w-full h-[120px] bg-gray-50 rounded-xl overflow-hidden mb-3 border border-gray-100">
+                      <div key={prod.id} className="min-w-[200px] w-[200px] bg-white border border-gray-100 rounded-[20px] p-3 shadow-sm snap-start shrink-0 flex flex-col transition-all duration-300 relative">
+                        <div className="w-full h-[120px] bg-gray-50 rounded-xl overflow-hidden mb-3 border border-gray-100 relative">
+                          {prod.etiqueta && (
+                            <span className={`absolute top-1.5 right-1.5 text-white text-[8px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded shadow-sm z-10 ${prod.etiqueta === 'Nuevo' ? 'bg-[#E4405F]' : 'bg-amber-500'}`}>
+                              {prod.etiqueta}
+                            </span>
+                          )}
                           {prod.imagenes && prod.imagenes[0] ? (
                             <img src={prod.imagenes[0]} className="w-full h-full object-cover" alt="prod" />
                           ) : (

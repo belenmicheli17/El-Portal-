@@ -134,6 +134,9 @@ export default function BolsaTrabajo() {
         to { transform: translateY(0); opacity: 1; }
       }
       .animate-slide-up { animation: slideUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+      /* Hide scrollbar for segmented control */
+      .hide-scrollbar::-webkit-scrollbar { display: none; }
+      .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     `;
     document.head.appendChild(style);
 
@@ -144,9 +147,7 @@ export default function BolsaTrabajo() {
       { threshold: 0.5 }
     );
 
-    if (footerRef.current) {
-      observer.observe(footerRef.current);
-    }
+    if (footerRef.current) observer.observe(footerRef.current);
 
     return () => {
       document.head.removeChild(link);
@@ -181,6 +182,8 @@ export default function BolsaTrabajo() {
   };
 
   const handleJobClick = (job) => { setSelectedJob(job); setView('detail'); window.scrollTo(0,0); };
+
+  const handleClearFilters = () => { setProvinciasSel([]); setPuestosSel([]); setJobSearchTerm(''); };
 
   // Funciones Formulario Clínica
   const handleJobFormChange = (field, value) => { setJobForm(prev => ({ ...prev, [field]: value })); if (errors[field]) setErrors(prev => ({ ...prev, [field]: null })); };
@@ -252,79 +255,92 @@ export default function BolsaTrabajo() {
   // RENDER: 1. LISTA DE EMPLEOS
   // =========================================================
   const renderList = () => (
-    <div className="flex flex-col gap-6 md:gap-8 animate-in fade-in duration-500 pb-24">
+    <div className="flex flex-col gap-6 md:gap-8 animate-in fade-in duration-500 pb-24 relative">
       
-      {/* Header con Gradiente Escuro */}
-      <header className="bg-gradient-to-br from-[#1A3D3D] via-[#1A3D3D] to-[#2D6A6A] rounded-[32px] p-8 md:p-14 text-center relative overflow-hidden shadow-xl border border-white/5">
+      {/* Header */}
+      <header className="bg-[#1A3D3D] rounded-[40px] p-8 md:p-14 text-center relative overflow-hidden shadow-xl z-10">
         <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-white opacity-5 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
         <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-[#4DB6AC] opacity-10 rounded-full blur-[60px] translate-y-1/3 -translate-x-1/3 pointer-events-none"></div>
         
         <div className="relative z-10 max-w-3xl mx-auto flex flex-col items-center">
-          <div className="w-16 h-16 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-5 border border-white/10 shadow-sm">
+          <div className="w-16 h-16 bg-white/10 backdrop-blur-sm rounded-[24px] flex items-center justify-center mb-5 border border-white/10 shadow-sm">
             <Briefcase className="w-8 h-8 text-[#4DB6AC]" />
           </div>
-          <h1 className="text-3xl md:text-5xl font-black font-['Montserrat'] text-white tracking-tighter uppercase leading-none mb-4">
+          <h1 className="text-[32px] md:text-[42px] lg:text-[48px] font-black font-['Montserrat'] text-white tracking-tighter leading-none mb-4">
             Bolsa de Trabajo
           </h1>
-          <p className="text-white/70 text-sm md:text-base font-medium mb-8 max-w-lg mx-auto leading-relaxed">
+          <p className="text-[#F4F7F7] opacity-80 text-[14px] md:text-[16px] font-medium mb-8 max-w-lg mx-auto leading-relaxed">
             La red de empleo exclusiva para profesionales veterinarios. Conectá con tu próximo desafío o encontrá al especialista ideal para tu clínica.
           </p>
           <div className="flex flex-col sm:flex-row items-center gap-4 w-full justify-center">
+            {/* Botón Primario adaptado al Manual (CTAs fuertes) */}
             <button 
               onClick={() => { setView('publish_job'); window.scrollTo(0,0); }}
-              className="w-full sm:w-auto bg-[#4DB6AC] text-[#1A3D3D] px-6 py-3.5 rounded-xl font-black text-[11px] uppercase tracking-widest hover:bg-white transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2"
+              className="w-full sm:w-auto bg-[#2D6A6A] text-white px-6 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-[#1A3D3D] hover:-translate-y-1 hover:shadow-2xl transition-all duration-300 ease-in-out flex items-center justify-center gap-2"
             >
               <Building className="w-4 h-4" /> Publicar Oferta de Clínica
             </button>
+            {/* Botón Estilo Glassmorphism */}
             <button 
               onClick={() => { setView('publish_prof'); window.scrollTo(0,0); }}
-              className="w-full sm:w-auto bg-white/10 backdrop-blur-sm text-white border border-white/20 px-6 py-3.5 rounded-xl font-bold text-[11px] uppercase tracking-widest hover:bg-white/20 transition-colors flex items-center justify-center gap-2"
+              className="w-full sm:w-auto bg-white/15 border border-white/20 text-white px-6 py-4 rounded-2xl font-bold text-[11px] uppercase tracking-widest hover:bg-white/25 hover:-translate-y-0.5 transition-all duration-300 ease-in-out flex items-center justify-center gap-2"
             >
-              <UserCheck className="w-4 h-4" /> Marcarme como Disponible
+              <UserCheck className="w-4 h-4" /> Marcarme Disponible
             </button>
           </div>
         </div>
       </header>
 
-      {/* Barra de Búsqueda Flotante ("Píldora") con Selector de Búsqueda */}
-      <div className="max-w-3xl mx-auto w-full relative z-20 -mt-12 px-4">
-        <div className="bg-white rounded-[24px] p-2 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.08)] flex flex-col md:flex-row items-center gap-2 relative z-30">
+      {/* Overlay de Filtros (Solo visible cuando los filtros están abiertos) */}
+      {showFilters && (
+        <div 
+          className="fixed inset-0 bg-[#1A3D3D]/10 backdrop-blur-[2px] z-20 transition-opacity" 
+          onClick={() => setShowFilters(false)}
+        />
+      )}
+
+      {/* Barra de Búsqueda Flotante */}
+      <div className="max-w-4xl mx-auto w-full relative z-30 -mt-12 px-4">
+        <div className="bg-white rounded-[24px] p-2 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.08)] flex flex-col md:flex-row items-stretch md:items-center gap-2 relative">
           
-          {/* Selector Contextual */}
-          <div className="w-full md:w-auto border-b md:border-b-0 md:border-r border-gray-100 pr-2">
-            <select 
-              value={searchTarget} 
-              onChange={(e) => setSearchTarget(e.target.value)}
-              className="w-full bg-transparent border-none py-2.5 px-3 text-xs font-bold text-[#1A3D3D] focus:outline-none focus:ring-0 uppercase tracking-wider cursor-pointer"
-            >
-              <option value="ambos">Buscar en todo</option>
-              <option value="ofertas">Ofertas de Clínicas</option>
-              <option value="profesionales">Profesionales Disponibles</option>
-            </select>
+          {/* Controles de Segmento (Reemplazo del <select> nativo) */}
+          <div className="grid grid-cols-3 bg-[#F4F7F7] p-1.5 rounded-[20px] w-full md:w-auto">
+            <button 
+              onClick={() => setSearchTarget('ambos')}
+              className={`px-1 sm:px-5 py-2.5 rounded-2xl text-[9px] sm:text-[11px] font-bold uppercase tracking-wider sm:tracking-widest transition-all truncate ${searchTarget === 'ambos' ? 'bg-white text-[#1A3D3D] shadow-sm' : 'text-[#666666] hover:text-[#1A3D3D]'}`}
+            >Todos</button>
+            <button 
+              onClick={() => setSearchTarget('ofertas')}
+              className={`px-1 sm:px-5 py-2.5 rounded-2xl text-[9px] sm:text-[11px] font-bold uppercase tracking-wider sm:tracking-widest transition-all truncate ${searchTarget === 'ofertas' ? 'bg-white text-[#1A3D3D] shadow-sm' : 'text-[#666666] hover:text-[#1A3D3D]'}`}
+            >Clínicas</button>
+            <button 
+              onClick={() => setSearchTarget('profesionales')}
+              className={`px-1 sm:px-5 py-2.5 rounded-2xl text-[9px] sm:text-[11px] font-bold uppercase tracking-wider sm:tracking-widest transition-all truncate ${searchTarget === 'profesionales' ? 'bg-white text-[#1A3D3D] shadow-sm' : 'text-[#666666] hover:text-[#1A3D3D]'}`}
+            >Profesionales</button>
           </div>
 
-          <div className="flex-1 w-full relative flex items-center">
-            <Search className="absolute left-3 text-gray-300 w-4 h-4" />
+          <div className="flex-1 w-full relative flex items-center bg-[#F4F7F7] md:bg-transparent rounded-[20px] md:rounded-none px-4 py-3 md:p-0">
+            <Search className="text-[#666666] w-5 h-5 shrink-0" />
             <input 
               type="search" 
               value={jobSearchTerm}
               onChange={(e) => setJobSearchTerm(e.target.value)}
-              placeholder="Buscar especialidad, provincia o clínica..." 
-              className="w-full bg-transparent border-none pl-10 pr-4 py-2 text-sm font-medium focus:outline-none focus:ring-0 text-[#1A3D3D] placeholder:text-gray-400" 
+              placeholder="Buscar especialidad o clínica..." 
+              className="w-full bg-transparent border-none pl-3 pr-2 py-1 text-[15px] font-medium focus:outline-none focus:ring-0 text-[#333333] placeholder:text-[#666666]/70" 
             />
           </div>
 
           <button 
             onClick={() => setShowFilters(!showFilters)}
-            className={`w-full md:w-auto px-5 py-2.5 rounded-xl font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 transition-colors ${showFilters ? 'bg-[#1A3D3D] text-white' : 'bg-gray-50 text-gray-600 hover:bg-gray-100'}`}
+            className={`w-full md:w-auto px-6 py-3.5 md:py-3 rounded-[18px] font-bold text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all duration-300 ${showFilters ? 'bg-[#1A3D3D] text-white shadow-md' : 'bg-[#F4F7F7] text-[#666666] hover:bg-gray-200'}`}
           >
-            <Filter className="w-3.5 h-3.5" /> Filtros {provinciasSel.length + puestosSel.length > 0 && `(${provinciasSel.length + puestosSel.length})`}
+            <Filter className="w-4 h-4" /> Filtros {provinciasSel.length + puestosSel.length > 0 && `(${provinciasSel.length + puestosSel.length})`}
           </button>
         </div>
 
         {/* Panel Desplegable de Filtros */}
         {showFilters && (
-          <div className="absolute top-full left-4 right-4 mt-4 bg-white rounded-[24px] p-6 border border-gray-100 shadow-xl z-20 animate-in fade-in slide-in-from-top-4">
+          <div className="absolute top-full left-4 right-4 md:left-0 md:right-0 mt-4 bg-white rounded-[32px] p-6 border border-gray-100 shadow-2xl z-30 animate-in fade-in slide-in-from-top-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
                 <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[10px] uppercase tracking-[0.2em] mb-4 flex items-center gap-2 border-b border-gray-50 pb-2">
@@ -332,9 +348,9 @@ export default function BolsaTrabajo() {
                 </h3>
                 <div className="flex flex-wrap gap-2">
                   {PROVINCIAS.map(p => (
-                    <label key={p} className={`flex items-center gap-2 cursor-pointer px-3 py-2 rounded-xl border transition-all ${provinciasSel.includes(p) ? 'bg-[#2D6A6A]/10 border-[#2D6A6A]/30' : 'bg-gray-50 border-gray-100 hover:bg-gray-100'}`}>
+                    <label key={p} className={`flex items-center gap-2 cursor-pointer px-4 py-2.5 rounded-[16px] border transition-all ${provinciasSel.includes(p) ? 'bg-[#2D6A6A]/10 border-[#2D6A6A]/30' : 'bg-[#F4F7F7] border-transparent hover:bg-gray-100'}`}>
                       <input type="checkbox" checked={provinciasSel.includes(p)} onChange={() => toggleFilterArray(setProvinciasSel, p)} className="w-3.5 h-3.5 accent-[#2D6A6A]" />
-                      <span className={`text-xs font-semibold ${provinciasSel.includes(p) ? 'text-[#1A3D3D]' : 'text-gray-600'}`}>{p}</span>
+                      <span className={`text-[13px] font-semibold ${provinciasSel.includes(p) ? 'text-[#1A3D3D]' : 'text-[#666666]'}`}>{p}</span>
                     </label>
                   ))}
                 </div>
@@ -345,63 +361,72 @@ export default function BolsaTrabajo() {
                 </h3>
                 <div className="flex flex-wrap gap-2">
                   {PUESTOS_TRABAJO.map(p => (
-                    <label key={p} className={`flex items-center gap-2 cursor-pointer px-3 py-2 rounded-xl border transition-all ${puestosSel.includes(p) ? 'bg-[#2D6A6A]/10 border-[#2D6A6A]/30' : 'bg-gray-50 border-gray-100 hover:bg-gray-100'}`}>
+                    <label key={p} className={`flex items-center gap-2 cursor-pointer px-4 py-2.5 rounded-[16px] border transition-all ${puestosSel.includes(p) ? 'bg-[#2D6A6A]/10 border-[#2D6A6A]/30' : 'bg-[#F4F7F7] border-transparent hover:bg-gray-100'}`}>
                       <input type="checkbox" checked={puestosSel.includes(p)} onChange={() => toggleFilterArray(setPuestosSel, p)} className="w-3.5 h-3.5 accent-[#2D6A6A]" />
-                      <span className={`text-xs font-semibold ${puestosSel.includes(p) ? 'text-[#1A3D3D]' : 'text-gray-600'}`}>{p}</span>
+                      <span className={`text-[13px] font-semibold ${puestosSel.includes(p) ? 'text-[#1A3D3D]' : 'text-[#666666]'}`}>{p}</span>
                     </label>
                   ))}
                 </div>
               </div>
             </div>
-            <div className="mt-6 pt-4 border-t border-gray-50 flex justify-end">
-               <button onClick={() => { setProvinciasSel([]); setPuestosSel([]); }} className="text-gray-400 hover:text-[#1A3D3D] font-bold text-[10px] uppercase tracking-widest transition-colors flex items-center gap-1.5">
-                 <RotateCcw className="w-3 h-3" /> Limpiar Filtros
+            
+            {/* Controles Inferiores del Filtro */}
+            <div className="mt-8 pt-6 border-t border-gray-50 flex flex-col-reverse md:flex-row justify-between items-center gap-4">
+               <button onClick={handleClearFilters} className="text-[#666666] hover:text-[#1A3D3D] font-bold text-[11px] uppercase tracking-widest transition-colors flex items-center gap-1.5 py-3 md:py-0 w-full md:w-auto justify-center">
+                 <RotateCcw className="w-3.5 h-3.5" /> Limpiar Filtros
+               </button>
+               <button onClick={() => setShowFilters(false)} className="w-full md:w-auto bg-[#1A3D3D] text-white px-8 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-[#2D6A6A] hover:-translate-y-1 transition-all duration-300 shadow-lg">
+                 Aplicar y Cerrar
                </button>
             </div>
           </div>
         )}
       </div>
 
-      {/* Grid Dinámica según el Target */}
+      {/* Grid Dinámica */}
       <div className={`grid gap-8 lg:gap-10 mt-6 relative z-10 ${searchTarget === 'ambos' ? 'grid-cols-1 xl:grid-cols-2' : 'grid-cols-1 max-w-4xl mx-auto w-full'}`}>
         
         {/* Columna Izquierda: Instituciones Buscando */}
         {(searchTarget === 'ambos' || searchTarget === 'ofertas') && (
           <section className="flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-4">
             <div className="flex items-center justify-between border-b border-gray-200 pb-3">
-              <h2 className="font-['Montserrat'] font-black text-[#1A3D3D] text-lg uppercase tracking-widest flex items-center gap-2">
+              <h2 className="font-['Montserrat'] font-bold text-[#1A3D3D] text-[14px] uppercase tracking-widest flex items-center gap-2">
                  <Building className="w-5 h-5 text-[#2D6A6A] hidden sm:block" /> Ofertas de Clínicas
               </h2>
-              <span className="bg-gray-100 text-[#1A3D3D] text-[10px] font-bold px-2.5 py-1 rounded-md">{jobsFiltrados.length}</span>
+              <span className="bg-[#F4F7F7] text-[#1A3D3D] text-[11px] font-bold px-2.5 py-1 rounded-md">{jobsFiltrados.length}</span>
             </div>
             
             {jobsFiltrados.length > 0 ? jobsFiltrados.map(job => (
-              <article key={job.id} onClick={() => handleJobClick(job)} className="bg-white rounded-[20px] p-5 border border-gray-200 shadow-sm hover:shadow-md hover:border-[#2D6A6A]/50 transition-all cursor-pointer flex gap-5 group">
-                <div className="w-14 h-14 rounded-xl bg-gray-50 border border-gray-100 p-2 shrink-0 hidden sm:block">
-                  <img src={job.logoClinica} alt={job.clinica} className="w-full h-full object-contain rounded-lg" />
+              <article key={job.id} onClick={() => handleJobClick(job)} className="bg-white rounded-[24px] p-5 md:p-6 border border-gray-100 shadow-sm hover:shadow-[0_15px_30px_rgba(45,106,106,0.05)] transition-all duration-300 ease-in-out cursor-pointer flex flex-col sm:flex-row gap-5 group">
+                <div className="w-16 h-16 md:w-20 md:h-20 rounded-[20px] bg-[#F4F7F7] border border-gray-100 p-2.5 shrink-0 hidden sm:block">
+                  <img src={job.logoClinica} alt={job.clinica} className="w-full h-full object-contain rounded-xl" />
                 </div>
                 <div className="flex-1">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="bg-[#E0F2F1] text-[#2D6A6A] text-[8px] font-black px-2 py-0.5 rounded uppercase tracking-widest">{job.fechaPublicacion}</span>
-                    <span className="text-gray-400 text-[10px] font-bold flex items-center gap-1"><MapPin className="w-3 h-3" /> {job.provincia}</span>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="bg-[#F4F7F7] text-[#666666] text-[12px] font-semibold px-3 py-1.5 rounded-lg">{job.fechaPublicacion}</span>
+                    <span className="text-[#666666] text-[12px] font-semibold flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" /> {job.provincia}</span>
                   </div>
-                  <h3 className="font-black text-[#1A3D3D] text-base group-hover:text-[#2D6A6A] transition-colors leading-tight mb-1">{job.puesto}</h3>
-                  <p className="text-gray-500 text-xs font-medium mb-3">{job.clinica}</p>
+                  <h3 className="font-bold font-['Montserrat'] text-[#1A3D3D] text-[18px] md:text-[20px] group-hover:text-[#2D6A6A] transition-colors leading-tight mb-1">{job.puesto}</h3>
+                  <p className="text-[#666666] text-[14px] md:text-[15px] font-medium mb-3">{job.clinica}</p>
                   
-                  <div className="flex flex-wrap items-center justify-between gap-2 mt-2 pt-3 border-t border-gray-50">
+                  <div className="flex flex-wrap items-center justify-between gap-2 mt-3 pt-4 border-t border-gray-50">
                     <div className="flex gap-2">
-                      <span className="bg-gray-50 border border-gray-100 text-gray-600 text-[10px] font-semibold px-2 py-1 rounded-md flex items-center gap-1.5"><GraduationCap className="w-3 h-3" /> {job.experiencia}</span>
+                      <span className="bg-[#F4F7F7] text-[#333333] text-[12px] font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5"><GraduationCap className="w-3.5 h-3.5 text-[#2D6A6A]" /> {job.experiencia}</span>
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center">
-                   <ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-[#2D6A6A] group-hover:translate-x-1 transition-all" />
+                <div className="flex items-center justify-end">
+                   <ChevronRight className="w-6 h-6 text-[#666666]/30 group-hover:text-[#2D6A6A] group-hover:translate-x-1 transition-all" />
                 </div>
               </article>
             )) : (
-              <div className="bg-white border border-gray-200 rounded-[20px] p-10 text-center flex flex-col items-center justify-center">
-                 <Building className="w-8 h-8 text-gray-300 mb-3" />
-                 <p className="text-gray-500 text-sm font-medium">No hay ofertas de clínicas que coincidan.</p>
+              <div className="bg-white border border-gray-100 rounded-[32px] p-12 text-center flex flex-col items-center justify-center shadow-sm">
+                 <div className="w-16 h-16 bg-[#F4F7F7] rounded-full flex items-center justify-center mb-5">
+                   <Building className="w-8 h-8 text-[#2D6A6A]/50" />
+                 </div>
+                 <h3 className="text-[#1A3D3D] text-[18px] font-bold font-['Montserrat'] mb-2">No encontramos ofertas</h3>
+                 <p className="text-[#666666] text-[14px] font-medium mb-6 max-w-sm">Intentá ajustar los filtros o buscar con otros términos para ver más resultados.</p>
+                 <button onClick={handleClearFilters} className="bg-[#F4F7F7] text-[#1A3D3D] font-bold text-[11px] uppercase tracking-widest px-6 py-3 rounded-xl hover:bg-gray-200 transition-colors">Limpiar todos los filtros</button>
               </div>
             )}
           </section>
@@ -411,87 +436,96 @@ export default function BolsaTrabajo() {
         {(searchTarget === 'ambos' || searchTarget === 'profesionales') && (
           <section className="flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-4">
             <div className="flex items-center justify-between border-b border-gray-200 pb-3">
-              <h2 className="font-['Montserrat'] font-black text-[#2D6A6A] text-lg uppercase tracking-widest flex items-center gap-2">
+              <h2 className="font-['Montserrat'] font-bold text-[#2D6A6A] text-[14px] uppercase tracking-widest flex items-center gap-2">
                  <UserCheck className="w-5 h-5 text-[#1A3D3D] hidden sm:block" /> Profesionales Disponibles
               </h2>
-              <span className="bg-[#E0F2F1] text-[#2D6A6A] text-[10px] font-bold px-2.5 py-1 rounded-md">{profesionalesFiltrados.length}</span>
+              <span className="bg-green-50 text-green-600 text-[11px] font-bold px-2.5 py-1 rounded-md">{profesionalesFiltrados.length}</span>
             </div>
 
             {profesionalesFiltrados.length > 0 ? profesionalesFiltrados.map(prof => {
               const isExpanded = expandedProfId === prof.id;
-              
               return (
               <article 
                 key={prof.id} 
                 onClick={() => setExpandedProfId(isExpanded ? null : prof.id)}
-                className={`bg-white rounded-[20px] p-5 border transition-all cursor-pointer group ${isExpanded ? 'border-[#2D6A6A] shadow-md ring-2 ring-[#2D6A6A]/5' : 'border-gray-200 shadow-sm hover:shadow-md hover:border-[#2D6A6A]/40'}`}
+                className={`bg-white rounded-[24px] p-5 md:p-6 border transition-all duration-300 ease-in-out cursor-pointer group ${isExpanded ? 'border-[#2D6A6A] shadow-md ring-2 ring-[#2D6A6A]/5' : 'border-gray-100 shadow-sm hover:shadow-[0_15px_30px_rgba(45,106,106,0.05)]'}`}
               >
                 <div className="flex gap-4 items-start">
-                  <div className="w-14 h-14 rounded-full bg-gray-100 border-2 border-white shadow-sm shrink-0 overflow-hidden relative">
+                  <div className="w-16 h-16 md:w-20 md:h-20 rounded-[20px] bg-[#F4F7F7] border border-gray-100 shadow-sm shrink-0 overflow-hidden relative">
                     <img src={prof.avatar} alt={prof.nombre} className="w-full h-full object-cover" />
-                    <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full z-10" title="Disponible"></div>
+                    <div className="absolute bottom-1 right-1 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full z-10 animate-pulse" title="Disponible"></div>
                   </div>
                   
                   <div className="flex-1 pt-1">
-                    <div className="flex items-center justify-between mb-0.5">
-                      <h3 className="font-black text-[#1A3D3D] text-base leading-tight">{prof.nombre}</h3>
-                      <span className="text-gray-400 text-[10px] font-bold flex items-center gap-1 shrink-0"><MapPin className="w-3 h-3" /> {prof.provincia}</span>
+                    <div className="flex items-center justify-between mb-1">
+                      <h3 className="font-bold font-['Montserrat'] text-[#1A3D3D] text-[18px] md:text-[20px] leading-tight">{prof.nombre}</h3>
+                      <span className="text-[#666666] text-[12px] font-semibold flex items-center gap-1.5 shrink-0"><MapPin className="w-3.5 h-3.5" /> {prof.provincia}</span>
                     </div>
-                    <p className="text-[#2D6A6A] text-xs font-bold mb-2.5">{prof.especialidad} • <span className="text-gray-500 font-medium">{prof.experiencia}</span></p>
+                    {/* Etiqueta Especialidad estilo Pill según manual */}
+                    <p className="inline-flex items-center gap-1.5 mt-1 mb-3 bg-[#F4F7F7] px-3 py-1.5 rounded-full">
+                      <span className="flex h-1.5 w-1.5 rounded-full bg-[#2D6A6A] animate-pulse"></span>
+                      <span className="text-[#2D6A6A] text-[11px] font-bold uppercase tracking-[0.2em]">{prof.especialidad}</span>
+                    </p>
                     
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div className="flex gap-3 text-[10px] font-bold text-gray-500">
-                        <span className="flex items-center gap-1.5"><Clock className="w-3 h-3" /> {prof.tiempo}</span>
-                        <span className="flex items-center gap-1.5"><User className="w-3 h-3" /> {prof.momentoDia}</span>
+                    <div className="flex flex-wrap items-center justify-between gap-2 mt-1">
+                      <div className="flex gap-4 text-[12px] font-medium text-[#666666]">
+                        <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> {prof.tiempo}</span>
+                        <span className="flex items-center gap-1.5"><User className="w-3.5 h-3.5" /> {prof.momentoDia}</span>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 {/* Contenido Expandible (Acordeón) */}
-                <div className={`grid transition-all duration-300 ease-in-out ${isExpanded ? 'grid-rows-[1fr] opacity-100 mt-4' : 'grid-rows-[0fr] opacity-0 mt-0'}`}>
+                <div className={`grid transition-all duration-300 ease-in-out ${isExpanded ? 'grid-rows-[1fr] opacity-100 mt-5' : 'grid-rows-[0fr] opacity-0 mt-0'}`}>
                    <div className="overflow-hidden">
-                     <div className="bg-gray-50 rounded-[16px] p-4 border border-gray-100 pt-5">
-                        <p className="text-[#1A3D3D] text-xs font-bold mb-3 flex items-center gap-1.5 uppercase tracking-widest"><Activity className="w-4 h-4 text-[#4DB6AC]"/> Servicios Ofrecidos</p>
-                        <div className="flex flex-wrap gap-2 mb-4">
+                     <div className="bg-[#F4F7F7] rounded-[24px] p-5 border border-gray-100">
+                        <p className="text-[#1A3D3D] text-[12px] font-bold mb-3 flex items-center gap-1.5 uppercase tracking-widest"><Activity className="w-4 h-4 text-[#4DB6AC]"/> Servicios Ofrecidos</p>
+                        <div className="flex flex-wrap gap-2 mb-5">
                           {prof.servicios.map((s, idx) => (
-                            <span key={idx} className="bg-white border border-gray-200 text-gray-600 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 shadow-sm">
-                              <CircleCheck className="w-3.5 h-3.5 text-[#2D6A6A]" /> {s}
+                            <span key={idx} className="bg-white border border-gray-200 text-[#333333] text-[12px] font-semibold px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-sm">
+                              <CircleCheck className="w-4 h-4 text-[#2D6A6A]" /> {s}
                             </span>
                           ))}
                         </div>
                         
                         <div className="relative">
                           <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#2D6A6A] rounded-full"></div>
-                          <p className="text-gray-600 text-xs italic bg-white p-3.5 rounded-lg border border-gray-100 pl-4 shadow-sm">"{prof.buscando}"</p>
+                          <p className="text-[#666666] text-[15px] italic bg-white p-5 rounded-2xl border border-gray-100 pl-6 shadow-sm">"{prof.buscando}"</p>
                         </div>
                      </div>
                      
-                     {/* Botón hacia el Perfil */}
+                     {/* Botón Primario según manual */}
                      <button 
                        onClick={(e) => { e.stopPropagation(); alert(`Redirigiendo al perfil público verificado de ${prof.nombre}...`); }}
-                       className="w-full mt-3 bg-white border border-[#2D6A6A] text-[#2D6A6A] py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-[#2D6A6A] hover:text-white transition-all shadow-sm flex items-center justify-center gap-2 group/btn"
+                       className="w-full mt-4 bg-[#2D6A6A] text-white px-6 py-4 rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] transition-all duration-300 ease-in-out hover:bg-[#1A3D3D] hover:-translate-y-1 hover:shadow-xl shadow-md flex items-center justify-center gap-2 group/btn"
                      >
-                       <User className="w-4 h-4" /> Ver perfil profesional <ChevronRight className="w-3 h-3 group-hover/btn:translate-x-1 transition-transform" />
+                       <User className="w-4 h-4" /> Ver perfil profesional <ChevronRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
                      </button>
                    </div>
                 </div>
                 
-                <div className={`flex justify-center transition-all duration-300 ${isExpanded ? 'mt-3 border-t border-gray-100 pt-2' : 'mt-2'}`}>
-                   <ChevronDown className={`w-4 h-4 text-gray-300 transition-transform duration-300 ${isExpanded ? 'rotate-180 text-[#2D6A6A]' : 'group-hover:text-[#2D6A6A]'}`} />
+                <div className={`flex justify-center transition-all duration-300 ${isExpanded ? 'mt-5 border-t border-gray-50 pt-4' : 'mt-4'}`}>
+                   <span className={`flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest transition-colors ${isExpanded ? 'text-[#2D6A6A]' : 'text-[#666666]/50 group-hover:text-[#2D6A6A]'}`}>
+                     {isExpanded ? 'Ocultar detalles' : 'Ver detalles'}
+                     <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+                   </span>
                 </div>
               </article>
               );
             }) : (
-              <div className="bg-white border border-gray-200 rounded-[20px] p-10 text-center flex flex-col items-center justify-center">
-                 <UserCheck className="w-8 h-8 text-gray-300 mb-3" />
-                 <p className="text-gray-500 text-sm font-medium">No hay profesionales disponibles que coincidan.</p>
+              <div className="bg-white border border-gray-100 rounded-[32px] p-12 text-center flex flex-col items-center justify-center shadow-sm">
+                 <div className="w-16 h-16 bg-[#F4F7F7] rounded-full flex items-center justify-center mb-5">
+                   <UserCheck className="w-8 h-8 text-[#2D6A6A]/50" />
+                 </div>
+                 <h3 className="text-[#1A3D3D] text-[18px] font-bold font-['Montserrat'] mb-2">No encontramos profesionales</h3>
+                 <p className="text-[#666666] text-[14px] font-medium mb-6 max-w-sm">Intentá ajustar los filtros o buscar con otros términos para ver más resultados.</p>
+                 <button onClick={handleClearFilters} className="bg-[#F4F7F7] text-[#1A3D3D] font-bold text-[11px] uppercase tracking-widest px-6 py-3 rounded-xl hover:bg-gray-200 transition-colors">Limpiar todos los filtros</button>
               </div>
             )}
           </section>
         )}
       </div>
-
     </div>
   );
 
@@ -500,38 +534,37 @@ export default function BolsaTrabajo() {
   // =========================================================
   const renderDetail = () => {
     if (!selectedJob) return null;
-
     return (
       <article className="max-w-[1000px] mx-auto animate-in fade-in duration-500 pb-24">
         <button 
           onClick={() => setView('list')} 
-          className="flex items-center gap-2 text-gray-400 hover:text-[#1A3D3D] font-bold text-[10px] uppercase tracking-[0.3em] mb-8 transition-colors group"
+          className="flex items-center gap-2 text-[#666666] hover:text-[#1A3D3D] font-bold text-[10px] uppercase tracking-[0.3em] mb-8 transition-colors group"
         >
           <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Volver a la Bolsa de Trabajo
         </button>
 
-        <div className="bg-white rounded-[32px] border border-gray-100 shadow-xl overflow-hidden mb-12 relative">
-          <div className="bg-gray-50/50 p-8 md:p-12 border-b border-gray-100 flex flex-col md:flex-row gap-8 items-start relative overflow-hidden">
+        <div className="bg-white rounded-[40px] border border-gray-100 shadow-xl overflow-hidden mb-12 relative">
+          <div className="bg-[#F4F7F7] p-8 md:p-12 border-b border-gray-100 flex flex-col md:flex-row gap-8 items-start relative overflow-hidden">
              <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-[#2D6A6A]/5 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
-             <div className="w-20 h-20 md:w-28 md:h-28 bg-white rounded-2xl border border-gray-100 shadow-sm p-2 shrink-0 z-10">
+             <div className="w-24 h-24 md:w-32 md:h-32 bg-white rounded-[24px] border border-gray-100 shadow-sm p-3 shrink-0 z-10">
                <img src={selectedJob.logoClinica} alt={selectedJob.clinica} className="w-full h-full object-contain rounded-xl" />
              </div>
              <div className="flex-1 z-10">
-                <div className="flex items-center gap-3 mb-3">
-                  <span className="bg-[#E0F2F1] text-[#2D6A6A] text-[9px] font-black px-3 py-1.5 rounded-md uppercase tracking-widest">{selectedJob.fechaPublicacion}</span>
-                  <span className="text-gray-500 text-[10px] font-bold flex items-center gap-1"><MapPin className="w-3.5 h-3.5" /> {selectedJob.ciudad}, {selectedJob.provincia}</span>
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="bg-white border border-gray-200 text-[#666666] text-[12px] font-semibold px-3 py-1.5 rounded-lg">{selectedJob.fechaPublicacion}</span>
+                  <span className="text-[#666666] text-[12px] font-semibold flex items-center gap-1.5"><MapPin className="w-4 h-4" /> {selectedJob.ciudad}, {selectedJob.provincia}</span>
                 </div>
-                <h1 className="text-3xl md:text-4xl font-black font-['Montserrat'] text-[#1A3D3D] leading-[1.1] mb-2 tracking-tight">
+                <h1 className="text-[32px] md:text-[42px] font-black font-['Montserrat'] text-[#1A3D3D] leading-[1.1] mb-2 tracking-tight">
                   {selectedJob.puesto}
                 </h1>
-                <p className="text-lg text-gray-500 font-medium mb-6">{selectedJob.clinica}</p>
+                <p className="text-[17px] text-[#666666] font-medium mb-6">{selectedJob.clinica}</p>
                 
                 <div className="flex flex-wrap gap-3">
-                  <div className="bg-white border border-gray-200 px-4 py-2 rounded-xl flex items-center gap-2 text-sm font-semibold text-gray-700 shadow-sm">
+                  <div className="bg-white border border-gray-200 px-4 py-2.5 rounded-xl flex items-center gap-2 text-[13px] font-bold text-[#333333] shadow-sm">
                     <GraduationCap className="w-4 h-4 text-[#2D6A6A]" /> {selectedJob.experiencia}
                   </div>
                   {selectedJob.requisitos.some(r => r.toLowerCase().includes('matrícula')) && (
-                    <div className="bg-[#2D6A6A]/10 px-4 py-2 rounded-xl flex items-center gap-2 text-sm font-semibold text-[#1A3D3D]">
+                    <div className="bg-[#2D6A6A]/10 px-4 py-2.5 rounded-xl flex items-center gap-2 text-[13px] font-bold text-[#1A3D3D]">
                       <CircleCheck className="w-4 h-4 text-[#2D6A6A]" /> Requiere Matrícula Activa
                     </div>
                   )}
@@ -539,37 +572,37 @@ export default function BolsaTrabajo() {
              </div>
           </div>
 
-          <div className="p-8 md:p-12 flex flex-col lg:flex-row gap-12">
-            <div className="flex-1 space-y-10">
+          <div className="p-8 md:p-12 flex flex-col lg:flex-row gap-12 lg:gap-16">
+            <div className="flex-1 space-y-12">
               <section>
-                <h3 className="text-xl font-black font-['Montserrat'] text-[#1A3D3D] mb-4">Descripción del puesto</h3>
-                <p className="text-gray-600 text-[15px] leading-relaxed font-medium whitespace-pre-line">
+                <h3 className="text-[22px] font-bold font-['Montserrat'] text-[#1A3D3D] mb-5">Descripción del puesto</h3>
+                <p className="text-[#333333] text-[16px] leading-relaxed font-medium whitespace-pre-line">
                   {selectedJob.descripcion}
                 </p>
               </section>
-
+              
               <section>
-                <h3 className="text-xl font-black font-['Montserrat'] text-[#1A3D3D] mb-4 flex items-center gap-2">
-                  <CircleCheck className="w-5 h-5 text-[#4DB6AC]" /> Requisitos excluyentes
+                <h3 className="text-[22px] font-bold font-['Montserrat'] text-[#1A3D3D] mb-5 flex items-center gap-2">
+                  <CircleCheck className="w-6 h-6 text-[#4DB6AC]" /> Requisitos excluyentes
                 </h3>
-                <ul className="space-y-3">
+                <ul className="space-y-4">
                   {selectedJob.requisitos.map((req, idx) => (
                     <li key={idx} className="flex items-start gap-3">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#1A3D3D] mt-2 shrink-0"></span>
-                      <span className="text-[14px] text-gray-600 font-medium leading-relaxed">{req}</span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#1A3D3D] mt-2.5 shrink-0"></span>
+                      <span className="text-[16px] text-[#333333] font-medium leading-relaxed">{req}</span>
                     </li>
                   ))}
                 </ul>
               </section>
 
               {selectedJob.equipamiento.length > 0 && selectedJob.equipamiento[0] !== '' && (
-                <section className="bg-gray-50 p-6 rounded-[24px] border border-gray-100">
-                  <h3 className="text-lg font-black font-['Montserrat'] text-[#1A3D3D] mb-4 flex items-center gap-2">
-                    <Stethoscope className="w-5 h-5 text-[#2D6A6A]" /> Equipamiento disponible en clínica
+                <section className="bg-[#F4F7F7] p-8 rounded-[32px] border border-gray-100">
+                  <h3 className="text-[18px] font-bold font-['Montserrat'] text-[#1A3D3D] mb-5 flex items-center gap-2">
+                    <Stethoscope className="w-5 h-5 text-[#2D6A6A]" /> Equipamiento en clínica
                   </h3>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2.5">
                     {selectedJob.equipamiento.map((eq, idx) => (
-                      <span key={idx} className="bg-white border border-gray-200 text-gray-600 text-xs font-semibold px-3 py-1.5 rounded-lg shadow-sm">
+                      <span key={idx} className="bg-white border border-gray-200 text-[#333333] text-[13px] font-semibold px-4 py-2 rounded-xl shadow-sm">
                         {eq}
                       </span>
                     ))}
@@ -579,39 +612,41 @@ export default function BolsaTrabajo() {
             </div>
 
             <div className="lg:w-[320px] shrink-0">
-              <div className="bg-[#1A3D3D] p-6 rounded-[24px] shadow-lg text-center relative overflow-hidden sticky top-28">
+              <div className="bg-[#1A3D3D] p-8 rounded-[32px] shadow-2xl text-center relative overflow-hidden sticky top-32">
                  <div className="absolute top-0 right-0 w-[150px] h-[150px] bg-white opacity-5 rounded-full blur-[30px] -translate-y-1/2 translate-x-1/2"></div>
-                 <h3 className="font-['Montserrat'] font-black text-white text-xl mb-2 relative z-10">Postularme ahora</h3>
-                 <p className="text-white/70 text-xs font-medium mb-6 relative z-10">La clínica prefiere que la contacten mediante:</p>
+                 <h3 className="font-['Montserrat'] font-black text-white text-[22px] mb-2 relative z-10">Postularme ahora</h3>
+                 <p className="text-white/70 text-[13px] font-medium mb-8 relative z-10">La clínica prefiere contacto por:</p>
                  
-                 <div className="space-y-3 relative z-10">
+                 <div className="space-y-4 relative z-10">
                    {selectedJob.tipoContacto.includes('whatsapp') && (
-                     <button className="w-full bg-[#25D366] text-white py-3.5 rounded-xl font-bold text-[11px] uppercase tracking-widest shadow-lg hover:bg-[#20bd5a] transition-all flex items-center justify-center gap-2">
-                       <MessageCircle className="w-5 h-5" /> Enviar WhatsApp
+                     <button className="w-full bg-[#25D366] text-white py-4 rounded-2xl font-black text-[12px] uppercase tracking-[0.2em] shadow-lg hover:bg-[#20bd5a] hover:-translate-y-1 transition-all duration-300 ease-in-out flex items-center justify-center gap-2">
+                       <MessageCircle className="w-5 h-5" /> WhatsApp
                      </button>
                    )}
                    {selectedJob.tipoContacto.includes('email') && (
-                     <button className="w-full bg-white text-[#1A3D3D] py-3.5 rounded-xl font-bold text-[11px] uppercase tracking-widest shadow-lg hover:bg-gray-50 transition-all flex items-center justify-center gap-2">
+                     <button className="w-full bg-white text-[#1A3D3D] py-4 rounded-2xl font-black text-[12px] uppercase tracking-[0.2em] shadow-lg hover:bg-gray-50 hover:-translate-y-1 transition-all duration-300 ease-in-out flex items-center justify-center gap-2">
                        <Send className="w-4 h-4" /> Enviar CV por Mail
                      </button>
                    )}
                  </div>
-
-                 <div className="mt-6 pt-5 border-t border-white/10 text-left">
-                   <p className="text-white/40 text-[9px] uppercase tracking-[0.2em] font-bold mb-2 flex items-center gap-1.5">
-                     <Info className="w-3 h-3" /> Condiciones de contratación
+                 
+                 <div className="mt-8 pt-6 border-t border-white/10 text-left">
+                   <p className="text-white/40 text-[10px] uppercase tracking-[0.2em] font-bold mb-3 flex items-center gap-2">
+                     <Info className="w-3.5 h-3.5" /> Condiciones
                    </p>
-                   <p className="text-white/80 text-xs font-medium">Las condiciones económicas (porcentaje, sueldo fijo, viáticos) y contractuales se arreglan directamente por privado entre el profesional y la clínica.</p>
+                   <p className="text-white/70 text-[13px] font-medium leading-relaxed">
+                     Las condiciones económicas y contractuales se arreglan directamente por privado entre el profesional y la clínica.
+                   </p>
                  </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-gray-50 border border-gray-200 p-6 rounded-[20px] flex items-start gap-4 mb-12 text-gray-500 text-xs font-medium">
-          <AlertTriangle className="w-5 h-5 text-yellow-500 shrink-0" />
+        <div className="bg-[#F4F7F7] border border-gray-200 p-8 rounded-[32px] flex items-start gap-4 mb-12 text-[#666666] text-[14px] font-medium leading-relaxed">
+          <AlertTriangle className="w-6 h-6 text-[#2D6A6A] shrink-0 mt-0.5" />
           <p>
-            <strong className="text-gray-700">Aviso Legal:</strong> El Portal actúa exclusivamente como un canal de difusión gratuito para ofertas laborales de terceros. No intervenimos en el proceso de selección, contratación, negociación salarial ni somos responsables de las condiciones laborales acordadas. Toda postulación se realiza bajo la exclusiva responsabilidad del profesional y la institución oferente.
+            <strong className="text-[#1A3D3D]">Aviso Legal:</strong> El Portal actúa exclusivamente como un canal de difusión gratuito para ofertas laborales de terceros. No intervenimos en el proceso de selección, contratación, negociación salarial ni somos responsables de las condiciones laborales acordadas. Toda postulación se realiza bajo la exclusiva responsabilidad del profesional y la institución oferente.
           </p>
         </div>
       </article>
@@ -626,152 +661,158 @@ export default function BolsaTrabajo() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <button 
           onClick={() => { setView('list'); setJobFormStep(1); setErrors({}); }} 
-          className="flex items-center gap-2 text-gray-400 hover:text-[#1A3D3D] font-bold text-[10px] uppercase tracking-[0.3em] transition-colors group"
+          className="flex items-center gap-2 text-[#666666] hover:text-[#1A3D3D] font-bold text-[10px] uppercase tracking-[0.3em] transition-colors group"
         >
           <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Cancelar publicación
         </button>
       </div>
 
       <div className="text-center mb-10">
-        <h1 className="text-3xl md:text-4xl font-black font-['Montserrat'] text-[#1A3D3D] tracking-tight mb-3">Publicar Oferta Laboral</h1>
-        <p className="text-gray-500 font-medium text-sm max-w-lg mx-auto">La difusión en El Portal es <strong className="text-[#2D6A6A]">100% gratuita</strong> para instituciones veterinarias con cuenta validada.</p>
+        <h1 className="text-[32px] md:text-[42px] font-black font-['Montserrat'] text-[#1A3D3D] tracking-tight mb-4">Publicar Oferta Laboral</h1>
+        <p className="text-[#666666] font-medium text-[16px] max-w-lg mx-auto leading-relaxed">La difusión en El Portal es <strong className="text-[#2D6A6A] font-bold">100% gratuita</strong> para instituciones veterinarias con cuenta validada.</p>
       </div>
 
-      <div className="bg-white rounded-[32px] border border-gray-100 shadow-xl overflow-hidden">
-        <div className="bg-gray-50 border-b border-gray-100 p-6 flex items-center justify-between relative">
+      <div className="bg-white rounded-[40px] border border-gray-100 shadow-xl overflow-hidden">
+        <div className="bg-[#F4F7F7] border-b border-gray-100 p-8 flex items-center justify-between relative">
           <div className="absolute top-1/2 left-10 right-10 h-1 bg-gray-200 -translate-y-1/2 rounded-full z-0 hidden md:block">
             <div className="h-full bg-[#4DB6AC] rounded-full transition-all duration-500" style={{ width: `${((jobFormStep - 1) / 2) * 100}%` }}></div>
           </div>
           {[1, 2, 3].map((step) => (
-            <div key={step} className="relative z-10 flex flex-col items-center gap-2">
-              <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-300 ${
+            <div 
+              key={step} 
+              onClick={() => { if(jobFormStep > step) setJobFormStep(step); }}
+              className={`relative z-10 flex flex-col items-center gap-3 ${jobFormStep > step ? 'cursor-pointer group' : ''}`}
+            >
+              <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center font-bold text-[14px] transition-all duration-300 ${
                 jobFormStep === step ? 'bg-[#1A3D3D] text-[#4DB6AC] shadow-lg scale-110' : 
-                jobFormStep > step ? 'bg-[#4DB6AC] text-[#1A3D3D]' : 'bg-white border-2 border-gray-200 text-gray-400'
+                jobFormStep > step ? 'bg-[#4DB6AC] text-[#1A3D3D] group-hover:bg-[#2D6A6A] group-hover:text-white' : 'bg-white border-2 border-gray-200 text-[#666666]'
               }`}>
-                {jobFormStep > step ? <Check className="w-4 h-4 md:w-5 md:h-5" /> : step}
+                {jobFormStep > step ? <Check className="w-5 h-5" /> : step}
               </div>
-              <span className={`text-[8px] md:text-[10px] uppercase tracking-widest font-bold hidden md:block ${jobFormStep >= step ? 'text-[#1A3D3D]' : 'text-gray-400'}`}>
+              <span className={`text-[9px] md:text-[11px] uppercase tracking-widest font-bold hidden md:block ${jobFormStep >= step ? 'text-[#1A3D3D]' : 'text-[#666666]'}`}>
                 {step === 1 ? 'Clínica' : step === 2 ? 'Puesto' : 'Contacto'}
               </span>
             </div>
           ))}
         </div>
 
-        <div className="p-6 md:p-10">
+        <div className="p-8 md:p-12">
           {jobFormStep === 1 && (
-            <div className="space-y-6 animate-in fade-in">
-              <h2 className="text-2xl font-black font-['Montserrat'] text-[#1A3D3D] mb-1">Datos de la Institución</h2>
-              <div className="space-y-5">
+            <div className="space-y-8 animate-in fade-in">
+              <h2 className="text-[24px] font-bold font-['Montserrat'] text-[#1A3D3D] mb-2">Datos de la Institución</h2>
+              <div className="space-y-6">
                 <div>
-                  <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2" htmlFor="clinica">Nombre de la Clínica / Hospital *</label>
-                  <input id="clinica" type="text" value={jobForm.clinica} onChange={(e) => handleJobFormChange('clinica', e.target.value)} placeholder="Ej: Hospital Veterinario Norte" className={`w-full bg-gray-50 border rounded-xl px-4 py-3.5 text-sm font-medium focus:outline-none focus:bg-white text-[#1A3D3D] ${errors.clinica ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-[#2D6A6A]'}`} />
-                  {errors.clinica && <p className="text-red-500 text-[10px] font-bold mt-1.5">{errors.clinica}</p>}
+                  <label className="block text-[11px] font-bold text-[#666666] uppercase tracking-widest mb-3" htmlFor="clinica">Nombre de la Clínica / Hospital *</label>
+                  <input id="clinica" type="text" value={jobForm.clinica} onChange={(e) => handleJobFormChange('clinica', e.target.value)} placeholder="Ej: Hospital Veterinario Norte" className={`w-full bg-[#F4F7F7] border rounded-2xl px-5 py-4 text-[15px] font-medium focus:outline-none focus:bg-white focus:ring-4 focus:ring-[#2D6A6A]/10 text-[#333333] transition-all ${errors.clinica ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-[#2D6A6A]'}`} />
+                  {errors.clinica && <p className="text-red-500 text-[11px] font-bold mt-2">{errors.clinica}</p>}
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
-                    <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Provincia *</label>
-                    <select value={jobForm.provincia} onChange={(e) => handleJobFormChange('provincia', e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-sm font-medium focus:outline-none focus:border-[#2D6A6A] focus:bg-white text-[#1A3D3D]">
+                    <label className="block text-[11px] font-bold text-[#666666] uppercase tracking-widest mb-3">Provincia *</label>
+                    <select value={jobForm.provincia} onChange={(e) => handleJobFormChange('provincia', e.target.value)} className="w-full bg-[#F4F7F7] border border-gray-200 rounded-2xl px-5 py-4 text-[15px] font-medium focus:outline-none focus:border-[#2D6A6A] focus:ring-4 focus:ring-[#2D6A6A]/10 focus:bg-white text-[#333333] transition-all">
                       {PROVINCIAS.filter(p=>p!=='Todas').map(m => <option key={m} value={m}>{m}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2" htmlFor="ciudad">Ciudad / Zona *</label>
-                    <input id="ciudad" type="text" value={jobForm.ciudad} onChange={(e) => handleJobFormChange('ciudad', e.target.value)} placeholder="Ej: San Isidro / Zona Norte" className={`w-full bg-gray-50 border rounded-xl px-4 py-3.5 text-sm font-medium focus:outline-none focus:bg-white text-[#1A3D3D] ${errors.ciudad ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-[#2D6A6A]'}`} />
-                    {errors.ciudad && <p className="text-red-500 text-[10px] font-bold mt-1.5">{errors.ciudad}</p>}
+                    <label className="block text-[11px] font-bold text-[#666666] uppercase tracking-widest mb-3" htmlFor="ciudad">Ciudad / Zona *</label>
+                    <input id="ciudad" type="text" value={jobForm.ciudad} onChange={(e) => handleJobFormChange('ciudad', e.target.value)} placeholder="Ej: San Isidro / Zona Norte" className={`w-full bg-[#F4F7F7] border rounded-2xl px-5 py-4 text-[15px] font-medium focus:outline-none focus:bg-white focus:ring-4 focus:ring-[#2D6A6A]/10 text-[#333333] transition-all ${errors.ciudad ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-[#2D6A6A]'}`} />
+                    {errors.ciudad && <p className="text-red-500 text-[11px] font-bold mt-2">{errors.ciudad}</p>}
                   </div>
                 </div>
               </div>
             </div>
           )}
-
           {jobFormStep === 2 && (
-            <div className="space-y-6 animate-in fade-in">
-              <h2 className="text-2xl font-black font-['Montserrat'] text-[#1A3D3D] mb-1">Detalles de la Búsqueda</h2>
-              <div className="space-y-5">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-8 animate-in fade-in">
+              <h2 className="text-[24px] font-bold font-['Montserrat'] text-[#1A3D3D] mb-2">Detalles de la Búsqueda</h2>
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
-                    <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Puesto o Área *</label>
-                    <select value={jobForm.puesto} onChange={(e) => handleJobFormChange('puesto', e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-sm font-medium focus:outline-none focus:border-[#2D6A6A] focus:bg-white text-[#1A3D3D]">
+                    <label className="block text-[11px] font-bold text-[#666666] uppercase tracking-widest mb-3">Puesto o Área *</label>
+                    <select value={jobForm.puesto} onChange={(e) => handleJobFormChange('puesto', e.target.value)} className="w-full bg-[#F4F7F7] border border-gray-200 rounded-2xl px-5 py-4 text-[15px] font-medium focus:outline-none focus:border-[#2D6A6A] focus:ring-4 focus:ring-[#2D6A6A]/10 focus:bg-white text-[#333333] transition-all">
                       {PUESTOS_TRABAJO.filter(p=>p!=='Todos').map(m => <option key={m} value={m}>{m}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Experiencia Requerida *</label>
-                    <select value={jobForm.experiencia} onChange={(e) => handleJobFormChange('experiencia', e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-sm font-medium focus:outline-none focus:border-[#2D6A6A] focus:bg-white text-[#1A3D3D]">
+                    <label className="block text-[11px] font-bold text-[#666666] uppercase tracking-widest mb-3">Experiencia Requerida *</label>
+                    <select value={jobForm.experiencia} onChange={(e) => handleJobFormChange('experiencia', e.target.value)} className="w-full bg-[#F4F7F7] border border-gray-200 rounded-2xl px-5 py-4 text-[15px] font-medium focus:outline-none focus:border-[#2D6A6A] focus:ring-4 focus:ring-[#2D6A6A]/10 focus:bg-white text-[#333333] transition-all">
                       {EXPERIENCIA_REQUERIDA.map(m => <option key={m} value={m}>{m}</option>)}
                     </select>
                   </div>
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Descripción del Puesto *</label>
-                  <textarea value={jobForm.descripcion} onChange={(e) => handleJobFormChange('descripcion', e.target.value)} rows="3" className={`w-full bg-gray-50 border rounded-xl px-4 py-3.5 text-sm font-medium focus:outline-none focus:bg-white text-[#1A3D3D] resize-none ${errors.descripcion ? 'border-red-400' : 'border-gray-200'}`}></textarea>
+                  <label className="block text-[11px] font-bold text-[#666666] uppercase tracking-widest mb-3">Descripción del Puesto *</label>
+                  <textarea value={jobForm.descripcion} onChange={(e) => handleJobFormChange('descripcion', e.target.value)} rows="4" className={`w-full bg-[#F4F7F7] border rounded-2xl px-5 py-4 text-[15px] font-medium focus:outline-none focus:bg-white focus:ring-4 focus:ring-[#2D6A6A]/10 text-[#333333] resize-none transition-all ${errors.descripcion ? 'border-red-400' : 'border-gray-200'}`}></textarea>
+                  {errors.descripcion && <p className="text-red-500 text-[11px] font-bold mt-2">{errors.descripcion}</p>}
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Requisitos Excluyentes *</label>
+                  <label className="block text-[11px] font-bold text-[#666666] uppercase tracking-widest mb-3">Requisitos Excluyentes *</label>
                   <div className="space-y-3">
                     {jobForm.requisitos.map((item, index) => (
-                      <div key={index} className="flex items-center gap-2">
-                        <input type="text" value={item} onChange={(e) => updateArrayItem('requisitos', index, e.target.value)} className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#2D6A6A]" />
-                        {jobForm.requisitos.length > 1 && <button onClick={() => removeArrayItem('requisitos', index)} className="p-3 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl"><Trash2 className="w-5 h-5" /></button>}
+                      <div key={index} className="flex items-center gap-3">
+                        <input type="text" value={item} onChange={(e) => updateArrayItem('requisitos', index, e.target.value)} className="flex-1 bg-[#F4F7F7] border border-gray-200 rounded-2xl px-5 py-3.5 text-[15px] focus:outline-none focus:border-[#2D6A6A] focus:bg-white transition-all text-[#333333]" />
+                        {jobForm.requisitos.length > 1 && <button onClick={() => removeArrayItem('requisitos', index)} className="p-3.5 text-[#666666] hover:text-red-500 hover:bg-red-50 rounded-2xl transition-colors"><Trash2 className="w-5 h-5" /></button>}
                       </div>
                     ))}
-                    <button onClick={() => addArrayItem('requisitos')} className="text-[#2D6A6A] font-bold text-xs uppercase tracking-widest mt-2 hover:bg-[#2D6A6A]/10 px-4 py-2 rounded-lg flex items-center gap-2"><Plus className="w-4 h-4" /> Agregar requisito</button>
+                    <button onClick={() => addArrayItem('requisitos')} className="text-[#2D6A6A] font-bold text-[12px] uppercase tracking-widest mt-3 hover:bg-[#2D6A6A]/10 px-5 py-3 rounded-2xl flex items-center gap-2 transition-colors"><Plus className="w-4 h-4" /> Agregar requisito</button>
+                    {errors.requisitos && <p className="text-red-500 text-[11px] font-bold mt-2">{errors.requisitos}</p>}
                   </div>
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2 flex items-center gap-2">Equipamiento <span className="text-gray-300 font-normal lowercase tracking-normal">(Opcional)</span></label>
+                  <label className="block text-[11px] font-bold text-[#666666] uppercase tracking-widest mb-3 flex items-center gap-2">Equipamiento <span className="text-[#666666]/50 font-medium lowercase tracking-normal">(Opcional)</span></label>
                   <div className="space-y-3">
                     {jobForm.equipamiento.map((item, index) => (
-                      <div key={index} className="flex items-center gap-2">
-                        <input type="text" value={item} onChange={(e) => updateArrayItem('equipamiento', index, e.target.value)} className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#2D6A6A]" />
-                        {jobForm.equipamiento.length > 1 && <button onClick={() => removeArrayItem('equipamiento', index)} className="p-3 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl"><Trash2 className="w-5 h-5" /></button>}
+                      <div key={index} className="flex items-center gap-3">
+                        <input type="text" value={item} onChange={(e) => updateArrayItem('equipamiento', index, e.target.value)} className="flex-1 bg-[#F4F7F7] border border-gray-200 rounded-2xl px-5 py-3.5 text-[15px] focus:outline-none focus:border-[#2D6A6A] focus:bg-white transition-all text-[#333333]" />
+                        {jobForm.equipamiento.length > 1 && <button onClick={() => removeArrayItem('equipamiento', index)} className="p-3.5 text-[#666666] hover:text-red-500 hover:bg-red-50 rounded-2xl transition-colors"><Trash2 className="w-5 h-5" /></button>}
                       </div>
                     ))}
-                    <button onClick={() => addArrayItem('equipamiento')} className="text-[#2D6A6A] font-bold text-xs uppercase tracking-widest mt-2 hover:bg-[#2D6A6A]/10 px-4 py-2 rounded-lg flex items-center gap-2"><Plus className="w-4 h-4" /> Agregar equipo</button>
+                    <button onClick={() => addArrayItem('equipamiento')} className="text-[#2D6A6A] font-bold text-[12px] uppercase tracking-widest mt-3 hover:bg-[#2D6A6A]/10 px-5 py-3 rounded-2xl flex items-center gap-2 transition-colors"><Plus className="w-4 h-4" /> Agregar equipo</button>
                   </div>
                 </div>
               </div>
             </div>
           )}
-
           {jobFormStep === 3 && (
-            <div className="space-y-6 animate-in fade-in">
-               <h2 className="text-2xl font-black font-['Montserrat'] text-[#1A3D3D] mb-1">Contacto y Condiciones</h2>
-              <div className="space-y-6">
+            <div className="space-y-8 animate-in fade-in">
+               <h2 className="text-[24px] font-bold font-['Montserrat'] text-[#1A3D3D] mb-2">Contacto y Condiciones</h2>
+              <div className="space-y-8">
                 <div>
-                  <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-4">Canal preferido de contacto *</label>
-                  <div className="flex flex-col sm:flex-row gap-4 mb-4">
-                    <button onClick={() => toggleTipoContacto('whatsapp')} className={`flex-1 p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${jobForm.tipoContacto.includes('whatsapp') ? 'border-[#25D366] bg-[#25D366]/5 text-[#1A3D3D]' : 'border-gray-100 text-gray-400'}`}>
-                      <MessageCircle className={`w-8 h-8 ${jobForm.tipoContacto.includes('whatsapp') ? 'text-[#25D366]' : ''}`} /> <span className="font-bold text-sm">WhatsApp</span>
+                  <label className="block text-[11px] font-bold text-[#666666] uppercase tracking-widest mb-4">Canal preferido de contacto *</label>
+                  <div className="flex flex-col sm:flex-row gap-5 mb-4">
+                    <button onClick={() => toggleTipoContacto('whatsapp')} className={`flex-1 p-6 rounded-[24px] border-2 flex flex-col items-center gap-3 transition-all duration-300 ${jobForm.tipoContacto.includes('whatsapp') ? 'border-[#25D366] bg-[#25D366]/5 text-[#1A3D3D] shadow-md' : 'border-gray-100 text-[#666666] hover:border-gray-200 hover:bg-gray-50'}`}>
+                      <MessageCircle className={`w-8 h-8 ${jobForm.tipoContacto.includes('whatsapp') ? 'text-[#25D366]' : ''}`} /> <span className="font-bold text-[15px]">WhatsApp</span>
                     </button>
-                    <button onClick={() => toggleTipoContacto('email')} className={`flex-1 p-4 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${jobForm.tipoContacto.includes('email') ? 'border-[#2D6A6A] bg-[#2D6A6A]/5 text-[#1A3D3D]' : 'border-gray-100 text-gray-400'}`}>
-                      <Mail className={`w-8 h-8 ${jobForm.tipoContacto.includes('email') ? 'text-[#2D6A6A]' : ''}`} /> <span className="font-bold text-sm">Email</span>
+                    <button onClick={() => toggleTipoContacto('email')} className={`flex-1 p-6 rounded-[24px] border-2 flex flex-col items-center gap-3 transition-all duration-300 ${jobForm.tipoContacto.includes('email') ? 'border-[#2D6A6A] bg-[#2D6A6A]/5 text-[#1A3D3D] shadow-md' : 'border-gray-100 text-[#666666] hover:border-gray-200 hover:bg-gray-50'}`}>
+                      <Mail className={`w-8 h-8 ${jobForm.tipoContacto.includes('email') ? 'text-[#2D6A6A]' : ''}`} /> <span className="font-bold text-[15px]">Email</span>
                     </button>
                   </div>
-                  {errors.tipoContacto && <p className="text-red-500 text-[10px] font-bold mt-1.5 text-center">{errors.tipoContacto}</p>}
+                  {errors.tipoContacto && <p className="text-red-500 text-[11px] font-bold mt-2 text-center">{errors.tipoContacto}</p>}
                 </div>
-                <div className="space-y-4">
+
+                <div className="space-y-6">
                   {jobForm.tipoContacto.includes('whatsapp') && (
                     <div className="animate-in slide-in-from-top-2">
-                      <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Número de WhatsApp *</label>
-                      <input type="text" value={jobForm.contactoWhatsapp} onChange={(e) => handleJobFormChange('contactoWhatsapp', e.target.value)} placeholder="Ej: +54 9 11 1234 5678" className={`w-full bg-gray-50 border rounded-xl px-4 py-3.5 text-sm focus:outline-none text-[#1A3D3D] ${errors.contactoWhatsapp ? 'border-red-400' : 'border-gray-200'}`} />
+                      <label className="block text-[11px] font-bold text-[#666666] uppercase tracking-widest mb-3">Número de WhatsApp *</label>
+                      <input type="text" value={jobForm.contactoWhatsapp} onChange={(e) => handleJobFormChange('contactoWhatsapp', e.target.value)} placeholder="Ej: +54 9 11 1234 5678" className={`w-full bg-[#F4F7F7] border rounded-2xl px-5 py-4 text-[15px] font-medium focus:outline-none focus:bg-white focus:ring-4 focus:ring-[#2D6A6A]/10 text-[#333333] transition-all ${errors.contactoWhatsapp ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-[#2D6A6A]'}`} />
+                      {errors.contactoWhatsapp && <p className="text-red-500 text-[11px] font-bold mt-2">{errors.contactoWhatsapp}</p>}
                     </div>
                   )}
                   {jobForm.tipoContacto.includes('email') && (
                     <div className="animate-in slide-in-from-top-2">
-                      <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Email *</label>
-                      <input type="email" value={jobForm.contactoEmail} onChange={(e) => handleJobFormChange('contactoEmail', e.target.value)} placeholder="rrhh@tuclinica.com" className={`w-full bg-gray-50 border rounded-xl px-4 py-3.5 text-sm focus:outline-none text-[#1A3D3D] ${errors.contactoEmail ? 'border-red-400' : 'border-gray-200'}`} />
+                      <label className="block text-[11px] font-bold text-[#666666] uppercase tracking-widest mb-3">Email *</label>
+                      <input type="email" value={jobForm.contactoEmail} onChange={(e) => handleJobFormChange('contactoEmail', e.target.value)} placeholder="rrhh@tuclinica.com" className={`w-full bg-[#F4F7F7] border rounded-2xl px-5 py-4 text-[15px] font-medium focus:outline-none focus:bg-white focus:ring-4 focus:ring-[#2D6A6A]/10 text-[#333333] transition-all ${errors.contactoEmail ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-[#2D6A6A]'}`} />
+                      {errors.contactoEmail && <p className="text-red-500 text-[11px] font-bold mt-2">{errors.contactoEmail}</p>}
                     </div>
                   )}
                 </div>
                 
-                {/* Expiration Notice */}
-                <div className="bg-yellow-50 border border-yellow-200 p-5 rounded-[16px] flex items-start gap-3 mt-8">
-                  <CalendarDays className="w-5 h-5 text-yellow-600 shrink-0" />
+                <div className="bg-[#F4F7F7] border border-gray-200 p-6 rounded-[24px] flex items-start gap-4 mt-10">
+                  <CalendarDays className="w-6 h-6 text-[#2D6A6A] shrink-0" />
                   <div>
-                    <h4 className="text-yellow-800 text-xs font-bold mb-1">Duración de la publicación</h4>
-                    <p className="text-yellow-800 text-xs font-medium leading-relaxed">
-                      La oferta estará visible en la red por <strong className="font-bold">30 días</strong>. Al acercarse la fecha, te enviaremos un correo para renovarla o darla de baja si ya cubriste la posición.
+                    <h4 className="text-[#1A3D3D] text-[15px] font-bold mb-2">Duración de la publicación</h4>
+                    <p className="text-[#666666] text-[14px] font-medium leading-relaxed">
+                      La oferta estará visible en la red por <strong className="font-bold text-[#1A3D3D]">30 días</strong>. Al acercarse la fecha, te enviaremos un correo para renovarla o darla de baja si ya cubriste la posición.
                     </p>
                   </div>
                 </div>
@@ -780,11 +821,11 @@ export default function BolsaTrabajo() {
           )}
         </div>
 
-        <div className="bg-gray-50 border-t border-gray-100 p-6 flex items-center justify-between">
-          {jobFormStep > 1 ? <button onClick={() => { setJobFormStep(prev => prev - 1); setErrors({}); window.scrollTo(0,0); }} className="px-6 py-3.5 text-[#1A3D3D] font-bold text-[11px] uppercase tracking-widest hover:bg-gray-200 rounded-xl transition-all">Anterior</button> : <div></div>}
-          {jobFormStep < 3 ? <button onClick={() => { if(validateJobStep(jobFormStep)){ setJobFormStep(prev=>prev+1); window.scrollTo(0,0); } }} className="px-8 py-3.5 bg-[#1A3D3D] text-[#4DB6AC] font-black text-[11px] uppercase tracking-widest hover:bg-[#2D6A6A] hover:text-white rounded-xl transition-all shadow-lg flex items-center gap-2">Siguiente <ChevronRight className="w-4 h-4" /></button> : 
-            <button onClick={submitJobForm} disabled={isSubmitting} className="px-8 py-3.5 bg-[#4DB6AC] text-[#1A3D3D] font-black text-[11px] uppercase tracking-widest hover:bg-white border hover:border-[#4DB6AC] rounded-xl transition-all shadow-lg flex items-center gap-2 disabled:opacity-50">
-              {isSubmitting ? <><Loader2 className="w-4 h-4 animate-spin" /> Procesando...</> : <><Send className="w-4 h-4" /> Publicar Oferta</>}
+        <div className="bg-[#F4F7F7] border-t border-gray-100 p-8 flex items-center justify-between">
+          {jobFormStep > 1 ? <button onClick={() => { setJobFormStep(prev => prev - 1); setErrors({}); window.scrollTo(0,0); }} className="px-6 py-4 text-[#666666] font-bold text-[11px] uppercase tracking-widest hover:bg-gray-200 rounded-2xl transition-all">Anterior</button> : <div></div>}
+          {jobFormStep < 3 ? <button onClick={() => { if(validateJobStep(jobFormStep)){ setJobFormStep(prev=>prev+1); window.scrollTo(0,0); } }} className="px-8 py-4 bg-[#F4F7F7] border border-gray-200 text-[#1A3D3D] font-black text-[11px] uppercase tracking-widest hover:bg-gray-50 hover:-translate-y-1 rounded-2xl transition-all duration-300 flex items-center gap-2 shadow-sm">Siguiente <ChevronRight className="w-5 h-5" /></button> : 
+            <button onClick={submitJobForm} disabled={isSubmitting} className="px-10 py-5 bg-[#2D6A6A] text-white font-black text-[12px] uppercase tracking-[0.2em] hover:bg-[#1A3D3D] hover:-translate-y-1 hover:shadow-2xl rounded-2xl transition-all duration-300 flex items-center gap-3 shadow-xl disabled:opacity-50">
+              {isSubmitting ? <><Loader2 className="w-5 h-5 animate-spin" /> Procesando...</> : <><Send className="w-5 h-5" /> Publicar Oferta</>}
             </button>
           }
         </div>
@@ -800,74 +841,77 @@ export default function BolsaTrabajo() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <button 
           onClick={() => { setView('list'); setProfFormStep(1); setErrors({}); }} 
-          className="flex items-center gap-2 text-gray-400 hover:text-[#1A3D3D] font-bold text-[10px] uppercase tracking-[0.3em] transition-colors group"
+          className="flex items-center gap-2 text-[#666666] hover:text-[#1A3D3D] font-bold text-[10px] uppercase tracking-[0.3em] transition-colors group"
         >
           <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Cancelar
         </button>
       </div>
 
       <div className="text-center mb-10">
-        <h1 className="text-3xl md:text-4xl font-black font-['Montserrat'] text-[#1A3D3D] tracking-tight mb-3">Marcar Disponibilidad</h1>
-        <p className="text-gray-500 font-medium text-sm max-w-lg mx-auto">Completá esta mini-ficha para que las clínicas puedan encontrarte y contactarte. Tu perfil debe estar validado con matrícula vigente.</p>
+        <h1 className="text-[32px] md:text-[42px] font-black font-['Montserrat'] text-[#1A3D3D] tracking-tight mb-4">Marcar Disponibilidad</h1>
+        <p className="text-[#666666] font-medium text-[16px] max-w-lg mx-auto leading-relaxed">Completá esta mini-ficha para que las clínicas puedan encontrarte y contactarte. Tu perfil debe estar validado con matrícula vigente.</p>
       </div>
 
-      <div className="bg-white rounded-[32px] border border-gray-100 shadow-xl overflow-hidden">
-        <div className="bg-gray-50 border-b border-gray-100 p-6 flex items-center justify-between relative">
+      <div className="bg-white rounded-[40px] border border-gray-100 shadow-xl overflow-hidden">
+        <div className="bg-[#F4F7F7] border-b border-gray-100 p-8 flex items-center justify-between relative">
           <div className="absolute top-1/2 left-1/4 right-1/4 h-1 bg-gray-200 -translate-y-1/2 rounded-full z-0 hidden md:block">
             <div className="h-full bg-[#4DB6AC] rounded-full transition-all duration-500" style={{ width: `${((profFormStep - 1) / 1) * 100}%` }}></div>
           </div>
           {[1, 2].map((step) => (
-            <div key={step} className="relative z-10 flex flex-col items-center gap-2 mx-auto">
-              <div className={`w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center font-bold text-xs transition-all duration-300 ${
+            <div 
+              key={step} 
+              onClick={() => { if(profFormStep > step) setProfFormStep(step); }}
+              className={`relative z-10 flex flex-col items-center gap-3 mx-auto ${profFormStep > step ? 'cursor-pointer group' : ''}`}
+            >
+              <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center font-bold text-[14px] transition-all duration-300 ${
                 profFormStep === step ? 'bg-[#1A3D3D] text-[#4DB6AC] shadow-lg scale-110' : 
-                profFormStep > step ? 'bg-[#4DB6AC] text-[#1A3D3D]' : 'bg-white border-2 border-gray-200 text-gray-400'
+                profFormStep > step ? 'bg-[#4DB6AC] text-[#1A3D3D] group-hover:bg-[#2D6A6A] group-hover:text-white' : 'bg-white border-2 border-gray-200 text-[#666666]'
               }`}>
-                {profFormStep > step ? <Check className="w-4 h-4 md:w-5 md:h-5" /> : step}
+                {profFormStep > step ? <Check className="w-5 h-5" /> : step}
               </div>
-              <span className={`text-[8px] md:text-[10px] uppercase tracking-widest font-bold hidden md:block ${profFormStep >= step ? 'text-[#1A3D3D]' : 'text-gray-400'}`}>
+              <span className={`text-[9px] md:text-[11px] uppercase tracking-widest font-bold hidden md:block ${profFormStep >= step ? 'text-[#1A3D3D]' : 'text-[#666666]'}`}>
                 {step === 1 ? 'Perfil Básico' : 'Disponibilidad'}
               </span>
             </div>
           ))}
         </div>
 
-        <div className="p-6 md:p-10">
+        <div className="p-8 md:p-12">
           {profFormStep === 1 && (
-            <div className="space-y-6 animate-in fade-in">
-              <h2 className="text-2xl font-black font-['Montserrat'] text-[#1A3D3D] mb-1">Tu perfil</h2>
-              <div className="space-y-5">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-8 animate-in fade-in">
+              <h2 className="text-[24px] font-bold font-['Montserrat'] text-[#1A3D3D] mb-2">Tu perfil</h2>
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
-                    <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Especialidad *</label>
-                    <select value={profForm.especialidad} onChange={(e) => handleProfFormChange('especialidad', e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-sm font-medium focus:outline-none focus:border-[#2D6A6A]">
+                    <label className="block text-[11px] font-bold text-[#666666] uppercase tracking-widest mb-3">Especialidad *</label>
+                    <select value={profForm.especialidad} onChange={(e) => handleProfFormChange('especialidad', e.target.value)} className="w-full bg-[#F4F7F7] border border-gray-200 rounded-2xl px-5 py-4 text-[15px] font-medium focus:outline-none focus:border-[#2D6A6A] focus:ring-4 focus:ring-[#2D6A6A]/10 text-[#333333] transition-all">
                       {PUESTOS_TRABAJO.filter(p=>p!=='Todos').map(m => <option key={m} value={m}>{m}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Experiencia *</label>
-                    <select value={profForm.experiencia} onChange={(e) => handleProfFormChange('experiencia', e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-sm font-medium focus:outline-none focus:border-[#2D6A6A]">
+                    <label className="block text-[11px] font-bold text-[#666666] uppercase tracking-widest mb-3">Experiencia *</label>
+                    <select value={profForm.experiencia} onChange={(e) => handleProfFormChange('experiencia', e.target.value)} className="w-full bg-[#F4F7F7] border border-gray-200 rounded-2xl px-5 py-4 text-[15px] font-medium focus:outline-none focus:border-[#2D6A6A] focus:ring-4 focus:ring-[#2D6A6A]/10 text-[#333333] transition-all">
                       {EXPERIENCIA_REQUERIDA.map(m => <option key={m} value={m}>{m}</option>)}
                     </select>
                   </div>
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Provincia de residencia/trabajo *</label>
-                  <select value={profForm.provincia} onChange={(e) => handleProfFormChange('provincia', e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-sm font-medium focus:outline-none focus:border-[#2D6A6A]">
+                  <label className="block text-[11px] font-bold text-[#666666] uppercase tracking-widest mb-3">Provincia de residencia/trabajo *</label>
+                  <select value={profForm.provincia} onChange={(e) => handleProfFormChange('provincia', e.target.value)} className="w-full bg-[#F4F7F7] border border-gray-200 rounded-2xl px-5 py-4 text-[15px] font-medium focus:outline-none focus:border-[#2D6A6A] focus:ring-4 focus:ring-[#2D6A6A]/10 text-[#333333] transition-all">
                     {PROVINCIAS.filter(p=>p!=='Todas').map(m => <option key={m} value={m}>{m}</option>)}
                   </select>
                 </div>
               </div>
             </div>
           )}
-
           {profFormStep === 2 && (
-            <div className="space-y-6 animate-in fade-in">
-              <h2 className="text-2xl font-black font-['Montserrat'] text-[#1A3D3D] mb-1">Tu Disponibilidad</h2>
-              <div className="space-y-5">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-8 animate-in fade-in">
+              <h2 className="text-[24px] font-bold font-['Montserrat'] text-[#1A3D3D] mb-2">Tu Disponibilidad</h2>
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
-                    <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Tiempo / Modalidad *</label>
-                    <select value={profForm.tiempo} onChange={(e) => handleProfFormChange('tiempo', e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-sm font-medium focus:outline-none focus:border-[#2D6A6A]">
+                    <label className="block text-[11px] font-bold text-[#666666] uppercase tracking-widest mb-3">Tiempo / Modalidad *</label>
+                    <select value={profForm.tiempo} onChange={(e) => handleProfFormChange('tiempo', e.target.value)} className="w-full bg-[#F4F7F7] border border-gray-200 rounded-2xl px-5 py-4 text-[15px] font-medium focus:outline-none focus:border-[#2D6A6A] focus:ring-4 focus:ring-[#2D6A6A]/10 text-[#333333] transition-all">
                       <option value="Part-time">Part-time (Algunos días)</option>
                       <option value="Full-time">Full-time (Lunes a Viernes)</option>
                       <option value="Por turnos">Por turnos / Interconsultas</option>
@@ -875,8 +919,8 @@ export default function BolsaTrabajo() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Franja Horaria *</label>
-                    <select value={profForm.momentoDia} onChange={(e) => handleProfFormChange('momentoDia', e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-sm font-medium focus:outline-none focus:border-[#2D6A6A]">
+                    <label className="block text-[11px] font-bold text-[#666666] uppercase tracking-widest mb-3">Franja Horaria *</label>
+                    <select value={profForm.momentoDia} onChange={(e) => handleProfFormChange('momentoDia', e.target.value)} className="w-full bg-[#F4F7F7] border border-gray-200 rounded-2xl px-5 py-4 text-[15px] font-medium focus:outline-none focus:border-[#2D6A6A] focus:ring-4 focus:ring-[#2D6A6A]/10 text-[#333333] transition-all">
                       <option value="Mañana">Mañana</option>
                       <option value="Tarde">Tarde</option>
                       <option value="Mañana / Tarde">Día Completo</option>
@@ -885,34 +929,31 @@ export default function BolsaTrabajo() {
                     </select>
                   </div>
                 </div>
-
                 <div>
-                  <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">¿Qué servicios ofreces específicamente? *</label>
+                  <label className="block text-[11px] font-bold text-[#666666] uppercase tracking-widest mb-3">¿Qué servicios ofreces específicamente? *</label>
                   <div className="space-y-3">
                     {profForm.servicios.map((item, index) => (
-                      <div key={index} className="flex items-center gap-2">
-                        <input type="text" value={item} onChange={(e) => updateProfArrayItem(index, e.target.value)} placeholder="Ej: Guardias activas, cirugías programadas, a domicilio..." className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#2D6A6A]" />
-                        {profForm.servicios.length > 1 && <button onClick={() => removeProfArrayItem(index)} className="p-3 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl"><Trash2 className="w-5 h-5" /></button>}
+                      <div key={index} className="flex items-center gap-3">
+                        <input type="text" value={item} onChange={(e) => updateProfArrayItem(index, e.target.value)} placeholder="Ej: Guardias activas, cirugías programadas, a domicilio..." className="flex-1 bg-[#F4F7F7] border border-gray-200 rounded-2xl px-5 py-3.5 text-[15px] focus:outline-none focus:border-[#2D6A6A] focus:bg-white text-[#333333] transition-all" />
+                        {profForm.servicios.length > 1 && <button onClick={() => removeProfArrayItem(index)} className="p-3.5 text-[#666666] hover:text-red-500 hover:bg-red-50 rounded-2xl transition-colors"><Trash2 className="w-5 h-5" /></button>}
                       </div>
                     ))}
-                    <button onClick={addProfArrayItem} className="text-[#2D6A6A] font-bold text-xs uppercase tracking-widest mt-2 hover:bg-[#2D6A6A]/10 px-4 py-2 rounded-lg flex items-center gap-2"><Plus className="w-4 h-4" /> Agregar servicio</button>
-                    {errors.servicios && <p className="text-red-500 text-[10px] font-bold mt-1.5">{errors.servicios}</p>}
+                    <button onClick={addProfArrayItem} className="text-[#2D6A6A] font-bold text-[12px] uppercase tracking-widest mt-3 hover:bg-[#2D6A6A]/10 px-5 py-3 rounded-2xl flex items-center gap-2 transition-colors"><Plus className="w-4 h-4" /> Agregar servicio</button>
+                    {errors.servicios && <p className="text-red-500 text-[11px] font-bold mt-2">{errors.servicios}</p>}
                   </div>
                 </div>
-
                 <div>
-                  <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Contanos qué estás buscando (Tu "Pitch") *</label>
-                  <textarea value={profForm.buscando} onChange={(e) => handleProfFormChange('buscando', e.target.value)} placeholder="Ej: Busco cubrir turnos fijos en clínica de pequeños animales, idealmente zona norte..." rows="3" className={`w-full bg-gray-50 border rounded-xl px-4 py-3.5 text-sm font-medium focus:outline-none focus:bg-white resize-none ${errors.buscando ? 'border-red-400' : 'border-gray-200'}`}></textarea>
-                  {errors.buscando && <p className="text-red-500 text-[10px] font-bold mt-1.5">{errors.buscando}</p>}
+                  <label className="block text-[11px] font-bold text-[#666666] uppercase tracking-widest mb-3">Contanos qué estás buscando (Tu "Pitch") *</label>
+                  <textarea value={profForm.buscando} onChange={(e) => handleProfFormChange('buscando', e.target.value)} placeholder="Ej: Busco cubrir turnos fijos en clínica de pequeños animales, idealmente zona norte..." rows="4" className={`w-full bg-[#F4F7F7] border rounded-2xl px-5 py-4 text-[15px] font-medium focus:outline-none focus:bg-white focus:ring-4 focus:ring-[#2D6A6A]/10 text-[#333333] resize-none transition-all ${errors.buscando ? 'border-red-400' : 'border-gray-200'}`}></textarea>
+                  {errors.buscando && <p className="text-red-500 text-[11px] font-bold mt-2">{errors.buscando}</p>}
                 </div>
-
-                {/* Expiration Notice */}
-                <div className="bg-blue-50 border border-blue-200 p-5 rounded-[16px] flex items-start gap-3 mt-8">
-                  <CalendarDays className="w-5 h-5 text-blue-600 shrink-0" />
+                
+                <div className="bg-[#F4F7F7] border border-gray-200 p-6 rounded-[24px] flex items-start gap-4 mt-10">
+                  <CalendarDays className="w-6 h-6 text-[#2D6A6A] shrink-0" />
                   <div>
-                    <h4 className="text-blue-800 text-xs font-bold mb-1">Renovación de Disponibilidad</h4>
-                    <p className="text-blue-800 text-xs font-medium leading-relaxed">
-                      Para asegurar que las clínicas vean datos reales, tu estado "Disponible" dura <strong className="font-bold">30 días</strong>. Pasado ese tiempo, tu tarjeta se ocultará automáticamente a menos que decidas renovarla con un clic.
+                    <h4 className="text-[#1A3D3D] text-[15px] font-bold mb-2">Renovación de Disponibilidad</h4>
+                    <p className="text-[#666666] text-[14px] font-medium leading-relaxed">
+                      Para asegurar que las clínicas vean datos reales, tu estado "Disponible" dura <strong className="font-bold text-[#1A3D3D]">30 días</strong>. Pasado ese tiempo, tu tarjeta se ocultará automáticamente a menos que decidas renovarla con un clic.
                     </p>
                   </div>
                 </div>
@@ -920,12 +961,11 @@ export default function BolsaTrabajo() {
             </div>
           )}
         </div>
-
-        <div className="bg-gray-50 border-t border-gray-100 p-6 flex items-center justify-between">
-          {profFormStep > 1 ? <button onClick={() => { setProfFormStep(prev => prev - 1); setErrors({}); window.scrollTo(0,0); }} className="px-6 py-3.5 text-[#1A3D3D] font-bold text-[11px] uppercase tracking-widest hover:bg-gray-200 rounded-xl transition-all">Anterior</button> : <div></div>}
-          {profFormStep < 2 ? <button onClick={() => { setProfFormStep(prev=>prev+1); window.scrollTo(0,0); }} className="px-8 py-3.5 bg-[#1A3D3D] text-[#4DB6AC] font-black text-[11px] uppercase tracking-widest hover:bg-[#2D6A6A] hover:text-white rounded-xl transition-all shadow-lg flex items-center gap-2">Siguiente <ChevronRight className="w-4 h-4" /></button> : 
-            <button onClick={submitProfForm} disabled={isSubmitting} className="px-8 py-3.5 bg-[#4DB6AC] text-[#1A3D3D] font-black text-[11px] uppercase tracking-widest hover:bg-white border hover:border-[#4DB6AC] rounded-xl transition-all shadow-lg flex items-center gap-2 disabled:opacity-50">
-              {isSubmitting ? <><Loader2 className="w-4 h-4 animate-spin" /> Procesando...</> : <><Send className="w-4 h-4" /> Marcarme Disponible</>}
+        <div className="bg-[#F4F7F7] border-t border-gray-100 p-8 flex items-center justify-between">
+          {profFormStep > 1 ? <button onClick={() => { setProfFormStep(prev => prev - 1); setErrors({}); window.scrollTo(0,0); }} className="px-6 py-4 text-[#666666] font-bold text-[11px] uppercase tracking-widest hover:bg-gray-200 rounded-2xl transition-all">Anterior</button> : <div></div>}
+          {profFormStep < 2 ? <button onClick={() => { setProfFormStep(prev=>prev+1); window.scrollTo(0,0); }} className="px-8 py-4 bg-[#F4F7F7] border border-gray-200 text-[#1A3D3D] font-black text-[11px] uppercase tracking-widest hover:bg-gray-50 hover:-translate-y-1 rounded-2xl transition-all duration-300 flex items-center gap-2 shadow-sm">Siguiente <ChevronRight className="w-5 h-5" /></button> : 
+            <button onClick={submitProfForm} disabled={isSubmitting} className="px-10 py-5 bg-[#2D6A6A] text-white font-black text-[12px] uppercase tracking-[0.2em] hover:bg-[#1A3D3D] hover:-translate-y-1 hover:shadow-2xl rounded-2xl transition-all duration-300 flex items-center gap-3 shadow-xl disabled:opacity-50">
+              {isSubmitting ? <><Loader2 className="w-5 h-5 animate-spin" /> Procesando...</> : <><Send className="w-5 h-5" /> Marcarme Disponible</>}
             </button>
           }
         </div>
@@ -935,7 +975,6 @@ export default function BolsaTrabajo() {
 
   return (
     <div className="bg-[#F4F7F7] min-h-screen font-['Inter'] antialiased relative">
-      
       {/* NAVBAR */}
       <nav className={`sticky top-0 w-full z-50 h-[80px] flex items-center px-6 md:px-12 lg:px-24 transition-all duration-300 print:hidden ${isNavbarScrolled ? 'bg-white/85 backdrop-blur-md shadow-md border-b border-gray-200' : 'bg-white border-b border-gray-100 shadow-sm'}`}>
         <div className="max-w-[1440px] mx-auto w-full flex justify-between items-center">
@@ -943,12 +982,11 @@ export default function BolsaTrabajo() {
             El Portal<span className="text-[#2D6A6A]">.</span>
           </button>
           <div className="flex items-center gap-4">
-            <div className="hidden md:flex items-center gap-10 text-[11px] font-black text-gray-400 uppercase tracking-widest">
+            <div className="hidden md:flex items-center gap-10 text-[11px] font-black text-[#666666] uppercase tracking-widest">
               <button onClick={() => navigate('/ecosistema')} className="hover:text-[#1A3D3D] cursor-pointer transition-colors">Cursos</button>
               <button className="text-[#1A3D3D] border-b-2 border-[#2D6A6A] pb-1 cursor-pointer transition-colors" onClick={() => { setView('list'); window.scrollTo(0,0); }}>Empleos</button>
               <button onClick={() => { setView('publish_job'); window.scrollTo(0,0); }} className="bg-[#1A3D3D] text-white px-8 py-3 rounded-full hover:bg-[#2D6A6A] transition-all">Publicar</button>
             </div>
-
             <div className="relative">
               <button 
                 onClick={() => setIsMenuOpen(!isMenuOpen)} 
@@ -963,18 +1001,17 @@ export default function BolsaTrabajo() {
                   <div className="fixed inset-0 z-[-1]" onClick={() => setIsMenuOpen(false)}></div>
                   <div className="absolute right-0 mt-4 w-64 bg-white rounded-[32px] shadow-[0_20px_50px_rgba(26,61,61,0.15)] border border-gray-100 overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
                     <div className="p-3">
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] px-4 py-3 border-b border-gray-50 mb-2 text-left">Navegación</p>
-                      <button onClick={() => { navigate('/inicio'); setIsMenuOpen(false); }} className="w-full flex items-center gap-3 px-4 py-4 hover:bg-[#F4F7F7] rounded-2xl transition-colors group"><Home className="w-4 h-4 text-gray-400 group-hover:text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Inicio</span></button>
-                      <button onClick={() => { navigate('/'); setIsMenuOpen(false); }} className="w-full flex items-center gap-3 px-4 py-4 hover:bg-[#F4F7F7] rounded-2xl transition-colors group"><Info className="w-4 h-4 text-gray-400 group-hover:text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Entrada</span></button>
+                      <p className="text-[10px] font-bold text-[#666666] uppercase tracking-[0.2em] px-4 py-3 border-b border-gray-50 mb-2 text-left">Navegación</p>
+                      <button onClick={() => { navigate('/inicio'); setIsMenuOpen(false); }} className="w-full flex items-center gap-3 px-4 py-4 hover:bg-[#F4F7F7] rounded-2xl transition-colors group"><Home className="w-4 h-4 text-[#666666] group-hover:text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Inicio</span></button>
+                      <button onClick={() => { navigate('/'); setIsMenuOpen(false); }} className="w-full flex items-center gap-3 px-4 py-4 hover:bg-[#F4F7F7] rounded-2xl transition-colors group"><Info className="w-4 h-4 text-[#666666] group-hover:text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Entrada</span></button>
                       <button onClick={() => { navigate('/ecosistema'); setIsMenuOpen(false); }} className="w-full flex items-center justify-between px-4 py-4 hover:bg-[#F4F7F7] rounded-2xl transition-colors group"><div className="flex items-center gap-3"><LayoutGrid className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Repertorio Clínico</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
                       <button onClick={() => { navigate('/novedades'); setIsMenuOpen(false); }} className="w-full flex items-center justify-between px-4 py-4 hover:bg-[#F4F7F7] rounded-2xl transition-colors group"><div className="flex items-center gap-3"><Sparkles className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Novedades</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
                       <button onClick={() => { setView('list'); setIsMenuOpen(false); }} className="w-full flex items-center justify-between px-4 py-4 hover:bg-[#F4F7F7] rounded-2xl transition-colors group"><div className="flex items-center gap-3"><Briefcase className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Bolsa de Trabajo</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
-
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] px-4 py-3 border-b border-gray-50 mb-2 mt-2 text-left">Perfiles</p>
+                      <p className="text-[10px] font-bold text-[#666666] uppercase tracking-[0.2em] px-4 py-3 border-b border-gray-50 mb-2 mt-2 text-left">Perfiles</p>
                       <button onClick={() => { navigate('/perfil-clinica'); setIsMenuOpen(false); }} className="w-full flex items-center justify-between px-4 py-4 hover:bg-[#F4F7F7] rounded-2xl transition-colors group"><div className="flex items-center gap-3"><Building className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Perfil Clínica</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
                       <button onClick={() => { navigate('/perfil-proveedor'); setIsMenuOpen(false); }} className="w-full flex items-center justify-between px-4 py-4 hover:bg-[#F4F7F7] rounded-2xl transition-colors group"><div className="flex items-center gap-3"><Truck className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Perfil Proveedor</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
                       
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] px-4 py-3 border-b border-gray-50 mb-2 mt-2 text-left">Editores</p>
+                      <p className="text-[10px] font-bold text-[#666666] uppercase tracking-[0.2em] px-4 py-3 border-b border-gray-50 mb-2 mt-2 text-left">Editores</p>
                       <button onClick={() => { navigate('/editor-clinica'); setIsMenuOpen(false); }} className="w-full flex items-center justify-between px-4 py-4 hover:bg-[#F4F7F7] rounded-2xl transition-colors group"><div className="flex items-center gap-3"><Edit3 className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Editor Clínica</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
                       <button onClick={() => { navigate('/editor-proveedores'); setIsMenuOpen(false); }} className="w-full flex items-center justify-between px-4 py-4 hover:bg-[#F4F7F7] rounded-2xl transition-colors group"><div className="flex items-center gap-3"><Edit3 className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Editor Proveedores</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
                     </div>
@@ -994,99 +1031,90 @@ export default function BolsaTrabajo() {
         {view === 'publish_prof' && renderPublishProfForm()}
       </main>
 
-      {/* FOOTER COMPACTO (Definitivo) */}
-      <footer ref={footerRef} className="w-full bg-gradient-to-br from-[#1A3D3D] to-[#2D6A6A] relative overflow-hidden mt-12 pt-12 pb-8 text-left print:hidden">
+      {/* FOOTER COMPACTO */}
+      <footer ref={footerRef} className="w-full bg-[#1A3D3D] relative overflow-hidden mt-12 pt-16 pb-8 text-left print:hidden">
         <div className="absolute top-0 left-0 w-full h-px bg-white/10"></div>
         <div className="max-w-[1100px] mx-auto px-8 md:px-10 relative z-10 text-left">
-          
           {/* BLOQUE DE CONTENIDO SUPERIOR */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-x-8 gap-y-8 mb-6 text-left">
-            
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-x-8 gap-y-12 mb-10 text-left">
             {/* COLUMNA 1: Branding */}
             <div className="md:col-span-1 text-left">
               <button onClick={() => navigate('/')} className="text-white font-['Montserrat'] font-bold text-2xl mb-4 text-left leading-none cursor-pointer block hover:opacity-80 transition-opacity">
-                El Portal<span className="text-white/40">.</span>
+                El Portal<span className="text-[#4DB6AC]">.</span>
               </button>
-              <p className="text-white/50 text-sm md:text-[13px] leading-relaxed font-medium text-left">
+              <p className="text-white/60 text-sm md:text-[13px] leading-relaxed font-medium text-left">
                 La red profesional exclusiva para medicina veterinaria de alta complejidad. Conectando talento con vocación.
               </p>
             </div>
-
             {/* COLUMNA 2: Repertorio */}
             <div>
-              <h4 className="text-white font-bold text-[11px] md:text-[10px] uppercase tracking-[0.3em] mb-4">Repertorio</h4>
-              <ul className="space-y-2 text-white/40 text-sm">
+              <h4 className="text-white font-bold text-[11px] md:text-[10px] uppercase tracking-[0.3em] mb-5">Repertorio</h4>
+              <ul className="space-y-3 text-white/60 text-[13px] font-medium">
                 <li><button onClick={() => navigate('/ecosistema')} className="hover:text-white transition-colors">Cursos y Seminarios</button></li>
                 <li><button onClick={() => navigate('/ecosistema')} className="hover:text-white transition-colors">Insumos</button></li>
               </ul>
             </div>
-
             {/* COLUMNA 3: Comunidad */}
             <div>
-              <h4 className="text-white font-bold text-[11px] md:text-[10px] uppercase tracking-[0.3em] mb-4">Comunidad</h4>
-              <ul className="space-y-2 text-white/40 text-sm">
-                <li><button onClick={() => navigate('/bolsa-de-trabajo')} className="hover:text-white transition-colors">Bolsa de Trabajo</button></li>
+              <h4 className="text-white font-bold text-[11px] md:text-[10px] uppercase tracking-[0.3em] mb-5">Comunidad</h4>
+              <ul className="space-y-3 text-white/60 text-[13px] font-medium">
+                <li><button onClick={() => navigate('/bolsa-de-trabajo')} className="text-white transition-colors">Bolsa de Trabajo</button></li>
                 <li><button onClick={() => navigate('/inicio')} className="hover:text-white transition-colors">Foro de Discusión</button></li>
               </ul>
             </div>
-
             {/* COLUMNA 4: Contacto */}
             <div>
-              <h4 className="text-white font-bold text-[11px] md:text-[10px] uppercase tracking-[0.3em] mb-4">Contacto</h4>
-              <ul className="space-y-2 text-white/40 text-sm leading-none">
+              <h4 className="text-white font-bold text-[11px] md:text-[10px] uppercase tracking-[0.3em] mb-5">Contacto</h4>
+              <ul className="space-y-3 text-white/60 text-[13px] font-medium">
                 <li>
                   <a href="mailto:elportalveterinario.arg@gmail.com" className="flex items-center gap-3 hover:text-white transition-colors">
                     <Mail className="w-4 h-4 shrink-0" /> 
-                    <span className="truncate">elportalveterinario.arg@gmail.com</span>
+                    <span className="truncate">elportal.arg@gmail.com</span>
                   </a>
                 </li>
                 <li className="flex items-center gap-3">
-                  <Globe className="w-4 h-4" /> elportal.vet
+                  <Globe className="w-4 h-4 shrink-0" /> elportal.vet
                 </li>
               </ul>
             </div>
           </div>
-
+          
           {/* FILA DE CRÉDITOS UNIFICADA */}
           <div className="flex flex-row items-center justify-center gap-x-8 mb-10 pt-4">
-            
-            {/* Iconos Redes */}
             <div className="flex gap-3 shrink-0">
-              <a href="#" aria-label="Facebook" className="w-9 h-9 bg-white/5 rounded-lg flex items-center justify-center text-white/70 hover:bg-white hover:text-[#1A3D3D] transition-all">
+              <a href="#" aria-label="Facebook" className="w-10 h-10 bg-white/5 rounded-[12px] flex items-center justify-center text-white/70 hover:bg-white hover:text-[#1A3D3D] transition-all duration-300">
                 <Facebook className="w-4 h-4" />
               </a>
-              <a href="#" aria-label="Instagram" className="w-9 h-9 bg-white/5 rounded-lg flex items-center justify-center text-white/70 hover:bg-white hover:text-[#1A3D3D] transition-all">
+              <a href="#" aria-label="Instagram" className="w-10 h-10 bg-white/5 rounded-[12px] flex items-center justify-center text-white/70 hover:bg-white hover:text-[#1A3D3D] transition-all duration-300">
                 <Instagram className="w-4 h-4" />
               </a>
-              <a href="#" aria-label="Linkedin" className="w-9 h-9 bg-white/5 rounded-lg flex items-center justify-center text-white/70 hover:bg-white hover:text-[#1A3D3D] transition-all">
+              <a href="#" aria-label="Linkedin" className="w-10 h-10 bg-white/5 rounded-[12px] flex items-center justify-center text-white/70 hover:bg-white hover:text-[#1A3D3D] transition-all duration-300">
                 <Linkedin className="w-4 h-4" />
               </a>
             </div>
             
-            {/* Copyright */}
-            <div className="text-white/40 text-[11px] md:text-xs font-medium leading-relaxed whitespace-nowrap shrink-0">
+            <div className="text-white/40 text-[11px] md:text-[12px] font-medium leading-relaxed whitespace-nowrap shrink-0">
               <p>&copy; {new Date().getFullYear()} El Portal. Todos los derechos reservados.</p>
             </div>
-
-            {/* Legales */}
-            <div className="text-white/40 text-[11px] md:text-xs font-medium flex items-center gap-2 shrink-0">
-              <button onClick={() => navigate('/terminos-y-condiciones')} className="underline hover:text-white transition-colors">Términos</button>
+            
+            <div className="text-white/40 text-[11px] md:text-[12px] font-medium flex items-center gap-2 shrink-0">
+              <button onClick={() => navigate('/terminos-y-condiciones')} className="hover:text-white transition-colors">Términos</button>
               <span className="opacity-20">•</span>
-              <button onClick={() => navigate('/politica-de-privacidad')} className="underline hover:text-white transition-colors">Privacidad</button>
+              <button onClick={() => navigate('/politica-de-privacidad')} className="hover:text-white transition-colors">Privacidad</button>
             </div>
           </div>
-
-          {/* BARRA INFERIOR FINAL - Letras en blanco */}
+          
+          {/* BARRA INFERIOR FINAL */}
           <div className="pt-6 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-white font-bold text-[11px] md:text-[10px] uppercase tracking-[0.3em]">creado por Belén M. Arenas</p>
-            <div className="text-white text-[11px] md:text-[10px] uppercase tracking-[0.3em] font-medium flex items-center gap-1.5 group cursor-default">
+            <p className="text-white/60 font-bold text-[10px] uppercase tracking-[0.3em]">creado por Belén M. Arenas</p>
+            <div className="text-white/60 text-[10px] uppercase tracking-[0.3em] font-bold flex items-center gap-1.5 group cursor-default">
               <span>Hecho con</span>
               <Heart className="w-3 h-3 text-red-400/80 group-hover:text-red-400 group-hover:scale-110 transition-all duration-300 fill-current" aria-hidden="true" />
               <span>en Argentina.</span>
             </div>
-            <div className="flex items-center gap-2 text-white">
-              <ShieldCheck className="w-3.5 h-3.5" aria-hidden="true" />
-              <span className="text-[11px] md:text-[10px] font-bold uppercase tracking-[0.3em] leading-none">Única plataforma veterinaria oficial</span>
+            <div className="flex items-center gap-2 text-white/60">
+              <ShieldCheck className="w-4 h-4" aria-hidden="true" />
+              <span className="text-[10px] font-bold uppercase tracking-[0.3em] leading-none">Única plataforma oficial</span>
             </div>
           </div>
         </div>
@@ -1094,20 +1122,19 @@ export default function BolsaTrabajo() {
 
       {/* BANNER DE COOKIES */}
       {showCookieBanner && !isFooterVisible && (
-        <div className="fixed bottom-0 left-0 w-full bg-[#0a1e1e]/95 backdrop-blur-md border-t border-white/10 z-[100] py-4 px-8 flex flex-col md:flex-row items-center justify-between gap-4 animate-slide-up shadow-2xl">
-          <div className="flex items-center gap-3 text-white/60 text-[11px] font-medium text-center md:text-left">
-            <Info size={14} className="text-[#2D6A6A] shrink-0" />
+        <div className="fixed bottom-0 left-0 w-full bg-[#1A3D3D]/95 backdrop-blur-md border-t border-white/10 z-[100] py-4 px-8 flex flex-col md:flex-row items-center justify-between gap-4 animate-slide-up shadow-2xl">
+          <div className="flex items-center gap-3 text-white/80 text-[13px] font-medium text-center md:text-left">
+            <Info size={16} className="text-[#4DB6AC] shrink-0" />
             <p>Utilizamos cookies para mejorar tu experiencia. Al continuar navegando, aceptás nuestros términos.</p>
           </div>
           <button 
             onClick={() => setShowCookieBanner(false)}
-            className="bg-[#2D6A6A] hover:bg-white text-white hover:text-[#1A3D3D] px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg"
+            className="bg-[#2D6A6A] hover:bg-white text-white hover:text-[#1A3D3D] px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 shadow-lg hover:-translate-y-0.5"
           >
             Entendido
           </button>
         </div>
       )}
-
     </div>
   );
 }

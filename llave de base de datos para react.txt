@@ -1,0 +1,24 @@
+npm install firebase
+
+
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyA9DsYU4-LEelrXFIiPpk9_nYErpZSqYTM",
+  authDomain: "el-portal-veterinario-3ab72.firebaseapp.com",
+  projectId: "el-portal-veterinario-3ab72",
+  storageBucket: "el-portal-veterinario-3ab72.firebasestorage.app",
+  messagingSenderId: "939343810474",
+  appId: "1:939343810474:web:8e31c0f498330e85cfe5d3",
+  measurementId: "G-6VQ6GT3ZQ9"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
