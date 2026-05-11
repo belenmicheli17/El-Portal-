@@ -1,21 +1,20 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Mail, Globe, Facebook, Instagram, Linkedin, Heart, ShieldCheck } from 'lucide-react';
 
-export default function Footer({ onNavigate }) {
-  // Función auxiliar para unificar la navegación
+export default function Footer() {
+  const navigate = useNavigate();
+
+  // Función auxiliar para unificar la navegación y subir el scroll
   const handleNavClick = (path) => {
-    if (onNavigate) {
-      onNavigate(path);
-    } else {
-      console.log('Navegando a:', path);
-    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    navigate(path);
   };
 
   return (
-    <footer className="w-full bg-gradient-to-br from-[#1A3D3D] to-[#2D6A6A] relative overflow-hidden pt-12 pb-8 text-left print:hidden mt-12">
-      <div className="absolute top-0 left-0 w-full h-px bg-white/10"></div>
-      <div className="max-w-[1100px] mx-auto px-8 md:px-10 relative z-10 text-left">
-        
+   <footer className="w-full bg-gradient-to-br from-[#1A3D3D] to-[#2D6A6A] relative overflow-hidden pt-4 pb-8 text-left print:hidden mt-0 font-['Inter']">
+  <div className="absolute top-0 left-0 w-full h-px bg-white/10"></div>
+  <div className="max-w-[1100px] mx-auto px-8 md:px-10 relative z-10 text-left">
         {/* BLOQUE DE CONTENIDO SUPERIOR */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-x-8 gap-y-8 mb-6 text-left">
           
@@ -31,7 +30,7 @@ export default function Footer({ onNavigate }) {
 
           {/* COLUMNA 2: Repertorio */}
           <div>
-            <h4 className="text-white font-bold text-[11px] md:text-[10px] uppercase tracking-[0.3em] mb-4">Repertorio</h4>
+            <h4 className="text-white font-bold text-[11px] md:text-[10px] uppercase tracking-[0.3em] mb-4 font-['Montserrat']">Repertorio</h4>
             <ul className="space-y-2 text-white/40 text-sm">
               <li><button onClick={() => handleNavClick('/ecosistema')} className="hover:text-white transition-colors">Cursos y Seminarios</button></li>
               <li><button onClick={() => handleNavClick('/ecosistema')} className="hover:text-white transition-colors">Insumos</button></li>
@@ -41,7 +40,7 @@ export default function Footer({ onNavigate }) {
 
           {/* COLUMNA 3: Comunidad */}
           <div>
-            <h4 className="text-white font-bold text-[11px] md:text-[10px] uppercase tracking-[0.3em] mb-4">Comunidad</h4>
+            <h4 className="text-white font-bold text-[11px] md:text-[10px] uppercase tracking-[0.3em] mb-4 font-['Montserrat']">Comunidad</h4>
             <ul className="space-y-2 text-white/40 text-sm">
             <li><button onClick={() => handleNavClick('/')} className="hover:text-white transition-colors">Profesionales</button></li>
              <li><button onClick={() => handleNavClick('/')} className="hover:text-white transition-colors">Clínicas</button></li>
@@ -53,7 +52,7 @@ export default function Footer({ onNavigate }) {
 
           {/* COLUMNA 4: Contacto */}
           <div>
-            <h4 className="text-white font-bold text-[11px] md:text-[10px] uppercase tracking-[0.3em] mb-4">Soporte</h4>
+            <h4 className="text-white font-bold text-[11px] md:text-[10px] uppercase tracking-[0.3em] mb-4 font-['Montserrat']">Soporte</h4>
             <ul className="space-y-2 text-white/40 text-sm leading-none">
               <li>
                 <a href="mailto:elportalveterinario.arg@gmail.com" className="flex items-center gap-3 hover:text-white transition-colors">
@@ -61,7 +60,7 @@ export default function Footer({ onNavigate }) {
                   <span className="truncate">elportalveterinario.arg@gmail.com</span>
                 </a>
               </li>
-              <li className="flex items-center gap-3">
+              <li className="flex items-center gap-3 hover:text-white transition-colors cursor-pointer">
                 <Globe className="w-4 h-4" /> elportal.vet
               </li>
             </ul>
@@ -99,15 +98,15 @@ export default function Footer({ onNavigate }) {
 
         {/* BARRA INFERIOR FINAL - Letras en blanco */}
         <div className="pt-6 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-white font-bold text-[11px] md:text-[10px] uppercase tracking-[0.3em]">creado por Belén M. Arenas</p>
-          <div className="text-white text-[11px] md:text-[10px] uppercase tracking-[0.3em] font-medium flex items-center gap-1.5 group cursor-default">
+          <p className="text-white font-bold text-[11px] md:text-[10px] uppercase tracking-[0.3em] font-['Montserrat']">creado por Belén M. Arenas</p>
+          <div className="text-white text-[11px] md:text-[10px] uppercase tracking-[0.3em] font-bold flex items-center gap-1.5 group cursor-default font-['Montserrat']">
             <span>Hecho con</span>
             <Heart className="w-3 h-3 text-red-400/80 group-hover:text-red-400 group-hover:scale-110 transition-all duration-300 fill-current" aria-hidden="true" />
             <span>en Argentina.</span>
           </div>
           <div className="flex items-center gap-2 text-white">
             <ShieldCheck className="w-3.5 h-3.5" aria-hidden="true" />
-            <span className="text-[11px] md:text-[10px] font-bold uppercase tracking-[0.3em] leading-none">Única plataforma veterinaria oficial</span>
+            <span className="text-[11px] md:text-[10px] font-bold uppercase tracking-[0.3em] leading-none font-['Montserrat']">Única plataforma veterinaria oficial</span>
           </div>
         </div>
       </div>

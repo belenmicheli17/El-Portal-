@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Menu, X, Home, Info, LayoutGrid, ChevronRight, 
-  Sparkles, Briefcase, Building, Truck, Edit 
+  Sparkles, Briefcase, Building, Truck, Edit, User 
 } from 'lucide-react';
 
-export default function Navbar({ onNavigate, mostrarBotonCrear = false }) {
+export default function Navbar({ mostrarBotonCrear = false, mostrarBotonContacto = false }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isNavbarScrolled, setIsNavbarScrolled] = useState(false);
+  
+  const navigate = useNavigate();
 
-  // Efecto para escuchar el scroll de la ventana
   useEffect(() => {
     const handleScroll = () => {
-      // Si scrolleamos más de 10px, activamos el estado
       setIsNavbarScrolled(window.scrollY > 10);
     };
     
@@ -19,13 +20,39 @@ export default function Navbar({ onNavigate, mostrarBotonCrear = false }) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Función para navegar y cerrar el menú móvil automáticamente
-  const handleNav = (path) => {
+  const handleNav = (page) => {
     setIsMenuOpen(false);
-    if (onNavigate) {
-      onNavigate(path);
-    } else {
-      console.log('Navegando a:', path);
+    
+    let path;
+    switch (page) {
+      case 'landing': path = '/'; break;
+      case 'inicio': path = '/inicio'; break;
+      case 'ecosistema': path = '/ecosistema'; break;
+      case 'novedades': path = '/novedades'; break;
+      case 'bolsa-de-trabajo': path = '/bolsa-de-trabajo'; break;
+      case 'perfil-profesional': path = '/perfil-profesional'; break;
+      case 'perfil-clinica': path = '/perfil-clinica'; break;
+      case 'perfil-proveedores': path = '/perfil-proveedores'; break;
+      case 'editor': path = '/editor'; break;
+      case 'editor-clinica': path = '/editor-clinica'; break;
+      case 'editor-proveedores': path = '/editor-proveedores'; break;
+      default: path = `/${page}`;
+    }
+    
+    navigate(path);
+  };
+
+  // Función mejorada para deslizar y activar el efecto visual
+  const scrollToContacto = () => {
+    const contactoSection = document.getElementById('contacto');
+    if (contactoSection) {
+      // 1. Desplazamiento suave
+      contactoSection.scrollIntoView({ behavior: 'smooth' });
+
+      // 2. Disparar evento personalizado para que el componente "perfil" active el efecto visual
+      // Esto permite que cualquier página (perfil-profesional, etc.) reaccione.
+      const event = new CustomEvent('trigger-highlight-contacto');
+      window.dispatchEvent(event);
     }
   };
 
@@ -37,12 +64,10 @@ export default function Navbar({ onNavigate, mostrarBotonCrear = false }) {
     }`}>
       <div className="max-w-[1100px] mx-auto w-full flex justify-between items-center">
           
-          {/* Logo */}
           <div className="text-[#1A3D3D] font-['Montserrat'] font-extrabold text-2xl tracking-tighter cursor-pointer" onClick={() => handleNav('landing')}>
               El Portal<span className="text-[#2D6A6A]">.</span>
           </div>
 
-          {/* Enlaces versión Escritorio */}
           <div className="hidden lg:flex items-center gap-8 text-gray-500 font-medium text-[12px] uppercase tracking-wider">
               <a href="#historia" className="hover:text-[#2D6A6A] transition-colors">¿Por qué unirte?</a>
               <a href="#ecosistema" className="hover:text-[#2D6A6A] transition-colors">Ecosistema</a>
@@ -50,17 +75,22 @@ export default function Navbar({ onNavigate, mostrarBotonCrear = false }) {
           
           <div className="flex items-center gap-4">
             
-            {/* Botón Call to Action Escritorio (Condicional) */}
-            {mostrarBotonCrear && (
+            {mostrarBotonContacto ? (
+              <button 
+                onClick={scrollToContacto}
+                className="hidden md:block bg-[#2D6A6A] text-white rounded-full px-8 py-2.5 text-[13px] font-semibold shadow-lg hover:bg-[#1A3D3D] transition-all hover:-translate-y-0.5"
+              >
+                Contactar
+              </button>
+            ) : mostrarBotonCrear ? (
               <button 
                 onClick={() => handleNav('editor')}
                 className="hidden md:block bg-[#1A3D3D] text-white rounded-full px-7 py-2.5 text-[13px] font-semibold shadow-lg hover:bg-[#2D6A6A] transition-all hover:-translate-y-0.5"
               >
                 Crear mi perfil
               </button>
-            )}
+            ) : null}
 
-            {/* Menú Hamburguesa + Dropdown */}
             <div className="relative">
               <button 
                 onClick={() => setIsMenuOpen(!isMenuOpen)} 
@@ -82,11 +112,13 @@ export default function Navbar({ onNavigate, mostrarBotonCrear = false }) {
                       <button onClick={() => handleNav('novedades')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><div className="flex items-center gap-3"><Sparkles className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Novedades</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
                       <button onClick={() => handleNav('bolsa-de-trabajo')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><div className="flex items-center gap-3"><Briefcase className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Bolsa de Trabajo</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
                       
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] px-4 py-3 border-b border-gray-50 mb-2 mt-2 text-left">Perfiles</p>
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] px-4 py-3 border-b border-gray-50 mb-2 mt-2 text-left">Perfiles Públicos</p>
+                      <button onClick={() => handleNav('perfil-profesional')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><div className="flex items-center gap-3"><User className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Perfil Profesional</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
                       <button onClick={() => handleNav('perfil-clinica')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><div className="flex items-center gap-3"><Building className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Perfil Clínica</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
-                      <button onClick={() => handleNav('perfil-proveedor')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><div className="flex items-center gap-3"><Truck className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Perfil Proveedor</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
+                      <button onClick={() => handleNav('perfil-proveedores')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><div className="flex items-center gap-3"><Truck className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Perfil Proveedores</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
                       
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] px-4 py-3 border-b border-gray-50 mb-2 mt-2 text-left">Editores</p>
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] px-4 py-3 border-b border-gray-50 mb-2 mt-2 text-left">Editores / Gestión</p>
+                      <button onClick={() => handleNav('editor')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><div className="flex items-center gap-3"><Edit className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Editor Profesional</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
                       <button onClick={() => handleNav('editor-clinica')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><div className="flex items-center gap-3"><Edit className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Editor Clínica</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
                       <button onClick={() => handleNav('editor-proveedores')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><div className="flex items-center gap-3"><Edit className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Editor Proveedores</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
                     

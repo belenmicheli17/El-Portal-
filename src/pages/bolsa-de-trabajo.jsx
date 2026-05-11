@@ -1,13 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  Search, ShieldCheck, CircleCheck, Plus, MessageCircle, Menu, 
-  ChevronRight, MapPin, Check, Award, Briefcase, Info, AlertTriangle, 
-  Send, Stethoscope, GraduationCap, X, PersonStanding, RotateCcw, 
-  ZoomIn, ZoomOut, Contrast, Palette, Type, Activity, Home, User, Sparkles,
-  LayoutGrid, Edit3, Trash2, Mail, Loader2, ChevronLeft, Facebook, 
-  Instagram, Linkedin, Globe, Heart, Filter, Clock, ChevronDown,
-  CalendarDays, UserCheck, Building
+  Search, CircleCheck, Plus, MessageCircle, 
+  ChevronRight, MapPin, Check, Briefcase, Info, AlertTriangle, 
+  Send, Stethoscope, GraduationCap, RotateCcw,
+  Activity, User, Trash2, Mail, Loader2, ChevronLeft, 
+  Filter, Clock, ChevronDown, CalendarDays, UserCheck, Building
 } from 'lucide-react';
 
 // ==========================================
@@ -36,7 +34,7 @@ const OFERTAS_EMPLEO = [
     cursoRecomendado: {
       titulo: "Ecografía Abdominal Básica",
       modalidad: "Online",
-      nivel: "Principiante",
+      level: "Principiante",
       imagen: "https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&q=80&w=800"
     }
   }
@@ -89,10 +87,6 @@ const PROFESIONALES_DISPONIBLES = [
 // ==========================================
 export default function BolsaTrabajo() {
   const [view, setView] = useState('list'); // 'list', 'detail', 'publish_job', 'publish_prof'
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isNavbarScrolled, setIsNavbarScrolled] = useState(false);
-  const [showCookieBanner, setShowCookieBanner] = useState(true);
-  const [isFooterVisible, setIsFooterVisible] = useState(false);
   
   // Estados de la lista, filtros y acordeones
   const [selectedJob, setSelectedJob] = useState(null);
@@ -118,7 +112,6 @@ export default function BolsaTrabajo() {
   });
 
   const navigate = useNavigate();
-  const footerRef = useRef(null);
 
   // Configuración de fuentes y scroll
   useEffect(() => {
@@ -140,26 +133,10 @@ export default function BolsaTrabajo() {
     `;
     document.head.appendChild(style);
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsFooterVisible(entry.isIntersecting);
-      },
-      { threshold: 0.5 }
-    );
-
-    if (footerRef.current) observer.observe(footerRef.current);
-
     return () => {
       document.head.removeChild(link);
       document.head.removeChild(style);
-      if (footerRef.current) observer.unobserve(footerRef.current);
     };
-  }, []);
-
-  useEffect(() => {
-    const handleScroll = () => setIsNavbarScrolled(window.scrollY > 10);
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   // Funciones de filtrado
@@ -273,7 +250,7 @@ export default function BolsaTrabajo() {
             La red de empleo exclusiva para profesionales veterinarios. Conectá con tu próximo desafío o encontrá al especialista ideal para tu clínica.
           </p>
           <div className="flex flex-col sm:flex-row items-center gap-4 w-full justify-center">
-            {/* Botón Primario adaptado al Manual (CTAs fuertes) */}
+            {/* Botón Primario */}
             <button 
               onClick={() => { setView('publish_job'); window.scrollTo(0,0); }}
               className="w-full sm:w-auto bg-[#2D6A6A] text-white px-6 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-[#1A3D3D] hover:-translate-y-1 hover:shadow-2xl transition-all duration-300 ease-in-out flex items-center justify-center gap-2"
@@ -291,7 +268,7 @@ export default function BolsaTrabajo() {
         </div>
       </header>
 
-      {/* Overlay de Filtros (Solo visible cuando los filtros están abiertos) */}
+      {/* Overlay de Filtros */}
       {showFilters && (
         <div 
           className="fixed inset-0 bg-[#1A3D3D]/10 backdrop-blur-[2px] z-20 transition-opacity" 
@@ -303,7 +280,7 @@ export default function BolsaTrabajo() {
       <div className="max-w-4xl mx-auto w-full relative z-30 -mt-12 px-4">
         <div className="bg-white rounded-[24px] p-2 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.08)] flex flex-col md:flex-row items-stretch md:items-center gap-2 relative">
           
-          {/* Controles de Segmento (Reemplazo del <select> nativo) */}
+          {/* Controles de Segmento */}
           <div className="grid grid-cols-3 bg-[#F4F7F7] p-1.5 rounded-[20px] w-full md:w-auto">
             <button 
               onClick={() => setSearchTarget('ambos')}
@@ -673,27 +650,44 @@ export default function BolsaTrabajo() {
       </div>
 
       <div className="bg-white rounded-[40px] border border-gray-100 shadow-xl overflow-hidden">
-        <div className="bg-[#F4F7F7] border-b border-gray-100 p-8 flex items-center justify-between relative">
-          <div className="absolute top-1/2 left-10 right-10 h-1 bg-gray-200 -translate-y-1/2 rounded-full z-0 hidden md:block">
-            <div className="h-full bg-[#4DB6AC] rounded-full transition-all duration-500" style={{ width: `${((jobFormStep - 1) / 2) * 100}%` }}></div>
-          </div>
-          {[1, 2, 3].map((step) => (
-            <div 
-              key={step} 
-              onClick={() => { if(jobFormStep > step) setJobFormStep(step); }}
-              className={`relative z-10 flex flex-col items-center gap-3 ${jobFormStep > step ? 'cursor-pointer group' : ''}`}
-            >
-              <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center font-bold text-[14px] transition-all duration-300 ${
-                jobFormStep === step ? 'bg-[#1A3D3D] text-[#4DB6AC] shadow-lg scale-110' : 
-                jobFormStep > step ? 'bg-[#4DB6AC] text-[#1A3D3D] group-hover:bg-[#2D6A6A] group-hover:text-white' : 'bg-white border-2 border-gray-200 text-[#666666]'
-              }`}>
-                {jobFormStep > step ? <Check className="w-5 h-5" /> : step}
-              </div>
-              <span className={`text-[9px] md:text-[11px] uppercase tracking-widest font-bold hidden md:block ${jobFormStep >= step ? 'text-[#1A3D3D]' : 'text-[#666666]'}`}>
-                {step === 1 ? 'Clínica' : step === 2 ? 'Puesto' : 'Contacto'}
-              </span>
+        <div className="bg-[#F4F7F7] border-b border-gray-100 py-10 px-6 md:px-12 relative overflow-hidden">
+          <div className="max-w-2xl mx-auto relative">
+            {/* Línea conectora base (Gris) */}
+            <div className="absolute top-[20px] md:top-[24px] left-[15%] right-[15%] h-1 bg-gray-200 rounded-full z-0 hidden md:block">
+              {/* Línea de progreso (Esmeralda) */}
+              <div className="absolute top-0 left-0 h-full bg-[#2D6A6A] rounded-full transition-all duration-500 ease-in-out" style={{ width: `${((jobFormStep - 1) / 2) * 100}%` }}></div>
             </div>
-          ))}
+
+            {/* Steppers */}
+            <div className="relative z-10 flex justify-between items-start">
+              {[1, 2, 3].map((step) => {
+                const isActive = jobFormStep === step;
+                const isCompleted = jobFormStep > step;
+                
+                return (
+                  <div 
+                    key={step} 
+                    onClick={() => { if(isCompleted) setJobFormStep(step); }}
+                    className={`flex flex-col items-center gap-3 w-24 md:w-32 ${isCompleted ? 'cursor-pointer group' : ''}`}
+                  >
+                    {/* Círculo con Efecto Gap */}
+                    <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center font-bold text-[14px] md:text-[16px] transition-all duration-300 z-10 ${
+                      isActive ? 'bg-[#1A3D3D] text-white shadow-[0_4px_12px_rgba(26,61,61,0.3)] scale-110 border-[4px] border-[#F4F7F7]' : 
+                      isCompleted ? 'bg-[#2D6A6A] text-white border-[4px] border-[#F4F7F7]' : 'bg-white border-[2px] border-gray-200 text-gray-400'
+                    }`}>
+                      {isCompleted ? <Check className="w-5 h-5 md:w-6 md:h-6 text-white" strokeWidth={3} /> : step}
+                    </div>
+                    {/* Etiqueta */}
+                    <span className={`text-[9px] md:text-[11px] uppercase tracking-[0.2em] font-black text-center ${
+                      isActive || isCompleted ? 'text-[#1A3D3D]' : 'text-gray-400'
+                    }`}>
+                      {step === 1 ? 'Clínica' : step === 2 ? 'Puesto' : 'Contacto'}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
 
         <div className="p-8 md:p-12">
@@ -853,27 +847,44 @@ export default function BolsaTrabajo() {
       </div>
 
       <div className="bg-white rounded-[40px] border border-gray-100 shadow-xl overflow-hidden">
-        <div className="bg-[#F4F7F7] border-b border-gray-100 p-8 flex items-center justify-between relative">
-          <div className="absolute top-1/2 left-1/4 right-1/4 h-1 bg-gray-200 -translate-y-1/2 rounded-full z-0 hidden md:block">
-            <div className="h-full bg-[#4DB6AC] rounded-full transition-all duration-500" style={{ width: `${((profFormStep - 1) / 1) * 100}%` }}></div>
-          </div>
-          {[1, 2].map((step) => (
-            <div 
-              key={step} 
-              onClick={() => { if(profFormStep > step) setProfFormStep(step); }}
-              className={`relative z-10 flex flex-col items-center gap-3 mx-auto ${profFormStep > step ? 'cursor-pointer group' : ''}`}
-            >
-              <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center font-bold text-[14px] transition-all duration-300 ${
-                profFormStep === step ? 'bg-[#1A3D3D] text-[#4DB6AC] shadow-lg scale-110' : 
-                profFormStep > step ? 'bg-[#4DB6AC] text-[#1A3D3D] group-hover:bg-[#2D6A6A] group-hover:text-white' : 'bg-white border-2 border-gray-200 text-[#666666]'
-              }`}>
-                {profFormStep > step ? <Check className="w-5 h-5" /> : step}
-              </div>
-              <span className={`text-[9px] md:text-[11px] uppercase tracking-widest font-bold hidden md:block ${profFormStep >= step ? 'text-[#1A3D3D]' : 'text-[#666666]'}`}>
-                {step === 1 ? 'Perfil Básico' : 'Disponibilidad'}
-              </span>
+        <div className="bg-[#F4F7F7] border-b border-gray-100 py-10 px-6 md:px-12 relative overflow-hidden">
+          <div className="max-w-md mx-auto relative">
+            {/* Línea conectora base (Gris) */}
+            <div className="absolute top-[20px] md:top-[24px] left-[25%] right-[25%] h-1 bg-gray-200 rounded-full z-0 hidden md:block">
+              {/* Línea de progreso (Esmeralda) */}
+              <div className="absolute top-0 left-0 h-full bg-[#2D6A6A] rounded-full transition-all duration-500 ease-in-out" style={{ width: `${((profFormStep - 1) / 1) * 100}%` }}></div>
             </div>
-          ))}
+
+            {/* Steppers */}
+            <div className="relative z-10 flex justify-between items-start">
+              {[1, 2].map((step) => {
+                const isActive = profFormStep === step;
+                const isCompleted = profFormStep > step;
+                
+                return (
+                  <div 
+                    key={step} 
+                    onClick={() => { if(isCompleted) setProfFormStep(step); }}
+                    className={`flex flex-col items-center gap-3 w-32 md:w-40 ${isCompleted ? 'cursor-pointer group' : ''}`}
+                  >
+                    {/* Círculo con Efecto Gap */}
+                    <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center font-bold text-[14px] md:text-[16px] transition-all duration-300 z-10 ${
+                      isActive ? 'bg-[#1A3D3D] text-white shadow-[0_4px_12px_rgba(26,61,61,0.3)] scale-110 border-[4px] border-[#F4F7F7]' : 
+                      isCompleted ? 'bg-[#2D6A6A] text-white border-[4px] border-[#F4F7F7]' : 'bg-white border-[2px] border-gray-200 text-gray-400'
+                    }`}>
+                      {isCompleted ? <Check className="w-5 h-5 md:w-6 md:h-6 text-white" strokeWidth={3} /> : step}
+                    </div>
+                    {/* Etiqueta */}
+                    <span className={`text-[9px] md:text-[11px] uppercase tracking-[0.2em] font-black text-center ${
+                      isActive || isCompleted ? 'text-[#1A3D3D]' : 'text-gray-400'
+                    }`}>
+                      {step === 1 ? 'Perfil Básico' : 'Disponibilidad'}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
 
         <div className="p-8 md:p-12">
@@ -975,166 +986,12 @@ export default function BolsaTrabajo() {
 
   return (
     <div className="bg-[#F4F7F7] min-h-screen font-['Inter'] antialiased relative">
-      {/* NAVBAR */}
-      <nav className={`sticky top-0 w-full z-50 h-[80px] flex items-center px-6 md:px-12 lg:px-24 transition-all duration-300 print:hidden ${isNavbarScrolled ? 'bg-white/85 backdrop-blur-md shadow-md border-b border-gray-200' : 'bg-white border-b border-gray-100 shadow-sm'}`}>
-        <div className="max-w-[1440px] mx-auto w-full flex justify-between items-center">
-          <button onClick={() => navigate('/')} className="text-[#1A3D3D] font-['Montserrat'] font-black text-2xl tracking-tighter cursor-pointer hover:opacity-80 transition-opacity">
-            El Portal<span className="text-[#2D6A6A]">.</span>
-          </button>
-          <div className="flex items-center gap-4">
-            <div className="hidden md:flex items-center gap-10 text-[11px] font-black text-[#666666] uppercase tracking-widest">
-              <button onClick={() => navigate('/ecosistema')} className="hover:text-[#1A3D3D] cursor-pointer transition-colors">Cursos</button>
-              <button className="text-[#1A3D3D] border-b-2 border-[#2D6A6A] pb-1 cursor-pointer transition-colors" onClick={() => { setView('list'); window.scrollTo(0,0); }}>Empleos</button>
-              <button onClick={() => { setView('publish_job'); window.scrollTo(0,0); }} className="bg-[#1A3D3D] text-white px-8 py-3 rounded-full hover:bg-[#2D6A6A] transition-all">Publicar</button>
-            </div>
-            <div className="relative">
-              <button 
-                onClick={() => setIsMenuOpen(!isMenuOpen)} 
-                aria-label={isMenuOpen ? "Cerrar menú principal" : "Abrir menú principal"}
-                aria-expanded={isMenuOpen}
-                className="w-12 h-12 bg-white rounded-2xl border border-gray-100 shadow-sm flex items-center justify-center text-[#1A3D3D] hover:bg-[#F4F7F7] transition-all active:scale-95"
-              >
-                {isMenuOpen ? <X className="w-6 h-6" aria-hidden="true" /> : <Menu className="w-6 h-6" aria-hidden="true" />}
-              </button>
-              {isMenuOpen && (
-                <>
-                  <div className="fixed inset-0 z-[-1]" onClick={() => setIsMenuOpen(false)}></div>
-                  <div className="absolute right-0 mt-4 w-64 bg-white rounded-[32px] shadow-[0_20px_50px_rgba(26,61,61,0.15)] border border-gray-100 overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
-                    <div className="p-3">
-                      <p className="text-[10px] font-bold text-[#666666] uppercase tracking-[0.2em] px-4 py-3 border-b border-gray-50 mb-2 text-left">Navegación</p>
-                      <button onClick={() => { navigate('/inicio'); setIsMenuOpen(false); }} className="w-full flex items-center gap-3 px-4 py-4 hover:bg-[#F4F7F7] rounded-2xl transition-colors group"><Home className="w-4 h-4 text-[#666666] group-hover:text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Inicio</span></button>
-                      <button onClick={() => { navigate('/'); setIsMenuOpen(false); }} className="w-full flex items-center gap-3 px-4 py-4 hover:bg-[#F4F7F7] rounded-2xl transition-colors group"><Info className="w-4 h-4 text-[#666666] group-hover:text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Entrada</span></button>
-                      <button onClick={() => { navigate('/ecosistema'); setIsMenuOpen(false); }} className="w-full flex items-center justify-between px-4 py-4 hover:bg-[#F4F7F7] rounded-2xl transition-colors group"><div className="flex items-center gap-3"><LayoutGrid className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Repertorio Clínico</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
-                      <button onClick={() => { navigate('/novedades'); setIsMenuOpen(false); }} className="w-full flex items-center justify-between px-4 py-4 hover:bg-[#F4F7F7] rounded-2xl transition-colors group"><div className="flex items-center gap-3"><Sparkles className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Novedades</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
-                      <button onClick={() => { setView('list'); setIsMenuOpen(false); }} className="w-full flex items-center justify-between px-4 py-4 hover:bg-[#F4F7F7] rounded-2xl transition-colors group"><div className="flex items-center gap-3"><Briefcase className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Bolsa de Trabajo</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
-                      <p className="text-[10px] font-bold text-[#666666] uppercase tracking-[0.2em] px-4 py-3 border-b border-gray-50 mb-2 mt-2 text-left">Perfiles</p>
-                      <button onClick={() => { navigate('/perfil-clinica'); setIsMenuOpen(false); }} className="w-full flex items-center justify-between px-4 py-4 hover:bg-[#F4F7F7] rounded-2xl transition-colors group"><div className="flex items-center gap-3"><Building className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Perfil Clínica</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
-                      <button onClick={() => { navigate('/perfil-proveedor'); setIsMenuOpen(false); }} className="w-full flex items-center justify-between px-4 py-4 hover:bg-[#F4F7F7] rounded-2xl transition-colors group"><div className="flex items-center gap-3"><Truck className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Perfil Proveedor</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
-                      
-                      <p className="text-[10px] font-bold text-[#666666] uppercase tracking-[0.2em] px-4 py-3 border-b border-gray-50 mb-2 mt-2 text-left">Editores</p>
-                      <button onClick={() => { navigate('/editor-clinica'); setIsMenuOpen(false); }} className="w-full flex items-center justify-between px-4 py-4 hover:bg-[#F4F7F7] rounded-2xl transition-colors group"><div className="flex items-center gap-3"><Edit3 className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Editor Clínica</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
-                      <button onClick={() => { navigate('/editor-proveedores'); setIsMenuOpen(false); }} className="w-full flex items-center justify-between px-4 py-4 hover:bg-[#F4F7F7] rounded-2xl transition-colors group"><div className="flex items-center gap-3"><Edit3 className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Editor Proveedores</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      </nav>
-
-      {/* RENDERIZADO DEL MÓDULO */}
-      <main id="main-content" className="max-w-[1440px] mx-auto pt-6 px-6 md:px-12 lg:px-24">
+      <main id="main-content" className="max-w-[1440px] mx-auto pt-6 md:pt-10 px-6 md:px-12 lg:px-24">
         {view === 'list' && renderList()}
         {view === 'detail' && renderDetail()}
         {view === 'publish_job' && renderPublishJobForm()}
         {view === 'publish_prof' && renderPublishProfForm()}
       </main>
-
-      {/* FOOTER COMPACTO */}
-      <footer ref={footerRef} className="w-full bg-[#1A3D3D] relative overflow-hidden mt-12 pt-16 pb-8 text-left print:hidden">
-        <div className="absolute top-0 left-0 w-full h-px bg-white/10"></div>
-        <div className="max-w-[1100px] mx-auto px-8 md:px-10 relative z-10 text-left">
-          {/* BLOQUE DE CONTENIDO SUPERIOR */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-x-8 gap-y-12 mb-10 text-left">
-            {/* COLUMNA 1: Branding */}
-            <div className="md:col-span-1 text-left">
-              <button onClick={() => navigate('/')} className="text-white font-['Montserrat'] font-bold text-2xl mb-4 text-left leading-none cursor-pointer block hover:opacity-80 transition-opacity">
-                El Portal<span className="text-[#4DB6AC]">.</span>
-              </button>
-              <p className="text-white/60 text-sm md:text-[13px] leading-relaxed font-medium text-left">
-                La red profesional exclusiva para medicina veterinaria de alta complejidad. Conectando talento con vocación.
-              </p>
-            </div>
-            {/* COLUMNA 2: Repertorio */}
-            <div>
-              <h4 className="text-white font-bold text-[11px] md:text-[10px] uppercase tracking-[0.3em] mb-5">Repertorio</h4>
-              <ul className="space-y-3 text-white/60 text-[13px] font-medium">
-                <li><button onClick={() => navigate('/ecosistema')} className="hover:text-white transition-colors">Cursos y Seminarios</button></li>
-                <li><button onClick={() => navigate('/ecosistema')} className="hover:text-white transition-colors">Insumos</button></li>
-              </ul>
-            </div>
-            {/* COLUMNA 3: Comunidad */}
-            <div>
-              <h4 className="text-white font-bold text-[11px] md:text-[10px] uppercase tracking-[0.3em] mb-5">Comunidad</h4>
-              <ul className="space-y-3 text-white/60 text-[13px] font-medium">
-                <li><button onClick={() => navigate('/bolsa-de-trabajo')} className="text-white transition-colors">Bolsa de Trabajo</button></li>
-                <li><button onClick={() => navigate('/inicio')} className="hover:text-white transition-colors">Foro de Discusión</button></li>
-              </ul>
-            </div>
-            {/* COLUMNA 4: Contacto */}
-            <div>
-              <h4 className="text-white font-bold text-[11px] md:text-[10px] uppercase tracking-[0.3em] mb-5">Contacto</h4>
-              <ul className="space-y-3 text-white/60 text-[13px] font-medium">
-                <li>
-                  <a href="mailto:elportalveterinario.arg@gmail.com" className="flex items-center gap-3 hover:text-white transition-colors">
-                    <Mail className="w-4 h-4 shrink-0" /> 
-                    <span className="truncate">elportal.arg@gmail.com</span>
-                  </a>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Globe className="w-4 h-4 shrink-0" /> elportal.vet
-                </li>
-              </ul>
-            </div>
-          </div>
-          
-          {/* FILA DE CRÉDITOS UNIFICADA */}
-          <div className="flex flex-row items-center justify-center gap-x-8 mb-10 pt-4">
-            <div className="flex gap-3 shrink-0">
-              <a href="#" aria-label="Facebook" className="w-10 h-10 bg-white/5 rounded-[12px] flex items-center justify-center text-white/70 hover:bg-white hover:text-[#1A3D3D] transition-all duration-300">
-                <Facebook className="w-4 h-4" />
-              </a>
-              <a href="#" aria-label="Instagram" className="w-10 h-10 bg-white/5 rounded-[12px] flex items-center justify-center text-white/70 hover:bg-white hover:text-[#1A3D3D] transition-all duration-300">
-                <Instagram className="w-4 h-4" />
-              </a>
-              <a href="#" aria-label="Linkedin" className="w-10 h-10 bg-white/5 rounded-[12px] flex items-center justify-center text-white/70 hover:bg-white hover:text-[#1A3D3D] transition-all duration-300">
-                <Linkedin className="w-4 h-4" />
-              </a>
-            </div>
-            
-            <div className="text-white/40 text-[11px] md:text-[12px] font-medium leading-relaxed whitespace-nowrap shrink-0">
-              <p>&copy; {new Date().getFullYear()} El Portal. Todos los derechos reservados.</p>
-            </div>
-            
-            <div className="text-white/40 text-[11px] md:text-[12px] font-medium flex items-center gap-2 shrink-0">
-              <button onClick={() => navigate('/terminos-y-condiciones')} className="hover:text-white transition-colors">Términos</button>
-              <span className="opacity-20">•</span>
-              <button onClick={() => navigate('/politica-de-privacidad')} className="hover:text-white transition-colors">Privacidad</button>
-            </div>
-          </div>
-          
-          {/* BARRA INFERIOR FINAL */}
-          <div className="pt-6 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-white/60 font-bold text-[10px] uppercase tracking-[0.3em]">creado por Belén M. Arenas</p>
-            <div className="text-white/60 text-[10px] uppercase tracking-[0.3em] font-bold flex items-center gap-1.5 group cursor-default">
-              <span>Hecho con</span>
-              <Heart className="w-3 h-3 text-red-400/80 group-hover:text-red-400 group-hover:scale-110 transition-all duration-300 fill-current" aria-hidden="true" />
-              <span>en Argentina.</span>
-            </div>
-            <div className="flex items-center gap-2 text-white/60">
-              <ShieldCheck className="w-4 h-4" aria-hidden="true" />
-              <span className="text-[10px] font-bold uppercase tracking-[0.3em] leading-none">Única plataforma oficial</span>
-            </div>
-          </div>
-        </div>
-      </footer>
-
-      {/* BANNER DE COOKIES */}
-      {showCookieBanner && !isFooterVisible && (
-        <div className="fixed bottom-0 left-0 w-full bg-[#1A3D3D]/95 backdrop-blur-md border-t border-white/10 z-[100] py-4 px-8 flex flex-col md:flex-row items-center justify-between gap-4 animate-slide-up shadow-2xl">
-          <div className="flex items-center gap-3 text-white/80 text-[13px] font-medium text-center md:text-left">
-            <Info size={16} className="text-[#4DB6AC] shrink-0" />
-            <p>Utilizamos cookies para mejorar tu experiencia. Al continuar navegando, aceptás nuestros términos.</p>
-          </div>
-          <button 
-            onClick={() => setShowCookieBanner(false)}
-            className="bg-[#2D6A6A] hover:bg-white text-white hover:text-[#1A3D3D] px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 shadow-lg hover:-translate-y-0.5"
-          >
-            Entendido
-          </button>
-        </div>
-      )}
     </div>
   );
 }

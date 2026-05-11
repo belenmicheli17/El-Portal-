@@ -52,9 +52,8 @@ const data = {
 function App() {
   const [activeTab, setActiveTab] = useState('perfil');
   const [mostrarTodosLogros, setMostrarTodosLogros] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [highlightContacto, setHighlightContacto] = useState(false);
   const navigate = useNavigate();
-  const footerRef = useRef(null);
 
   const renderIcon = (iconName, className) => {
     const IconMap = { Syringe, Briefcase, GraduationCap, Stethoscope };
@@ -68,13 +67,11 @@ function App() {
     link.rel = 'stylesheet';
     document.head.appendChild(link);
 
-    const favicon = document.createElement('link');
-    favicon.rel = 'icon';
-    favicon.href = "data:image/svg+xml,%3Csvg viewBox='0 0 100 100' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M 18 85 V 45 A 32 32 0 0 1 82 45 V 85' stroke='%231A3D3D' stroke-width='12' stroke-linecap='round' fill='none'/%3E%3Cpath d='M 38 85 V 55 A 12 12 0 0 1 62 55 V 85' stroke='%232D6A6A' stroke-width='12' stroke-linecap='round' fill='none'/%3E%3C/svg%3E";
-    document.head.appendChild(favicon);
-
     const style = document.createElement('style');
     style.innerHTML = `
+      #contacto {
+        scroll-margin-top: 100px;
+      }
       .group.active-mobile { transition-duration: 0.5s; }
       html, body { overflow-x: hidden; width: 100%; position: relative; }
     `;
@@ -89,12 +86,30 @@ function App() {
 
     setTimeout(() => document.querySelectorAll('.group').forEach(el => mobileHoverObserver.observe(el)), 500);
 
+    const handleHighlightEvent = () => {
+      setHighlightContacto(true);
+      setTimeout(() => { setHighlightContacto(false); }, 2500);
+    };
+    
+    window.addEventListener('trigger-highlight-contacto', handleHighlightEvent);
+
     return () => {
       if (document.head.contains(link)) document.head.removeChild(link);
-      if (document.head.contains(favicon)) document.head.removeChild(favicon);
       if (document.head.contains(style)) document.head.removeChild(style);
+      window.removeEventListener('trigger-highlight-contacto', handleHighlightEvent);
     };
   }, []);
+
+  const scrollToContacto = (e) => {
+    e.preventDefault();
+    const contactoSection = document.getElementById('contacto');
+    if (contactoSection) {
+      contactoSection.scrollIntoView({ behavior: 'smooth' });
+      setTimeout(() => {
+        window.dispatchEvent(new Event('trigger-highlight-contacto'));
+      }, 600);
+    }
+  };
 
   return (
     <div className="font-['Inter'] antialiased min-h-screen flex justify-center bg-gray-200 md:bg-[#F4F7F7] overflow-x-hidden w-full">
@@ -104,15 +119,6 @@ function App() {
           ========================================================================= */}
       <div className="w-full max-w-[412px] bg-[#F4F7F7] min-h-screen relative shadow-2xl flex flex-col md:hidden shrink-0 overflow-x-hidden">
         
-        {/* NAVBAR FIJO */}
-        <nav className="sticky top-0 z-50 h-[60px] bg-white/95 backdrop-blur-md border-b border-gray-100 flex items-center px-5 justify-between shrink-0">
-          <button className="text-[#1A3D3D]" onClick={() => navigate(-1)}><ChevronLeft size={22} /></button>
-          <div className="text-[#1A3D3D] font-['Montserrat'] font-extrabold text-lg tracking-tighter" onClick={() => navigate('/')}>
-            El Portal<span className="text-[#2D6A6A]">.</span>
-          </div>
-          <div className="w-[22px]"></div>
-        </nav>
-
         {/* HERO */}
         <section className="bg-[#1A3D3D] px-6 py-8 relative overflow-hidden shrink-0">
           <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent"></div>
@@ -155,11 +161,11 @@ function App() {
                 <p className="text-gray-500 text-[12px] leading-relaxed font-medium italic">"{data.profesional.bio}"</p>
                 <div className="grid grid-cols-2 gap-3 mt-6 pt-6 border-t border-gray-50">
                   <div className="flex flex-col items-center gap-1.5">
-                    <div className="w-10 h-10 rounded-xl bg-[#F4F7F7] flex items-center justify-center text-[#2D6A6A]"><MapPin size={16} /></div>
+                    <MapPin size={24} className="text-[#2D6A6A] mb-1" />
                     <p className="font-bold text-[#1A3D3D] text-[9px] uppercase tracking-wide">{data.profesional.provincia}</p>
                   </div>
                   <div className="flex flex-col items-center gap-1.5">
-                    <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600"><Home size={16} /></div>
+                    <Home size={24} className="text-blue-600 mb-1" />
                     <p className="font-bold text-[#1A3D3D] text-[9px] uppercase tracking-wide">A Domicilio</p>
                   </div>
                 </div>
@@ -170,7 +176,7 @@ function App() {
                 {data.zonas.map((zona) => (
                   <div key={zona.id} className="bg-white p-5 rounded-[24px] border border-gray-100 shadow-sm text-left">
                     <h4 className="font-bold text-[11px] text-[#1A3D3D] font-['Montserrat'] uppercase tracking-widest mb-3 flex items-center gap-2">
-                      <Building2 size={14} className="text-[#2D6A6A]" /> {zona.nombre}
+                      <Building2 size={16} className="text-[#2D6A6A]" /> {zona.nombre}
                     </h4>
                     <ul className="space-y-2.5 text-gray-500 font-medium text-[10.5px]">
                       {zona.clinicas.map((c, idx) => (
@@ -193,7 +199,7 @@ function App() {
                 <div className="space-y-3">
                   {data.servicios.map((s) => (
                     <div key={s.id} className="bg-white p-4 rounded-2xl border border-gray-50 flex gap-4 items-center text-left">
-                      <div className="w-11 h-11 bg-[#F4F7F7] rounded-xl flex items-center justify-center text-[#2D6A6A] shrink-0">{renderIcon(s.icono, "w-5 h-5")}</div>
+                      <div className="text-[#2D6A6A] shrink-0">{renderIcon(s.icono, "w-6 h-6")}</div>
                       <div>
                         <h4 className="font-bold font-['Montserrat'] text-[11px] text-[#1A3D3D] uppercase mb-0.5">{s.titulo}</h4>
                         <p className="text-gray-400 text-[10px] leading-snug">{s.desc}</p>
@@ -271,100 +277,7 @@ function App() {
             </button>
           </div>
         </div>
-
-        {/* FOOTER MÓVIL */}
-        <footer className="w-full bg-gradient-to-br from-[#1A3D3D] to-[#2D6A6A] relative overflow-hidden pt-12 pb-8 px-8 text-left shrink-0 overflow-x-hidden print:hidden">
-          <div className="absolute top-0 left-0 w-full h-px bg-white/10"></div>
-          
-          {/* BLOQUE DE CONTENIDO SUPERIOR */}
-          <div className="grid grid-cols-1 gap-y-8 mb-6 text-left">
-            
-            {/* Branding */}
-            <div className="text-left">
-              <button onClick={() => navigate('/')} className="text-white font-['Montserrat'] font-bold text-2xl mb-4 text-left leading-none cursor-pointer block hover:opacity-80 transition-opacity">
-                El Portal<span className="text-white/40">.</span>
-              </button>
-              <p className="text-white/50 text-sm leading-relaxed font-medium text-left">
-                La red profesional exclusiva para medicina veterinaria de alta complejidad. Conectando talento con vocación.
-              </p>
-            </div>
-
-            {/* Repertorio */}
-            <div>
-              <h4 className="text-white font-bold text-[11px] uppercase tracking-[0.3em] mb-4">Repertorio</h4>
-              <ul className="space-y-2 text-white/40 text-sm">
-                <li><button onClick={() => navigate('/ecosistema')} className="hover:text-white transition-colors">Cursos y Seminarios</button></li>
-                <li><button onClick={() => navigate('/ecosistema')} className="hover:text-white transition-colors">Insumos</button></li>
-              </ul>
-            </div>
-
-            {/* Comunidad */}
-            <div>
-              <h4 className="text-white font-bold text-[11px] uppercase tracking-[0.3em] mb-4">Comunidad</h4>
-              <ul className="space-y-2 text-white/40 text-sm">
-                <li><button onClick={() => navigate('/bolsa-de-trabajo')} className="hover:text-white transition-colors">Bolsa de Trabajo</button></li>
-                <li><button onClick={() => navigate('/inicio')} className="hover:text-white transition-colors">Foro de Discusión</button></li>
-              </ul>
-            </div>
-
-            {/* Contacto */}
-            <div>
-              <h4 className="text-white font-bold text-[11px] uppercase tracking-[0.3em] mb-4">Contacto</h4>
-              <ul className="space-y-2 text-white/40 text-sm leading-none">
-                <li>
-                  <a href="mailto:elportalveterinario.arg@gmail.com" className="flex items-center gap-3 hover:text-white transition-colors">
-                    <Mail className="w-4 h-4 shrink-0" /> 
-                    <span className="truncate">elportalveterinario.arg@gmail.com</span>
-                  </a>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Globe className="w-4 h-4" /> elportal.vet
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          {/* FILA DE CRÉDITOS UNIFICADA */}
-          <div className="flex flex-col items-center justify-center gap-y-4 mb-8 pt-4 border-t border-white/5">
-            
-            {/* Iconos Redes */}
-            <div className="flex gap-3 shrink-0">
-              <a href="#" aria-label="Facebook" className="w-9 h-9 bg-white/5 rounded-lg flex items-center justify-center text-white/70 hover:bg-white hover:text-[#1A3D3D] transition-all">
-                <Facebook className="w-4 h-4" />
-              </a>
-              <a href="#" aria-label="Instagram" className="w-9 h-9 bg-white/5 rounded-lg flex items-center justify-center text-white/70 hover:bg-white hover:text-[#1A3D3D] transition-all">
-                <Instagram className="w-4 h-4" />
-              </a>
-              <a href="#" aria-label="Linkedin" className="w-9 h-9 bg-white/5 rounded-lg flex items-center justify-center text-white/70 hover:bg-white hover:text-[#1A3D3D] transition-all">
-                <Linkedin className="w-4 h-4" />
-              </a>
-            </div>
-            
-            {/* Legales */}
-            <div className="text-white/40 text-[11px] font-medium flex items-center gap-2 shrink-0">
-              <button onClick={() => navigate('/terminos-y-condiciones')} className="underline hover:text-white transition-colors">Términos</button>
-              <span className="opacity-20">•</span>
-              <button onClick={() => navigate('/politica-de-privacidad')} className="underline hover:text-white transition-colors">Privacidad</button>
-            </div>
-
-            {/* Copyright */}
-            <div className="text-white/40 text-[11px] font-medium leading-relaxed whitespace-nowrap shrink-0">
-              <p>&copy; {new Date().getFullYear()} El Portal. Todos los derechos reservados.</p>
-            </div>
-          </div>
-
-          {/* BARRA INFERIOR FINAL */}
-          <div className="flex flex-col items-center gap-2">
-            <p className="text-white font-bold text-[10px] uppercase tracking-[0.3em]">creado por Belén M. Arenas</p>
-            <div className="text-white text-[10px] uppercase tracking-[0.3em] font-medium flex items-center gap-1.5 group cursor-default">
-              <span>Hecho con</span>
-              <Heart className="w-3 h-3 text-red-400/80 group-hover:text-red-400 group-hover:scale-110 transition-all duration-300 fill-current" aria-hidden="true" />
-              <span>en Argentina.</span>
-            </div>
-          </div>
-        </footer>
       </div>
-
 
       {/* =========================================================================
           VERSIÓN ESCRITORIO (PC STYLE) - Solo visible en pantallas medianas o grandes (hidden md:block)
@@ -373,59 +286,10 @@ function App() {
         {/* Textura de ruido */}
         <div className="fixed inset-0 pointer-events-none z-[999] opacity-[0.025] mix-blend-overlay" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}></div>
 
-        {/* NAVBAR UNIFICADA CON MENÚ HAMBURGUESA */}
-        <nav className="sticky top-0 z-40 h-[80px] bg-white/80 backdrop-blur-lg border-b border-gray-100 flex items-center px-8 md:px-10 w-full">
-          <div className="max-w-7xl mx-auto w-full flex justify-between items-center">
-              
-              <div className="text-[#1A3D3D] font-['Montserrat'] font-extrabold text-2xl tracking-tighter cursor-pointer" onClick={() => navigate('/')}>
-                  El Portal<span className="text-[#2D6A6A]">.</span>
-              </div>
-
-              {/* LINKS DE ESCRITORIO (Internos del perfil) */}
-              <div className="hidden lg:flex items-center gap-10 text-gray-500 font-medium text-[15px]">
-                  <a href="#perfil" className="hover:text-[#2D6A6A] transition-colors">La Profesional</a>
-                  <a href="#casos" className="hover:text-[#2D6A6A] transition-colors">Casos</a>
-                  <a href="#zonas" className="hover:text-[#2D6A6A] transition-colors">Zonas</a>
-              </div>
-              
-              <div className="flex items-center gap-4">
-                <a href="#contacto" className="hidden md:block bg-[#1A3D3D] text-white rounded-full px-8 py-3 font-semibold shadow-lg hover:bg-[#2D6A6A] transition-all hover:-translate-y-0.5 text-sm">
-                  Contactar
-                </a>
-
-                <div className="relative">
-                  <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="w-12 h-12 bg-white rounded-2xl border border-gray-100 shadow-sm flex items-center justify-center text-[#1A3D3D] hover:bg-[#F4F7F7] transition-all active:scale-95">
-                    {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-                  </button>
-                  {isMenuOpen && (
-                    <>
-                      <div className="fixed inset-0 z-[-1]" onClick={() => setIsMenuOpen(false)}></div>
-                      <div className="absolute right-0 mt-4 w-64 bg-white rounded-[32px] shadow-[0_20px_50px_rgba(26,61,61,0.15)] border border-gray-100 overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
-                        <div className="p-3">
-                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] px-4 py-3 border-b border-gray-50 mb-2 text-left">Navegación</p>
-                          <button onClick={() => { navigate('/inicio'); setIsMenuOpen(false); }} className="w-full flex items-center gap-3 px-4 py-4 hover:bg-[#F4F7F7] rounded-2xl transition-colors group"><Home className="w-4 h-4 text-gray-400 group-hover:text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Inicio</span></button>
-                          <button onClick={() => { navigate('/'); setIsMenuOpen(false); }} className="w-full flex items-center gap-3 px-4 py-4 hover:bg-[#F4F7F7] rounded-2xl transition-colors group"><Info className="w-4 h-4 text-gray-400 group-hover:text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Entrada</span></button>
-                          <button onClick={() => { navigate('/perfil'); setIsMenuOpen(false); }} className="w-full flex items-center justify-between px-4 py-4 hover:bg-[#F4F7F7] rounded-2xl transition-colors group"><div className="flex items-center gap-3"><User className="w-4 h-4 text-[#2D6A6A]" /><span className="text-sm font-bold text-[#1A3D3D]">Mi Perfil Público</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
-                          
-                          {/* SECCIÓN INTERCAMBIADA: NOTICIAS PRIMERO, SERVICIOS (ÚLTIMA CAJITA) */}
-                          <button onClick={() => { navigate('/novedades'); setIsMenuOpen(false); }} className="w-full flex items-center justify-between px-4 py-4 hover:bg-[#F4F7F7] rounded-2xl transition-colors group"><div className="flex items-center gap-3"><Sparkles className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Novedades</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
-                          <button onClick={() => { navigate('/bolsa-de-trabajo'); setIsMenuOpen(false); }} className="w-full flex items-center justify-between px-4 py-4 hover:bg-[#F4F7F7] rounded-2xl transition-colors group"><div className="flex items-center gap-3"><BriefcaseIcon className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Bolsa de Trabajo</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
-                          <button onClick={() => { navigate('/ecosistema'); setIsMenuOpen(false); }} className="w-full flex items-center justify-between px-4 py-4 hover:bg-[#F4F7F7] rounded-2xl transition-colors group"><div className="flex items-center gap-3"><LayoutGrid className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Repertorio Clínico</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
-                          
-                          <button onClick={() => { navigate('/editor'); setIsMenuOpen(false); }} className="w-full flex items-center justify-between px-4 py-4 hover:bg-[#F4F7F7] rounded-2xl transition-colors group"><div className="flex items-center gap-3"><Edit className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Ir al Editor</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
-                        </div>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-          </div>
-        </nav>
-
         <main className="max-w-[1000px] mx-auto px-8 md:px-10 relative z-10 pt-8 flex flex-col items-center">
           
           {/* CONTENEDOR MAESTRO */}
-          <div className="w-full bg-white rounded-[44px] shadow-[0_30px_80px_rgba(26,61,61,0.12)] overflow-hidden border border-gray-100 mb-12 relative">
+          <div className="w-full bg-white rounded-[44px] shadow-[0_30px_80px_rgba(26,61,61,0.12)] border border-gray-100 mb-12 relative">
             
             {/* REDES SOCIALES */}
             <div className="absolute right-6 top-[104px] -translate-y-1/2 md:top-[168px] md:translate-y-0 z-20 flex flex-col gap-3">
@@ -447,7 +311,7 @@ function App() {
             </div>
 
             {/* SECCIÓN 1: IDENTIDAD */}
-            <div id="perfil" className="bg-[#1A3D3D] pt-10 px-10 pb-24 md:pt-14 md:px-14 md:pb-32 flex flex-col items-center text-center relative">
+            <div id="perfil" className="bg-[#1A3D3D] rounded-t-[44px] overflow-hidden pt-10 px-10 pb-24 md:pt-14 md:px-14 md:pb-32 flex flex-col items-center text-center relative">
               <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent"></div>
               
               <div className="relative mb-8 z-10">
@@ -522,8 +386,8 @@ function App() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {data.servicios.map((servicio) => (
                   <div key={servicio.id} className="bg-white p-8 rounded-[36px] border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 group-[.active-mobile]:shadow-xl group-[.active-mobile]:-translate-y-1 transition-all group">
-                    <div className="w-12 h-12 bg-[#F4F7F7] rounded-2xl flex items-center justify-center text-[#2D6A6A] mb-6 group-hover:bg-[#1A3D3D] group-hover:text-white group-[.active-mobile]:bg-[#1A3D3D] group-[.active-mobile]:text-white transition-colors">
-                      {renderIcon(servicio.icono, "w-6 h-6")}
+                    <div className="text-[#2D6A6A] mb-6 group-hover:text-[#1A3D3D] group-[.active-mobile]:text-[#1A3D3D] transition-colors">
+                      {renderIcon(servicio.icono, "w-8 h-8")}
                     </div>
                     <h4 className="font-bold font-['Montserrat'] text-[14px] text-[#1A3D3D] mb-3 uppercase tracking-wider">{servicio.titulo}</h4>
                     <p className="text-gray-400 font-medium text-[12px] leading-relaxed">{servicio.desc}</p>
@@ -538,7 +402,6 @@ function App() {
                 <h2 className="text-xl font-extrabold text-[#1A3D3D] font-['Montserrat'] mb-2 uppercase tracking-tight">Trayectoria Académica</h2>
                 <p className="text-gray-400 text-[13px] font-bold uppercase tracking-[0.2em] opacity-80 leading-none">Formación y Logros</p>
               </div>
-
               <div className="relative">
                 <div className="absolute left-[20px] md:left-[23px] top-6 bottom-6 w-[1.5px] bg-gray-100"></div>
                 <div className="space-y-12 relative">
@@ -554,7 +417,6 @@ function App() {
                     </div>
                   ))}
                 </div>
-
                 {data.logros.length > 3 && (
                   <div className="mt-12 ml-[54px] md:ml-[63px]">
                     <button onClick={() => setMostrarTodosLogros(!mostrarTodosLogros)} className="bg-[#1A3D3D] text-white px-7 py-3 rounded-full font-bold text-[9px] uppercase tracking-[0.3em] flex items-center gap-2 hover:-translate-y-1 shadow-lg transition-all">
@@ -599,19 +461,16 @@ function App() {
             </div>
 
             {/* SECCIÓN 6: ZONAS DE ATENCIÓN */}
-            <div id="zonas" className="p-10 md:p-16 bg-white rounded-b-[44px]">
+            <div id="zonas" className="p-10 md:p-16 bg-white border-b border-gray-50">
               <div className="mb-12 text-center">
                 <h2 className="text-2xl font-extrabold text-[#1A3D3D] font-['Montserrat'] uppercase tracking-tight mb-4">Lugares de Atención</h2>
                 <p className="text-gray-400 font-medium text-sm">Dónde encontrarme para consultas y cirugías</p>
               </div>
-
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {data.zonas.map((zona) => (
                   <div key={zona.id} className="bg-[#F4F7F7] p-8 rounded-[32px] border border-gray-100 hover:border-[#2D6A6A]/30 transition-colors">
                     <div className="flex items-center gap-3 mb-6">
-                      <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-[#2D6A6A] shadow-sm border border-gray-100">
-                        <Building2 className="w-5 h-5" />
-                      </div>
+                      <Building2 className="text-[#2D6A6A] w-6 h-6" />
                       <h3 className="font-bold text-lg text-[#1A3D3D] uppercase tracking-wide">{zona.nombre}</h3>
                     </div>
                     <ul className="space-y-4">
@@ -627,106 +486,51 @@ function App() {
               </div>
             </div>
 
+            {/* SECCIÓN 7: CONTACTO (EFECTO INTEGRADO) */}
+            <div id="contacto" className={`p-10 md:p-16 flex flex-col lg:flex-row gap-16 items-center bg-white transition-all duration-700 ease-out ${
+              highlightContacto 
+                ? 'scale-[1.03] shadow-[0_0_80px_rgba(45,106,106,0.3)] ring-4 ring-[#4DB6AC]/50 ring-offset-4 ring-offset-[#F4F7F7]/50 rounded-[40px] relative z-50 border border-[#4DB6AC]' 
+                : 'scale-100 border-transparent rounded-b-[44px] relative z-10 border-gray-100'
+            }`}>
+              <div className="w-full lg:w-5/12 text-left">
+                <div className="w-14 h-14 bg-[#F4F7F7] rounded-2xl flex items-center justify-center text-[#2D6A6A] mb-8 shadow-inner">
+                  <MessageCircle className="w-6 h-6" />
+                </div>
+                <h2 className="text-2xl md:text-3xl font-extrabold font-['Montserrat'] text-[#1A3D3D] mb-6 uppercase tracking-tight leading-none">Enviar Propuesta</h2>
+                <p className="text-gray-400 leading-relaxed mb-10 text-[15px] font-medium">
+                  Para invitaciones a seminarios, derivación de casos o colaboraciones académicas.
+                </p>
+                <div className="p-8 bg-[#F4F7F7] rounded-[40px] border border-gray-50">
+                  <p className="text-[9px] font-bold text-[#1A3D3D] uppercase tracking-[0.3em] mb-5 leading-none text-left">Chatea directamente</p>
+                  <button className="w-full bg-[#25D366] text-white font-bold py-4 rounded-[20px] shadow-lg hover:bg-[#20bd5a] hover:-translate-y-1 flex items-center justify-center gap-3 tracking-[0.25em] text-[9px]">
+                    <Phone className="w-5 h-5" /> WhatsApp
+                  </button>
+                </div>
+              </div>
+              <div className="w-full lg:w-7/12">
+                <form className="space-y-8 text-left">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                    <div>
+                      <label className="block text-[9px] font-bold text-gray-400 uppercase tracking-[0.3em] mb-3 leading-none ml-1">Nombre completo</label>
+                      <input type="text" className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-5 text-sm font-medium focus:outline-none focus:border-[#2D6A6A] transition-all" placeholder="Ej: Dr. Alejandro Martínez" />
+                    </div>
+                    <div>
+                      <label className="block text-[9px] font-bold text-gray-400 uppercase tracking-[0.3em] mb-3 leading-none ml-1">Tu mail</label>
+                      <input type="email" className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-5 text-sm font-medium focus:outline-none focus:border-[#2D6A6A] transition-all" placeholder="ejemplo@correo.com" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-[9px] font-bold text-gray-400 uppercase tracking-[0.3em] mb-3 leading-none ml-1">Escribí tu mensaje acá</label>
+                    <textarea rows="5" className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-5 text-sm font-medium focus:outline-none focus:border-[#2D6A6A] transition-all resize-none" placeholder="Escribe aquí los detalles..."></textarea>
+                  </div>
+                  <button type="button" className="w-full bg-[#1A3D3D] text-white font-bold py-5 rounded-2xl shadow-xl hover:bg-[#2D6A6A] transition-all flex items-center justify-center gap-4 text-[10px] uppercase tracking-[0.3em]">
+                    <Send className="w-4 h-4" /> Enviar
+                  </button>
+                </form>
+              </div>
+            </div>
           </div>
         </main>
-
-        {/* FOOTER DESKTOP */}
-        <footer className="w-full bg-gradient-to-br from-[#1A3D3D] to-[#2D6A6A] relative overflow-hidden pt-12 pb-8 text-left print:hidden">
-          <div className="absolute top-0 left-0 w-full h-px bg-white/10"></div>
-          <div className="max-w-[1100px] mx-auto px-8 md:px-10 relative z-10">
-            
-            {/* BLOQUE DE CONTENIDO SUPERIOR */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-x-8 gap-y-8 mb-6 text-left">
-              
-              {/* COLUMNA 1: Branding */}
-              <div className="md:col-span-1 text-left">
-                <button onClick={() => navigate('/')} className="text-white font-['Montserrat'] font-bold text-2xl mb-4 text-left leading-none cursor-pointer block hover:opacity-80 transition-opacity">
-                  El Portal<span className="text-white/40">.</span>
-                </button>
-                <p className="text-white/50 text-sm md:text-[13px] leading-relaxed font-medium text-left">
-                  La red profesional exclusiva para medicina veterinaria de alta complejidad. Conectando talento con vocación.
-                </p>
-              </div>
-
-              {/* COLUMNA 2: Repertorio */}
-              <div>
-                <h4 className="text-white font-bold text-[11px] md:text-[10px] uppercase tracking-[0.3em] mb-4">Repertorio</h4>
-                <ul className="space-y-2 text-white/40 text-sm">
-                  <li><button onClick={() => navigate('/ecosistema')} className="hover:text-white transition-colors">Cursos y Seminarios</button></li>
-                  <li><button onClick={() => navigate('/ecosistema')} className="hover:text-white transition-colors">Insumos</button></li>
-                </ul>
-              </div>
-
-              {/* COLUMNA 3: Comunidad */}
-              <div>
-                <h4 className="text-white font-bold text-[11px] md:text-[10px] uppercase tracking-[0.3em] mb-4">Comunidad</h4>
-                <ul className="space-y-2 text-white/40 text-sm">
-                  <li><button onClick={() => navigate('/bolsa-de-trabajo')} className="hover:text-white transition-colors">Bolsa de Trabajo</button></li>
-                  <li><button onClick={() => navigate('/inicio')} className="hover:text-white transition-colors">Foro de Discusión</button></li>
-                </ul>
-              </div>
-
-              {/* COLUMNA 4: Contacto */}
-              <div>
-                <h4 className="text-white font-bold text-[11px] md:text-[10px] uppercase tracking-[0.3em] mb-4">Contacto</h4>
-                <ul className="space-y-2 text-white/40 text-sm leading-none">
-                  <li>
-                    <a href="mailto:elportalveterinario.arg@gmail.com" className="flex items-center gap-3 hover:text-white transition-colors">
-                      <Mail className="w-4 h-4 shrink-0" /> 
-                      <span className="truncate">elportalveterinario.arg@gmail.com</span>
-                    </a>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <Globe className="w-4 h-4" /> elportal.vet
-                  </li>
-                </ul>
-              </div>
-            </div>
-
-            {/* FILA DE CRÉDITOS UNIFICADA */}
-            <div className="flex flex-row items-center justify-center gap-x-8 mb-10 pt-4">
-              
-              {/* Iconos Redes */}
-              <div className="flex gap-3 shrink-0">
-                <a href="#" aria-label="Facebook" className="w-9 h-9 bg-white/5 rounded-lg flex items-center justify-center text-white/70 hover:bg-white hover:text-[#1A3D3D] transition-all">
-                  <Facebook className="w-4 h-4" />
-                </a>
-                <a href="#" aria-label="Instagram" className="w-9 h-9 bg-white/5 rounded-lg flex items-center justify-center text-white/70 hover:bg-white hover:text-[#1A3D3D] transition-all">
-                  <Instagram className="w-4 h-4" />
-                </a>
-                <a href="#" aria-label="Linkedin" className="w-9 h-9 bg-white/5 rounded-lg flex items-center justify-center text-white/70 hover:bg-white hover:text-[#1A3D3D] transition-all">
-                  <Linkedin className="w-4 h-4" />
-                </a>
-              </div>
-              
-              {/* Copyright */}
-              <div className="text-white/40 text-[11px] md:text-xs font-medium leading-relaxed whitespace-nowrap shrink-0">
-                <p>&copy; {new Date().getFullYear()} El Portal. Todos los derechos reservados.</p>
-              </div>
-
-              {/* Legales */}
-              <div className="text-white/40 text-[11px] md:text-xs font-medium flex items-center gap-2 shrink-0">
-                <button onClick={() => navigate('/terminos-y-condiciones')} className="underline hover:text-white transition-colors">Términos</button>
-                <span className="opacity-20">•</span>
-                <button onClick={() => navigate('/politica-de-privacidad')} className="underline hover:text-white transition-colors">Privacidad</button>
-              </div>
-            </div>
-
-            {/* BARRA INFERIOR FINAL - Letras en blanco */}
-            <div className="pt-6 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
-              <p className="text-white font-bold text-[11px] md:text-[10px] uppercase tracking-[0.3em]">creado por Belén M. Arenas</p>
-              <div className="text-white text-[11px] md:text-[10px] uppercase tracking-[0.3em] font-medium flex items-center gap-1.5 group cursor-default">
-                <span>Hecho con</span>
-                <Heart className="w-3 h-3 text-red-400/80 group-hover:text-red-400 group-hover:scale-110 transition-all duration-300 fill-current" aria-hidden="true" />
-                <span>en Argentina.</span>
-              </div>
-              <div className="flex items-center gap-2 text-white">
-                <ShieldCheck className="w-3.5 h-3.5" aria-hidden="true" />
-                <span className="text-[11px] md:text-[10px] font-bold uppercase tracking-[0.3em] leading-none">Única plataforma veterinaria oficial</span>
-              </div>
-            </div>
-          </div>
-        </footer>
       </div>
     </div>
   );

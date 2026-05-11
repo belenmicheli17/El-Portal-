@@ -3,7 +3,7 @@ import {
   ShieldCheck, ChevronLeft, ChevronRight, Menu, Phone, Mail, Globe,
   PackageSearch, Truck, CreditCard, Check, ArrowUpRight, X, MessageCircle, FileText, Wrench,
   Facebook, Instagram, Linkedin, Heart, Building2, MapPin, Star, ArrowUp, Filter, Clock,
-  Search, Play, Loader2
+  Search, Play
 } from 'lucide-react';
 
 // ==========================================
@@ -68,7 +68,6 @@ export default function PerfilProveedor() {
   // ESTADOS DE UI
   const [productoSeleccionado, setProductoSeleccionado] = useState(null);
   const [imagenActiva, setImagenActiva] = useState(0);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [categoriaFiltro, setCategoriaFiltro] = useState("Todos");
   const [searchQuery, setSearchQuery] = useState("");
   const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
@@ -76,6 +75,9 @@ export default function PerfilProveedor() {
   const [isMobileCatalogOpen, setIsMobileCatalogOpen] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [showMainBackToTop, setShowMainBackToTop] = useState(false);
+  
+  // ESTADO PARA EL EFECTO HIGHLIGHT DE CONTACTO
+  const [highlightContacto, setHighlightContacto] = useState(false);
   
   // ==========================================
   // CARGAR DATOS DESDE FIREBASE
@@ -152,8 +154,7 @@ export default function PerfilProveedor() {
   }) : [];
 
   const categoriasUnicas = proveedor ? ["Todos", ...new Set(proveedor.productosDestacados.map(p => p.categoria))] : ["Todos"];
-  const logoGenerado = proveedor ? (proveedor.logo || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(proveedor.nombre)}&backgroundColor=1A3D3D`) : "";
-
+  
   // ==========================================
   // LÓGICA DE CARRUSEL DESLIZANTE INFINITO
   // ==========================================
@@ -198,6 +199,19 @@ export default function PerfilProveedor() {
   // ==========================================
   // EFECTOS Y NAVEGACIÓN GENERAL
   // ==========================================
+  
+  // Efecto para escuchar la señal de highlight (brillo) de contacto enviada desde el Navbar externo
+  useEffect(() => {
+    const handleHighlightEvent = () => {
+      setHighlightContacto(true);
+      // Reducido a 1.5s para que sea un destello más ágil
+      setTimeout(() => { setHighlightContacto(false); }, 2500);
+    };
+    
+    window.addEventListener('trigger-highlight-contacto', handleHighlightEvent);
+    return () => window.removeEventListener('trigger-highlight-contacto', handleHighlightEvent);
+  }, []);
+
   useEffect(() => {
     const link = document.createElement('link');
     link.href = 'https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap';
@@ -219,7 +233,7 @@ export default function PerfilProveedor() {
       document.head.removeChild(link);
       window.removeEventListener('scroll', handleMainScroll);
     };
-  }, [isLoading]); // Se vuelve a ejecutar cuando termina de cargar
+  }, [isLoading]); 
 
   useEffect(() => {
     if (productoSeleccionado || isMobileCatalogOpen) {
@@ -255,16 +269,10 @@ export default function PerfilProveedor() {
   };
 
   // ==========================================
-  // PANTALLA DE CARGA
+  // PANTALLA DE CARGA (Oculta visualmente)
   // ==========================================
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#F4F7F7] font-['Montserrat']">
-        <Loader2 className="w-12 h-12 text-[#2D6A6A] animate-spin mb-4" />
-        <h2 className="text-xl font-black text-[#1A3D3D]">Cargando perfil...</h2>
-        <p className="text-gray-500 font-medium">Conectando con la base de datos</p>
-      </div>
-    );
+    return <div className="min-h-screen bg-[#F4F7F7]"></div>;
   }
 
   // ==========================================
@@ -283,7 +291,7 @@ export default function PerfilProveedor() {
   }
 
   const DesktopProductCard = ({ prod }) => (
-    <article onClick={() => abrirModalProducto(prod)} className="bg-white border border-gray-200 rounded-[24px] hover:border-[#2D6A6A]/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group flex flex-col text-left cursor-pointer overflow-hidden h-full">
+    <article onClick={() => abrirModalProducto(prod)} className="bg-white border border-gray-200 rounded-[24px] hover:border-[#2D6A6A]/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-200 group flex flex-col text-left cursor-pointer overflow-hidden h-full">
       <div className="w-full h-48 relative overflow-hidden bg-white shrink-0 border-b border-gray-100">
         <div className="absolute top-4 left-4 z-10">
           <span className="bg-[#1A3D3D]/90 backdrop-blur-sm text-white text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-lg shadow-sm">
@@ -300,7 +308,7 @@ export default function PerfilProveedor() {
         )}
 
         {prod.imagenes && prod.imagenes[0] ? (
-          <img src={prod.imagenes[0]} alt={prod.titulo} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" />
+          <img src={prod.imagenes[0]} alt={prod.titulo} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ease-out" />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gray-50"><PackageSearch className="w-8 h-8 text-gray-300"/></div>
         )}
@@ -311,7 +319,7 @@ export default function PerfilProveedor() {
         </h3>
         <div className="mt-auto flex items-end justify-between border-t border-gray-50 pt-4">
           <div>
-            <span className="text-[9px] text-gray-400 font-bold uppercase tracking-widest block mb-0.5">Precio ARS</span>
+            <span className="text-[9px] text-gray-400 font-bold uppercase tracking-widest mb-0.5 block">Precio ARS</span>
             <span className="font-black text-[#2D6A6A] text-lg">{prod.precio ? `$${prod.precio}` : 'Consultar'}</span>
           </div>
           <div className="w-9 h-9 bg-[#F4F7F7] rounded-xl flex items-center justify-center text-[#2D6A6A] group-hover:bg-[#2D6A6A] group-hover:text-white transition-colors shadow-inner">
@@ -325,22 +333,7 @@ export default function PerfilProveedor() {
   return (
     <div className="bg-[#F4F7F7] font-['Inter'] antialiased min-h-screen relative text-[#333333] text-left overflow-x-hidden selection:bg-[#2D6A6A] selection:text-white">
       
-      {/* NAVBAR */}
-      <nav className="fixed top-0 left-0 w-full z-[100] h-[72px] bg-white/90 backdrop-blur-lg border-b border-gray-100 flex items-center px-8 md:px-10">
-        <div className="max-w-[1100px] mx-auto w-full flex justify-between items-center">
-            <div className="text-[#1A3D3D] font-['Montserrat'] font-extrabold text-2xl tracking-tighter cursor-pointer">
-                El Portal<span className="text-[#2D6A6A]">.</span>
-            </div>
-            <div className="hidden lg:flex items-center gap-8 text-gray-500 font-medium text-[12px] uppercase tracking-wider">
-                <a href="#nosotros" className="hover:text-[#2D6A6A] transition-colors">Empresa</a>
-                <a href="#catalogo" className="hover:text-[#2D6A6A] transition-colors">Catálogo</a>
-                <a href="#condiciones" className="hover:text-[#2D6A6A] transition-colors">Condiciones</a>
-            </div>
-            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="w-10 h-10 bg-white rounded-xl border border-gray-100 shadow-sm flex items-center justify-center text-[#1A3D3D] lg:hidden">
-                {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
-        </div>
-      </nav>
+      {/* EL NAVBAR SE REMOVIÓ DE AQUÍ, SERÁ IMPORTADO COMO COMPONENTE GLOBAL EN APP.JSX */}
 
       {/* SECCIÓN EDITORIAL SUPERIOR */}
       <main className="w-full bg-white pt-[72px]">
@@ -420,10 +413,10 @@ export default function PerfilProveedor() {
                     className={`w-full h-[240px] md:h-[320px] rounded-[24px] overflow-hidden relative shadow-sm border border-gray-100 group ${proveedor.videoNosotros ? 'cursor-pointer' : ''}`}
                     onClick={() => proveedor.videoNosotros && window.open(proveedor.videoNosotros, '_blank')}
                   >
-                    <img src={proveedor.imagenNosotros} alt="Instalaciones / Equipo" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                    <img src={proveedor.imagenNosotros} alt="Instalaciones / Equipo" className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                     
                     {proveedor.videoNosotros && (
-                      <div className="absolute inset-0 bg-[#1A3D3D]/10 group-hover:bg-[#1A3D3D]/30 transition-colors duration-300 flex items-center justify-center">
+                      <div className="absolute inset-0 bg-[#1A3D3D]/10 group-hover:bg-[#1A3D3D]/30 transition-colors duration-200 flex items-center justify-center">
                         <div className="w-16 h-16 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center text-[#1A3D3D] shadow-lg group-hover:scale-110 transition-transform">
                           <Play className="w-6 h-6 ml-1 fill-current" />
                         </div>
@@ -436,7 +429,12 @@ export default function PerfilProveedor() {
             </div>
 
             <aside className="lg:w-[35%] w-full">
-              <div className="sticky top-[100px] bg-[#F9FBFA] rounded-[32px] p-8 border border-gray-100 shadow-sm flex flex-col text-left reveal-on-scroll mt-4 lg:mt-16">
+              {/* EFECTO DE HIGHLIGHT (Tiempos reducidos para mayor agilidad) */}
+              <div id="contacto" className={`sticky top-[100px] bg-[#F9FBFA] p-8 border border-gray-100 flex flex-col text-left mt-4 lg:mt-16 transition-all duration-700 ease-out ${
+                highlightContacto 
+                  ? 'scale-[1.02] shadow-[0_0_60px_rgba(45,106,106,0.25)] ring-4 ring-[#4DB6AC]/40 ring-offset-4 ring-offset-[#F4F7F7]/50 rounded-[32px] relative z-50' 
+                  : 'scale-100 shadow-sm rounded-[32px] relative z-10 reveal-on-scroll'
+              }`}>
                 
                 <h3 className="text-[#1A3D3D] font-black font-['Montserrat'] text-[18px] mb-8 pb-4 border-b border-gray-200/60">
                   Información del Proveedor
@@ -595,7 +593,7 @@ export default function PerfilProveedor() {
                         style={isCarouselActive ? {
                           width: `${(carouselItems.length / 3) * 100}%`,
                           transform: `translateX(-${(currentIndex / carouselItems.length) * 100}%)`,
-                          transition: isTransitioning ? 'transform 0.6s cubic-bezier(0.25, 1, 0.5, 1)' : 'none'
+                          transition: isTransitioning ? 'transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)' : 'none'
                         } : { width: '100%' }}
                         onTransitionEnd={handleCarouselTransitionEnd}
                       >
@@ -890,7 +888,7 @@ export default function PerfilProveedor() {
                     <img 
                       src={productoSeleccionado.imagenes[imagenActiva]} 
                       alt={`${productoSeleccionado.titulo}`} 
-                      className="max-w-full max-h-full object-contain mix-blend-multiply transition-opacity duration-300 drop-shadow-sm fade-scale"
+                      className="max-w-full max-h-full object-contain mix-blend-multiply transition-opacity duration-200 drop-shadow-sm fade-scale"
                       key={imagenActiva}
                     />
                   ) : (
@@ -996,54 +994,7 @@ export default function PerfilProveedor() {
         </button>
       )}
 
-      {/* FOOTER */}
-      <footer className="w-full bg-gradient-to-br from-[#1A3D3D] to-[#2D6A6A] pt-8 pb-6 text-white text-left mt-8">
-        <div className="max-w-[1100px] mx-auto px-8 md:px-10">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-x-8 gap-y-10 mb-8 border-b border-white/5 pb-8 text-left">
-            <div className="md:col-span-1 text-left">
-              <h4 className="font-['Montserrat'] font-black text-2xl mb-4 leading-none text-left">
-                El Portal<span className="opacity-40">.</span>
-              </h4>
-              <p className="text-white/50 text-[13px] leading-relaxed text-left">
-                La red profesional exclusiva para medicina veterinaria. <br />Perfil Oficial de {proveedor.nombre}.
-              </p>
-            </div>
-
-            <div className="text-left">
-              <h4 className="font-bold text-[10px] uppercase tracking-widest mb-4 opacity-60 text-left">Plataforma</h4>
-              <ul className="space-y-2 text-white/40 text-sm">
-                <li>Bolsa de Trabajo</li>
-                <li>Insumos Médicos</li>
-              </ul>
-            </div>
-
-            <div className="text-left">
-              <h4 className="font-bold text-[10px] uppercase tracking-widest mb-4 opacity-60 text-left">Soporte</h4>
-              <ul className="space-y-2 text-white/40 text-sm">
-                <li>Centro de Ayuda</li>
-                <li>Términos y Privacidad</li>
-              </ul>
-            </div>
-
-            <div className="text-center md:text-right">
-                <div className="flex justify-center md:justify-end gap-4 mb-6">
-                   {proveedor.contacto.redes.instagram && <a href={proveedor.contacto.redes.instagram} target="_blank" rel="noreferrer"><Instagram className="w-6 h-6 opacity-40 hover:opacity-100 transition-opacity text-white" /></a>}
-                   {proveedor.contacto.redes.facebook && <a href={proveedor.contacto.redes.facebook} target="_blank" rel="noreferrer"><Facebook className="w-6 h-6 opacity-40 hover:opacity-100 transition-opacity text-white" /></a>}
-                   {proveedor.contacto.redes.linkedin && <a href={proveedor.contacto.redes.linkedin} target="_blank" rel="noreferrer"><Linkedin className="w-6 h-6 opacity-40 hover:opacity-100 transition-opacity text-white" /></a>}
-                </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] uppercase tracking-widest font-bold opacity-30">
-            <p>&copy; {new Date().getFullYear()} El Portal. Belén M. Arenas</p>
-            <div className="flex items-center gap-2">Hecho con <Heart className="w-3 h-3 text-red-400 fill-current" /> en Argentina</div>
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4" /> Perfil Oficial Verificado
-            </div>
-          </div>
-        </div>
-      </footer>
-
+     
       {/* ========================================== */}
       {/* ANIMACIONES CSS PURAS */}
       {/* ========================================== */}
@@ -1056,13 +1007,14 @@ export default function PerfilProveedor() {
           scrollbar-width: none;
         }
 
+        /* Tiempos reducidos para sentir la interfaz más snappy */
         @keyframes fadeScale {
           from { opacity: 0; transform: scale(0.98); }
           to { opacity: 1; transform: scale(1); }
         }
 
         .fade-scale {
-          animation: fadeScale 0.3s ease-out forwards;
+          animation: fadeScale 0.15s ease-out forwards;
         }
       `}</style>
 

@@ -154,7 +154,7 @@ const Accordion = ({ title, icon: Icon, children, isOpen, onToggle, tooltip, isB
   );
 };
 
-function Editor() { 
+export default function Editor() { 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [modalConfig, setModalConfig] = useState({ isOpen: false, title: '', message: '', type: 'info', onConfirm: null });
   const [openSection, setOpenSection] = useState('identidad');
@@ -736,5 +736,3 @@ function Editor() {
     </div>
   );
 }
-
-export default function App() { return <Editor />; }

@@ -1,13 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { 
-  Menu, X, ChevronRight, ChevronLeft, ChevronDown, MapPin, Phone, Mail, Globe, 
+  ChevronRight, ChevronLeft, ChevronDown, MapPin, Phone, Mail, Globe, 
   Clock, Star, ShieldCheck, Heart, AlertTriangle, 
   Stethoscope, Syringe, Microscope, Activity, Building2, 
-  Facebook, Instagram, Linkedin, Info, Award, ArrowRight, LayoutGrid, Briefcase, Home, Users, Quote, ExternalLink
+  Facebook, Instagram, Linkedin, Info, Award, ArrowRight, Users, Quote, ExternalLink
 } from 'lucide-react';
-
-// Mock de useNavigate para que no se rompa el Canvas
-const useNavigate = () => (path) => console.log('Navegando a:', path);
 
 // ==========================================
 // DATOS DE LA CLÍNICA (Configurables)
@@ -81,11 +78,10 @@ const renderIcon = (iconName, className) => {
 // ==========================================
 // COMPONENTE PRINCIPAL
 // ==========================================
-export default function App() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+export default function PerfilClinica() {
   const [openFaq, setOpenFaq] = useState(null);
+  const [highlightContacto, setHighlightContacto] = useState(false);
   const scrollRef = useRef(null);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const link = document.createElement('link');
@@ -93,17 +89,39 @@ export default function App() {
     link.rel = 'stylesheet';
     document.head.appendChild(link);
 
+    // Inyección de estilos para el scroll y la animación
+    const style = document.createElement('style');
+    style.innerHTML = `
+      #contacto {
+        scroll-margin-top: 100px;
+      }
+      .highlight-animation {
+        transition: all 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+    `;
+    document.head.appendChild(style);
+
     const observer = new IntersectionObserver(
       (entries) => entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in-view'); observer.unobserve(e.target); } }),
       { threshold: 0.1 }
     );
     document.querySelectorAll('.reveal-on-scroll').forEach(el => observer.observe(el));
-  }, []);
+    
+    // Escuchador del evento personalizado para destacar la sección de contacto
+    const handleHighlightEvent = () => {
+      setHighlightContacto(true);
+      setTimeout(() => { setHighlightContacto(false); }, 2500);
+    };
+    
+    window.addEventListener('trigger-highlight-contacto', handleHighlightEvent);
 
-  const handleNav = (page) => {
-    setIsMenuOpen(false);
-    navigate(`/${page}`);
-  };
+    return () => {
+      if (document.head.contains(link)) document.head.removeChild(link);
+      if (document.head.contains(style)) document.head.removeChild(style);
+      observer.disconnect();
+      window.removeEventListener('trigger-highlight-contacto', handleHighlightEvent);
+    };
+  }, []);
 
   const scrollReviews = (direction) => {
     if (scrollRef.current) {
@@ -112,7 +130,7 @@ export default function App() {
       if (!firstChild) return;
       
       const cardWidth = firstChild.offsetWidth;
-      const gap = 20; // Correspondiente al gap-5 de Tailwind
+      const gap = 20; 
       const scrollAmount = cardWidth + gap;
 
       if (direction === 'right') {
@@ -132,27 +150,12 @@ export default function App() {
   };
 
   return (
-    <div className="bg-[#F4F7F7] font-['Inter'] antialiased min-h-screen relative text-left overflow-x-hidden selection:bg-[#2D6A6A] selection:text-white text-left">
+    <div className="bg-[#F4F7F7] font-['Inter'] antialiased relative text-left overflow-x-hidden selection:bg-[#2D6A6A] selection:text-white">
       
-      {/* NAVBAR */}
-      <nav className="fixed top-0 left-0 w-full z-[100] h-[72px] bg-white/90 backdrop-blur-lg border-b border-gray-100 flex items-center px-8 md:px-10">
-        <div className="max-w-[1100px] mx-auto w-full flex justify-between items-center">
-            <div className="text-[#1A3D3D] font-['Montserrat'] font-extrabold text-2xl tracking-tighter cursor-pointer" onClick={() => handleNav('')}>
-                El Portal<span className="text-[#2D6A6A]">.</span>
-            </div>
-            <div className="hidden lg:flex items-center gap-8 text-gray-500 font-medium text-[12px] uppercase tracking-wider">
-                <a href="#nosotros" className="hover:text-[#2D6A6A] transition-colors">Nosotros</a>
-                <a href="#servicios" className="hover:text-[#2D6A6A] transition-colors">Servicios</a>
-                <a href="#urgencias" className="hover:text-[#2D6A6A] transition-colors">Urgencias</a>
-            </div>
-            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="w-10 h-10 bg-white rounded-xl border border-gray-100 shadow-sm flex items-center justify-center text-[#1A3D3D]">
-                {isMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
-        </div>
-      </nav>
+      {/* EL NAVBAR SE REMOVIÓ DE AQUÍ, SE INTEGRA DESDE APP.JSX */}
 
       {/* HERO */}
-      <main className="relative w-full bg-white overflow-hidden pt-[72px]">
+      <main className="relative w-full bg-white overflow-hidden pt-[72px] md:pt-[90px]">
         <div className="max-w-[1100px] mx-auto px-6 md:px-10 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center pt-4 pb-6 md:pb-8">
           <div className="lg:col-span-7 flex flex-col items-start text-left">
             {data.clinica.guardia24hs && (
@@ -174,7 +177,7 @@ export default function App() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-              <a href={`https://wa.me/${data.clinica.whatsapp}`} className="flex items-center justify-center gap-2.5 bg-[#25D366] text-white px-8 py-4 rounded-2xl font-black uppercase text-[11px] shadow-lg tracking-widest">
+              <a href={`https://wa.me/${data.clinica.whatsapp}`} className="flex items-center justify-center gap-2.5 bg-[#25D366] text-white px-8 py-4 rounded-2xl font-black uppercase text-[11px] shadow-lg tracking-widest hover:bg-[#20bd5a] transition-colors">
                 <Phone className="w-4 h-4" /> Enviar WhatsApp 
               </a>
               <a href="#servicios" className="flex items-center justify-center gap-2.5 bg-white border-2 border-gray-100 text-[#1A3D3D] px-8 py-4 rounded-2xl font-black uppercase text-[11px] hover:border-[#2D6A6A]/30 transition-all tracking-widest">
@@ -206,7 +209,6 @@ export default function App() {
                 <span className="text-xs font-bold text-[#1A3D3D]">{data.clinica.direccion}</span>
               </div>
 
-              {/* Badge de Experiencia - Ajustado según solicitud */}
               <div className="absolute -bottom-6 -right-8 bg-[#1A3D3D] rounded-2xl py-3 px-4 shadow-xl border border-white/10 flex items-center gap-2.5">
                 <div className="w-8 h-8 bg-[#2D6A6A] rounded-xl flex items-center justify-center shrink-0">
                   <Star className="w-4 h-4 text-white fill-white" />
@@ -219,8 +221,6 @@ export default function App() {
             </div>
           </div>
         </div>
-
-      
       </main>
 
       {/* NUESTRA HISTORIA */}
@@ -280,7 +280,7 @@ export default function App() {
                 <p className="text-red-900/60 font-medium text-[13px] leading-relaxed max-w-2xl">{data.servicios[0].desc}</p>
               </div>
             </div>
-            <a href={`https://wa.me/${data.clinica.whatsapp}`} className="bg-red-500 text-white px-8 py-3.5 rounded-xl font-black uppercase tracking-widest text-[10px] shadow-lg whitespace-nowrap">
+            <a href={`https://wa.me/${data.clinica.whatsapp}`} className="bg-red-500 text-white px-8 py-3.5 rounded-xl font-black uppercase tracking-widest text-[10px] shadow-lg whitespace-nowrap hover:bg-red-600 transition-colors">
               Avisar Urgencia
             </a>
           </div>
@@ -303,11 +303,11 @@ export default function App() {
           </div>
 
           <div className="max-w-4xl mx-auto bg-[#F9FBFA] rounded-[32px] p-6 md:p-8 border border-gray-200 shadow-sm">
-            <h3 className="text-center font-black text-[#1A3D3D] font-['Montserrat'] text-2xl mb-6 tracking-tight text-center">Preguntas Frecuentes</h3>
+            <h3 className="text-center font-black text-[#1A3D3D] font-['Montserrat'] text-2xl mb-6 tracking-tight">Preguntas Frecuentes</h3>
             <div className="space-y-3">
               {data.serviciosDesplegables.map((faq) => (
                 <div key={faq.id} className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm text-left">
-                  <button onClick={() => setOpenFaq(openFaq === faq.id ? null : faq.id)} className="w-full flex items-center justify-between px-6 py-4">
+                  <button onClick={() => setOpenFaq(openFaq === faq.id ? null : faq.id)} className="w-full flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors">
                     <span className="font-bold text-[#1A3D3D] text-[14px]">{faq.titulo}</span>
                     <div className={`w-8 h-8 rounded-full bg-[#F4F7F7] flex items-center justify-center transition-transform ${openFaq === faq.id ? 'rotate-180 bg-[#1A3D3D] text-white' : 'text-[#2D6A6A]'}`}>
                       <ChevronDown className="w-4 h-4" />
@@ -335,7 +335,7 @@ export default function App() {
               <AlertTriangle className="w-64 h-64 text-red-500" />
             </div>
 
-            <div className="relative z-10 text-center max-w-2xl mx-auto mb-6 text-center">
+            <div className="relative z-10 max-w-2xl mx-auto mb-6 text-center">
               <h3 className="text-red-500 font-bold text-[10px] uppercase tracking-[0.3em] mb-2 text-center">Protocolo Crítico</h3>
               <h2 className="text-3xl md:text-5xl font-black text-red-600 font-['Montserrat'] tracking-tight mb-4 leading-tight text-center">¿Qué hacer antes de llegar?</h2>
               <p className="text-red-900/60 font-medium text-[15px] text-center">Instrucciones vitales para actuar mientras venís en camino a nuestra guardia.</p>
@@ -351,7 +351,7 @@ export default function App() {
               ))}
             </div>
 
-            <div className="mt-8 text-center relative z-10 text-center">
+            <div className="mt-8 relative z-10 text-center">
                <a href={`https://wa.me/${data.clinica.whatsapp}`} className="inline-flex items-center gap-3 bg-red-500 text-white px-10 py-4 rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-lg hover:bg-red-600 transition-all">
                   <AlertTriangle className="w-5 h-5" /> Avisar Guardia en Camino
                </a>
@@ -376,7 +376,7 @@ export default function App() {
                 </div>
                 <h3 className="text-[16px] font-black text-[#1A3D3D] font-['Montserrat'] leading-tight mb-1">{m.nombre}</h3>
                 <p className="text-[#2D6A6A] text-[9px] font-black uppercase tracking-widest mb-4 h-6">{m.especialidad.split('·')[0]}</p>
-                <p className="text-gray-500 text-[12px] font-medium leading-relaxed mb-6 flex-1 px-2">{m.bio}</p>
+                <p className="text-gray-500 text-[12px] font-medium leading-relaxed mb-6 flex-1 px-2 text-center">{m.bio}</p>
                 
                 <div className="w-full mt-auto bg-white rounded-2xl p-3.5 border border-gray-100 text-left flex items-center justify-between">
                    <div className="text-left">
@@ -394,7 +394,7 @@ export default function App() {
       {/* RESEÑAS GOOGLE */}
       <section className="py-10 mt-4 bg-[#F4F7F7] reveal-on-scroll overflow-hidden">
         <div className="max-w-[1100px] mx-auto px-6 md:px-10">
-          <div className="flex flex-col md:flex-row items-center justify-center gap-4 mb-8 text-center text-center">
+          <div className="flex flex-col md:flex-row items-center justify-center gap-4 mb-8 text-center">
             <svg className="w-10 h-10 shrink-0" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
               <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -402,7 +402,7 @@ export default function App() {
               <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
             </svg>
             <div className="text-center">
-              <p className="text-[20px] font-black text-[#1A3D3D] font-['Montserrat'] leading-none mb-2 text-center text-center">Qué dicen nuestros clientes</p>
+              <p className="text-[20px] font-black text-[#1A3D3D] font-['Montserrat'] leading-none mb-2 text-center">Qué dicen nuestros clientes</p>
               <div className="flex items-center justify-center gap-1.5 text-center">
                 <span className="text-amber-500 font-bold text-sm text-center">{data.clinica.googleRating}</span>
                 <div className="flex text-center">
@@ -458,10 +458,15 @@ export default function App() {
         </div>
       </section>
 
-      {/* CONTACTO & MAPA */}
-      <section className="py-6 md:py-10 bg-white reveal-on-scroll">
+      {/* CONTACTO & MAPA (SECCIÓN CON EFECTO DE RESALTADO MEJORADO) */}
+      <section id="contacto" className="py-6 md:py-10 bg-white reveal-on-scroll">
         <div className="max-w-[1100px] mx-auto px-6 md:px-10">
-          <div className="bg-white rounded-[40px] p-6 md:p-8 shadow-[0_30px_60px_rgba(26,61,61,0.06)] border border-gray-100 flex flex-col lg:flex-row gap-8">
+          
+          <div className={`highlight-animation bg-white rounded-[40px] p-6 md:p-8 flex flex-col lg:flex-row gap-8 border border-gray-100
+            ${highlightContacto 
+              ? 'scale-[1.03] shadow-[0_0_80px_rgba(45,106,106,0.3)] ring-4 ring-[#4DB6AC]/50 ring-offset-4 ring-offset-white relative z-50' 
+              : 'scale-100 shadow-[0_30px_60px_rgba(26,61,61,0.06)] relative z-10'}`}
+          >
             
             <div className="flex-1 flex flex-col text-left">
               <h3 className="text-[#2D6A6A] font-bold text-[11px] uppercase tracking-[0.3em] mb-2 text-left">Contacto Directo</h3>
@@ -501,13 +506,13 @@ export default function App() {
                   </div>
                 </a>
 
-                {/* Redes Sociales (Premium Icons) */}
+                {/* Redes Sociales */}
                 <div className="flex items-center gap-4 bg-[#F9FBFA] border border-gray-100 rounded-2xl p-4">
                   <div className="w-12 h-12 bg-[#2D6A6A]/10 rounded-xl flex items-center justify-center text-[#2D6A6A] shrink-0">
                     <Globe className="w-5 h-5" />
                   </div>
                   <div className="text-left">
-                    <p className="text-[9px] font-bold text-gray-400 uppercase leading-none mb-2">Nuestra Comunidad</p>
+                    <p className="text-[9px] font-bold text-gray-400 uppercase mb-2">Nuestra Comunidad</p>
                     <div className="flex gap-2">
                        <a href={data.clinica.redes.instagram} target="_blank" rel="noreferrer" className="w-8 h-8 rounded-full bg-white border border-gray-100 flex items-center justify-center text-[#E4405F] hover:bg-[#E4405F] hover:text-white transition-all shadow-sm">
                           <Instagram className="w-4 h-4" />
@@ -534,53 +539,6 @@ export default function App() {
           </div>
         </div>
       </section>
-
-      {/* FOOTER */}
-      <footer className="w-full bg-gradient-to-br from-[#1A3D3D] to-[#2D6A6A] pt-8 pb-6 text-white text-left">
-        <div className="max-w-[1100px] mx-auto px-8 md:px-10">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-x-8 gap-y-10 mb-8 border-b border-white/5 pb-8 text-left">
-            <div className="md:col-span-1 text-left">
-              <h4 className="font-['Montserrat'] font-black text-2xl mb-4 leading-none text-left">
-                El Portal<span className="opacity-40">.</span>
-              </h4>
-              <p className="text-white/50 text-[13px] leading-relaxed text-left">
-                La red profesional exclusiva para medicina veterinaria. <br />Perfil Oficial de {data.clinica.nombre}.
-              </p>
-            </div>
-
-            <div className="text-left">
-              <h4 className="font-bold text-[10px] uppercase tracking-widest mb-4 opacity-60 text-left">Plataforma</h4>
-              <ul className="space-y-2 text-white/40 text-sm">
-                <li>Bolsa de Trabajo</li>
-                <li>Insumos Médicos</li>
-              </ul>
-            </div>
-
-            <div className="text-left">
-              <h4 className="font-bold text-[10px] uppercase tracking-widest mb-4 opacity-60 text-left">Soporte</h4>
-              <ul className="space-y-2 text-white/40 text-sm">
-                <li>Centro de Ayuda</li>
-                <li>Términos y Privacidad</li>
-              </ul>
-            </div>
-
-            <div className="text-center md:text-right">
-                <div className="flex justify-center md:justify-end gap-4 mb-6">
-                    <Instagram className="w-6 h-6 opacity-40 hover:opacity-100 transition-opacity cursor-pointer text-left" />
-                    <Facebook className="w-6 h-6 opacity-40 hover:opacity-100 transition-opacity cursor-pointer text-left" />
-                </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] uppercase tracking-widest font-bold opacity-30">
-            <p>&copy; {new Date().getFullYear()} El Portal. Belén M. Arenas</p>
-            <div className="flex items-center gap-2">Hecho con <Heart className="w-3 h-3 text-red-400 fill-current" /> en Argentina</div>
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4" /> Perfil Oficial Verificado
-            </div>
-          </div>
-        </div>
-      </footer>
 
       {/* WHATSAPP FLOTANTE */}
       <a

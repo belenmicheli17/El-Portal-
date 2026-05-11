@@ -1,76 +1,128 @@
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 
-// ==========================================
-// IMPORTACIÓN DE PÁGINAS (Ajusta según tus archivos)
-// ==========================================
+// Componentes Globales
+import Navbar from './components/Navbar'; 
+import Footer from './components/Footer'; 
+import AccessibilityWidget from './components/AccessibilityWidget';
+
+// Importaciones de páginas
 import LandingPage from './pages/landing-page';
 import Inicio from './pages/inicio';
-
-// Perfiles
 import Perfil from './pages/perfiles/perfil-profesional'; 
 import PerfilProveedor from './pages/perfiles/perfil-proveedores'; 
 import PerfilClinica from './pages/perfiles/perfil-clinica';
-
-// Editores
 import Editor from './pages/editores/editor-profesional'; 
 import EditorClinica from './pages/editores/editor-clinica'; 
 import EditorProveedor from './pages/editores/editor-proveedores'; 
-
-// Secciones del Ecosistema
 import Ecosistema from './pages/repertorio';
 import Novedades from './pages/novedades';
 import BolsaDeTrabajo from './pages/bolsa-de-trabajo';
-
-// Legales
 import LegalPage from './pages/legales/privacidad';
 
-// Componentes Globales
-import AccessibilityWidget from './components/AccessibilityWidget';
+// ==========================================
+// COMPONENTE: SCROLL TO TOP
+// Obliga a la página a subir arriba de todo al cambiar de ruta
+// ==========================================
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+};
 
-/**
- * COMPONENTE PRINCIPAL (App.jsx)
- * * Cambios realizados:
- * 1. Eliminado <Router>: Evita el error "You cannot render a <Router> inside another <Router>".
- * 2. Limpieza de duplicados: Se corrigieron los imports mal pegados al inicio.
- * 3. Rutas unificadas: Se agregaron todas las secciones de tu plataforma.
- */
+// ==========================================
+// 1. CREAMOS EL COMPONENTE LAYOUT
+// ==========================================
+const MainLayout = () => {
+  // Extraemos la información de la ruta actual
+  const location = useLocation();
+  
+  // Detectamos si la URL actual incluye la palabra "perfil"
+  const esRutaDePerfil = location.pathname.includes('/perfil');
+
+  return (
+    <div className="flex flex-col min-h-screen">
+      {/* Navbar Dinámico: 
+        Si estamos en un perfil, mostrarBotonContacto será TRUE. 
+        Si estamos en cualquier otra vista, mostrarBotonCrear será TRUE.
+      */}
+      <Navbar 
+        mostrarBotonContacto={esRutaDePerfil} 
+        mostrarBotonCrear={!esRutaDePerfil} 
+      /> 
+      
+      {/* Contenedor Principal que empuja el Footer hacia abajo */}
+      <main className="pt-[72px] flex-grow">
+        {/* El Outlet es el espacio dinámico donde renderiza la página según la URL */}
+        <Outlet /> 
+      </main>
+      
+      {/* Footer al final de la página */}
+      <Footer /> 
+    </div>
+  );
+};
+
+// ==========================================
+// 2. COMPONENTE PRINCIPAL (App)
+// ==========================================
 export default function App() {
   return (
     <div className="relative min-h-screen bg-gray-50 selection:bg-[#2D6A6A] selection:text-white">
       
-      {/* SISTEMA DE RUTAS: Solo una vez */}
+      {/* Estilos globales para corregir el desplazamiento (Scroll Offset) */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        #contacto {
+          scroll-margin-top: 100px; /* Altura Navbar (72px) + 28px de margen extra */
+        }
+        html {
+          scroll-behavior: smooth;
+        }
+      `}} />
+
+      {/* Activa el Scroll To Top automático */}
+      <ScrollToTop />
+
       <Routes>
-        {/* Landing e Inicio */}
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/inicio" element={<Inicio />} />
-        
-        {/* Perfiles */}
-        <Route path="/perfil" element={<Perfil />} />
-        <Route path="/perfil-proveedor" element={<PerfilProveedor />} />
-        <Route path="/perfil-clinica" element={<PerfilClinica />} />
-        
-        {/* Editores */}
-        <Route path="/editor" element={<Editor />} />
+        {/* ========================================================= */}
+        {/* RUTAS CON NAVBAR Y FOOTER PÚBLICOS (MainLayout)           */}
+        {/* ========================================================= */}
+        <Route element={<MainLayout />}>
+          
+          {/* Páginas principales */}
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/inicio" element={<Inicio />} />
+          
+          {/* Perfiles */}
+          <Route path="/perfil-profesional" element={<Perfil />} />
+          <Route path="/perfil-proveedores" element={<PerfilProveedor />} />
+          <Route path="/perfil-clinica" element={<PerfilClinica />} />
+          
+          {/* Secciones de la plataforma */}
+          <Route path="/ecosistema" element={<Ecosistema />} />
+          <Route path="/novedades" element={<Novedades />} />
+          <Route path="/bolsa-de-trabajo" element={<BolsaDeTrabajo />} />
+          
+          {/* Legales */}
+          <Route path="/terminos-y-condiciones" element={<LegalPage />} />
+          <Route path="/politica-de-privacidad" element={<LegalPage />} />
+        </Route>
+
+        {/* ========================================================= */}
+        {/* RUTAS DE EDITORES (Sin Navbar ni Footer globales)         */}
+        {/* ========================================================= */}
+        <Route path="/editor-profesional" element={<Editor />} />
         <Route path="/editor-clinica" element={<EditorClinica />} />
         <Route path="/editor-proveedores" element={<EditorProveedor />} />
-        
-        {/* Secciones del Ecosistema */}
-        <Route path="/ecosistema" element={<Ecosistema />} />
-        <Route path="/novedades" element={<Novedades />} />
-        <Route path="/bolsa-de-trabajo" element={<BolsaDeTrabajo />} />
-        
-        {/* Legales */}
-        <Route path="/terminos-y-condiciones" element={<LegalPage />} />
-        <Route path="/politica-de-privacidad" element={<LegalPage />} />
-        
-        {/* Redirección por defecto si la ruta no existe */}
+
+        {/* Redirección por defecto: si alguien entra a una URL que no existe, va al Landing */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
 
-      {/* WIDGET DE ACCESIBILIDAD: Global para todo el sitio */}
+      {/* Widget Flotante de Accesibilidad */}
       <AccessibilityWidget />
-
     </div>
   );
 }
