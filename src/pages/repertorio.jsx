@@ -124,7 +124,7 @@ const PARTNERS = [
     marca: "Distribuidora MedVet",
     logoMarca: "https://api.dicebear.com/7.x/initials/svg?seed=DM&backgroundColor=2D6A6A",
     imagen: "https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=800&q=80",
-    descripcionCorta: "La mejor resolución para diagnóstico en campo. 10% OFF con el código PORTAL10.",
+    descripcionCorta: "La mejor resolución para diagnóstico en campo.",
     descripcionLarga: "El Mindray V1 es la solución definitiva para el veterinario moderno que requiere movilidad sin sacrificar calidad de imagen. Su diseño ultraportátil y resistente al agua lo hace ideal tanto para el consultorio como para el trabajo de campo con grandes animales (equinos, bovinos). Cuenta con tecnología de procesamiento de imágenes avanzada que garantiza diagnósticos precisos en ecografía abdominal, cardíaca y reproductiva.",
     color: "#2D6A6A",
     precio: 2500000,
@@ -1948,7 +1948,7 @@ const renderPropuesta = () => (
             <div className="sticky top-28 space-y-6">
               <div className="bg-white p-8 rounded-[32px] shadow-[0_20px_50px_rgba(0,0,0,0.06)] border border-gray-100 flex flex-col gap-6">
                 <div>
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Inversión sugerida</p>
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Inversión</p>
                   <div className="flex items-baseline gap-2">
                     <span className="text-3xl lg:text-4xl font-black font-['Montserrat'] text-[#1A3D3D] tracking-tighter">
                       ${selectedInsumo.precio.toLocaleString('es-AR')}

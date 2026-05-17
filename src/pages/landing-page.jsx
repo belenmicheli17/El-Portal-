@@ -16,9 +16,9 @@ const strategicCardsData = [
     id: 'clinicas',
     icon: Building2,
     title: 'Centros Veterinarios',
-    subtitle: 'Atraé nuevos pacientes y convertite en el centro de derivación de tu región.',
+    subtitle: 'Atraé nuevos pacientes y convertite en el centro de derivación de tu zona de cobertura.',
     features: [
-      { icon: MapPin, title: 'Visibilidad ante tutores:', desc: 'Que los dueños de mascotas encuentren tu clínica por zona, exploren tus servicios y conozcan a tu staff de profesionales.' },
+      { icon: MapPin, title: 'Visibilidad ante tutores:', desc: 'Que los tutores de mascotas encuentren tu clínica, exploren tus servicios y conozcan a tu equipo de profesionales.' },
       { icon: TrendingUp, title: 'Rentabilizá tu equipamiento:', desc: 'Atraé derivaciones directas de colegas que necesitan tus equipos de alta complejidad o quirófano.' },
       { icon: Briefcase, title: 'Reclutamiento ágil:', desc: 'Publicá búsquedas en nuestra Bolsa de Trabajo y encontrá rápidamente a los especialistas exactos que tu equipo necesita.' }
     ]
@@ -31,7 +31,7 @@ const strategicCardsData = [
     features: [
       { icon: Stethoscope, title: 'Casos a tu medida:', desc: 'Atraé consultas y derivaciones 100% alineadas con tu área de mayor interés y zona de cobertura.' },
       { icon: TrendingUp, title: 'Evolución profesional:', desc: 'Destacá tu formación para ser descubierto por directores médicos que buscan sumar talento especializado.' },
-      { icon: LayoutGrid, title: 'Llave al ecosistema:', desc: 'Usá tu cuenta como un pase directo para explorar proveedores mayoristas, ofertas laborales y capacitaciones.' }
+      { icon: LayoutGrid, title: 'Llave al ecosistema:', desc: 'Usá tu cuenta como un pase directo para explorar proveedores mayoristas, ofertas laborales y enterarte de todas las capacitaciones.' }
     ]
   },
   {
@@ -352,7 +352,7 @@ export default function LandingPage() {
                 <TypewriterTitle />
                 
                 <p className="text-[15px] md:text-[15px] lg:text-[17px] text-[#333333]/80 font-medium leading-relaxed mb-2 lg:mb-6 max-w-[500px]">
-                  Todo el ecosistema veterinario conectado en un solo lugar. Un espacio pensado para que muestren todo lo que ofreces, sin la presión de crear contenido a diario.
+                  Todo el ecosistema veterinario conectado en un solo lugar. Un espacio pensado para que muestres todo lo que ofreces, sin la presión de crear contenido a diario.
                 </p>
                 
                 <div className="hidden lg:flex items-center gap-3 text-[11px] font-bold text-[#2D6A6A] uppercase tracking-widest cursor-pointer group">
@@ -634,9 +634,9 @@ export default function LandingPage() {
             title="Foco en tu vocación, no en el algoritmo."
             text={
               <>
-                El Portal está diseñado para que no pierdas tiempo en redes sociales que exigen creación constante y no están pensadas para profesionales de la salud. Aquí, tu perfil es atemporal: no necesitás publicar historias para que te deriven pacientes; si un colega o un tutor busca tu especialidad, te encuentra al instante, sin esfuerzo ni mantenimiento de tu parte.
+                El Portal está diseñado para que no pierdas tiempo en redes sociales que exigen creación constante y no están pensadas para profesionales de la salud. Acá, tu perfil es atemporal: no necesitás publicar historias para que te deriven pacientes; si un colega o un tutor busca tu especialidad, te encuentra al instante, sin esfuerzo ni mantenimiento de tu parte.
                 <span className="block mt-2">
-                  Este mismo ecosistema potencia a instituciones y proveedores: posiciona tus instalaciones para multiplicar consultas y expone tu equipamiento ante una red de <strong>profesionales</strong> que toman decisiones.
+                  Este mismo ecosistema potencia a <strong>instituciones y proveedores</strong>: posiciona tus instalaciones para multiplicar consultas y expone tu equipamiento ante una red de <strong>profesionales</strong> que toman decisiones.
                 </span>
               </>
             }

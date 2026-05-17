@@ -1,10 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
+
+// Importamos useNavigate para poder navegar entre páginas
+import { useNavigate } from 'react-router-dom';
+
+// ==========================================
+// IMPORTACIONES DE FIREBASE (NUEVO)
+// ==========================================
+import { db } from '../../firebase'; // <-- Asegurate de que la ruta coincida con tu archivo de conexión
+import { doc, setDoc } from 'firebase/firestore'; 
+
 import { 
   Camera, Info, AlertCircle, Save, X, Plus, Trash2, 
   ArrowUp, ArrowDown, MapPin, ShieldCheck, Check, ArrowLeft,
   Smartphone, Home, Mail, Award, ChevronDown, 
-  ArrowRight, ExternalLink, Heart,
-  Menu, User, LayoutGrid, Edit, Briefcase, FileText, Undo2, Redo2, FileCheck, Building2, AlertTriangle, Syringe, Activity, Microscope, Stethoscope, Crop, Sparkles, Loader2, Globe, CreditCard, ArrowUpRight, Eye, EyeOff
+  ArrowRight, ExternalLink, Heart, Lock, Zap, Clock,
+  Menu, User, LayoutGrid, Edit, Briefcase, FileText, Undo2, Redo2, FileCheck, Building2, AlertTriangle, Syringe, Activity, Microscope, Stethoscope, Crop, Sparkles, Loader2, Globe, CreditCard, ArrowUpRight, Eye, EyeOff, MessageSquare
 } from 'lucide-react';
 
 // ==========================================
@@ -271,16 +281,22 @@ const SimpleCropper = ({ imageSrc, onCrop, onCancel, type }) => {
 // APLICACIÓN PRINCIPAL
 // ==========================================
 export default function EditorClinico() { 
-  const [activeTab, setActiveTab] = useState('perfil'); 
+  const navigate = useNavigate(); // <-- INICIALIZAMOS LA NAVEGACIÓN DE REACT ROUTER
+
+  const [activeTab, setActiveTab] = useState('cuenta'); 
   const [modalConfig, setModalConfig] = useState({ isOpen: false, title: '', message: '', type: 'info', onConfirm: null });
   const [isSubModalOpen, setIsSubModalOpen] = useState(false); 
+  const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
   const [openSection, setOpenSection] = useState(null);
   const [nuevaSubOpcion, setNuevaSubOpcion] = useState({ idServicio: null, texto: '' });
   const [cropModal, setCropModal] = useState({ isOpen: false, imageSrc: null, targetId: null, type: null });
   const [saveStatus, setSaveStatus] = useState('idle');
 
-  // ESTADO PARA SUSCRIPCIÓN ACTIVA/INACTIVA (falso por defecto para mostrar el mockup de advertencia)
-  const [isSubscriptionActive, setIsSubscriptionActive] = useState(false);
+  const [planType, setPlanType] = useState('pro');
+  const [tempSelectedPlan, setTempSelectedPlan] = useState('pro'); 
+  const [isSubscriptionActive, setIsSubscriptionActive] = useState(true);
+
+  const isPro = planType === 'pro';
 
   const initialData = {
     cuentaEmail: 'clinica@vetsur.com.ar',
@@ -296,10 +312,11 @@ export default function EditorClinico() {
     telefono: "+54 11 4567-8901",
     whatsapp: "5491145678901",
     email: "contacto@sanroquevet.com.ar",
-    googleMapsUrl: "https://maps.google.com/?q=Clinica+Veterinaria+San+Roque+Moron",
-    redes: { instagram: "https://instagram.com", facebook: "https://facebook.com", linkedin: "" },
+    planActual: 'pro',
+    redes: { instagram: "https://instagram.com", facebook: "https://facebook.com" },
     guardia24hs: true,
     telefonoGuardia: "",
+    horarios: { semanaDesde: "09", semanaHasta: "20", sabadoDesde: "10", sabadoHasta: "14" },
     staff: [
       { id: 1, nombre: "Dr. Martín Suárez", especialidad: "Director Médico", matricula: "MV 4521", bio: "Especialista en cirugía general con más de 10 años de experiencia.", foto: "" },
       { id: 2, nombre: "Dra. Valeria Rojas", especialidad: "Medicina Interna", matricula: "MV 3108", bio: "Enfocada en diagnóstico y tratamiento de patologías de alta complejidad.", foto: "" }
@@ -308,7 +325,10 @@ export default function EditorClinico() {
       'guardia': { activo: true, subOpcionesSeleccionadas: ['Terapia Intensiva (UTI)'] },
       'cirugia': { activo: true, subOpcionesSeleccionadas: ['Tejidos Blandos', 'Traumatología'] },
       'especialidades': { activo: true, subOpcionesSeleccionadas: ['Cardiología', 'Dermatología'] }
-    }
+    },
+    faqs: [
+      { id: 1, pregunta: "¿Qué incluye la internación?", respuesta: "", isDefault: true },
+    ]
   };
 
   const [_formData, _setFormData] = useState(initialData);
@@ -371,6 +391,11 @@ export default function EditorClinico() {
   const handleRedesChange = (red, value) => {
     setFormData(prev => ({ ...prev, redes: { ...prev.redes, [red]: value } }));
   };
+  
+  const handleHorarioChange = (field, value) => {
+    const soloNumeros = value.replace(/\D/g, '').slice(0, 2);
+    setFormData(prev => ({ ...prev, horarios: { ...prev.horarios, [field]: soloNumeros } }));
+  };
 
   const handleArrayAdd = (listName, defaultObj) => {
     setFormData(prev => ({ ...prev, [listName]: [...prev[listName], { id: Date.now(), ...defaultObj }] }));
@@ -389,6 +414,28 @@ export default function EditorClinico() {
     if (direction === 'up' && index > 0) [newArr[index - 1], newArr[index]] = [newArr[index], newArr[index - 1]];
     else if (direction === 'down' && index < newArr.length - 1) [newArr[index + 1], newArr[index]] = [newArr[index], newArr[index + 1]];
     setFormData(prev => ({ ...prev, [listName]: newArr }));
+  };
+
+  // FAQ Handlers
+  const handleFaqChange = (id, field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      faqs: prev.faqs.map(faq => faq.id === id ? { ...faq, [field]: value } : faq)
+    }));
+  };
+
+  const addCustomFaq = () => {
+    setFormData(prev => ({
+      ...prev,
+      faqs: [...prev.faqs, { id: Date.now(), pregunta: '', respuesta: '', isDefault: false }]
+    }));
+  };
+
+  const removeFaq = (id) => {
+    setFormData(prev => ({
+      ...prev,
+      faqs: prev.faqs.filter(faq => faq.id !== id)
+    }));
   };
 
   const toggleServicio = (idServicio) => {
@@ -464,7 +511,7 @@ export default function EditorClinico() {
     }
   };
 
-  const handleSaveData = () => {
+  const handleSaveData = async () => {
     if (!formData.nombre.trim() || !formData.direccion.trim() || !formData.foto) {
       setModalConfig({ 
         isOpen: true, 
@@ -479,16 +526,52 @@ export default function EditorClinico() {
 
     setSaveStatus('saving');
     
-    setTimeout(() => {
+    try {
+      const docRef = doc(db, 'clinicas', 'clinica_prueba_1');
+      await setDoc(docRef, formData);
+
       setSaveStatus('saved');
       setModalConfig({ 
         isOpen: true, 
         title: '¡Publicación Exitosa!', 
-        message: 'Los datos de tu clínica han sido guardados y ya se encuentran actualizados en la red.', 
+        message: 'Los datos de tu clínica han sido guardados en Firebase y ya se encuentran actualizados en la red.', 
         type: 'success' 
       });
       setTimeout(() => setSaveStatus('idle'), 2500);
-    }, 1500);
+
+    } catch (error) {
+      console.error("Error al guardar en Firebase:", error);
+      setSaveStatus('error');
+      setModalConfig({ 
+        isOpen: true, 
+        title: 'Error al guardar', 
+        message: 'Hubo un problema de conexión. Intentá de nuevo.', 
+        type: 'error' 
+      });
+      setTimeout(() => setSaveStatus('idle'), 2500);
+    }
+  };
+
+  const handleConfirmChangePlan = () => {
+    setPlanType(tempSelectedPlan);
+    setFormData(prev => ({ ...prev, planActual: tempSelectedPlan })); 
+    setIsPlanModalOpen(false);
+    
+    if (tempSelectedPlan === 'gratis' && (activeTab === 'servicios' || activeTab === 'staff')) {
+       setActiveTab('cuenta');
+    }
+    
+    setModalConfig({ 
+      isOpen: true, 
+      title: 'Plan Actualizado', 
+      message: `Has cambiado exitosamente al plan ${tempSelectedPlan === 'pro' ? 'Clínica PRO' : 'Básico (Gratis)'}.`, 
+      type: 'success' 
+    });
+  };
+
+  const openPlanModal = () => {
+    setTempSelectedPlan(planType);
+    setIsPlanModalOpen(true);
   };
 
   useEffect(() => {
@@ -502,9 +585,9 @@ export default function EditorClinico() {
   return (
     <div className="bg-[#F4F7F7] min-h-screen font-['Inter'] antialiased text-left text-[#1A3D3D] selection:bg-[#4DB6AC] selection:text-white relative w-full overflow-x-hidden flex flex-col">
       
-      {/* MODALES */}
+      {/* MODALES GENÉRICOS (FROSTED GLASS OSCURO) */}
       {modalConfig.isOpen && (
-        <div className="fixed inset-0 bg-[#1A3D3D]/95 z-[300] flex items-center justify-center p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 bg-[#1A3D3D]/40 backdrop-blur-md z-[300] flex items-center justify-center p-4 transition-all">
           <div className="bg-white rounded-[32px] w-full max-w-sm overflow-hidden shadow-2xl p-8 text-center animate-in fade-in zoom-in duration-200">
             {modalConfig.type === 'error' ? (
               <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-5">
@@ -527,89 +610,184 @@ export default function EditorClinico() {
         </div>
       )}
 
-      {/* MODAL DE SUSCRIPCIÓN */}
-      {isSubModalOpen && (
-        <div className="fixed inset-0 bg-[#1A3D3D]/95 z-[300] flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-[32px] w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-200">
-            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#009EE3]/10 flex items-center justify-center"><CreditCard className="w-5 h-5 text-[#009EE3]" /></div>
-                <h3 className="font-bold font-['Montserrat'] text-xl text-[#1A3D3D]">Facturación</h3>
-              </div>
-              <button onClick={() => setIsSubModalOpen(false)} className="p-2.5 bg-white rounded-full hover:bg-gray-100 transition-colors border border-gray-200"><X className="w-5 h-5 text-gray-500" /></button>
-            </div>
-            
-            <div className="p-8">
-              <div className="text-center mb-8">
-                <p className="text-sm text-gray-500 font-bold uppercase tracking-widest mb-2">Plan Actual</p>
-                <h2 className="text-4xl font-black text-[#1A3D3D] font-['Montserrat']">Clínica PRO</h2>
-                <div className={`inline-flex items-center gap-2 mt-3 px-3 py-1.5 rounded-full text-xs font-bold border ${isSubscriptionActive ? 'bg-[#4DB6AC]/10 text-[#4DB6AC] border-[#4DB6AC]/30' : 'bg-red-500/10 text-red-500 border-red-500/30'}`}>
-                  <span className={`w-2 h-2 rounded-full ${isSubscriptionActive ? 'bg-[#4DB6AC]' : 'bg-red-500'}`}></span>
-                  {isSubscriptionActive ? 'Activo' : 'Inactivo (Falta de pago)'}
+      {/* MODAL CAMBIO DE PLANES */}
+      {isPlanModalOpen && (
+        <div className="fixed inset-0 bg-[#1A3D3D]/40 backdrop-blur-md z-[300] overflow-y-auto">
+          <div className="flex min-h-full items-center justify-center p-4 sm:p-6">
+            <div className="bg-white rounded-[32px] w-full max-w-3xl flex flex-col overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-200">
+              <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 shrink-0">
+                <div>
+                  <h3 className="font-bold font-['Montserrat'] text-2xl text-[#1A3D3D]">Elegí tu Plan</h3>
+                  <p className="text-sm text-gray-500 mt-1">Podés mejorar o pausar tu suscripción en cualquier momento.</p>
                 </div>
+                <button onClick={() => setIsPlanModalOpen(false)} className="p-2.5 bg-white rounded-full hover:bg-red-50 hover:text-red-500 transition-colors border border-gray-200"><X className="w-5 h-5 text-gray-500" /></button>
+              </div>
+              
+              <div className="p-6 md:p-8 bg-[#F4F7F7]">
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                   
+                   <div 
+                     onClick={() => setTempSelectedPlan('gratis')}
+                     className={`relative rounded-[24px] bg-white border-2 p-6 cursor-pointer transition-all duration-300 flex flex-col h-full
+                       ${tempSelectedPlan === 'gratis' ? 'border-[#1A3D3D] shadow-lg scale-[1.02]' : 'border-gray-200 hover:border-[#1A3D3D]/30 opacity-70 hover:opacity-100'}`}
+                   >
+                      {tempSelectedPlan === 'gratis' && (
+                        <div className="absolute -top-3 right-6 bg-[#1A3D3D] text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full flex items-center gap-1 shadow-md">
+                          <Check className="w-3 h-3" /> Seleccionado
+                        </div>
+                      )}
+                      <h4 className="text-xl font-black text-gray-800 font-['Montserrat'] mb-1">Plan Básico</h4>
+                      <p className="text-3xl font-black text-[#1A3D3D] font-['Montserrat'] my-4">$0 <span className="text-sm text-gray-400 font-medium">/mes</span></p>
+                      <p className="text-sm text-gray-500 mb-6 flex-1">Ideal para tener presencia en el directorio y que te encuentren fácilmente.</p>
+                      
+                      <ul className="space-y-3 mb-6">
+                        <li className="flex items-start gap-2 text-sm text-gray-600 font-medium">
+                          <Check className="w-4 h-4 text-[#2D6A6A] shrink-0 mt-0.5" /> Perfil público de tu clínica
+                        </li>
+                        <li className="flex items-start gap-2 text-sm text-gray-600 font-medium">
+                          <Check className="w-4 h-4 text-[#2D6A6A] shrink-0 mt-0.5" /> Enlace a redes sociales y WhatsApp
+                        </li>
+                        <li className="flex items-start gap-2 text-sm text-gray-400 opacity-50 line-through">
+                          <X className="w-4 h-4 shrink-0 mt-0.5" /> Sección de Staff Médico
+                        </li>
+                        <li className="flex items-start gap-2 text-sm text-gray-400 opacity-50 line-through">
+                          <X className="w-4 h-4 shrink-0 mt-0.5" /> Detalle de Especialidades y Servicios
+                        </li>
+                      </ul>
+                   </div>
+
+                   <div 
+                     onClick={() => setTempSelectedPlan('pro')}
+                     className={`relative rounded-[24px] bg-white border-2 p-6 cursor-pointer transition-all duration-300 flex flex-col h-full
+                       ${tempSelectedPlan === 'pro' ? 'border-[#4DB6AC] shadow-[0_10px_30px_rgba(77,182,172,0.2)] scale-[1.02]' : 'border-gray-200 hover:border-[#4DB6AC]/50 opacity-70 hover:opacity-100'}`}
+                   >
+                      {tempSelectedPlan === 'pro' && (
+                        <div className="absolute -top-3 right-6 bg-[#4DB6AC] text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full flex items-center gap-1 shadow-md">
+                          <Check className="w-3 h-3" /> Seleccionado
+                        </div>
+                      )}
+                      <h4 className="text-xl font-black text-[#1A3D3D] font-['Montserrat'] mb-1 flex items-center gap-2">
+                         Clínica PRO <Zap className="w-5 h-5 text-[#4DB6AC] fill-[#4DB6AC]" />
+                      </h4>
+                      <p className="text-3xl font-black text-[#1A3D3D] font-['Montserrat'] my-4">$15.000 <span className="text-sm text-gray-400 font-medium">/mes</span></p>
+                      <p className="text-sm text-gray-500 mb-6 flex-1">Mostrá todo el potencial de tu centro médico y generá máxima confianza.</p>
+                      
+                      <ul className="space-y-3 mb-6">
+                        <li className="flex items-start gap-2 text-sm text-gray-700 font-bold">
+                          <Check className="w-4 h-4 text-[#4DB6AC] shrink-0 mt-0.5" /> Todo lo del Plan Básico
+                        </li>
+                        <li className="flex items-start gap-2 text-sm text-gray-700 font-bold">
+                          <Check className="w-4 h-4 text-[#4DB6AC] shrink-0 mt-0.5" /> Sección completa de Staff Médico
+                        </li>
+                        <li className="flex items-start gap-2 text-sm text-gray-700 font-bold">
+                          <Check className="w-4 h-4 text-[#4DB6AC] shrink-0 mt-0.5" /> Catálogo de Especialidades y Servicios
+                        </li>
+                        <li className="flex items-start gap-2 text-sm text-gray-700 font-bold">
+                          <Check className="w-4 h-4 text-[#4DB6AC] shrink-0 mt-0.5" /> Soporte prioritario
+                        </li>
+                      </ul>
+                   </div>
+
+                 </div>
               </div>
 
-              {isSubscriptionActive && (
-                <div className="bg-gray-50 rounded-2xl p-5 border border-gray-100 mb-8">
-                  <div className="flex justify-between items-center mb-3">
-                    <span className="text-sm text-gray-500 font-medium">Próximo cobro</span>
-                    <span className="text-sm font-bold text-[#1A3D3D]">15 de Junio, 2026</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-500 font-medium">Método de pago</span>
-                    <span className="text-sm font-bold text-[#1A3D3D] flex items-center gap-2">Visa terminada en 4242</span>
-                  </div>
-                </div>
-              )}
-
-              <div className="flex flex-col gap-3">
-                <button 
-                  onClick={() => {
-                    setIsSubscriptionActive(true);
-                    setIsSubModalOpen(false);
-                    setModalConfig({ isOpen: true, title: '¡Pago Exitoso!', message: 'Tu cuenta ha sido reactivada y tu perfil vuelve a ser visible.', type: 'success' });
-                  }}
-                  className="w-full py-4 rounded-xl font-bold text-sm bg-[#009EE3] text-white hover:bg-[#0080B7] transition-all flex items-center justify-center gap-2 shadow-md"
-                >
-                  Simular Pago (Mercado Pago) <ArrowUpRight className="w-4 h-4" />
-                </button>
-                <button 
-                  onClick={() => {
-                    setIsSubscriptionActive(false);
-                    setIsSubModalOpen(false);
-                  }}
-                  className="w-full py-4 rounded-xl font-bold text-sm text-gray-500 hover:bg-gray-50 transition-all border border-transparent hover:border-gray-200"
-                >
-                  Simular Vencimiento
-                </button>
-                {isSubscriptionActive && (
-                  <button className="w-full py-4 rounded-xl font-bold text-sm text-red-500 hover:bg-red-50 transition-all border border-transparent hover:border-red-100">
-                    Cancelar Suscripción
-                  </button>
-                )}
+              <div className="p-6 border-t border-gray-100 bg-white flex justify-end gap-3 shrink-0">
+                 <button onClick={() => setIsPlanModalOpen(false)} className="px-6 py-3 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition-colors">Cancelar</button>
+                 <button 
+                   onClick={handleConfirmChangePlan}
+                   className="px-8 py-3 rounded-xl text-sm font-bold bg-[#1A3D3D] text-white hover:bg-[#2D6A6A] shadow-md transition-all flex items-center gap-2"
+                 >
+                   Confirmar Cambio <ArrowRight className="w-4 h-4" />
+                 </button>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {cropModal.isOpen && (
-        <div className="fixed inset-0 bg-[#1A3D3D]/95 z-[200] flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-[32px] w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col animate-in zoom-in duration-200">
-            <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-              <div>
-                <h3 className="font-bold font-['Montserrat'] text-xl text-[#1A3D3D]">Encuadre de Imagen</h3>
-                <p className="text-sm text-gray-500 mt-1">Arrastra para mover la imagen o utiliza el zoom.</p>
+      {/* MODAL DE SUSCRIPCIÓN PENDIENTE (PAGO) */}
+      {isSubModalOpen && (
+        <div className="fixed inset-0 bg-[#1A3D3D]/40 backdrop-blur-md z-[300] overflow-y-auto">
+          <div className="flex min-h-full items-center justify-center p-4 sm:p-6">
+            <div className="bg-white rounded-[32px] w-full max-w-md flex flex-col overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-200">
+              <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-[#009EE3]/10 flex items-center justify-center"><CreditCard className="w-5 h-5 text-[#009EE3]" /></div>
+                  <h3 className="font-bold font-['Montserrat'] text-xl text-[#1A3D3D]">Facturación</h3>
+                </div>
+                <button onClick={() => setIsSubModalOpen(false)} className="p-2.5 bg-white rounded-full hover:bg-gray-100 transition-colors border border-gray-200"><X className="w-5 h-5 text-gray-500" /></button>
               </div>
-              <button onClick={() => setCropModal({ isOpen: false })} className="p-2.5 bg-gray-100 rounded-full hover:bg-red-100 hover:text-red-500 transition-colors"><X className="w-6 h-6" /></button>
+              
+              <div className="p-6 md:p-8 bg-white">
+                <div className="text-center mb-8">
+                  <p className="text-sm text-gray-500 font-bold uppercase tracking-widest mb-2">Plan Actual</p>
+                  <h2 className="text-4xl font-black text-[#1A3D3D] font-['Montserrat']">Clínica PRO</h2>
+                  <div className={`inline-flex items-center gap-2 mt-3 px-3 py-1.5 rounded-full text-xs font-bold border ${isSubscriptionActive ? 'bg-[#4DB6AC]/10 text-[#4DB6AC] border-[#4DB6AC]/30' : 'bg-red-500/10 text-red-500 border-red-500/30'}`}>
+                    <span className={`w-2 h-2 rounded-full ${isSubscriptionActive ? 'bg-[#4DB6AC]' : 'bg-red-500'}`}></span>
+                    {isSubscriptionActive ? 'Activo' : 'Inactivo (Falta de pago)'}
+                  </div>
+                </div>
+
+                {isSubscriptionActive && (
+                  <div className="bg-gray-50 rounded-2xl p-5 border border-gray-100 mb-8">
+                    <div className="flex justify-between items-center mb-3">
+                      <span className="text-sm text-gray-500 font-medium">Próximo cobro</span>
+                      <span className="text-sm font-bold text-[#1A3D3D]">15 de Junio, 2026</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-500 font-medium">Método de pago</span>
+                      <span className="text-sm font-bold text-[#1A3D3D] flex items-center gap-2">Visa terminada en 4242</span>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex flex-col gap-3">
+                  <button 
+                    onClick={() => {
+                      setIsSubscriptionActive(true);
+                      setIsSubModalOpen(false);
+                      setModalConfig({ isOpen: true, title: '¡Pago Exitoso!', message: 'Tu cuenta ha sido reactivada y tu perfil vuelve a ser visible.', type: 'success' });
+                    }}
+                    className="w-full py-4 rounded-xl font-bold text-sm bg-[#009EE3] text-white hover:bg-[#0080B7] transition-all flex items-center justify-center gap-2 shadow-md"
+                  >
+                    Simular Pago (Mercado Pago) <ArrowUpRight className="w-4 h-4" />
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setIsSubscriptionActive(false);
+                      setIsSubModalOpen(false);
+                    }}
+                    className="w-full py-4 rounded-xl font-bold text-sm text-gray-500 hover:bg-gray-50 transition-all border border-transparent hover:border-gray-200"
+                  >
+                    Simular Vencimiento
+                  </button>
+                </div>
+              </div>
             </div>
-            <div className="bg-[#F4F7F7] p-8 flex justify-center items-center relative overflow-hidden">
-               <SimpleCropper 
-                  imageSrc={cropModal.imageSrc} 
-                  type={cropModal.type} 
-                  onCrop={saveCroppedImage} 
-                  onCancel={() => setCropModal({ isOpen: false })} 
-               />
+          </div>
+        </div>
+      )}
+
+      {/* CROPPER MODAL */}
+      {cropModal.isOpen && (
+        <div className="fixed inset-0 bg-[#1A3D3D]/40 backdrop-blur-md z-[200] overflow-y-auto">
+          <div className="flex min-h-full items-center justify-center p-4">
+            <div className="bg-white rounded-[32px] w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col animate-in zoom-in duration-200">
+              <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+                <div>
+                  <h3 className="font-bold font-['Montserrat'] text-xl text-[#1A3D3D]">Encuadre de Imagen</h3>
+                  <p className="text-sm text-gray-500 mt-1">Arrastra para mover la imagen o utiliza el zoom.</p>
+                </div>
+                <button onClick={() => setCropModal({ isOpen: false })} className="p-2.5 bg-gray-100 rounded-full hover:bg-red-100 hover:text-red-500 transition-colors"><X className="w-6 h-6" /></button>
+              </div>
+              <div className="bg-[#F4F7F7] p-8 flex justify-center items-center relative overflow-hidden">
+                 <SimpleCropper 
+                   imageSrc={cropModal.imageSrc} 
+                   type={cropModal.type} 
+                   onCrop={saveCroppedImage} 
+                   onCancel={() => setCropModal({ isOpen: false })} 
+                 />
+              </div>
             </div>
           </div>
         </div>
@@ -620,12 +798,16 @@ export default function EditorClinico() {
         <div className="max-w-[1100px] w-full mx-auto flex justify-between items-center">
           
           <div className="flex items-center gap-6">
-            <button className="flex items-center gap-2 text-gray-400 hover:text-[#4DB6AC] transition-colors bg-gray-50 hover:bg-gray-100 px-3 py-1.5 rounded-xl border border-gray-200">
+            {/* BOTÓN ACTUALIZADO PARA VOLVER AL INICIO */}
+            <button 
+              onClick={() => navigate('/')} 
+              className="flex items-center gap-2 text-gray-400 hover:text-[#4DB6AC] transition-colors bg-gray-50 hover:bg-gray-100 px-3 py-1.5 rounded-xl border border-gray-200"
+            >
                <ArrowLeft className="w-4 h-4" /> <span className="text-xs font-bold hidden sm:block">Volver al Portal</span>
             </button>
             <div className="w-px h-6 bg-gray-200 hidden sm:block"></div>
             <div className="text-[#1A3D3D] font-['Montserrat'] font-extrabold text-xl tracking-tight cursor-pointer">
-                El Portal<span className="text-[#2D6A6A]">.</span>
+               El Portal<span className="text-[#2D6A6A]">.</span>
             </div>
           </div>
 
@@ -645,21 +827,21 @@ export default function EditorClinico() {
       {/* LAYOUT PRINCIPAL (Padding 76px) */}
       <div className="pt-[76px] max-w-[1100px] mx-auto px-4 md:px-8 flex flex-col gap-6 w-full pb-10">
         
-        {/* BANNER DE SUSCRIPCIÓN INACTIVA */}
-        {!isSubscriptionActive && (
-          <div className="w-full bg-orange-50 border border-orange-200 rounded-[24px] p-5 md:p-6 flex flex-col md:flex-row items-center justify-between gap-5 shadow-sm animate-in fade-in slide-in-from-top-4 z-10">
+        {/* BANNER DE SUSCRIPCIÓN INACTIVA (Solo se muestra si es Plan PRO y falta de pago) */}
+        {(isPro && !isSubscriptionActive) && (
+          <div className="w-full bg-red-50 border border-red-200 rounded-[24px] p-5 md:p-6 flex flex-col md:flex-row items-center justify-between gap-5 shadow-sm animate-in fade-in slide-in-from-top-4 z-10">
             <div className="flex items-center gap-4 text-left w-full md:w-auto">
-              <div className="w-12 h-12 bg-orange-100/50 rounded-full flex items-center justify-center shrink-0 border border-orange-200">
-                <AlertTriangle className="w-6 h-6 text-orange-600" />
+              <div className="w-12 h-12 bg-red-100/50 rounded-full flex items-center justify-center shrink-0 border border-red-200">
+                <AlertTriangle className="w-6 h-6 text-red-600" />
               </div>
               <div>
-                <h3 className="font-bold text-orange-800 text-base md:text-lg">Cuenta suspendida por falta de pago</h3>
-                <p className="text-sm text-orange-700/90 font-medium mt-0.5 leading-snug">Tu perfil clínico no está visible en el directorio. Regularizá tu situación para volver a aparecer.</p>
+                <h3 className="font-bold text-red-800 text-base md:text-lg">Cuenta suspendida por falta de pago</h3>
+                <p className="text-sm text-red-700/90 font-medium mt-0.5 leading-snug">Tu perfil clínico no está visible en el directorio. Regularizá tu situación para volver a aparecer.</p>
               </div>
             </div>
             <button
               onClick={() => setIsSubModalOpen(true)}
-              className="shrink-0 w-full md:w-auto px-8 py-3.5 bg-orange-600 hover:bg-orange-700 text-white font-bold text-sm rounded-xl transition-colors shadow-md flex items-center justify-center gap-2"
+              className="shrink-0 w-full md:w-auto px-8 py-3.5 bg-red-600 hover:bg-red-700 text-white font-bold text-sm rounded-xl transition-colors shadow-md flex items-center justify-center gap-2"
             >
               <CreditCard className="w-4 h-4" /> Regularizar pago
             </button>
@@ -670,33 +852,61 @@ export default function EditorClinico() {
           {/* COLUMNA IZQUIERDA: SIDEBAR */}
           <div className="w-full md:w-[260px] shrink-0 md:sticky md:top-[96px] self-start z-20">
             
-            <div className="h-[48px] flex items-center mb-6 px-1">
+            <div className="md:h-[52px] flex items-center mb-6 px-1">
                <h2 className="text-[28px] font-black font-['Montserrat'] uppercase tracking-tight text-[#1A3D3D] hidden md:block leading-none">
                  Configuración
                </h2>
             </div>
             
             <nav className="flex flex-col gap-1.5 pb-2 md:pb-0 bg-white md:bg-transparent p-2 md:p-0 rounded-2xl md:rounded-none border md:border-none border-gray-100 shadow-sm md:shadow-none">
-              <button onClick={() => setActiveTab('cuenta')} className={`flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap outline-none ${activeTab === 'cuenta' ? 'bg-[#2D6A6A]/10 text-[#1A3D3D]' : 'text-gray-500 hover:bg-white hover:text-[#4DB6AC]'}`}>
-                <User className={`w-5 h-5 ${activeTab === 'cuenta' ? 'text-[#2D6A6A]' : 'text-gray-400'}`} /> Sobre mi cuenta
+              
+              <button onClick={() => setActiveTab('cuenta')} className={`flex items-center justify-between px-4 py-3.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap outline-none ${activeTab === 'cuenta' ? 'bg-[#2D6A6A]/10 text-[#1A3D3D]' : 'text-gray-500 hover:bg-white hover:text-[#4DB6AC]'}`}>
+                <div className="flex items-center gap-3">
+                   <User className={`w-5 h-5 ${activeTab === 'cuenta' ? 'text-[#2D6A6A]' : 'text-gray-400'}`} /> Sobre mi cuenta
+                </div>
               </button>
-              <button onClick={() => setActiveTab('perfil')} className={`flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap outline-none ${activeTab === 'perfil' ? 'bg-[#2D6A6A]/10 text-[#1A3D3D]' : 'text-gray-500 hover:bg-white hover:text-[#4DB6AC]'}`}>
-                <Building2 className={`w-5 h-5 ${activeTab === 'perfil' ? 'text-[#2D6A6A]' : 'text-gray-400'}`} /> Mi perfil público
+              
+              <button onClick={() => setActiveTab('perfil')} className={`flex items-center justify-between px-4 py-3.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap outline-none ${activeTab === 'perfil' ? 'bg-[#2D6A6A]/10 text-[#1A3D3D]' : 'text-gray-500 hover:bg-white hover:text-[#4DB6AC]'}`}>
+                <div className="flex items-center gap-3">
+                   <Building2 className={`w-5 h-5 ${activeTab === 'perfil' ? 'text-[#2D6A6A]' : 'text-gray-400'}`} /> Mi perfil público
+                </div>
               </button>
-              <button onClick={() => setActiveTab('servicios')} className={`flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap outline-none ${activeTab === 'servicios' ? 'bg-[#2D6A6A]/10 text-[#1A3D3D]' : 'text-gray-500 hover:bg-white hover:text-[#4DB6AC]'}`}>
-                <Activity className={`w-5 h-5 ${activeTab === 'servicios' ? 'text-[#2D6A6A]' : 'text-gray-400'}`} /> Especialidades
+
+              {/* BLOQUEADOS SI EL PLAN ES GRATIS */}
+              <button 
+                onClick={() => isPro && setActiveTab('servicios')} 
+                disabled={!isPro}
+                className={`flex items-center justify-between px-4 py-3.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap outline-none
+                  ${!isPro ? 'opacity-50 grayscale cursor-not-allowed text-gray-400' : 
+                    activeTab === 'servicios' ? 'bg-[#2D6A6A]/10 text-[#1A3D3D]' : 'text-gray-500 hover:bg-white hover:text-[#4DB6AC]'}`}
+              >
+                <div className="flex items-center gap-3">
+                   <Activity className={`w-5 h-5 ${activeTab === 'servicios' ? 'text-[#2D6A6A]' : 'text-gray-400'}`} /> Especialidades
+                </div>
+                {!isPro && <Lock className="w-3.5 h-3.5 text-gray-400" />}
               </button>
-              <button onClick={() => setActiveTab('staff')} className={`flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap outline-none ${activeTab === 'staff' ? 'bg-[#2D6A6A]/10 text-[#1A3D3D]' : 'text-gray-500 hover:bg-white hover:text-[#4DB6AC]'}`}>
-                <User className={`w-5 h-5 ${activeTab === 'staff' ? 'text-[#2D6A6A]' : 'text-gray-400'}`} /> Staff Médico
+
+              <button 
+                onClick={() => isPro && setActiveTab('staff')} 
+                disabled={!isPro}
+                className={`flex items-center justify-between px-4 py-3.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap outline-none
+                  ${!isPro ? 'opacity-50 grayscale cursor-not-allowed text-gray-400' : 
+                    activeTab === 'staff' ? 'bg-[#2D6A6A]/10 text-[#1A3D3D]' : 'text-gray-500 hover:bg-white hover:text-[#4DB6AC]'}`}
+              >
+                <div className="flex items-center gap-3">
+                   <User className={`w-5 h-5 ${activeTab === 'staff' ? 'text-[#2D6A6A]' : 'text-gray-400'}`} /> Staff Médico
+                </div>
+                {!isPro && <Lock className="w-3.5 h-3.5 text-gray-400" />}
               </button>
+
             </nav>
           </div>
 
           {/* COLUMNA DERECHA: ÁREA PRINCIPAL */}
           <div className="flex-1 w-full flex flex-col min-w-0">
             
-            {/* BARRA DE ACCIÓN SUPERIOR ALINEADA (Alto 48px) */}
-            <div className="flex justify-between items-center mb-6 h-[48px] w-full">
+            {/* BARRA DE ACCIÓN SUPERIOR ALINEADA (Alto 52px) */}
+            <div className="flex justify-between items-center mb-6 md:h-[52px] w-full">
                <div className="flex items-center gap-2 shrink-0">
                   <button onClick={undo} disabled={past.length === 0} className={`p-2.5 rounded-xl transition-all border ${past.length > 0 ? 'bg-white border-gray-200 text-[#1A3D3D] hover:border-[#4DB6AC] hover:text-[#4DB6AC] shadow-sm' : 'bg-transparent border-transparent text-gray-300'}`} title="Deshacer"><Undo2 className="w-5 h-5" /></button>
                   <button onClick={redo} disabled={future.length === 0} className={`p-2.5 rounded-xl transition-all border ${future.length > 0 ? 'bg-white border-gray-200 text-[#1A3D3D] hover:border-[#4DB6AC] hover:text-[#4DB6AC] shadow-sm' : 'bg-transparent border-transparent text-gray-300'}`} title="Rehacer"><Redo2 className="w-5 h-5" /></button>
@@ -726,35 +936,77 @@ export default function EditorClinico() {
             {/* TAB 1: SOBRE MI CUENTA */}
             {activeTab === 'cuenta' && (
               <div className="w-full bg-white rounded-[32px] shadow-sm border border-gray-100 p-6 md:p-10 animate-in fade-in duration-300 min-h-[500px]">
-                <h3 className="text-2xl font-black text-[#1A3D3D] mb-8 font-['Montserrat']">Sobre mi cuenta</h3>
-                <p className="text-sm text-gray-500 mb-8">Información privada para el acceso a la plataforma y facturación. Esto no será visible para los usuarios.</p>
+                
+                <h3 className="text-2xl font-black text-[#1A3D3D] mb-2 font-['Montserrat']">Sobre mi cuenta</h3>
+                <p className="text-sm text-gray-500 mb-6">Información privada para el acceso a la plataforma y facturación. Esto no será visible para los usuarios.</p>
 
                 <div className="max-w-2xl">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 items-start">
-                     <InputGroup label="Email de Acceso" id="cuentaEmail" type="email" value={formData.cuentaEmail} readOnly tooltip="Este email está vinculado a tu cuenta y no puede modificarse desde aquí." />
-                     <InputGroup label="Contraseña" id="cuentaPassword" type="password" value={formData.cuentaPassword} onChange={handleChange} placeholder="••••••••" tooltip="Modificá este campo solo si querés cambiar tu contraseña." />
-                     <div className="md:col-span-2">
-                       <InputGroup label="Teléfono de Recuperación" id="cuentaTelefono" type="tel" value={formData.cuentaTelefono} readOnly tooltip="Número validado para la recuperación de la cuenta." />
+                  
+                  {/* ESTADO DE MENSUALIDAD DINÁMICO SEGÚN PLAN */}
+                  <div className="mb-8 pb-8 border-b border-gray-100">
+                     <h4 className="flex items-center gap-2 text-sm font-bold text-[#1A3D3D] uppercase tracking-widest leading-none mb-4">
+                       <CreditCard className="w-5 h-5 text-[#2D6A6A]" /> Estado de la suscripción
+                     </h4>
+                     
+                     <div className={`border p-5 md:p-6 rounded-2xl flex flex-col gap-5 transition-colors 
+                       ${isPro && !isSubscriptionActive ? 'bg-red-50/50 border-red-200' : 'bg-gray-50 border-gray-200'}`}
+                     >
+                       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+                         
+                         {/* Info del Plan Actual */}
+                         <div>
+                           <div className="flex items-center gap-2 mb-1">
+                             <p className={`font-bold text-xl ${isPro && !isSubscriptionActive ? 'text-red-800' : 'text-[#1A3D3D]'}`}>
+                               {isPro ? 'Plan Clínica PRO' : 'Plan Básico'}
+                             </p>
+                             <span className={`text-white text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider ${isPro ? 'bg-[#1A3D3D]' : 'bg-gray-400'}`}>
+                               {isPro ? 'Premium' : 'Gratis'}
+                             </span>
+                           </div>
+                           <div className="flex items-center gap-2 mt-2">
+                             <span className={`w-2 h-2 rounded-full ${isPro && !isSubscriptionActive ? 'bg-red-500' : 'bg-[#4DB6AC]'}`}></span>
+                             <p className={`text-sm font-medium ${isPro && !isSubscriptionActive ? 'text-red-600' : 'text-gray-600'}`}>
+                               {isPro ? (isSubscriptionActive ? 'Suscripción activa y al día' : 'Suspendida por falta de pago') : 'Suscripción activa (Gratuita)'}
+                             </p>
+                           </div>
+                         </div>
+                         
+                         {/* BOTONES DE ACCIÓN */}
+                         <div className="flex flex-col sm:flex-row sm:items-center gap-3 shrink-0">
+                            {isPro && (
+                              <button onClick={() => setIsSubModalOpen(true)} className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm border w-full sm:w-auto text-center ${isSubscriptionActive ? 'bg-white border-gray-200 text-gray-700 hover:border-[#4DB6AC] hover:text-[#4DB6AC]' : 'bg-red-600 text-white border-red-600 hover:bg-red-700'}`}>
+                                {isSubscriptionActive ? 'Gestionar pagos' : 'Regularizar pago'}
+                              </button>
+                            )}
+                            <button onClick={openPlanModal} className="px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm border bg-white border-gray-200 text-gray-700 hover:border-[#4DB6AC] hover:text-[#4DB6AC] w-full sm:w-auto text-center">
+                              Cambiar de plan
+                            </button>
+                         </div>
+                       </div>
+
+                       {/* BOTÓN DE BAJA */}
+                       <div className="pt-4 border-t border-gray-200/60 flex justify-start">
+                         <button className="text-xs font-bold text-red-500 hover:text-red-700 transition-colors underline decoration-red-200 underline-offset-4">
+                           Darse de baja de la plataforma
+                         </button>
+                       </div>
                      </div>
                   </div>
 
-                  <div className="mt-8 pt-8 border-t border-gray-100">
-                     <h4 className="flex items-center gap-2 text-sm font-bold text-[#1A3D3D] uppercase tracking-widest leading-none mb-5">
-                       <CreditCard className="w-5 h-5 text-[#2D6A6A]" /> Estado de la mensualidad
+                  {/* DATOS DE ACCESO */}
+                  <div>
+                      <h4 className="flex items-center gap-2 text-sm font-bold text-[#1A3D3D] uppercase tracking-widest leading-none mb-5">
+                       <User className="w-5 h-5 text-[#2D6A6A]" /> Datos de Acceso
                      </h4>
-                     <div className={`border p-5 rounded-2xl flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 transition-colors ${isSubscriptionActive ? 'bg-gray-50 border-gray-200' : 'bg-red-50/50 border-red-200'}`}>
-                        <div>
-                           <p className={`font-bold text-lg ${isSubscriptionActive ? 'text-[#1A3D3D]' : 'text-red-800'}`}>Plan Clínica PRO</p>
-                           <div className="flex items-center gap-2 mt-1">
-                             <span className={`w-2 h-2 rounded-full ${isSubscriptionActive ? 'bg-[#4DB6AC]' : 'bg-red-500'}`}></span>
-                             <p className={`text-sm font-medium ${isSubscriptionActive ? 'text-gray-600' : 'text-red-600'}`}>{isSubscriptionActive ? 'Suscripción activa' : 'Suspendida por falta de pago'}</p>
-                           </div>
-                        </div>
-                        <button onClick={() => setIsSubModalOpen(true)} className={`text-sm font-bold px-4 py-2.5 rounded-xl transition-colors shadow-sm border ${isSubscriptionActive ? 'text-gray-500 hover:text-[#4DB6AC] border-gray-200 bg-white hover:border-[#4DB6AC]' : 'bg-red-600 text-white border-red-600 hover:bg-red-700'}`}>
-                          {isSubscriptionActive ? 'Gestionar pagos' : 'Regularizar pago'}
-                        </button>
-                     </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 items-start">
+                         <InputGroup label="Email de Acceso" id="cuentaEmail" type="email" value={formData.cuentaEmail} readOnly tooltip="Este email está vinculado a tu cuenta y no puede modificarse desde aquí." />
+                         <InputGroup label="Contraseña" id="cuentaPassword" type="password" value={formData.cuentaPassword} onChange={handleChange} placeholder="••••••••" tooltip="Modificá este campo solo si querés cambiar tu contraseña." />
+                         <div className="md:col-span-2">
+                           <InputGroup label="Teléfono de Recuperación" id="cuentaTelefono" type="tel" value={formData.cuentaTelefono} readOnly tooltip="Número validado para la recuperación de la cuenta." />
+                         </div>
+                      </div>
                   </div>
+
                 </div>
               </div>
             )}
@@ -763,7 +1015,7 @@ export default function EditorClinico() {
             {activeTab === 'perfil' && (
               <div className="flex flex-col w-full animate-in fade-in duration-300 relative">
                 
-                {/* TARJETA DE HEADER (Mockup Horizontal) */}
+                {/* TARJETA DE HEADER */}
                 <div className="w-full bg-white rounded-[32px] shadow-sm border border-gray-100 mb-6 flex flex-col md:flex-row items-center p-6 gap-6">
                   {/* Avatar */}
                   <div className="relative shrink-0">
@@ -821,8 +1073,8 @@ export default function EditorClinico() {
                         </div>
                         <div className="flex-1 text-left flex flex-col justify-center">
                           <h3 className="text-sm font-bold text-[#1A3D3D] mb-2 uppercase tracking-wide flex items-center">
-                            Logo Institucional <span className="text-red-400 ml-1">*</span>
-                            <Tooltip text="Sube el logo de tu clínica en alta resolución. Fondo blanco o transparente recomendado." />
+                            Foto del equipo o logo institucional <span className="text-red-400 ml-1">*</span>
+                            <Tooltip text="Subí una foto de tu equipo para que sepan rapidamente quien los atiende o el logo de tu clínica en alta resolución, con fondo blanco o transparente recomendado." />
                           </h3>
                           <p className="text-xs text-gray-500 mb-4 leading-relaxed">Formatos PNG o JPG. Máx 2MB.</p>
                         </div>
@@ -856,10 +1108,60 @@ export default function EditorClinico() {
                       </div>
                     </Accordion>
 
-                    {/* CONTACTO Y UBICACIÓN */}
+                    {/* PREGUNTAS FRECUENTES (NUEVO) */}
+                    <Accordion title="Preguntas Frecuentes (FAQ)" icon={MessageSquare} isOpen={openSection === 'faq'} onToggle={() => setOpenSection(openSection === 'faq' ? null : 'faq')} tooltip="Respuestas rápidas para tus clientes. Las preguntas vacías no se mostrarán en tu perfil.">
+                      <div className="space-y-5">
+                        <div className="bg-[#F4F7F7] border border-[#2D6A6A]/20 text-[#2D6A6A] text-xs font-medium px-4 py-3 rounded-xl flex items-start gap-2 leading-relaxed">
+                          <Info className="w-4 h-4 shrink-0 mt-0.5" /> 
+                          <span>Te sugerimos algunas preguntas clave. Si no completás la respuesta, esa pregunta simplemente se ocultará en tu perfil público.</span>
+                        </div>
+
+                        {formData.faqs.map((faq, index) => (
+                          <div key={faq.id} className="bg-white border border-gray-200 p-5 rounded-[20px] shadow-sm relative group text-left">
+                            {!faq.isDefault && (
+                              <button onClick={() => removeFaq(faq.id)} className="absolute top-4 right-4 p-1.5 text-gray-300 hover:text-red-500 rounded-lg hover:bg-red-50 transition-colors">
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
+                            
+                            {faq.isDefault ? (
+                              <label className="text-sm font-bold text-[#1A3D3D] mb-3 block">{faq.pregunta}</label>
+                            ) : (
+                              <div className="mb-4 pr-8">
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 block">Pregunta Personalizada</label>
+                                <input 
+                                  type="text" 
+                                  value={faq.pregunta} 
+                                  onChange={(e) => handleFaqChange(faq.id, 'pregunta', e.target.value)} 
+                                  placeholder="Ej: ¿Atienden animales exóticos?" 
+                                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-bold text-[#1A3D3D] focus:border-[#2D6A6A] outline-none transition-colors" 
+                                />
+                              </div>
+                            )}
+
+                            <div>
+                              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 block">Tu Respuesta</label>
+                              <textarea 
+                                value={faq.respuesta} 
+                                onChange={(e) => handleFaqChange(faq.id, 'respuesta', e.target.value)} 
+                                placeholder="Escribe la respuesta aquí..." 
+                                rows="2"
+                                className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm font-medium text-gray-600 focus:border-[#2D6A6A] outline-none transition-colors resize-none" 
+                              />
+                            </div>
+                          </div>
+                        ))}
+                        
+                        <button type="button" onClick={addCustomFaq} className="w-full py-3.5 border-2 border-dashed border-[#2D6A6A]/30 bg-white rounded-xl text-[#2D6A6A] text-xs font-bold hover:bg-[#2D6A6A]/5 hover:border-[#2D6A6A] transition-colors flex items-center justify-center gap-2">
+                          <Plus className="w-4 h-4" /> Agregar otra pregunta
+                        </button>
+                      </div>
+                    </Accordion>
+
+                    {/* CONTACTO, UBICACIÓN Y HORARIOS */}
                     <Accordion title="Contacto y Ubicación" icon={MapPin} isOpen={openSection === 'contacto'} onToggle={() => setOpenSection(openSection === 'contacto' ? null : 'contacto')}>
                       <InputGroup label="Dirección Física" id="direccion" value={formData.direccion} onChange={handleChange} required />
-                      <InputGroup label="Link de Google Maps (Iframe SRC)" id="googleMapsUrl" value={formData.googleMapsUrl} onChange={handleChange} tooltip="Pega aquí el enlace para embeber el mapa de tu clínica." />
+                      
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 mt-4">
                          <InputGroup label="Teléfono Fijo" id="telefono" value={formData.telefono} onChange={handleChange} />
@@ -867,7 +1169,74 @@ export default function EditorClinico() {
                       </div>
                       <InputGroup label="Email Oficial" id="email" type="email" value={formData.email} onChange={handleChange} />
 
-                      <div className="pt-8 mt-2 border-t border-gray-100">
+                      {/* SECCIÓN HORARIOS DE ATENCIÓN */}
+                      <div className="pt-6 mt-2 border-t border-gray-100 relative">
+                         <h3 className="text-xs font-bold text-[#1A3D3D] uppercase tracking-widest ml-1 mb-4 flex items-center gap-2">
+                           <Clock className="w-4 h-4 text-[#2D6A6A]" /> Horarios de Atención
+                           <Tooltip text="Ingresá solo la hora (ej: 09 y 18). Si tenés activada la Guardia 24hs, esta sección se desactiva sola." />
+                         </h3>
+                         
+                         {/* Capa de bloqueo para Guardia 24hs */}
+                         {formData.guardia24hs && (
+                           <div className="absolute inset-0 z-10 bg-white/60 backdrop-blur-[2px] flex items-center justify-center rounded-2xl mt-12 mb-2 animate-in fade-in duration-300">
+                             <div className="bg-white border border-[#2D6A6A]/20 px-5 py-3.5 rounded-2xl flex items-center gap-3 shadow-lg text-[#1A3D3D]">
+                               <div className="bg-[#4DB6AC]/10 p-2 rounded-xl">
+                                 <Activity className="w-5 h-5 text-[#2D6A6A]" />
+                               </div>
+                               <div className="flex flex-col text-left">
+                                 <span className="text-sm font-black font-['Montserrat'] leading-none mb-1">Atención Continua</span>
+                                 <span className="text-xs font-medium text-gray-500 leading-none">Horario cubierto por Guardia 24hs.</span>
+                               </div>
+                             </div>
+                           </div>
+                         )}
+
+                         <div className={`grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 transition-all duration-300 ${formData.guardia24hs ? 'opacity-40 grayscale pointer-events-none' : ''}`}>
+                            {/* Lunes a Viernes (Obligatorio) */}
+                            <div>
+                              <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2 block ml-1">Lunes a Viernes <span className="text-red-400 ml-1">*</span></label>
+                              <div className="flex items-center gap-3">
+                                <input 
+                                  type="text" placeholder="09" 
+                                  value={formData.horarios.semanaDesde} 
+                                  onChange={(e) => handleHorarioChange('semanaDesde', e.target.value)} 
+                                  className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-center text-lg font-black text-[#1A3D3D] focus:border-[#2D6A6A] outline-none transition-all shadow-sm" 
+                                />
+                                <span className="text-xs font-black text-gray-400 uppercase tracking-widest">hasta</span>
+                                <input 
+                                  type="text" placeholder="20" 
+                                  value={formData.horarios.semanaHasta} 
+                                  onChange={(e) => handleHorarioChange('semanaHasta', e.target.value)} 
+                                  className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-center text-lg font-black text-[#1A3D3D] focus:border-[#2D6A6A] outline-none transition-all shadow-sm" 
+                                />
+                                <span className="text-xs font-black text-gray-400 uppercase tracking-widest">hs</span>
+                              </div>
+                            </div>
+                            
+                            {/* Sábados (Opcional) */}
+                            <div>
+                              <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2 block ml-1">Sábados <span className="text-gray-400 ml-1 normal-case text-[9px]">(Opcional)</span></label>
+                              <div className="flex items-center gap-3">
+                                <input 
+                                  type="text" placeholder="10" 
+                                  value={formData.horarios.sabadoDesde} 
+                                  onChange={(e) => handleHorarioChange('sabadoDesde', e.target.value)} 
+                                  className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-center text-lg font-black text-[#1A3D3D] focus:border-[#2D6A6A] outline-none transition-all shadow-sm" 
+                                />
+                                <span className="text-xs font-black text-gray-400 uppercase tracking-widest">hasta</span>
+                                <input 
+                                  type="text" placeholder="14" 
+                                  value={formData.horarios.sabadoHasta} 
+                                  onChange={(e) => handleHorarioChange('sabadoHasta', e.target.value)} 
+                                  className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-center text-lg font-black text-[#1A3D3D] focus:border-[#2D6A6A] outline-none transition-all shadow-sm" 
+                                />
+                                <span className="text-xs font-black text-gray-400 uppercase tracking-widest">hs</span>
+                              </div>
+                            </div>
+                         </div>
+                      </div>
+
+                      <div className="pt-8 mt-6 border-t border-gray-100">
                         <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1 mb-5">Redes Sociales</h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
                           <InputGroup label="Instagram" id="instagram" value={formData.redes.instagram} onChange={(e) => handleRedesChange('instagram', e.target.value)} canTest />
@@ -880,9 +1249,10 @@ export default function EditorClinico() {
 
                 {/* LINK INFERIOR PARA VER PERFIL */}
                 <div className="flex justify-center pb-6 mt-4">
+                  {/* BOTÓN ACTUALIZADO PARA IR AL PERFIL */}
                   <button 
                     type="button" 
-                    onClick={() => setModalConfig({ isOpen: true, title: 'Navegación', message: `Yendo a: /perfil`, type: 'info' })} 
+                    onClick={() => navigate('/perfil')} 
                     className="text-center block text-gray-400 font-bold text-xs uppercase tracking-[0.2em] hover:text-[#4DB6AC] transition-colors flex items-center justify-center gap-2 group bg-white px-6 py-3 rounded-full border border-gray-200 shadow-sm"
                   >
                     Ver mi perfil público <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -892,7 +1262,7 @@ export default function EditorClinico() {
             )}
 
             {/* TAB 3: ESPECIALIDADES */}
-            {activeTab === 'servicios' && (
+            {activeTab === 'servicios' && isPro && (
               <div className="w-full bg-white rounded-[32px] shadow-sm border border-gray-100 p-6 md:p-10 relative animate-in fade-in duration-300 min-h-[500px]">
                 <div className="mb-8">
                    <h3 className="text-2xl font-black text-[#1A3D3D] font-['Montserrat']">Especialidades y Servicios</h3>
@@ -980,7 +1350,7 @@ export default function EditorClinico() {
             )}
 
             {/* TAB 4: STAFF */}
-            {activeTab === 'staff' && (
+            {activeTab === 'staff' && isPro && (
               <div className="w-full bg-white rounded-[32px] shadow-sm border border-gray-100 p-6 md:p-10 relative animate-in fade-in duration-300 min-h-[500px]">
                 <div className="mb-8">
                    <h3 className="text-2xl font-black text-[#1A3D3D] font-['Montserrat']">Staff Médico</h3>
