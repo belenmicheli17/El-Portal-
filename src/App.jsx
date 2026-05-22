@@ -9,6 +9,7 @@ import AccessibilityWidget from './components/AccessibilityWidget';
 // Importaciones de páginas
 import LandingPage from './pages/landing-page';
 import Inicio from './pages/inicio';
+import Directorio from './pages/directorio'; // NUEVA IMPORTACIÓN
 import Perfil from './pages/perfiles/perfil-profesional'; 
 import PerfilProveedor from './pages/perfiles/perfil-proveedores'; 
 import PerfilClinica from './pages/perfiles/perfil-clinica';
@@ -39,8 +40,8 @@ const MainLayout = () => {
   // Extraemos la información de la ruta actual
   const location = useLocation();
   
-  // Detectamos si la URL actual incluye la palabra "perfil"
-  const esRutaDePerfil = location.pathname.includes('/perfil');
+  // Detectamos si la URL actual incluye la palabra "perfil" o "profesional"
+  const esRutaDePerfil = location.pathname.includes('/perfil') || location.pathname.includes('/profesional');
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -60,7 +61,9 @@ const MainLayout = () => {
       </main>
       
       {/* Footer al final de la página */}
-      <Footer /> 
+      <footer className="mt-auto">
+        <Footer /> 
+      </footer>
     </div>
   );
 };
@@ -94,9 +97,11 @@ export default function App() {
           {/* Páginas principales */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/inicio" element={<Inicio />} />
+          <Route path="/directorio" element={<Directorio />} /> {/* NUEVA RUTA */}
           
           {/* Perfiles */}
           <Route path="/perfil-profesional" element={<Perfil />} />
+          <Route path="/profesional/:id" element={<Perfil />} /> {/* NUEVA RUTA DINÁMICA */}
           <Route path="/perfil-proveedores" element={<PerfilProveedor />} />
           <Route path="/perfil-clinica" element={<PerfilClinica />} />
           

@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Menu, X, Home, Info, LayoutGrid, ChevronRight, 
-  Sparkles, Briefcase, Building, Truck, Edit, User 
-} from 'lucide-react';
+  Sparkles, Briefcase, Building, Truck, Edit, User, CircleUserRound, Search
+} from 'lucide-react'; // <-- Agregué Search acá
 
 export default function Navbar({ mostrarBotonCrear = false, mostrarBotonContacto = false }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -27,13 +27,15 @@ export default function Navbar({ mostrarBotonCrear = false, mostrarBotonContacto
     switch (page) {
       case 'landing': path = '/'; break;
       case 'inicio': path = '/inicio'; break;
+      case 'directorio': path = '/directorio'; break; // <-- NUEVA RUTA AGREGADA
       case 'ecosistema': path = '/ecosistema'; break;
       case 'novedades': path = '/novedades'; break;
       case 'bolsa-de-trabajo': path = '/bolsa-de-trabajo'; break;
       case 'perfil-profesional': path = '/perfil-profesional'; break;
       case 'perfil-clinica': path = '/perfil-clinica'; break;
       case 'perfil-proveedores': path = '/perfil-proveedores'; break;
-      case 'editor': path = '/editor'; break;
+  
+      case 'editor': path = '/editor-profesional'; break; 
       case 'editor-clinica': path = '/editor-clinica'; break;
       case 'editor-proveedores': path = '/editor-proveedores'; break;
       default: path = `/${page}`;
@@ -42,15 +44,10 @@ export default function Navbar({ mostrarBotonCrear = false, mostrarBotonContacto
     navigate(path);
   };
 
-  // Función mejorada para deslizar y activar el efecto visual
   const scrollToContacto = () => {
     const contactoSection = document.getElementById('contacto');
     if (contactoSection) {
-      // 1. Desplazamiento suave
       contactoSection.scrollIntoView({ behavior: 'smooth' });
-
-      // 2. Disparar evento personalizado para que el componente "perfil" active el efecto visual
-      // Esto permite que cualquier página (perfil-profesional, etc.) reaccione.
       const event = new CustomEvent('trigger-highlight-contacto');
       window.dispatchEvent(event);
     }
@@ -75,6 +72,14 @@ export default function Navbar({ mostrarBotonCrear = false, mostrarBotonContacto
           
           <div className="flex items-center gap-4">
             
+            {/* NUEVO BOTÓN DIRECTORIO (Visible en PC) */}
+            <button 
+              onClick={() => handleNav('directorio')}
+              className="hidden md:flex items-center gap-2 bg-white text-[#1A3D3D] border border-gray-200 rounded-full px-5 py-2 text-[13px] font-bold shadow-sm hover:bg-gray-50 hover:border-[#2D6A6A] transition-all"
+            >
+              <Search className="w-4 h-4" /> Buscar Profesionales
+            </button>
+
             {mostrarBotonContacto ? (
               <button 
                 onClick={scrollToContacto}
@@ -102,11 +107,14 @@ export default function Navbar({ mostrarBotonCrear = false, mostrarBotonContacto
               {isMenuOpen && (
                 <>
                   <div className="fixed inset-0 z-[-1]" onClick={() => setIsMenuOpen(false)}></div>
-                  <div className="absolute right-0 mt-3 w-64 bg-white rounded-[24px] shadow-[0_20px_50px_rgba(26,61,61,0.15)] border border-gray-100 overflow-y-auto max-h-[80vh] animate-in fade-in slide-in-from-top-4 duration-300">
+                  <div className="absolute right-0 mt-3 w-64 bg-white rounded-[24px] shadow-[0_20px_50px_rgba(26,61,61,0.15)] border border-gray-100 overflow-y-auto max-h-[90vh] animate-in fade-in slide-in-from-top-4 duration-300">
                     <div className="p-3">
                       
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] px-4 py-3 border-b border-gray-50 mb-2 text-left">Navegación</p>
                       <button onClick={() => handleNav('inicio')} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><Home className="w-4 h-4 text-gray-400 group-hover:text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Inicio</span></button>
+                      
+                      {/* NUEVO ITEM EN EL MENÚ (Para móvil) */}
+                      <button onClick={() => handleNav('directorio')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><div className="flex items-center gap-3"><Search className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Directorio</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
+
                       <button onClick={() => handleNav('landing')} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><Info className="w-4 h-4 text-gray-400 group-hover:text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Entrada</span></button>
                       <button onClick={() => handleNav('ecosistema')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><div className="flex items-center gap-3"><LayoutGrid className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Repertorio Clínico</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
                       <button onClick={() => handleNav('novedades')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><div className="flex items-center gap-3"><Sparkles className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Novedades</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>

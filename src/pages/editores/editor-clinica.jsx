@@ -281,7 +281,7 @@ const SimpleCropper = ({ imageSrc, onCrop, onCancel, type }) => {
 // APLICACIÓN PRINCIPAL
 // ==========================================
 export default function EditorClinico() { 
-  const navigate = useNavigate(); // <-- INICIALIZAMOS LA NAVEGACIÓN DE REACT ROUTER
+  const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState('cuenta'); 
   const [modalConfig, setModalConfig] = useState({ isOpen: false, title: '', message: '', type: 'info', onConfirm: null });
@@ -1247,17 +1247,6 @@ export default function EditorClinico() {
                   </div>
                 </div>
 
-                {/* LINK INFERIOR PARA VER PERFIL */}
-                <div className="flex justify-center pb-6 mt-4">
-                  {/* BOTÓN ACTUALIZADO PARA IR AL PERFIL */}
-                  <button 
-                    type="button" 
-                    onClick={() => navigate('/perfil')} 
-                    className="text-center block text-gray-400 font-bold text-xs uppercase tracking-[0.2em] hover:text-[#4DB6AC] transition-colors flex items-center justify-center gap-2 group bg-white px-6 py-3 rounded-full border border-gray-200 shadow-sm"
-                  >
-                    Ver mi perfil público <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                  </button>
-                </div>
               </div>
             )}
 
@@ -1420,6 +1409,19 @@ export default function EditorClinico() {
                 </div>
               </div>
             )}
+
+            {/* ========================================================================= */}
+            {/* LINK INFERIOR PARA VER PERFIL - AHORA ESTÁ FUERA DE LAS SOLAPAS           */}
+            {/* ========================================================================= */}
+            <div className="flex justify-center mt-8 pb-4">
+              <button 
+                type="button" 
+                onClick={() => navigate('/perfil-clinica')} 
+                className="text-center block text-gray-400 font-bold text-xs uppercase tracking-[0.2em] hover:text-[#4DB6AC] transition-colors flex items-center justify-center gap-2 group bg-white px-6 py-3 rounded-full border border-gray-200 shadow-sm w-full md:w-auto"
+              >
+                Ver mi perfil público <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </button>
+            </div>
 
           </div>
         </div>

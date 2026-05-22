@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { db } from '../../firebase'; 
 import { doc, getDoc } from 'firebase/firestore';
 
@@ -21,6 +22,7 @@ const INFO_SERVICIOS = {
 };
 
 export default function PerfilClinica() {
+  const navigate = useNavigate();
   const [openFaq, setOpenFaq] = useState(null);
   const [highlightContacto, setHighlightContacto] = useState(false);
   const scrollRef = useRef(null);
@@ -100,7 +102,7 @@ export default function PerfilClinica() {
     return (
       <div className="min-h-screen bg-[#F4F7F7] flex flex-col items-center justify-center">
         <div className="w-12 h-12 border-4 border-[#2D6A6A]/30 border-t-[#2D6A6A] rounded-full animate-spin mb-4"></div>
-        <p className="text-[#1A3D3D] font-bold">Cargando perfil desde Firebase...</p>
+        <p className="text-[#1A3D3D] font-bold">Cargando perfil...</p>
       </div>
     );
   }
@@ -138,7 +140,16 @@ export default function PerfilClinica() {
     <div className="bg-[#F4F7F7] font-['Inter'] antialiased relative text-left overflow-x-hidden selection:bg-[#2D6A6A] selection:text-white pb-20">
 
       {/* HERO */}
-      <main className="relative w-full bg-white overflow-hidden pt-[72px] md:pt-[90px]">
+      <main className="relative w-full bg-white overflow-hidden pt-[18px] md:pt-[45px]">
+       {/* BOTÓN VOLVER AL DIRECTORIO */}
+<div className="w-full flex justify-start pl-15">
+  <button 
+    onClick={() => navigate('/directorio')} 
+    className="flex items-center gap-2 text-gray-400 hover:text-[#1A3D3D] font-bold text-xs md:text-[10px] uppercase tracking-[0.3em] mb-8 transition-colors group"
+  >
+    <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Volver al Directorio
+  </button>
+</div>
         <div className="max-w-[1100px] mx-auto px-6 md:px-10 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center pt-4 pb-6 md:pb-12">
           <div className="lg:col-span-7 flex flex-col items-start text-left">
             {data.guardia24hs && (

@@ -710,7 +710,7 @@ export default function Repertorio() {
 
         <aside className="lg:col-span-3 flex flex-col gap-5 md:gap-6 animate-in fade-in duration-500">
           <div className="flex flex-col gap-1">
-            <h2 className="font-['Montserrat'] font-black text-gray-400 text-[11px] md:text-xs uppercase tracking-[0.2em]">Insumos Destacados</h2>
+            <h2 className="font-['Montserrat'] font-black text-gray-700 text-[11px] md:text-xs uppercase tracking-[0.2em]">Insumos Destacados</h2>
             <button 
               onClick={() => { setActiveGridTab('proveedores'); window.scrollTo(0,0); }} 
               className="text-[#2D6A6A] font-bold text-[10px] uppercase tracking-widest hover:underline flex items-center gap-1 w-fit mt-1 group"

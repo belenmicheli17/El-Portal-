@@ -42,43 +42,17 @@ const OFERTAS_EMPLEO = [
 
 const PROFESIONALES_DISPONIBLES = [
   {
-    id: 101,
-    nombre: "Dr. Juan Pérez",
+    id: "veterinario_prueba_123",
+    nombre: "Dr. Veterinario Prueba",
     especialidad: "Clínico General",
-    provincia: "CABA",
-    experiencia: "3 años",
-    tiempo: "Part-time",
-    momentoDia: "Mañana / Tarde",
-    servicios: ["Guardias activas", "A domicilio"],
-    buscando: "Busco cubrir turnos fijos en clínica de pequeños animales, 2 o 3 veces por semana.",
-    avatar: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=150",
-    diasRestantes: 5
-  },
-  {
-    id: 102,
-    nombre: "Dra. Ana López",
-    especialidad: "Ecografista",
     provincia: "Buenos Aires",
-    experiencia: "Especialista (+5 años)",
-    tiempo: "Por turnos",
-    momentoDia: "A convenir",
-    servicios: ["Interconsultas programadas"],
-    buscando: "Ofrezco servicio de ecografías (abdominal y cardio). Dispongo de equipo propio para trasladarme.",
-    avatar: "https://images.unsplash.com/photo-1594824436998-df40ec5a1dc8?auto=format&fit=crop&q=80&w=150",
-    diasRestantes: 12
-  },
-  {
-    id: 103,
-    nombre: "Vet. Carlos Gómez",
-    especialidad: "Enfermero / Asistente",
-    provincia: "Córdoba",
-    experiencia: "1 año",
+    experiencia: "Más de 3 años (Senior)",
     tiempo: "Full-time",
-    momentoDia: "Nocturno",
-    servicios: ["Guardias nocturnas", "Internación"],
-    buscando: "Busco puesto fijo para atención de internación y asistencia en quirófano de noche. Mucha predisposición.",
-    avatar: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=150",
-    diasRestantes: 29
+    momentoDia: "Mañana / Tarde",
+    servicios: ["Guardias activas", "Atención en consultorio"],
+    buscando: "Busco puesto fijo para atención de pequeños animales en clínica con buen volumen de casos.",
+    avatar: "https://ui-avatars.com/api/?name=Veterinario+Prueba&background=F4F7F7&color=1A3D3D",
+    diasRestantes: 30
   }
 ];
 
@@ -232,23 +206,27 @@ export default function BolsaTrabajo() {
   // RENDER: 1. LISTA DE EMPLEOS
   // =========================================================
   const renderList = () => (
-    <div className="flex flex-col gap-6 md:gap-8 animate-in fade-in duration-500 pb-24 relative">
+    <div className="flex flex-col animate-in fade-in duration-500 pb-24 relative">
       
-      {/* Header */}
-      <header className="bg-[#1A3D3D] rounded-[40px] p-8 md:p-14 text-center relative overflow-hidden shadow-xl z-10">
-        <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-white opacity-5 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
-        <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-[#4DB6AC] opacity-10 rounded-full blur-[60px] translate-y-1/3 -translate-x-1/3 pointer-events-none"></div>
+      {/* INNER HEADER (Fondo Petróleo, nunca blanco) */}
+      <section className="relative bg-[#1A3D3D] pt-16 pb-20 overflow-hidden rounded-b-[40px] md:rounded-b-[60px] shadow-[0_10px_30px_rgba(26,61,61,0.1)] z-10 text-center">
         
-        <div className="relative z-10 max-w-3xl mx-auto flex flex-col items-center">
-          <div className="w-16 h-16 bg-white/10 backdrop-blur-sm rounded-[24px] flex items-center justify-center mb-5 border border-white/10 shadow-sm">
-            <Briefcase className="w-8 h-8 text-[#4DB6AC]" />
-          </div>
+        {/* Burbujas decorativas difuminadas */}
+        <div className="absolute top-0 left-10 w-72 h-72 bg-[#4DB6AC]/10 rounded-full blur-[80px] pointer-events-none"></div>
+        <div className="absolute bottom-10 right-20 w-96 h-96 bg-white/5 rounded-full blur-[100px] pointer-events-none"></div>
+        
+        <div className="relative z-10 max-w-3xl mx-auto flex flex-col items-center px-4">
+          
+          {/* Ícono estilo Directorio, sin caja, en color blanco/translúcido */}
+          <Briefcase className="w-8 h-8 text-white mb-4" />
+          
           <h1 className="text-[32px] md:text-[42px] lg:text-[48px] font-black font-['Montserrat'] text-white tracking-tighter leading-none mb-4">
             Bolsa de Trabajo
           </h1>
-          <p className="text-[#F4F7F7] opacity-80 text-[14px] md:text-[16px] font-medium mb-8 max-w-lg mx-auto leading-relaxed">
+          <p className="text-[#F4F7F7] opacity-80 text-[14px] md:text-[16px] font-medium mb-6 max-w-lg mx-auto leading-relaxed">
             La red de empleo exclusiva para profesionales veterinarios. Conectá con tu próximo desafío o encontrá al especialista ideal para tu clínica.
           </p>
+          
           <div className="flex flex-col sm:flex-row items-center gap-4 w-full justify-center">
             {/* Botón Primario */}
             <button 
@@ -266,7 +244,7 @@ export default function BolsaTrabajo() {
             </button>
           </div>
         </div>
-      </header>
+      </section>
 
       {/* Overlay de Filtros */}
       {showFilters && (
@@ -277,15 +255,12 @@ export default function BolsaTrabajo() {
       )}
 
       {/* Barra de Búsqueda Flotante */}
-      <div className="max-w-4xl mx-auto w-full relative z-30 -mt-12 px-4">
+      <div className="max-w-4xl mx-auto w-full relative z-30 -mt-10 px-4">
         <div className="bg-white rounded-[24px] p-2 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.08)] flex flex-col md:flex-row items-stretch md:items-center gap-2 relative">
           
           {/* Controles de Segmento */}
           <div className="grid grid-cols-3 bg-[#F4F7F7] p-1.5 rounded-[20px] w-full md:w-auto">
-            <button 
-              onClick={() => setSearchTarget('ambos')}
-              className={`px-1 sm:px-5 py-2.5 rounded-2xl text-[9px] sm:text-[11px] font-bold uppercase tracking-wider sm:tracking-widest transition-all truncate ${searchTarget === 'ambos' ? 'bg-white text-[#1A3D3D] shadow-sm' : 'text-[#666666] hover:text-[#1A3D3D]'}`}
-            >Todos</button>
+            
             <button 
               onClick={() => setSearchTarget('ofertas')}
               className={`px-1 sm:px-5 py-2.5 rounded-2xl text-[9px] sm:text-[11px] font-bold uppercase tracking-wider sm:tracking-widest transition-all truncate ${searchTarget === 'ofertas' ? 'bg-white text-[#1A3D3D] shadow-sm' : 'text-[#666666] hover:text-[#1A3D3D]'}`}
@@ -361,7 +336,7 @@ export default function BolsaTrabajo() {
       </div>
 
       {/* Grid Dinámica */}
-      <div className={`grid gap-8 lg:gap-10 mt-6 relative z-10 ${searchTarget === 'ambos' ? 'grid-cols-1 xl:grid-cols-2' : 'grid-cols-1 max-w-4xl mx-auto w-full'}`}>
+      <div className={`grid gap-8 lg:gap-10 mt-10 px-4 relative z-10 ${searchTarget === 'ambos' ? 'grid-cols-1 xl:grid-cols-2' : 'grid-cols-1 max-w-4xl mx-auto w-full'}`}>
         
         {/* Columna Izquierda: Instituciones Buscando */}
         {(searchTarget === 'ambos' || searchTarget === 'ofertas') && (
@@ -374,8 +349,12 @@ export default function BolsaTrabajo() {
             </div>
             
             {jobsFiltrados.length > 0 ? jobsFiltrados.map(job => (
-              <article key={job.id} onClick={() => handleJobClick(job)} className="bg-white rounded-[24px] p-5 md:p-6 border border-gray-100 shadow-sm hover:shadow-[0_15px_30px_rgba(45,106,106,0.05)] transition-all duration-300 ease-in-out cursor-pointer flex flex-col sm:flex-row gap-5 group">
-                <div className="w-16 h-16 md:w-20 md:h-20 rounded-[20px] bg-[#F4F7F7] border border-gray-100 p-2.5 shrink-0 hidden sm:block">
+             <article 
+  key={job.id} 
+  onClick={() => handleJobClick(job)} 
+  className="bg-white rounded-[24px] p-5 md:p-6 border border-gray-100 shadow-sm hover:border-[#2D6A6A]/30 hover:shadow-[0_15px_30px_rgba(45,106,106,0.08)] transition-all duration-300 ease-in-out cursor-pointer flex flex-col sm:flex-row gap-5 group"
+>
+   <div className="w-16 h-16 md:w-20 md:h-20 rounded-[20px] bg-[#F4F7F7] border border-gray-100 p-2.5 shrink-0 hidden sm:block">
                   <img src={job.logoClinica} alt={job.clinica} className="w-full h-full object-contain rounded-xl" />
                 </div>
                 <div className="flex-1">
@@ -423,10 +402,14 @@ export default function BolsaTrabajo() {
               const isExpanded = expandedProfId === prof.id;
               return (
               <article 
-                key={prof.id} 
-                onClick={() => setExpandedProfId(isExpanded ? null : prof.id)}
-                className={`bg-white rounded-[24px] p-5 md:p-6 border transition-all duration-300 ease-in-out cursor-pointer group ${isExpanded ? 'border-[#2D6A6A] shadow-md ring-2 ring-[#2D6A6A]/5' : 'border-gray-100 shadow-sm hover:shadow-[0_15px_30px_rgba(45,106,106,0.05)]'}`}
-              >
+  key={prof.id} 
+  onClick={() => setExpandedProfId(isExpanded ? null : prof.id)}
+  className={`bg-white rounded-[24px] p-5 md:p-6 border transition-all duration-300 ease-in-out cursor-pointer group flex flex-col h-full ${
+    isExpanded 
+      ? 'border-[#2D6A6A] shadow-md ring-2 ring-[#2D6A6A]/5' 
+      : 'border-gray-100 shadow-sm hover:border-[#2D6A6A]/30 hover:shadow-[0_15px_30px_rgba(45,106,106,0.08)]'
+  }`}
+>
                 <div className="flex gap-4 items-start">
                   <div className="w-16 h-16 md:w-20 md:h-20 rounded-[20px] bg-[#F4F7F7] border border-gray-100 shadow-sm shrink-0 overflow-hidden relative">
                     <img src={prof.avatar} alt={prof.nombre} className="w-full h-full object-cover" />
@@ -472,7 +455,6 @@ export default function BolsaTrabajo() {
                         </div>
                      </div>
                      
-                     {/* Botón Primario según manual */}
                      <button 
                        onClick={(e) => { e.stopPropagation(); alert(`Redirigiendo al perfil público verificado de ${prof.nombre}...`); }}
                        className="w-full mt-4 bg-[#2D6A6A] text-white px-6 py-4 rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] transition-all duration-300 ease-in-out hover:bg-[#1A3D3D] hover:-translate-y-1 hover:shadow-xl shadow-md flex items-center justify-center gap-2 group/btn"
@@ -512,7 +494,7 @@ export default function BolsaTrabajo() {
   const renderDetail = () => {
     if (!selectedJob) return null;
     return (
-      <article className="max-w-[1000px] mx-auto animate-in fade-in duration-500 pb-24">
+      <article className="max-w-[1000px] mx-auto animate-in fade-in duration-500 pb-24 px-4 pt-8 md:pt-12">
         <button 
           onClick={() => setView('list')} 
           className="flex items-center gap-2 text-[#666666] hover:text-[#1A3D3D] font-bold text-[10px] uppercase tracking-[0.3em] mb-8 transition-colors group"
@@ -634,7 +616,7 @@ export default function BolsaTrabajo() {
   // RENDER: 3. FORMULARIO DE PUBLICACIÓN DE EMPLEO (CLÍNICA)
   // =========================================================
   const renderPublishJobForm = () => (
-    <section className="max-w-[800px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500 pb-24">
+    <section className="max-w-[800px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500 pb-24 px-4 pt-8 md:pt-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <button 
           onClick={() => { setView('list'); setJobFormStep(1); setErrors({}); }} 
@@ -831,7 +813,7 @@ export default function BolsaTrabajo() {
   // RENDER: 4. FORMULARIO DE PROFESIONAL (OFRECER SERVICIOS)
   // =========================================================
   const renderPublishProfForm = () => (
-    <section className="max-w-[800px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500 pb-24">
+    <section className="max-w-[800px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500 pb-24 px-4 pt-8 md:pt-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <button 
           onClick={() => { setView('list'); setProfFormStep(1); setErrors({}); }} 
@@ -986,7 +968,8 @@ export default function BolsaTrabajo() {
 
   return (
     <div className="bg-[#F4F7F7] min-h-screen font-['Inter'] antialiased relative">
-      <main id="main-content" className="max-w-[1440px] mx-auto pt-6 md:pt-10 px-6 md:px-12 lg:px-24">
+      {/* Removí los paddings laterales del main para que el hero toque los bordes al igual que el Directorio */}
+      <main id="main-content" className="max-w-[1440px] mx-auto">
         {view === 'list' && renderList()}
         {view === 'detail' && renderDetail()}
         {view === 'publish_job' && renderPublishJobForm()}

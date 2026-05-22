@@ -340,7 +340,7 @@ export default function LandingPage() {
 
           {/* 1. HERO SECTION */}
           {/* Ajuste de pt: Cambiamos pt-[96px] por pt-8 (y md:pt-12) para que compense con el nuevo Layout */}
-          <main className="relative z-10 w-full pt-8 pb-10 md:pt-12 md:pb-12">
+          <main className="relative z-10 w-full pt-8 pb-10 md:pt-[45px] md:pb-12">
             <div className="max-w-[1100px] mx-auto px-8 md:px-10 grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-10 lg:gap-12 items-center">
               
               <div className="flex flex-col items-start text-left lg:pt-2">
