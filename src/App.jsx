@@ -9,7 +9,7 @@ import AccessibilityWidget from './components/AccessibilityWidget';
 // Importaciones de páginas
 import LandingPage from './pages/landing-page';
 import Inicio from './pages/inicio';
-import Directorio from './pages/directorio'; // NUEVA IMPORTACIÓN
+import Directorio from './pages/Directorio'; // NUEVA IMPORTACIÓN
 import Perfil from './pages/perfiles/perfil-profesional'; 
 import PerfilProveedor from './pages/perfiles/perfil-proveedores'; 
 import PerfilClinica from './pages/perfiles/perfil-clinica';
@@ -97,7 +97,7 @@ export default function App() {
           {/* Páginas principales */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/inicio" element={<Inicio />} />
-          <Route path="/directorio" element={<Directorio />} /> {/* NUEVA RUTA */}
+          <Route path="/Directorio" element={<Directorio />} /> {/* NUEVA RUTA */}
           
           {/* Perfiles */}
           <Route path="/perfil-profesional" element={<Perfil />} />
