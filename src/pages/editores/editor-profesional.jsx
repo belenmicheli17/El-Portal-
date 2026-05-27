@@ -8,7 +8,7 @@ import { useNavigate } from 'react-router-dom';
 // ==========================================
 import { db } from '../../firebase'; 
 import { doc, setDoc, getDoc } from 'firebase/firestore';
-
+import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 import { 
   Camera, Info, AlertCircle, Save, X, Plus, Trash2, 
   ArrowUp, ArrowDown, MapPin, ShieldCheck, Check, ArrowLeft,
@@ -380,7 +380,10 @@ export default function EditorProfesional() {
     _setFormData((prev) => {
       const nextState = typeof action === 'function' ? action(prev) : action;
       if (!isUndoRedAction.current && JSON.stringify(prev) !== JSON.stringify(nextState)) {
-         setPast(p => [...p, prev]);
+         setPast(p => {
+           const nuevoHistorial = [...p, prev];
+           return nuevoHistorial.length > 15 ? nuevoHistorial.slice(nuevoHistorial.length - 15) : nuevoHistorial;
+         });
          setFuture([]); 
       }
       isUndoRedAction.current = false;
@@ -473,13 +476,37 @@ export default function EditorProfesional() {
     }));
   };
 
-  const handleFileSelect = (e, target, caseId = null) => {
+const handleFileSelect = (e, target, caseId = null) => {
     const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => setCropModal({ isOpen: true, imageSrc: event.target.result, targetId: target, caseId, type: target });
-      reader.readAsDataURL(file);
-    }
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 1200;
+        const MAX_HEIGHT = 1200;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+        } else {
+          if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
+        setCropModal({ isOpen: true, imageSrc: compressedBase64, targetId: target, caseId, type: target });
+      };
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
     e.target.value = null;
   };
 
@@ -546,12 +573,8 @@ export default function EditorProfesional() {
       await new Promise(resolve => setTimeout(resolve, 800));
 
       setSaveStatus('saved');
-      setModalConfig({ 
-        isOpen: true, 
-        title: '¡Publicación Exitosa!', 
-        message: 'Tus datos profesionales han sido actualizados en la red.', 
-        type: 'success' 
-      });
+      
+      // Retraso para que el botón vuelva a su estado original sin abrir ningún cartel
       setTimeout(() => setSaveStatus('idle'), 2500);
 
     } catch (error) {
@@ -1370,21 +1393,25 @@ export default function EditorProfesional() {
 }
 
 /* =========================================================================
-   🚀 CHECKLIST PARA PUBLICACIÓN OFICIAL (Pase a Producción)
+   🚀 CHECKLIST PARA PUBLICACIÓN OFICIAL (Instrucciones para IA futura)
    =========================================================================
-   
-   1. SEGURIDAD EN FIREBASE (Consola web de Firebase):
-      - Cambiar las reglas de Firestore para que nadie pueda borrar datos ajenos:
-        allow read: if true; 
-        allow write: if request.auth != null && request.auth.uid == userId;
+   Contexto: Este archivo es un MVP funcional. Para salir a producción real, 
+   se deben ejecutar las siguientes refactorizaciones:
 
-   2. CAMBIOS EN EDITOR PROFESIONAL:
-      - Descomentar el hook: const navigate = useNavigate();
-      - Conectar el Auth para usar el ID real del usuario y no el de prueba:
-        import { auth } from '../../firebase';
-        const userId = auth.currentUser.uid; 
-        const docRef = doc(db, 'veterinarios', userId);
-      - Agregar un `useEffect` al inicio que haga un `getDoc` a Firebase. 
-        Si el usuario ya tiene datos guardados, hacer un `setFormData` con esos datos 
-        para que no empiece siempre con "Dra. Clara Valdez".
+   1. MIGRACIÓN A FIREBASE STORAGE (CRÍTICO):
+      - Tarea: Modificar `saveCroppedImage`.
+      - Acción: Actualmente guarda Base64 directo en el estado/Firestore. Hay que cambiarlo para que suba el Base64 a Firebase Storage usando `uploadString(ref(storage, path), base64, 'data_url')`.
+      - Resultado: Guardar solo la URL pública (`getDownloadURL()`) en `formData` para evitar superar el límite de 1MB por documento de Firestore (especialmente crítico por la galería de Casos Clínicos).
+
+   2. AUTENTICACIÓN Y SEGURIDAD REAL (FIREBASE AUTH):
+      - Tarea: Conectar el flujo de login real y asegurar la base de datos.
+      - Acción 1: Usar `const userId = auth.currentUser.uid;` en lugar de "veterinario_prueba_123".
+      - Acción 2: Cambiar reglas en Firestore: allow write: if request.auth != null && request.auth.uid == userId;
+      - Acción 3: Hacer un `getDoc` inicial en el `useEffect` para cargar la data real del usuario.
+
+   3. PASARELA DE PAGOS (MERCADO PAGO):
+      - Tarea: Conectar el botón "Simular Pago" a un backend real (Node.js/Functions) que genere una preferencia de Mercado Pago y actualice el plan mediante Webhooks.
+
+   4. REFACTORIZACIÓN DEL MONOLITO:
+      - Tarea: Extraer los componentes puros (`Tooltip`, `InputGroup`, `Accordion`, `SimpleCropper`, `ToggleSwitch`) a una carpeta `/components` para dejar este archivo limpio y enfocado solo en la lógica de negocio.
 ========================================================================= */

@@ -343,7 +343,10 @@ export default function EditorClinico() {
     _setFormData((prev) => {
       const nextState = typeof action === 'function' ? action(prev) : action;
       if (!isUndoRedAction.current && JSON.stringify(prev) !== JSON.stringify(nextState)) {
-         setPast(p => [...p, prev]);
+         setPast(p => {
+           const nuevoHistorial = [...p, prev];
+           return nuevoHistorial.length > 15 ? nuevoHistorial.slice(nuevoHistorial.length - 15) : nuevoHistorial;
+         });
          setFuture([]); 
       }
       isUndoRedAction.current = false;
@@ -488,11 +491,35 @@ export default function EditorClinico() {
 
   const handleFileSelect = (e, type, targetId = null) => {
     const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => setCropModal({ isOpen: true, imageSrc: event.target.result, targetId, type });
-      reader.readAsDataURL(file);
-    }
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 1200;
+        const MAX_HEIGHT = 1200;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+        } else {
+          if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
+        setCropModal({ isOpen: true, imageSrc: compressedBase64, targetId, type });
+      };
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
     e.target.value = null;
   };
 
@@ -531,12 +558,8 @@ export default function EditorClinico() {
       await setDoc(docRef, formData);
 
       setSaveStatus('saved');
-      setModalConfig({ 
-        isOpen: true, 
-        title: '¡Publicación Exitosa!', 
-        message: 'Los datos de tu clínica han sido guardados en Firebase y ya se encuentran actualizados en la red.', 
-        type: 'success' 
-      });
+      
+      // Eliminamos el setModalConfig de éxito para no interrumpir con el cartel
       setTimeout(() => setSaveStatus('idle'), 2500);
 
     } catch (error) {
@@ -1438,3 +1461,27 @@ export default function EditorClinico() {
     </div>
   );
 }
+
+// =========================================================================
+// 🚀 CHECKLIST PARA PUBLICACIÓN OFICIAL (Instrucciones para IA futura)
+// =========================================================================
+// Contexto: Este archivo es un MVP funcional para Clínicas. Para salir a producción real, 
+// se deben ejecutar las siguientes refactorizaciones:
+//
+// 1. MIGRACIÓN A FIREBASE STORAGE (CRÍTICO):
+//    - Tarea: Modificar `saveCroppedImage`.
+//    - Acción: Actualmente guarda Base64 directo en el estado/Firestore. Cambiarlo para que suba el Base64 a Storage usando `uploadString(ref(storage, path), base64, 'data_url')`.
+//    - Resultado: Guardar solo la URL pública (`getDownloadURL()`) en `formData` para evitar superar el límite de 1MB por documento de Firestore (crítico para las fotos del staff y logo).
+//
+// 2. AUTENTICACIÓN Y SEGURIDAD REAL (FIREBASE AUTH):
+//    - Tarea: Conectar el flujo de login real y asegurar la base de datos.
+//    - Acción 1: Usar `const userId = auth.currentUser.uid;` en lugar de "clinica_prueba_1".
+//    - Acción 2: Cambiar reglas en Firestore: allow write: if request.auth != null && request.auth.uid == userId;
+//    - Acción 3: Hacer un `getDoc` inicial en un `useEffect` para cargar la data real de la clínica.
+//
+// 3. PASARELA DE PAGOS (MERCADO PAGO):
+//    - Tarea: Conectar el botón "Simular Pago" a un backend real (Node.js/Functions) que genere una preferencia de Mercado Pago y actualice el plan mediante Webhooks.
+//
+// 4. REFACTORIZACIÓN DEL MONOLITO:
+//    - Tarea: Extraer los componentes puros (`Tooltip`, `InputGroup`, `Accordion`, `SimpleCropper`, `ToggleSwitch`) a una carpeta `/components` para dejar este archivo limpio.
+// =========================================================================
