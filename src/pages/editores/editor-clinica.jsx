@@ -37,44 +37,74 @@ const CATALOGO_SERVICIOS = [
 
 const Tooltip = ({ text, isSection = false }) => {
   const [isVisible, setIsVisible] = useState(false);
+  const boxRef = useRef(null);
+  const [xOffset, setXOffset] = useState(0);
+
+  useEffect(() => {
+    // Si el tooltip está abierto, calculamos su posición en pantalla
+    if (isVisible && boxRef.current) {
+      const rect = boxRef.current.getBoundingClientRect();
+      const margin = 16; // Margen de seguridad en píxeles contra los bordes del celular
+
+      // Si choca por la izquierda, lo empujamos a la derecha. Si choca por la derecha, a la izquierda.
+      if (rect.left < margin) {
+        setXOffset(margin - rect.left);
+      } else if (rect.right > window.innerWidth - margin) {
+        setXOffset((window.innerWidth - margin) - rect.right);
+      }
+    } else {
+      // Reiniciamos la posición cuando se cierra para el próximo uso
+      setXOffset(0);
+    }
+  }, [isVisible]);
 
   return (
     <div 
       className="group relative inline-flex items-center ml-2 cursor-help z-[100]"
       onMouseEnter={() => setIsVisible(true)}
       onMouseLeave={() => setIsVisible(false)}
-      onClick={(e) => { if (e.cancelable !== false) e.preventDefault(); e.stopPropagation(); setIsVisible(!isVisible); }}
+      onClick={(e) => { 
+        if (e.cancelable !== false) e.preventDefault(); 
+        e.stopPropagation(); 
+        setIsVisible(!isVisible); 
+      }}
     >
+      {/* Ícono de Información */}
       <div className="bg-[#2D6A6A]/10 p-1 rounded-full border border-[#2D6A6A]/20 group-hover:bg-[#2D6A6A] transition-colors duration-300">
         <Info className="w-4 h-4 text-[#2D6A6A] group-hover:text-white transition-colors" />
       </div>
 
+      {/* Contenedor principal (Siempre fijo y centrado sobre el ícono) */}
       <div className={`
-        transition-all duration-300 
-        absolute 
-        bottom-full 
-        left-1/2
-        ${isSection ? '-translate-x-[80%] sm:-translate-x-1/2' : '-translate-x-[20%] sm:-translate-x-1/2'}
-        mb-3 
-        w-[240px] sm:w-[280px] 
-        text-left leading-relaxed transform normal-case tracking-normal font-normal z-[110]
-        ${isVisible ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto' : 'opacity-0 translate-y-2 scale-95 pointer-events-none'}
+        absolute bottom-full left-1/2 -translate-x-1/2 mb-3 z-[110]
+        transition-all duration-300 flex flex-col items-center
+        ${isVisible ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-2 pointer-events-none'}
       `}>
-        {isSection ? (
-           <div className="bg-white border border-gray-100 p-4 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] relative text-left">
-             <div className="flex items-center gap-2 mb-2">
-                 <div className="w-1.5 h-1.5 rounded-full bg-[#2D6A6A]"></div>
-                 <span className="text-xs font-black text-[#2D6A6A] tracking-wide uppercase">Importante</span>
-             </div>
-             <p className="text-sm text-gray-600 font-medium leading-relaxed">{text}</p>
-             <div className="absolute top-full left-[80%] sm:left-1/2 -translate-x-1/2 border-[8px] border-transparent border-t-white"></div>
-           </div>
-        ) : (
-           <div className="bg-[#1A3D3D] text-white text-sm font-medium p-3 rounded-xl shadow-2xl relative text-left border border-white/10">
-             {text}
-             <div className="absolute top-full left-[20%] sm:left-1/2 -translate-x-1/2 border-[6px] border-transparent border-t-[#1A3D3D]"></div>
-           </div>
-        )}
+        
+        {/* Caja de texto (Se desliza sola usando transform si choca con los bordes) */}
+        <div 
+          ref={boxRef}
+          style={{ transform: `translateX(${xOffset}px)` }}
+          className={`
+            w-[260px] sm:w-[280px] text-left leading-relaxed normal-case tracking-normal font-normal transition-transform duration-200 ease-out
+            ${isSection 
+              ? 'bg-white border border-gray-100 p-4 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.3)]' 
+              : 'bg-[#1A3D3D] text-white text-sm font-medium p-3 rounded-xl shadow-2xl border border-white/10'
+            }
+          `}
+        >
+          {isSection && (
+            <div className="flex items-center gap-2 mb-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#2D6A6A]"></div>
+                <span className="text-xs font-black text-[#2D6A6A] tracking-wide uppercase">Importante</span>
+            </div>
+          )}
+          <p className={isSection ? "text-sm text-gray-600 font-medium leading-relaxed" : ""}>{text}</p>
+        </div>
+
+        {/* Triangulito inferior (Fuera de la caja de texto para que no se mueva) */}
+        <div className={`absolute top-full left-1/2 -translate-x-1/2 border-[7px] border-transparent ${isSection ? 'border-t-white' : 'border-t-[#1A3D3D]'}`}></div>
+        
       </div>
     </div>
   );
@@ -1088,12 +1118,34 @@ export default function EditorClinico() {
                     <Accordion title="Identidad de la Clínica" icon={Building2} isOpen={openSection === 'identidad'} onToggle={() => setOpenSection(openSection === 'identidad' ? null : 'identidad')}>
                       <div className="flex flex-col sm:flex-row gap-8 mb-8 mt-2 md:mt-0">
                         <div className="relative group cursor-pointer shrink-0 text-left">
-                          <div onClick={() => triggerFileInput(fileInputRef)} className={`w-32 h-32 rounded-[28px] overflow-hidden border-2 border-dashed ${formData.foto ? 'border-transparent' : 'border-gray-200'} transition-all flex items-center justify-center bg-gray-50 block cursor-pointer relative group/img`}>
-                            {formData.foto ? <img src={formData.foto} className="w-full h-full object-cover" alt="Logo" /> : <Camera className="w-8 h-8 text-gray-300" />}
-                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover/img:opacity-100 flex items-center justify-center transition-opacity"><Camera className="w-8 h-8 text-white" /></div>
+                          <div onClick={() => triggerFileInput(fileInputRef)} className={`w-32 h-32 rounded-[28px] overflow-hidden border-2 border-dashed ${formData.foto ? 'border-transparent' : 'border-gray-200'} transition-all flex items-center justify-center bg-gray-50 block cursor-pointer relative group/img shadow-sm hover:border-[#2D6A6A]`}>
+                            {formData.foto ? (
+                              <>
+                                <img src={formData.foto} className="w-full h-full object-cover" alt="Logo" />
+                                {/* Botón X adentro de la imagen, sin borde, sobre la esquina */}
+                                <button 
+                                  type="button" 
+                                  onClick={(e) => { 
+                                    e.preventDefault(); 
+                                    e.stopPropagation(); 
+                                    setFormData(prev => ({ ...prev, foto: '' })); 
+                                  }} 
+                                  className="absolute top-2 right-2 p-1.5 bg-white text-red-500 rounded-full opacity-100 md:opacity-0 md:group-hover/img:opacity-100 transition-opacity z-20 shadow-md hover:bg-red-50"
+                                >
+                                  <X className="w-4 h-4" strokeWidth={3} />
+                                </button>
+                              </>
+                            ) : (
+                              <Camera className="w-8 h-8 text-gray-300" />
+                            )}
+                            {/* Capa negra de hover (pointer-events-none para no bloquear clicks) */}
+                            <div className="absolute inset-0 bg-black/50 opacity-0 md:group-hover/img:opacity-100 flex items-center justify-center transition-opacity pointer-events-none">
+                              <Camera className="w-8 h-8 text-white" />
+                            </div>
                           </div>
                           <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={(e) => handleFileSelect(e, 'logo')} />
                         </div>
+                        
                         <div className="flex-1 text-left flex flex-col justify-center">
                           <h3 className="text-sm font-bold text-[#1A3D3D] mb-2 uppercase tracking-wide flex items-center">
                             Foto del equipo o logo institucional <span className="text-red-400 ml-1">*</span>
@@ -1372,30 +1424,37 @@ export default function EditorClinico() {
                 <div className="space-y-6">
                   {formData.staff.map((item, index) => (
                     <div key={item.id} className="bg-gray-50/50 p-6 rounded-3xl border border-gray-100 flex flex-col md:flex-row gap-6 text-left relative group/staff shadow-sm hover:border-[#4DB6AC] transition-all">
-                      <button onClick={() => handleArrayRemove('staff', item.id)} className="absolute top-4 right-4 p-2 bg-white text-gray-300 hover:text-red-500 rounded-xl border border-transparent hover:border-red-100 shadow-sm opacity-0 group-hover/staff:opacity-100 transition-opacity"><Trash2 className="w-4 h-4" /></button>
                       
-                      <div className="flex flex-col gap-1.5 mt-1 shrink-0 md:hidden">
-                        <button type="button" onClick={() => handleArrayMove('staff', index, 'up')} disabled={index === 0} className="p-1.5 text-gray-300 hover:text-[#1A3D3D] disabled:opacity-20"><ArrowUp className="w-5 h-5" /></button>
-                        <button type="button" onClick={() => handleArrayMove('staff', index, 'down')} disabled={index === formData.staff.length - 1} className="p-1.5 text-gray-300 hover:text-[#1A3D3D] disabled:opacity-20"><ArrowDown className="w-5 h-5" /></button>
-                      </div>
+                      {/* Botón Eliminar: Siempre visible en móvil, se muestra con hover en desktop */}
+                      <button onClick={() => handleArrayRemove('staff', item.id)} className="absolute top-4 right-4 p-2.5 bg-red-50 md:bg-white text-red-500 md:text-gray-300 hover:text-red-500 rounded-xl border border-transparent hover:border-red-100 shadow-sm opacity-100 md:opacity-0 group-hover/staff:opacity-100 transition-opacity z-10" title="Eliminar médico"><Trash2 className="w-4 h-4" /></button>
+                      
+                      {/* Cabecera Móvil (Foto + Flechas) */}
+                      <div className="flex items-center justify-between w-full md:w-auto shrink-0">
+                        <label htmlFor={`staff-foto-${item.id}`} className="relative group/img cursor-pointer shrink-0 block w-24 h-24 self-start">
+                          <div className={`w-full h-full rounded-2xl overflow-hidden border-2 border-dashed ${item.foto ? 'border-transparent' : 'border-[#2D6A6A]/40 bg-[#2D6A6A]/5'} transition-all flex flex-col items-center justify-center bg-white shadow-sm hover:border-[#2D6A6A]`}>
+                            {item.foto ? (
+                               <img src={item.foto} className="w-full h-full object-cover" alt={item.nombre} /> 
+                            ) : (
+                               <>
+                                 <Camera className="w-7 h-7 text-[#2D6A6A] mb-1" />
+                                 <span className="text-[9px] font-black uppercase text-[#2D6A6A] tracking-widest text-center px-1">Subir<br/>Foto</span>
+                               </>
+                            )}
+                          </div>
+                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover/img:opacity-100 flex items-center justify-center transition-opacity rounded-2xl">
+                            <Camera className="w-8 h-8 text-white" />
+                          </div>
+                          <input type="file" id={`staff-foto-${item.id}`} className="hidden" accept="image/*" onChange={(e) => handleFileSelect(e, 'staff', item.id)} />
+                        </label>
 
-                      <label htmlFor={`staff-foto-${item.id}`} className="relative group/img cursor-pointer shrink-0 block w-24 h-24 self-start">
-                        <div className={`w-full h-full rounded-2xl overflow-hidden border-2 border-dashed ${item.foto ? 'border-transparent' : 'border-[#2D6A6A]/40 bg-[#2D6A6A]/5'} transition-all flex flex-col items-center justify-center bg-white shadow-sm hover:border-[#2D6A6A]`}>
-                          {item.foto ? (
-                             <img src={item.foto} className="w-full h-full object-cover" alt={item.nombre} /> 
-                          ) : (
-                             <>
-                               <Camera className="w-7 h-7 text-[#2D6A6A] mb-1" />
-                               <span className="text-[9px] font-black uppercase text-[#2D6A6A] tracking-widest text-center px-1">Subir<br/>Foto</span>
-                             </>
-                          )}
+                        {/* Flechas Móvil (Alineadas a la derecha de la imagen) */}
+                        <div className="flex md:hidden items-center gap-2 mr-14">
+                          <button type="button" onClick={() => handleArrayMove('staff', index, 'up')} disabled={index === 0} className="p-2.5 bg-white rounded-xl border border-gray-200 text-gray-500 hover:text-[#1A3D3D] hover:border-[#4DB6AC] disabled:opacity-30 shadow-sm transition-all"><ArrowUp className="w-5 h-5" /></button>
+                          <button type="button" onClick={() => handleArrayMove('staff', index, 'down')} disabled={index === formData.staff.length - 1} className="p-2.5 bg-white rounded-xl border border-gray-200 text-gray-500 hover:text-[#1A3D3D] hover:border-[#4DB6AC] disabled:opacity-30 shadow-sm transition-all"><ArrowDown className="w-5 h-5" /></button>
                         </div>
-                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover/img:opacity-100 flex items-center justify-center transition-opacity rounded-2xl">
-                          <Camera className="w-8 h-8 text-white" />
-                        </div>
-                        <input type="file" id={`staff-foto-${item.id}`} className="hidden" accept="image/*" onChange={(e) => handleFileSelect(e, 'staff', item.id)} />
-                      </label>
+                      </div>
                       
+                      {/* Formulario */}
                       <div className="flex-1 space-y-4 pt-2">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
@@ -1420,6 +1479,7 @@ export default function EditorClinico() {
                         </div>
                       </div>
                       
+                      {/* Flechas Desktop */}
                       <div className="hidden md:flex flex-col gap-1.5 mt-1 shrink-0">
                         <button type="button" onClick={() => handleArrayMove('staff', index, 'up')} disabled={index === 0} className="p-1 text-gray-300 hover:text-[#1A3D3D] disabled:opacity-20 transition-colors"><ArrowUp className="w-5 h-5" /></button>
                         <button type="button" onClick={() => handleArrayMove('staff', index, 'down')} disabled={index === formData.staff.length - 1} className="p-1 text-gray-300 hover:text-[#1A3D3D] disabled:opacity-20 transition-colors"><ArrowDown className="w-5 h-5" /></button>

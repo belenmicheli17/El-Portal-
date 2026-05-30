@@ -39,44 +39,74 @@ const IconoBisturi = ({ className }) => (
 
 const Tooltip = ({ text, isSection = false }) => {
   const [isVisible, setIsVisible] = useState(false);
+  const boxRef = useRef(null);
+  const [xOffset, setXOffset] = useState(0);
+
+  useEffect(() => {
+    // Si el tooltip está abierto, calculamos su posición en pantalla
+    if (isVisible && boxRef.current) {
+      const rect = boxRef.current.getBoundingClientRect();
+      const margin = 16; // Margen de seguridad en píxeles contra los bordes del celular
+
+      // Si choca por la izquierda, lo empujamos a la derecha. Si choca por la derecha, a la izquierda.
+      if (rect.left < margin) {
+        setXOffset(margin - rect.left);
+      } else if (rect.right > window.innerWidth - margin) {
+        setXOffset((window.innerWidth - margin) - rect.right);
+      }
+    } else {
+      // Reiniciamos la posición cuando se cierra para el próximo uso
+      setXOffset(0);
+    }
+  }, [isVisible]);
 
   return (
     <div 
       className="group relative inline-flex items-center ml-2 cursor-help z-[100]"
       onMouseEnter={() => setIsVisible(true)}
       onMouseLeave={() => setIsVisible(false)}
-      onClick={(e) => { if (e.cancelable !== false) e.preventDefault(); e.stopPropagation(); setIsVisible(!isVisible); }}
+      onClick={(e) => { 
+        if (e.cancelable !== false) e.preventDefault(); 
+        e.stopPropagation(); 
+        setIsVisible(!isVisible); 
+      }}
     >
+      {/* Ícono de Información */}
       <div className="bg-[#2D6A6A]/10 p-1 rounded-full border border-[#2D6A6A]/20 group-hover:bg-[#2D6A6A] transition-colors duration-300">
-        <Info className="w-3 h-3 text-[#2D6A6A] group-hover:text-white transition-colors" />
+        <Info className="w-4 h-4 text-[#2D6A6A] group-hover:text-white transition-colors" />
       </div>
 
+      {/* Contenedor principal (Siempre fijo y centrado sobre el ícono) */}
       <div className={`
-        transition-all duration-300 
-        absolute 
-        bottom-full 
-        left-1/2
-        ${isSection ? '-translate-x-[80%] sm:-translate-x-1/2' : '-translate-x-[20%] sm:-translate-x-1/2'}
-        mb-3 
-        w-[240px] sm:w-[280px] 
-        text-left leading-relaxed transform normal-case tracking-normal font-normal z-[110]
-        ${isVisible ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto' : 'opacity-0 translate-y-2 scale-95 pointer-events-none'}
+        absolute bottom-full left-1/2 -translate-x-1/2 mb-3 z-[110]
+        transition-all duration-300 flex flex-col items-center
+        ${isVisible ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-2 pointer-events-none'}
       `}>
-        {isSection ? (
-           <div className="bg-white border border-gray-100 p-4 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] relative text-left">
-             <div className="flex items-center gap-2 mb-2">
-                 <div className="w-1.5 h-1.5 rounded-full bg-[#2D6A6A]"></div>
-                 <span className="text-xs font-black text-[#2D6A6A] tracking-wide uppercase">Importante</span>
-             </div>
-             <p className="text-sm text-gray-600 font-medium leading-relaxed">{text}</p>
-             <div className="absolute top-full left-[80%] sm:left-1/2 -translate-x-1/2 border-[8px] border-transparent border-t-white"></div>
-           </div>
-        ) : (
-           <div className="bg-[#1A3D3D] text-white text-sm font-medium p-3 rounded-xl shadow-2xl relative text-left border border-white/10">
-             {text}
-             <div className="absolute top-full left-[20%] sm:left-1/2 -translate-x-1/2 border-[6px] border-transparent border-t-[#1A3D3D]"></div>
-           </div>
-        )}
+        
+        {/* Caja de texto (Se desliza sola usando transform si choca con los bordes) */}
+        <div 
+          ref={boxRef}
+          style={{ transform: `translateX(${xOffset}px)` }}
+          className={`
+            w-[260px] sm:w-[280px] text-left leading-relaxed normal-case tracking-normal font-normal transition-transform duration-200 ease-out
+            ${isSection 
+              ? 'bg-white border border-gray-100 p-4 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.3)]' 
+              : 'bg-[#1A3D3D] text-white text-sm font-medium p-3 rounded-xl shadow-2xl border border-white/10'
+            }
+          `}
+        >
+          {isSection && (
+            <div className="flex items-center gap-2 mb-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#2D6A6A]"></div>
+                <span className="text-xs font-black text-[#2D6A6A] tracking-wide uppercase">Importante</span>
+            </div>
+          )}
+          <p className={isSection ? "text-sm text-gray-600 font-medium leading-relaxed" : ""}>{text}</p>
+        </div>
+
+        {/* Triangulito inferior (Fuera de la caja de texto para que no se mueva) */}
+        <div className={`absolute top-full left-1/2 -translate-x-1/2 border-[7px] border-transparent ${isSection ? 'border-t-white' : 'border-t-[#1A3D3D]'}`}></div>
+        
       </div>
     </div>
   );
@@ -1051,24 +1081,63 @@ const handleFileSelect = (e, target, caseId = null) => {
                     {/* IDENTIDAD PROFESIONAL */}
                     <Accordion title="Identidad Profesional" icon={User} isOpen={openSection === 'identidad'} onToggle={() => setOpenSection(openSection === 'identidad' ? null : 'identidad')}>
                       <div className="flex flex-col sm:flex-row gap-8 mb-8 mt-2 md:mt-0">
-                        <div className="relative group cursor-pointer shrink-0 text-left">
-                          <label htmlFor="p-upload" className={`w-32 h-32 rounded-full overflow-hidden border-2 border-dashed ${formData.foto ? 'border-transparent' : 'border-gray-200'} transition-all flex items-center justify-center bg-gray-50 block cursor-pointer relative group/img`}>
-                            {formData.foto ? <img src={formData.foto} className="w-full h-full object-cover" alt="Perfil" /> : <Camera className="w-8 h-8 text-gray-300" />}
-                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover/img:opacity-100 flex items-center justify-center transition-opacity"><Camera className="w-8 h-8 text-white" /></div>
+                        
+                        {/* CONTENEDOR FOTO PRINCIPAL */}
+                        {/* Agregamos w-32 h-32 al div padre para contener todo el bloque */}
+                        <div className="relative group shrink-0 text-left w-32 h-32">
+                          <label htmlFor="p-upload" className={`w-full h-full rounded-full overflow-hidden border-2 border-dashed ${formData.foto ? 'border-transparent' : 'border-gray-200'} transition-all flex items-center justify-center bg-gray-50 block cursor-pointer relative group/img shadow-sm hover:border-[#2D6A6A]`}>
+                            {formData.foto ? (
+                               <img src={formData.foto} className="w-full h-full object-cover" alt="Perfil" /> 
+                            ) : (
+                               <Camera className="w-8 h-8 text-gray-300" />
+                            )}
+                            {/* Capa negra de hover (con pointer-events-none para no bloquear clicks) */}
+                            <div className="absolute inset-0 bg-black/50 opacity-0 md:group-hover/img:opacity-100 flex items-center justify-center transition-opacity pointer-events-none">
+                              <Camera className="w-8 h-8 text-white" />
+                            </div>
                           </label>
                           <input type="file" id="p-upload" className="hidden" accept="image/*" onChange={(e) => handleFileSelect(e, 'perfil')} />
+                          
+                          {/* Botón X FUERA del label para evitar que se abra la ventana de archivos */}
+                          {formData.foto && (
+                            <button 
+                              type="button" 
+                              onClick={(e) => { 
+                                e.preventDefault(); 
+                                e.stopPropagation(); 
+                                setFormData(prev => ({ ...prev, foto: '' })); 
+                              }} 
+                              className="absolute top-0 right-0 p-1.5 bg-white text-red-500 rounded-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-20 shadow-md hover:bg-red-50"
+                            >
+                              <X className="w-4 h-4" strokeWidth={3} />
+                            </button>
+                          )}
                         </div>
+
                         <div className="flex-1 text-left flex flex-col justify-center">
                           <h3 className="text-sm font-bold text-[#1A3D3D] mb-2 uppercase tracking-wide flex items-center">
                             Fotografía de Perfil <span className="text-red-400 ml-1">*</span>
                             <Tooltip text="Usa una foto vertical o cuadrada. Una buena iluminación transmite más confianza a los tutores y colegas." />
                           </h3>
                           <p className="text-xs text-gray-500 mb-4 leading-relaxed">Sube una imagen profesional. Formatos PNG o JPG. Máx 2MB.</p>
+                          
+                          {/* MINI GALERÍA DE FOTOS PREVIAS */}
                           <div className="flex flex-wrap gap-2">
-                            {formData.fotosPerfil.map((url, i) => (
-                              <div key={i} className={`relative w-10 h-10 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${formData.foto === url ? 'border-[#2D6A6A]' : 'border-gray-100'}`} onClick={() => setFormData(prev => ({...prev, foto: url}))}>
+                            {formData.fotosPerfil && formData.fotosPerfil.map((url, i) => (
+                              <div key={i} className={`relative group/mini w-10 h-10 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${formData.foto === url ? 'border-[#2D6A6A]' : 'border-gray-100'}`} onClick={() => setFormData(prev => ({...prev, foto: url}))}>
                                 <img src={url} className="w-full h-full object-cover" alt="Historial" />
-                                <button onClick={(e) => deleteProfilePhoto(url, e)} className="absolute top-0 right-0 p-0.5 bg-white text-red-500 opacity-0 group-hover:opacity-100"><X className="w-2 h-2" /></button>
+                                {/* Botón X de miniaturas adaptado a la nueva lógica responsiva */}
+                                <button 
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    deleteProfilePhoto(url, e);
+                                  }} 
+                                  className="absolute top-0 right-0 p-0.5 bg-white/90 text-red-500 rounded-bl-lg opacity-100 md:opacity-0 md:group-hover/mini:opacity-100 transition-opacity z-20 hover:bg-white"
+                                >
+                                  <X className="w-3 h-3" strokeWidth={3} />
+                                </button>
                               </div>
                             ))}
                           </div>
@@ -1081,7 +1150,7 @@ const handleFileSelect = (e, target, caseId = null) => {
                         <InputGroup label="Matrícula" id="matricula" value={formData.matricula} onChange={handleChange} required tooltip="Ingresa únicamente los números de tu matrícula profesional." />
                         <div className="mb-6 text-left">
                           <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 block ml-1">Provincia Base</label>
-                          <select id="provincia" value={formData.provincia} onChange={handleChange} className="w-full bg-gray-50/50 border border-gray-200 rounded-2xl px-5 py-3.5 text-base font-medium focus:outline-none focus:border-[#2D6A6A] text-[#1A3D3D]">
+                          <select id="provincia" value={formData.provincia} onChange={handleChange} className="w-full bg-gray-50/50 border border-gray-200 rounded-2xl px-5 py-3.5 text-base font-medium focus:outline-none focus:border-[#2D6A6A] text-[#1A3D3D] shadow-sm transition-colors">
                             {["Buenos Aires", "CABA", "Córdoba", "Santa Fe", "Mendoza", "Tucumán", "Salta", "Entre Ríos"].map(p => <option key={p} value={p}>{p}</option>)}
                           </select>
                         </div>
@@ -1260,13 +1329,14 @@ const handleFileSelect = (e, target, caseId = null) => {
               {/* SELECTOR DE ÍCONOS */}
               <div>
                 <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Elegí un ícono para este servicio</label>
-                <div className="grid grid-cols-5 md:grid-cols-7 gap-2">
+                <div className="grid grid-cols-6 md:grid-cols-8 gap-2">
                   {iconsList.map((icon) => (
                     <button 
                       type="button"
                       key={icon.name}
                       onClick={() => handleArrayUpdate('servicios', item.id, 'icono', icon.name)}
-                      className={`p-2 rounded-xl border-2 flex items-center justify-center transition-all ${item.icono === icon.name ? 'border-[#2D6A6A] bg-[#2D6A6A]/10 text-[#1A3D3D]' : 'border-transparent bg-white text-gray-400 hover:text-[#2D6A6A] hover:bg-gray-50 shadow-sm'}`}
+                      /* Eliminamos padding (p-0), forzamos aspect-square con w-full, y agrandamos el SVG */
+                      className={`w-full aspect-square p-0 flex items-center justify-center rounded-xl border-2 transition-all [&_svg]:w-6 [&_svg]:h-6 md:[&_svg]:w-7 md:[&_svg]:h-7 ${item.icono === icon.name ? 'border-[#2D6A6A] bg-[#2D6A6A]/10 text-[#1A3D3D]' : 'border-transparent bg-white text-gray-500 hover:text-[#2D6A6A] hover:bg-gray-50 shadow-sm'}`}
                     >
                       {icon.comp}
                     </button>
@@ -1307,7 +1377,7 @@ const handleFileSelect = (e, target, caseId = null) => {
               <div className="w-full bg-white rounded-[32px] shadow-sm border border-gray-100 p-6 md:p-10 relative animate-in fade-in duration-300 min-h-[500px]">
                 <div className="mb-8 flex justify-between items-end">
                    <div>
-                     <h3 className="text-2xl font-black text-[#1A3D3D] font-['Montserrat'] flex items-center gap-2">Casos Clínicos <Sparkles className="w-5 h-5 text-[#4DB6AC]" /></h3>
+                     <h3 className="text-2xl font-black text-[#1A3D3D] font-['Montserrat'] flex items-center gap-2">Casos Clínicos </h3>
                      <p className="text-sm text-gray-500 mt-1">Sube fotos del antes y después para generar confianza en tu trabajo.</p>
                    </div>
                 </div>

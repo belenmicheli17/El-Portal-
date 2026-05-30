@@ -33,44 +33,74 @@ const PROVINCIAS_ARG = [
 
 const Tooltip = ({ text, isSection = false }) => {
   const [isVisible, setIsVisible] = useState(false);
+  const boxRef = useRef(null);
+  const [xOffset, setXOffset] = useState(0);
+
+  useEffect(() => {
+    // Si el tooltip está abierto, calculamos su posición en pantalla
+    if (isVisible && boxRef.current) {
+      const rect = boxRef.current.getBoundingClientRect();
+      const margin = 16; // Margen de seguridad en píxeles contra los bordes del celular
+
+      // Si choca por la izquierda, lo empujamos a la derecha. Si choca por la derecha, a la izquierda.
+      if (rect.left < margin) {
+        setXOffset(margin - rect.left);
+      } else if (rect.right > window.innerWidth - margin) {
+        setXOffset((window.innerWidth - margin) - rect.right);
+      }
+    } else {
+      // Reiniciamos la posición cuando se cierra para el próximo uso
+      setXOffset(0);
+    }
+  }, [isVisible]);
 
   return (
     <div 
       className="group relative inline-flex items-center ml-2 cursor-help z-[100]"
       onMouseEnter={() => setIsVisible(true)}
       onMouseLeave={() => setIsVisible(false)}
-      onClick={(e) => { if (e.cancelable !== false) e.preventDefault(); e.stopPropagation(); setIsVisible(!isVisible); }}
+      onClick={(e) => { 
+        if (e.cancelable !== false) e.preventDefault(); 
+        e.stopPropagation(); 
+        setIsVisible(!isVisible); 
+      }}
     >
+      {/* Ícono de Información */}
       <div className="bg-[#2D6A6A]/10 p-1 rounded-full border border-[#2D6A6A]/20 group-hover:bg-[#2D6A6A] transition-colors duration-300">
         <Info className="w-4 h-4 text-[#2D6A6A] group-hover:text-white transition-colors" />
       </div>
 
+      {/* Contenedor principal (Siempre fijo y centrado sobre el ícono) */}
       <div className={`
-        transition-all duration-300 
-        absolute 
-        bottom-full 
-        left-1/2
-        ${isSection ? '-translate-x-[80%] sm:-translate-x-1/2' : '-translate-x-[20%] sm:-translate-x-1/2'}
-        mb-3 
-        w-[240px] sm:w-[280px] 
-        text-left leading-relaxed transform normal-case tracking-normal font-normal z-[110]
-        ${isVisible ? 'opacity-100 translate-y-0 scale-100 pointer-events-auto' : 'opacity-0 translate-y-2 scale-95 pointer-events-none'}
+        absolute bottom-full left-1/2 -translate-x-1/2 mb-3 z-[110]
+        transition-all duration-300 flex flex-col items-center
+        ${isVisible ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-2 pointer-events-none'}
       `}>
-        {isSection ? (
-           <div className="bg-white border border-gray-100 p-4 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] relative text-left">
-             <div className="flex items-center gap-2 mb-2">
-                 <div className="w-1.5 h-1.5 rounded-full bg-[#2D6A6A]"></div>
-                 <span className="text-xs font-black text-[#2D6A6A] tracking-wide uppercase">Importante</span>
-             </div>
-             <p className="text-sm text-gray-600 font-medium leading-relaxed">{text}</p>
-             <div className="absolute top-full left-[80%] sm:left-1/2 -translate-x-1/2 border-[8px] border-transparent border-t-white"></div>
-           </div>
-        ) : (
-           <div className="bg-[#1A3D3D] text-white text-sm font-medium p-3 rounded-xl shadow-2xl relative text-left border border-white/10">
-             {text}
-             <div className="absolute top-full left-[20%] sm:left-1/2 -translate-x-1/2 border-[6px] border-transparent border-t-[#1A3D3D]"></div>
-           </div>
-        )}
+        
+        {/* Caja de texto (Se desliza sola usando transform si choca con los bordes) */}
+        <div 
+          ref={boxRef}
+          style={{ transform: `translateX(${xOffset}px)` }}
+          className={`
+            w-[260px] sm:w-[280px] text-left leading-relaxed normal-case tracking-normal font-normal transition-transform duration-200 ease-out
+            ${isSection 
+              ? 'bg-white border border-gray-100 p-4 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.3)]' 
+              : 'bg-[#1A3D3D] text-white text-sm font-medium p-3 rounded-xl shadow-2xl border border-white/10'
+            }
+          `}
+        >
+          {isSection && (
+            <div className="flex items-center gap-2 mb-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#2D6A6A]"></div>
+                <span className="text-xs font-black text-[#2D6A6A] tracking-wide uppercase">Importante</span>
+            </div>
+          )}
+          <p className={isSection ? "text-sm text-gray-600 font-medium leading-relaxed" : ""}>{text}</p>
+        </div>
+
+        {/* Triangulito inferior (Fuera de la caja de texto para que no se mueva) */}
+        <div className={`absolute top-full left-1/2 -translate-x-1/2 border-[7px] border-transparent ${isSection ? 'border-t-white' : 'border-t-[#1A3D3D]'}`}></div>
+        
       </div>
     </div>
   );
@@ -799,7 +829,7 @@ export default function EditorEmpresa() {
         </nav>
 
         {/* LAYOUT PRINCIPAL (Padding 76px) */}
-        <div className="pt-[76px] max-w-[1100px] mx-auto px-4 md:px-8 flex flex-col gap-6 w-full pb-10">
+        <div className="pt-[76px] max-w-[1100px] mx-auto px-4 md:px-8 flex flex-col gap-2 md:gap-6 w-full pb-10">
           
           {/* BANNER DE SUSCRIPCIÓN INACTIVA */}
           {!isSubscriptionActive && (
@@ -826,7 +856,7 @@ export default function EditorEmpresa() {
             {/* COLUMNA IZQUIERDA: SIDEBAR */}
             <div className="w-full md:w-[260px] shrink-0 md:sticky md:top-[96px] self-start z-20">
               
-              <div className="h-[48px] flex items-center mb-6 px-1">
+              <div className="h-[48px] flex items-center mb-1 md:mb-6 px-1">
                  <h2 className="text-[28px] font-black font-['Montserrat'] uppercase tracking-tight text-[#1A3D3D] hidden md:block leading-none">
                    Configuración
                  </h2>
@@ -849,7 +879,7 @@ export default function EditorEmpresa() {
             <div className="flex-1 w-full flex flex-col min-w-0">
               
               {/* BARRA DE ACCIÓN SUPERIOR ALINEADA (Alto 48px) */}
-              <div className="flex justify-between items-center mb-6 h-[48px] w-full">
+              <div className="flex justify-between items-center mb-3 md:mb-6 h-[48px] w-full">
                  
                  <div className="flex items-center gap-2 shrink-0">
                     <button onClick={undo} disabled={past.length === 0} className={`p-2.5 rounded-xl transition-all border ${past.length > 0 ? 'bg-white border-gray-200 text-[#1A3D3D] hover:border-[#4DB6AC] hover:text-[#4DB6AC] shadow-sm' : 'bg-transparent border-transparent text-gray-300'}`} title="Deshacer"><Undo2 className="w-5 h-5" /></button>
@@ -974,82 +1004,106 @@ export default function EditorEmpresa() {
 
                     <div className="border-t border-gray-100">
                       {/* IDENTIDAD VISUAL */}
-                      <Accordion title="Identidad Visual e Info" icon={Building} isOpen={openSection === 'identidad'} onToggle={() => setOpenSection(openSection === 'identidad' ? null : 'identidad')}>
-                        <div className="flex flex-col sm:flex-row gap-6 mb-8 mt-2 md:mt-0">
-                          {/* LOGO */}
-                          <div className="relative group cursor-pointer shrink-0 text-left">
-                            <div onClick={() => triggerFileInput(logoInputRef)} className={`w-32 h-32 rounded-[28px] overflow-hidden border-2 border-dashed ${formData.foto ? 'border-transparent' : 'border-gray-200'} transition-all flex items-center justify-center bg-gray-50 block cursor-pointer relative group/img`}>
-                              {formData.foto ? (
-                                <>
-                                  <img src={formData.foto} className="w-full h-full object-cover" alt="Logo" />
-                                  <button type="button" onClick={eliminarLogo} className="absolute top-2 right-2 p-1.5 bg-white text-red-500 rounded-full opacity-0 group-hover/img:opacity-100 transition-opacity z-10 shadow-md hover:bg-red-50">
-                                    <Trash2 className="w-4 h-4" />
-                                  </button>
-                                </>
-                              ) : (
-                                <ImagePlus className="w-8 h-8 text-gray-300" />
-                              )}
-                              {!formData.foto && <div className="absolute inset-0 bg-black/50 opacity-0 group-hover/img:opacity-100 flex items-center justify-center transition-opacity"><Camera className="w-8 h-8 text-white" /></div>}
-                            </div>
-                            <input type="file" ref={logoInputRef} className="hidden" accept="image/*" onChange={(e) => handleFileSelect(e, 'logo')} />
-                          </div>
-                          
-                          {/* BANNER */}
-                          <div className="flex-1 relative group cursor-pointer text-left">
-                            <div onClick={() => triggerFileInput(bannerInputRef)} className={`w-full h-32 rounded-[28px] overflow-hidden border-2 border-dashed ${formData.banner ? 'border-transparent' : 'border-gray-200'} transition-all flex items-center justify-center bg-gray-50 block cursor-pointer relative group/img`}>
-                              {formData.banner ? (
-                                <>
-                                  <img src={formData.banner} className="w-full h-full object-cover" alt="Banner" />
-                                  <button type="button" onClick={eliminarBanner} className="absolute top-3 right-3 p-2 bg-white text-red-500 rounded-xl opacity-0 group-hover/img:opacity-100 transition-opacity z-10 shadow-md hover:bg-red-50">
-                                    <Trash2 className="w-5 h-5" />
-                                  </button>
-                                </>
-                              ) : (
-                                <div className="text-center"><ImagePlus className="w-8 h-8 text-gray-300 mx-auto mb-2" /><span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Banner Portada</span></div>
-                              )}
-                              {!formData.banner && <div className="absolute inset-0 bg-black/50 opacity-0 group-hover/img:opacity-100 flex items-center justify-center transition-opacity"><span className="text-white font-bold text-xs uppercase tracking-widest flex items-center gap-2"><Camera className="w-5 h-5"/> Cambiar Portada</span></div>}
-                            </div>
-                            <input type="file" ref={bannerInputRef} className="hidden" accept="image/*" onChange={(e) => handleFileSelect(e, 'banner')} />
-                          </div>
-                        </div>
-
-                        <InputGroup label="Nombre de la Empresa" id="nombreEmpresa" value={formData.nombreEmpresa} onChange={handleChange} required />
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 items-end">
-                           <InputGroup label="Razón Social" id="razonSocial" value={formData.razonSocial} onChange={handleChange} />
-                           <InputGroup label="CUIT" id="cuit" value={formData.cuit} onChange={handleChange} required />
-                        </div>
-
-                        <SelectGroup 
-                          label="Etiqueta de Categoría Principal" id="categoria" value={formData.categoria} onChange={handleChange} required
-                          options={[
-                            { value: "Distribuidor Oficial Nacional", label: "Distribuidor Oficial Nacional" },
-                            { value: "Fabricante Nacional", label: "Fabricante Nacional" },
-                            { value: "Importador Directo", label: "Importador Directo" },
-                            { value: "Laboratorio Veterinario", label: "Laboratorio Veterinario" }
-                          ]}
-                        />
-                        
-                        <InputGroup type="textarea" rows="2" label="Slogan o Bio Corta" id="bioCorta" value={formData.bioCorta} onChange={handleChange} maxLength={150} tooltip="Frase gancho para destacar en el directorio." />
-                        <InputGroup type="textarea" rows="4" label="Descripción Completa" id="descripcion" value={formData.descripcion} onChange={handleChange} required tooltip="Detalla la trayectoria, propuesta de valor y diferenciales de tu empresa." />
-
-                        <div className="pt-4 mt-6 border-t border-gray-100">
-                           <h4 className="flex items-center text-xs font-bold text-[#1A3D3D] uppercase tracking-widest leading-none mb-4">Multimedia de Trayectoria</h4>
-                           <div className="flex flex-col sm:flex-row gap-6 mb-4">
-                              <div className="relative group cursor-pointer w-full sm:w-[220px] h-[150px] shrink-0 text-left">
-                                 <div onClick={() => triggerFileInput(imagenNosotrosInputRef)} className={`w-full h-full rounded-2xl overflow-hidden border-2 border-dashed ${formData.imagenNosotros ? 'border-transparent' : 'border-gray-200'} transition-all flex items-center justify-center bg-gray-50 block cursor-pointer relative group/img shadow-sm hover:border-[#2D6A6A]`}>
-                                   {formData.imagenNosotros ? <img src={formData.imagenNosotros} className="w-full h-full object-cover" alt="Sede" /> : <div className="text-center"><ImagePlus className="w-6 h-6 text-gray-300 mx-auto mb-2" /><span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Foto Equipo/Sede</span></div>}
-                                   <div className="absolute inset-0 bg-black/50 opacity-0 group-hover/img:opacity-100 flex items-center justify-center transition-opacity"><Camera className="w-6 h-6 text-white" /></div>
-                                 </div>
-                                 <input type="file" ref={imagenNosotrosInputRef} className="hidden" accept="image/*" onChange={(e) => handleFileSelect(e, 'imagenNosotros')} />
+                    {/* IDENTIDAD VISUAL */}
+                    <Accordion title="Identidad Visual e Info" icon={Building2} isOpen={openSection === 'identidad'} onToggle={() => setOpenSection(openSection === 'identidad' ? null : 'identidad')}>
+                      <div className="flex flex-col sm:flex-row gap-6 mb-8 mt-2 md:mt-0">
+                        {/* LOGO */}
+                        <div className="relative shrink-0 text-left">
+                          <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 block ml-1">Logo Empresa</label>
+                          <div onClick={() => triggerFileInput(logoInputRef)} className={`w-32 h-32 rounded-[28px] overflow-hidden border-2 border-dashed ${formData.foto ? 'border-transparent' : 'border-gray-200'} transition-all flex items-center justify-center bg-gray-50 block cursor-pointer relative group/img shadow-sm hover:border-[#2D6A6A]`}>
+                            {formData.foto ? (
+                              <>
+                                <img src={formData.foto} className="w-full h-full object-cover" alt="Logo" />
+                                {/* Botón X adentro de la imagen, sin borde, sobre la esquina */}
+                                <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); eliminarLogo(); }} className="absolute top-2 right-2 p-1.5 bg-white text-red-500 rounded-full opacity-100 md:opacity-0 md:group-hover/img:opacity-100 transition-opacity z-20 shadow-md hover:bg-red-50">
+                                  <X className="w-4 h-4" strokeWidth={3} />
+                                </button>
+                              </>
+                            ) : (
+                              <div className="text-center">
+                                <ImagePlus className="w-8 h-8 text-gray-300 mx-auto mb-1" />
+                                <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest leading-tight block px-2">Subir<br/>Logo</span>
                               </div>
-                              <div className="flex-1">
-                                 <InputGroup label="Video Corporativo (YouTube/Vimeo)" id="videoNosotros" type="url" value={formData.videoNosotros} onChange={handleChange} canTest tooltip="Si tenés un video de presentación, añadí el link acá." />
-                              </div>
-                           </div>
+                            )}
+                            <div className="absolute inset-0 bg-black/50 opacity-0 md:group-hover/img:opacity-100 flex items-center justify-center transition-opacity pointer-events-none"><Camera className="w-8 h-8 text-white" /></div>
+                          </div>
+                          <input type="file" ref={logoInputRef} className="hidden" accept="image/*" onChange={(e) => handleFileSelect(e, 'logo')} />
                         </div>
-                      </Accordion>
+                        
+                        {/* BANNER */}
+                        <div className="flex-1 relative text-left">
+                          <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 block ml-1">Banner de Portada</label>
+                          <div onClick={() => triggerFileInput(bannerInputRef)} className={`w-full h-32 rounded-[28px] overflow-hidden border-2 border-dashed ${formData.banner ? 'border-transparent' : 'border-gray-200'} transition-all flex items-center justify-center bg-gray-50 block cursor-pointer relative group/img shadow-sm hover:border-[#2D6A6A]`}>
+                            {formData.banner ? (
+                              <>
+                                <img src={formData.banner} className="w-full h-full object-cover" alt="Banner" />
+                                {/* Botón X adentro de la imagen, sin borde, sobre la esquina */}
+                                <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); eliminarBanner(); }} className="absolute top-2 right-2 p-1.5 bg-white text-red-500 rounded-full opacity-100 md:opacity-0 md:group-hover/img:opacity-100 transition-opacity z-20 shadow-md hover:bg-red-50">
+                                  <X className="w-5 h-5" strokeWidth={3} />
+                                </button>
+                              </>
+                            ) : (
+                              <div className="text-center">
+                                <ImagePlus className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Añadir Portada</span>
+                              </div>
+                            )}
+                            {!formData.banner && <div className="absolute inset-0 bg-black/50 opacity-0 md:group-hover/img:opacity-100 flex items-center justify-center transition-opacity pointer-events-none"><span className="text-white font-bold text-xs uppercase tracking-widest flex items-center gap-2"><Camera className="w-5 h-5"/> Cambiar Portada</span></div>}
+                          </div>
+                          <input type="file" ref={bannerInputRef} className="hidden" accept="image/*" onChange={(e) => handleFileSelect(e, 'banner')} />
+                        </div>
+                      </div>
 
+                      <InputGroup label="Nombre de la Empresa" id="nombreEmpresa" value={formData.nombreEmpresa} onChange={handleChange} required />
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 items-end">
+                         <InputGroup label="Razón Social" id="razonSocial" value={formData.razonSocial} onChange={handleChange} />
+                         <InputGroup label="CUIT" id="cuit" value={formData.cuit} onChange={handleChange} required />
+                      </div>
+
+                      <SelectGroup 
+                        label="Etiqueta de Categoría Principal" id="categoria" value={formData.categoria} onChange={handleChange} required
+                        options={[
+                          { value: "Distribuidor Oficial Nacional", label: "Distribuidor Oficial Nacional" },
+                          { value: "Fabricante Nacional", label: "Fabricante Nacional" },
+                          { value: "Importador Directo", label: "Importador Directo" },
+                          { value: "Laboratorio Veterinario", label: "Laboratorio Veterinario" }
+                        ]}
+                      />
+                      
+                      <InputGroup type="textarea" rows="2" label="Slogan o Bio Corta" id="bioCorta" value={formData.bioCorta} onChange={handleChange} maxLength={150} tooltip="Frase gancho para destacar en el directorio." />
+                      <InputGroup type="textarea" rows="4" label="Descripción Completa" id="descripcion" value={formData.descripcion} onChange={handleChange} required tooltip="Detalla la trayectoria, propuesta de valor y diferenciales de tu empresa." />
+
+                      <div className="pt-4 mt-6 border-t border-gray-100">
+                         <h4 className="flex items-center text-xs font-bold text-[#1A3D3D] uppercase tracking-widest leading-none mb-4">Multimedia de Trayectoria</h4>
+                         <div className="flex flex-col sm:flex-row gap-6 mb-4">
+                            {/* IMAGEN DE EQUIPO/SEDE */}
+                            <div className="relative w-full sm:w-[220px] h-[150px] shrink-0 text-left">
+                               <div onClick={() => triggerFileInput(imagenNosotrosInputRef)} className={`w-full h-full rounded-2xl overflow-hidden border-2 border-dashed ${formData.imagenNosotros ? 'border-transparent' : 'border-gray-200'} transition-all flex items-center justify-center bg-gray-50 block cursor-pointer relative group/img shadow-sm hover:border-[#2D6A6A]`}>
+                                 {formData.imagenNosotros ? (
+                                    <>
+                                      <img src={formData.imagenNosotros} className="w-full h-full object-cover" alt="Sede" /> 
+                                      {/* Botón X adentro de la imagen, sin borde, sobre la esquina */}
+                                      <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setFormData(prev => ({ ...prev, imagenNosotros: '' })); }} className="absolute top-2 right-2 p-1.5 bg-white text-red-500 rounded-full opacity-100 md:opacity-0 md:group-hover/img:opacity-100 transition-opacity z-20 shadow-md hover:bg-red-50">
+                                        <X className="w-4 h-4" strokeWidth={3} />
+                                      </button>
+                                    </>
+                                 ) : (
+                                    <div className="text-center">
+                                      <ImagePlus className="w-6 h-6 text-gray-300 mx-auto mb-2" />
+                                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block px-2 leading-tight">Foto Equipo<br/>o Sede</span>
+                                    </div>
+                                 )}
+                                 <div className="absolute inset-0 bg-black/50 opacity-0 md:group-hover/img:opacity-100 flex items-center justify-center transition-opacity pointer-events-none"><Camera className="w-6 h-6 text-white" /></div>
+                               </div>
+                               <input type="file" ref={imagenNosotrosInputRef} className="hidden" accept="image/*" onChange={(e) => handleFileSelect(e, 'imagenNosotros')} />
+                            </div>
+                            <div className="flex-1">
+                               <InputGroup label="Video Corporativo (YouTube/Vimeo)" id="videoNosotros" type="url" value={formData.videoNosotros} onChange={handleChange} canTest tooltip="Si tenés un video de presentación, añadí el link acá." />
+                            </div>
+                         </div>
+                      </div>
+                    </Accordion>
                       {/* CATÁLOGO LINKS */}
                       <Accordion title="Catálogo y Rubros" icon={PackageSearch} isOpen={openSection === 'catalogo-links'} onToggle={() => setOpenSection(openSection === 'catalogo-links' ? null : 'catalogo-links')}>
                         <InputGroup type="url" label="Link a Catálogo o Drive de Precios" id="linkCatalogo" value={formData.linkCatalogo} onChange={handleChange} canTest tooltip="Las clínicas podrán acceder directo desde un botón en tu perfil." />

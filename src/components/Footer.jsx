@@ -122,7 +122,7 @@ export default function Footer() {
           
           <div className="flex items-center justify-center md:justify-start gap-2 text-white">
             <ShieldCheck className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
-            <span className="text-[11px] md:text-[10px] font-bold uppercase tracking-[0.1em] leading-tight md:leading-none font-['Montserrat']">Única plataforma veterinaria oficial</span>
+            <span className="text-[11px] md:text-[10px] font-bold uppercase tracking-[0.1em] leading-tight md:leading-none font-['Montserrat']">Única plataforma veterinaria</span>
           </div>
         </div>
       </div>
