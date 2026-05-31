@@ -306,7 +306,7 @@ export default function LandingPage() {
                 <TypewriterTitle />
                 
                 <p className="text-[16px] md:text-[18px] text-[#333333]/90 font-medium leading-relaxed mb-8 max-w-[500px]">
-                  Un espacio pensado exclusivamente para centralizar el ecosistema veterinario, a disposicion en todo momento.
+                  La primera red exclusiva pensada para el sector veterinario, diseñada para garantizar una máxima presencia digital con el mínimo mantenimiento. Un espacio que optimiza el uso de tu tiempo hoy y asegura tu posicionamiento a futuro, conectando de forma orgánica con las audiencias clave de la profesión sin la exigencia de generar contenido constante.
                 </p>
                 
                 <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
