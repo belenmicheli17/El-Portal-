@@ -840,7 +840,7 @@ export default function EditorEmpresa() {
                 </div>
                 <div>
                   <h3 className="font-bold text-red-800 text-base md:text-lg">Cuenta suspendida por falta de pago</h3>
-                  <p className="text-sm text-red-700/90 font-medium mt-0.5 leading-snug">Tu perfil de proveedor no está visible en el directorio. Regularizá tu situación para volver a aparecer.</p>
+                  <p className="text-sm text-red-700/90 font-medium mt-0.5 leading-snug">Tu perfil de proveedor no está visible en el Cartilla. Regularizá tu situación para volver a aparecer.</p>
                 </div>
               </div>
               <button
@@ -999,7 +999,7 @@ export default function EditorEmpresa() {
                     
                     <div className="pt-6 px-6 md:px-10 pb-4">
                       <h3 className="text-xl font-black text-[#1A3D3D] mb-1 font-['Montserrat']">Mi perfil público</h3>
-                      <p className="text-xs text-gray-500 mb-0">Toda la info que cargues aquí será la que las clínicas verán en el directorio.</p>
+                      <p className="text-xs text-gray-500 mb-0">Toda la info que cargues aquí será la que las clínicas verán en el Cartilla.</p>
                     </div>
 
                     <div className="border-t border-gray-100">
@@ -1071,7 +1071,7 @@ export default function EditorEmpresa() {
                         ]}
                       />
                       
-                      <InputGroup type="textarea" rows="2" label="Slogan o Bio Corta" id="bioCorta" value={formData.bioCorta} onChange={handleChange} maxLength={150} tooltip="Frase gancho para destacar en el directorio." />
+                      <InputGroup type="textarea" rows="2" label="Slogan o Bio Corta" id="bioCorta" value={formData.bioCorta} onChange={handleChange} maxLength={150} tooltip="Frase gancho para destacar en el Cartilla." />
                       <InputGroup type="textarea" rows="4" label="Descripción Completa" id="descripcion" value={formData.descripcion} onChange={handleChange} required tooltip="Detalla la trayectoria, propuesta de valor y diferenciales de tu empresa." />
 
                       <div className="pt-4 mt-6 border-t border-gray-100">

@@ -2159,19 +2159,20 @@ const renderPropuesta = () => (
       </div>
     </div>
   );
-
-  return (
-    <div className="bg-[#F4F7F7] min-h-screen font-['Inter'] antialiased relative">
-      <main id="main-content" className="max-w-[1440px] mx-auto px-6 md:px-12 lg:px-24 flex-grow">
-        {view === 'grid' ? renderGrid() : 
-         view === 'detail' ? renderDetail() : 
-         view === 'insumoDetail' ? renderInsumoDetail() : 
-         view === 'wizard' ? renderCourseWizard() : 
-         view === 'insumoForm' ? renderInsumoForm() : 
-         view === 'propuesta' ? renderPropuesta() : 
-         view === 'favoritos' ? renderFavoritos() :
-         renderAdvertise()}
-      </main>
-    </div>
-  );
+  
+return (
+    <div className="bg-[#F4F7F7] min-h-screen font-['Inter'] antialiased relative">
+      {/* Aquí fusionamos tus clases nuevas (relative, z-10, w-full, pt-5, etc.) con las que ya tenías */}
+      <main id="main-content" className="relative z-10 w-full max-w-[1440px] mx-auto px-6 md:px-12 lg:px-24 pt-5 pb-10 md:pt-9 md:pb-16 flex-grow">
+        {view === 'grid' ? renderGrid() : 
+         view === 'detail' ? renderDetail() : 
+         view === 'insumoDetail' ? renderInsumoDetail() : 
+         view === 'wizard' ? renderCourseWizard() : 
+         view === 'insumoForm' ? renderInsumoForm() : 
+         view === 'propuesta' ? renderPropuesta() : 
+         view === 'favoritos' ? renderFavoritos() :
+         renderAdvertise()}
+      </main>
+    </div>
+  );
 }

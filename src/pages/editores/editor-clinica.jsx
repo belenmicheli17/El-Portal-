@@ -691,7 +691,7 @@ export default function EditorClinico() {
                       )}
                       <h4 className="text-xl font-black text-gray-800 font-['Montserrat'] mb-1">Plan Básico</h4>
                       <p className="text-3xl font-black text-[#1A3D3D] font-['Montserrat'] my-4">$0 <span className="text-sm text-gray-400 font-medium">/mes</span></p>
-                      <p className="text-sm text-gray-500 mb-6 flex-1">Ideal para tener presencia en el directorio y que te encuentren fácilmente.</p>
+                      <p className="text-sm text-gray-500 mb-6 flex-1">Ideal para tener presencia en el Cartilla y que te encuentren fácilmente.</p>
                       
                       <ul className="space-y-3 mb-6">
                         <li className="flex items-start gap-2 text-sm text-gray-600 font-medium">
@@ -889,7 +889,7 @@ export default function EditorClinico() {
               </div>
               <div>
                 <h3 className="font-bold text-red-800 text-base md:text-lg">Cuenta suspendida por falta de pago</h3>
-                <p className="text-sm text-red-700/90 font-medium mt-0.5 leading-snug">Tu perfil clínico no está visible en el directorio. Regularizá tu situación para volver a aparecer.</p>
+                <p className="text-sm text-red-700/90 font-medium mt-0.5 leading-snug">Tu perfil clínico no está visible en el Cartilla. Regularizá tu situación para volver a aparecer.</p>
               </div>
             </div>
             <button
@@ -1110,7 +1110,7 @@ export default function EditorClinico() {
                   
                   <div className="pt-6 px-6 md:px-10 pb-4">
                     <h3 className="text-xl font-black text-[#1A3D3D] mb-1 font-['Montserrat']">Mi perfil público</h3>
-                    <p className="text-xs text-gray-500 mb-0">Toda la info que cargues aquí será la que tus clientes verán en el directorio.</p>
+                    <p className="text-xs text-gray-500 mb-0">Toda la info que cargues aquí será la que tus clientes verán en el Cartilla.</p>
                   </div>
 
                   <div className="border-t border-gray-100">

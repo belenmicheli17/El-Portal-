@@ -1,0 +1,159 @@
+[
+    {
+    "id": "clinica_general",
+    "nombre_mostrar": "Clínica Médica General",
+    "categoria": "clinica_medica",
+    "tags": ["veterinario", "consulta", "control", "general", "medico", "revisacion", "clinico"]
+  },
+  {
+    "id": "cardiologia",
+    "nombre_mostrar": "Cardiología",
+    "categoria": "clinica_medica",
+    "tags": ["corazon", "soplo", "arritmia", "cardiaco", "cardiologo", "presion"]
+  },
+  {
+    "id": "dermatologia",
+    "nombre_mostrar": "Dermatología",
+    "categoria": "clinica_medica",
+    "tags": ["piel", "alergia", "pelo", "sarna", "rasca", "otitis", "oido", "dermatologo", "hongos"]
+  },
+  {
+    "id": "endocrinologia",
+    "nombre_mostrar": "Endocrinología",
+    "categoria": "clinica_medica",
+    "tags": ["hormonas", "diabetes", "tiroides", "cushing", "gordura", "peso"]
+  },
+  {
+    "id": "gastroenterologia",
+    "nombre_mostrar": "Gastroenterología",
+    "categoria": "clinica_medica",
+    "tags": ["estomago", "vomito", "diarrea", "higado", "pancreas", "digestion", "gastro"]
+  },
+  {
+    "id": "nefrologia_urologia",
+    "nombre_mostrar": "Nefrología y Urología",
+    "categoria": "clinica_medica",
+    "tags": ["riñon", "vejiga", "orina", "pis", "calculos", "piedras", "renal", "nefrologo"]
+  },
+  {
+    "id": "neumonologia",
+    "nombre_mostrar": "Neumonología",
+    "categoria": "clinica_medica",
+    "tags": ["pulmon", "respirar", "tos", "asma", "ahogo", "vias respiratorias"]
+  },
+  {
+    "id": "neurologia",
+    "nombre_mostrar": "Neurología",
+    "categoria": "clinica_medica",
+    "tags": ["convulsiones", "epilepsia", "paralisis", "columna", "hernia", "camina mal", "neurologo"]
+  },
+  {
+    "id": "oncologia",
+    "nombre_mostrar": "Oncología",
+    "categoria": "clinica_medica",
+    "tags": ["cancer", "tumor", "quimio", "quimioterapia", "bulto", "oncologo"]
+  },
+  {
+    "id": "oftalmologia",
+    "nombre_mostrar": "Oftalmología",
+    "categoria": "clinica_medica",
+    "tags": ["ojos", "ciego", "cataratas", "glaucoma", "ulcera", "lagañas", "oftalmologo"]
+  },
+  {
+    "id": "odontologia",
+    "nombre_mostrar": "Odontología",
+    "categoria": "clinica_medica",
+    "tags": ["dientes", "boca", "aliento", "sarro", "muela", "limpieza", "odontologo", "dentista"]
+  },
+  {
+    "id": "pediatria_neonatologia",
+    "nombre_mostrar": "Pediatría y Neonatología",
+    "categoria": "clinica_medica",
+    "tags": ["cachorro", "bebe", "recien nacido", "vacunas", "desparasitar", "pediatra"]
+  },
+  {
+    "id": "reproduccion",
+    "nombre_mostrar": "Reproducción",
+    "categoria": "clinica_medica",
+    "tags": ["embarazo", "parto", "cria", "fertilidad", "inseminacion", "castracion"]
+  },
+  {
+  "id": "cirugia",
+  "nombre_mostrar": "Cirugía",
+  "categoria": "quirurgicas_criticas",
+  "subcategorias": ["Tejidos Blandos", "Traumatología", "Neurológica"],
+  "tags": ["operacion", "cirujano"]
+}
+  {
+    "id": "traumatologia_ortopedia",
+    "nombre_mostrar": "Traumatología y Ortopedia",
+    "categoria": "quirurgicas_criticas",
+    "tags": ["huesos", "fractura", "quebrado", "rengo", "articulacion", "ligamentos", "traumatologo"]
+  },
+  {
+    "id": "anestesiologia_algiologia",
+    "nombre_mostrar": "Anestesiología y Manejo del Dolor",
+    "categoria": "quirurgicas_criticas",
+    "tags": ["anestesia", "hanestecia", "dolor", "sedacion", "dormir", "anestesista"]
+  },
+  {
+    "id": "cuidados_intensivos",
+    "nombre_mostrar": "Cuidados Intensivos y Emergencias",
+    "categoria": "quirurgicas_criticas",
+    "tags": ["urgencia", "emergencia", "guardia", "24hs", "internacion", "uti", "grave", "emergentologia"]
+  },
+  {
+    "id": "imagenologia",
+    "nombre_mostrar": "Ecografía y Rayos X",
+    "categoria": "diagnostico",
+    "tags": ["ecografia", "hecografia", "rayos", "placa", "radiografia", "tomografia", "imagenes"]
+  },
+  {
+    "id": "patologia_clinica",
+    "nombre_mostrar": "Laboratorio y Análisis",
+    "categoria": "diagnostico",
+    "tags": ["sangre", "analisis", "laboratorio", "orina", "muestra", "estudios"]
+  },
+  {
+    "id": "medicina_felina",
+    "nombre_mostrar": "Medicina Felina",
+    "categoria": "especificas",
+    "tags": ["gatos", "felino", "cat friendly", "especialista en gatos"]
+  },
+  {
+    "id": "animales_exoticos",
+    "nombre_mostrar": "Animales Exóticos",
+    "categoria": "especificas",
+    "tags": ["exoticos", "aves", "pajaros", "conejos", "hamster", "huron", "reptiles", "tortuga"]
+  },
+  {
+    "id": "medicina_equina",
+    "nombre_mostrar": "Medicina Equina",
+    "categoria": "especificas",
+    "tags": ["caballos", "equino", "yegua", "potrillo"]
+  },
+  {
+    "id": "etologia",
+    "nombre_mostrar": "Etología Clínica",
+    "categoria": "bienestar_comportamiento",
+    "tags": ["comportamiento", "conducta", "agresivo", "miedo", "ansiedad", "adiestramiento", "etologo", "loco"]
+  },
+  {
+    "id": "nutricion",
+    "nombre_mostrar": "Nutrición Clínica",
+    "categoria": "bienestar_comportamiento",
+    "tags": ["dieta", "comida", "alimento", "gordo", "obeso", "nutricionista", "recetas"]
+  },
+  {
+    "id": "fisioterapia",
+    "nombre_mostrar": "Fisioterapia y Rehabilitación",
+    "categoria": "bienestar_comportamiento",
+    "tags": ["kinesiologia", "fisioterapia", "rehabilitacion", "masajes", "laser", "cinta", "magneto"]
+  },
+  {
+    "id": "terapias_holisticas",
+    "nombre_mostrar": "Terapias Holísticas",
+    "categoria": "bienestar_comportamiento",
+    "tags": ["acupuntura", "cannabis", "ozono", "flores de bach", "holistico", "alternativa", "natural"]
+  }
+]

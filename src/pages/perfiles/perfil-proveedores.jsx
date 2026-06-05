@@ -342,7 +342,7 @@ export default function PerfilProveedor() {
           <div className="pt-8 pb-2 flex flex-wrap items-center gap-2 text-xs md:text-[10px] uppercase tracking-[0.2em] font-bold text-gray-400">
              <button onClick={() => { navigate('/'); window.scrollTo(0,0); }} className="hover:text-[#2D6A6A] transition-colors">Inicio</button>
              <ChevronRight className="w-3 h-3 text-gray-300" />
-             <button onClick={() => { navigate('/directorio'); window.scrollTo(0,0); }} className="hover:text-[#2D6A6A] transition-colors">Directorio</button>
+             <button onClick={() => { navigate('/Cartilla'); window.scrollTo(0,0); }} className="hover:text-[#2D6A6A] transition-colors">Cartilla</button>
              <ChevronRight className="w-3 h-3 text-gray-300" />
              <span className="text-[#1A3D3D]">{proveedor.nombre}</span>
           </div>

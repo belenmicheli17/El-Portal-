@@ -143,8 +143,8 @@ const ZigZagSection = ({ title, subtitle, text, image, isReversed, icon: Icon, b
 
 const TypewriterTitle = () => {
   const [charIndex, setCharIndex] = useState(0);
-  const text1 = "Enfocate en curar.";
-  const text2 = "Nosotros en conectarte.";
+  const text1 = "Enfocate en curar,";
+  const text2 = "nosotros en conectarte.";
   const totalChars = text1.length + text2.length;
 
   useEffect(() => {
@@ -294,13 +294,13 @@ export default function LandingPage() {
             <div className="absolute top-[45%] md:top-[50%] right-[-10%] w-[80vw] md:w-[45vw] h-[80vw] md:h-[45vw] bg-[#2D6A6A]/[0.12] rounded-full blur-[120px] mix-blend-multiply"></div>
           </div>
 
-          <main className="relative z-10 w-full pt-12 pb-10 md:pt-20 md:pb-16">
+          <main className="relative z-10 w-full pt-5 pb-10 md:pt-9 md:pb-16">
             <div className="max-w-[1100px] mx-auto px-8 md:px-10 grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
               
               <div className="flex flex-col items-start text-left">
                 <div className="mb-6 inline-flex items-center gap-2 bg-white/60 backdrop-blur-md border border-white/50 px-4 py-2 rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.03)]">
                   <span className="flex h-2.5 w-2.5 rounded-full bg-[#2D6A6A] animate-pulse"></span>
-                  <span className="text-[#2D6A6A] font-bold text-[12px] uppercase tracking-[0.2em] leading-none mt-0.5">Red exclusiva de veterinaria Argentina</span>
+                  <span className="text-[#2D6A6A] font-bold text-[12px] uppercase tracking-[0.2em] leading-none mt-0.5">Primera Cartilla veterinaria Argentina</span>
                 </div>
                 
                 <TypewriterTitle />
@@ -710,7 +710,7 @@ export default function LandingPage() {
                   </div>
                 </div>
                 <p className="text-[#333333]/90 leading-[1.6] font-medium text-[14px] text-left">
-                  Directorio optimizado para contactar proveedores de insumos médicos complejos y aparatología.
+                  Cartilla optimizado para contactar proveedores de insumos médicos complejos y aparatología.
                 </p>
               </div>
 

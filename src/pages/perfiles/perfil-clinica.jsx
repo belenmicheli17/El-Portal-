@@ -141,13 +141,13 @@ export default function PerfilClinica() {
 
       {/* HERO */}
       <main className="relative w-full bg-white overflow-hidden pt-[18px] md:pt-[45px]">
-       {/* BOTÓN VOLVER AL DIRECTORIO */}
+       {/* BOTÓN VOLVER AL Cartilla */}
 <div className="w-full flex justify-start pl-15">
   <button 
-    onClick={() => navigate('/directorio')} 
+    onClick={() => navigate('/Cartilla')} 
     className="flex items-center gap-2 text-gray-400 hover:text-[#1A3D3D] font-bold text-xs md:text-[10px] uppercase tracking-[0.3em] mb-8 transition-colors group"
   >
-    <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Volver al Directorio
+    <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Volver al Cartilla
   </button>
 </div>
         <div className="max-w-[1100px] mx-auto px-6 md:px-10 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center pt-4 pb-6 md:pb-12">

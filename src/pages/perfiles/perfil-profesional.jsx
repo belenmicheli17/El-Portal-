@@ -218,9 +218,9 @@ function PerfilPublico() {
       {/* ========================================== */}
       <div className="w-full max-w-[412px] bg-[#F4F7F7] min-h-screen relative shadow-2xl flex flex-col md:hidden shrink-0 overflow-x-hidden">
         
-        {/* BOTÓN VOLVER AL DIRECTORIO - MÓVIL */}
+        {/* BOTÓN VOLVER AL Cartilla - MÓVIL */}
         <div className="px-6 pt-6 pb-2 bg-[#1A3D3D]">
-          <button onClick={() => navigate('/directorio')} className="flex items-center gap-2 text-white/70 hover:text-white font-bold text-[10px] uppercase tracking-[0.3em] transition-colors group">
+          <button onClick={() => navigate('/Cartilla')} className="flex items-center gap-2 text-white/70 hover:text-white font-bold text-[10px] uppercase tracking-[0.3em] transition-colors group">
             <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Volver
           </button>
         </div>
@@ -422,10 +422,10 @@ function PerfilPublico() {
 
         <main className="max-w-[1000px] mx-auto px-8 md:px-10 relative z-10 pt-8 flex flex-col items-center">
           
-          {/* BOTÓN VOLVER AL DIRECTORIO - ESCRITORIO */}
+          {/* BOTÓN VOLVER AL Cartilla - ESCRITORIO */}
           <div className="w-full flex justify-start">
-            <button onClick={() => navigate('/directorio')} className="flex items-center gap-2 text-gray-400 hover:text-[#1A3D3D] font-bold text-[10px] md:text-[12px] uppercase tracking-[0.3em] mb-8 transition-colors group">
-              <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Volver al Directorio
+            <button onClick={() => navigate('/Cartilla')} className="flex items-center gap-2 text-gray-400 hover:text-[#1A3D3D] font-bold text-[10px] md:text-[12px] uppercase tracking-[0.3em] mb-8 transition-colors group">
+              <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Volver al Cartilla
             </button>
           </div>
 

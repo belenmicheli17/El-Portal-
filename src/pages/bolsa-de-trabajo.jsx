@@ -217,7 +217,7 @@ export default function BolsaTrabajo() {
         
         <div className="relative z-10 max-w-3xl mx-auto flex flex-col items-center px-4">
           
-          {/* Ícono estilo Directorio, sin caja, en color blanco/translúcido */}
+          {/* Ícono estilo Cartilla, sin caja, en color blanco/translúcido */}
           <Briefcase className="w-8 h-8 text-white mb-4" />
           
           <h1 className="text-[32px] md:text-[42px] lg:text-[48px] font-black font-['Montserrat'] text-white tracking-tighter leading-none mb-4">
@@ -968,7 +968,7 @@ export default function BolsaTrabajo() {
 
   return (
     <div className="bg-[#F4F7F7] min-h-screen font-['Inter'] antialiased relative">
-      {/* Removí los paddings laterales del main para que el hero toque los bordes al igual que el Directorio */}
+      {/* Removí los paddings laterales del main para que el hero toque los bordes al igual que el Cartilla */}
       <main id="main-content" className="max-w-[1440px] mx-auto">
         {view === 'list' && renderList()}
         {view === 'detail' && renderDetail()}
