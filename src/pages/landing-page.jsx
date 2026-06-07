@@ -4,10 +4,11 @@ import {
   ChevronRight, Clock, Users, Globe, Target,
   BookOpen, Briefcase, Package, Newspaper,
   Star, Building2, ShieldCheck, ArrowUpRight,
-  Award, Bell, Building, Truck, User, MapPin, Activity, ArrowRight,
-  Chrome, Eye, EyeOff, Lock, Stethoscope, Tag, ShoppingCart,
+  Award, Bell, Building, Truck, User, MapPin, Activity,
+  Chrome, Eye, EyeOff, Lock, Stethoscope, Tag, ShoppingCart, ArrowDown,
   TrendingUp, Network, ShoppingBag, Mail, LayoutGrid
 } from 'lucide-react';
+import CartillaHeroMockup from '../components/CartillaHeroMockup';
 
 const Cookies = ({ isFooterVisible }) => null;
 
@@ -53,12 +54,10 @@ const strategicCardsData = [
 const StrategicCard = ({ data, isMobile, index, onSelectRole }) => {
   const { icon: Icon, title, subtitle, features, roleKey } = data;
 
-  // Lógica de "Escalera" para Desktop: 
-  // index 0 (Profesionales) queda arriba, index 1 (Clínicas) baja un poco, index 2 (Proveedores) baja más.
   const getDesktopPosition = (idx) => {
-    if (idx === 0) return ''; // Escalón 1: Más alto
-    if (idx === 1) return 'md:top-6 lg:top-8'; // Escalón 2: Intermedio
-    return 'md:top-12 lg:top-16'; // Escalón 3: Más bajo
+    if (idx === 0) return '';
+    if (idx === 1) return 'md:top-6 lg:top-8';
+    return 'md:top-12 lg:top-16';
   };
 
   return (
@@ -94,7 +93,190 @@ const StrategicCard = ({ data, isMobile, index, onSelectRole }) => {
   );
 };
 
-const ZigZagSection = ({ title, subtitle, text, image, isReversed, icon: Icon, bgClass = "bg-transparent", paddingClass = "py-12 md:py-20", badge, isDark = false, mobileMockup }) => {
+const StackedMockups = ({ navigate }) => {
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  const mockups = [
+    {
+      id: 'profesionales',
+      route: '/perfiles',
+      content: (
+        <div className="bg-white border border-[#1A3D3D]/10 rounded-[32px] md:rounded-[40px] p-6 shadow-[0_12px_32px_rgba(0,0,0,0.06)] h-[400px] w-full flex flex-col items-center text-center">
+          <div className="w-full flex items-center justify-start mb-5">
+            <span className="text-[13px] font-black text-[#2D6A6A] uppercase tracking-widest flex items-center gap-2">
+              <User className="w-4 h-4" /> Profesionales
+            </span>
+          </div>
+          <div className="relative mb-5">
+            <div className="w-24 h-24 rounded-[24px] bg-[#F4F7F7] overflow-hidden relative z-10 border border-[#1A3D3D]/5 shadow-sm mx-auto">
+              <img src="https://images.unsplash.com/photo-1594824436951-7f12bc3ac92e?auto=format&fit=crop&w=300&q=80" alt="Dra. Arenas" className="w-full h-full object-cover" />
+            </div>
+            <div className="absolute -bottom-2 -right-2 bg-[#789A9A] p-2 rounded-xl border-[3px] border-white shadow-sm text-white z-20">
+              <ShieldCheck className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="bg-yellow-50 text-yellow-700 text-[11px] font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 mb-3 border border-yellow-200/50 uppercase tracking-widest">
+              <Award className="w-3.5 h-3.5 fill-current" /> Referente Destacada
+          </div>
+          <h3 className="text-[18px] font-black text-[#1A3D3D] font-['Montserrat'] leading-tight mb-1">Dra. Mercedes Arenas</h3>
+          <p className="text-[#2D6A6A] text-[12px] font-semibold uppercase tracking-widest mb-5">Cirujana Traumatóloga</p>
+          
+          <div className="flex flex-col gap-3 w-full mt-auto mb-5">
+            <div className="bg-[#F4F7F7] px-4 py-3 rounded-2xl border border-[#1A3D3D]/5 flex items-center gap-3">
+              <Stethoscope className="w-6 h-6 text-[#2D6A6A] shrink-0" />
+              <div className="text-left">
+                <p className="text-[11px] font-semibold text-[#1A3D3D]/60 uppercase tracking-widest leading-none mb-1">Modalidad</p>
+                <p className="text-[14px] font-bold text-[#1A3D3D] leading-none">Derivaciones y Quirófano</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+    },
+    {
+      id: 'clinicas',
+      route: '/perfiles',
+      content: (
+        <div className="bg-white border border-[#1A3D3D]/10 rounded-[32px] md:rounded-[40px] p-6 shadow-[0_12px_32px_rgba(0,0,0,0.06)] h-[400px] w-full flex flex-col">
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-[13px] font-black text-[#2D6A6A] uppercase tracking-widest flex items-center gap-2">
+              <Building2 className="w-4 h-4" /> Clínicas
+            </span>
+            <span className="flex items-center gap-1.5 bg-red-50 text-red-700 px-2.5 py-1 rounded-full text-[10px] md:text-[11px] font-bold border border-red-200/50">
+              <span className="flex h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse"></span>GUARDIA 24HS
+            </span>
+          </div>
+          <div className="relative mb-8">
+            <div className="w-full h-[120px] rounded-[24px] bg-[#F4F7F7] overflow-hidden relative z-10 border border-[#1A3D3D]/5 shadow-sm">
+              <img src="https://images.unsplash.com/photo-1584820927498-cafe8c11a686?auto=format&fit=crop&w=400&q=80" alt="Hospital San Marcos" className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#1A3D3D]/80 via-[#1A3D3D]/20 to-transparent"></div>
+            </div>
+            <div className="absolute -bottom-3 right-3 bg-[#789A9A] p-2 rounded-xl border-[3px] border-white shadow-sm text-white z-20">
+              <ShieldCheck className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="pl-1 mb-4 text-left">
+            <h3 className="text-[18px] font-black text-[#1A3D3D] font-['Montserrat'] leading-tight mb-2">Hospital San Marcos</h3>
+            <p className="text-[#1A3D3D]/70 text-[13px] font-bold flex items-center gap-1">
+              <MapPin className="w-3.5 h-3.5 text-[#2D6A6A]" /> CABA y GBA Norte
+            </p>
+          </div>
+          <div className="flex flex-col gap-3 w-full mt-auto mb-5">
+            <div className="bg-[#F4F7F7] px-4 py-3 rounded-2xl border border-[#1A3D3D]/5 flex items-center gap-3">
+              <Building className="w-6 h-6 text-[#2D6A6A] shrink-0" />
+              <div className="text-left">
+                <p className="text-[11px] font-semibold text-[#1A3D3D]/60 uppercase tracking-widest leading-none mb-1">Infraestructura</p>
+                <p className="text-[14px] font-bold text-[#1A3D3D] leading-none">Tomógrafo y Quirófano</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+    },
+    {
+      id: 'proveedores',
+      route: '/perfiles',
+      content: (
+        <div className="bg-white border border-[#1A3D3D]/10 rounded-[32px] md:rounded-[40px] p-6 shadow-[0_12px_32px_rgba(0,0,0,0.06)] h-[400px] w-full flex flex-col items-center text-center">
+          <div className="w-full flex items-center justify-start mb-5">
+            <span className="text-[13px] font-black text-[#2D6A6A] uppercase tracking-widest flex items-center gap-2">
+              <Package className="w-4 h-4" /> Proveedores
+            </span>
+          </div>
+          <div className="relative mb-5">
+            <div className="w-24 h-24 rounded-[24px] bg-[#F4F7F7] overflow-hidden relative z-10 border border-[#1A3D3D]/5 shadow-sm mx-auto">
+              <img src="https://images.unsplash.com/photo-1581594549595-35f6edc7b762?auto=format&fit=crop&w=300&q=80" alt="Equipamiento" className="w-full h-full object-cover" />
+            </div>
+            <div className="absolute -bottom-2 -right-2 bg-[#789A9A] p-2 rounded-xl border-[3px] border-white shadow-sm text-white z-20">
+              <ShieldCheck className="w-4 h-4" />
+            </div>
+          </div>
+          <div className="bg-[#4DB6AC]/10 text-[#4DB6AC] text-[11px] font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 mb-3 border border-[#4DB6AC]/30 uppercase tracking-widest">
+              <Tag className="w-3.5 h-3.5 fill-current" /> Distribuidor Oficial
+          </div>
+          <h3 className="text-[18px] font-black text-[#1A3D3D] font-['Montserrat'] leading-tight mb-1">Mindray Argentina</h3>
+          <p className="text-[#2D6A6A] text-[12px] font-semibold uppercase tracking-widest mb-5">Catálogo Mayorista</p>
+          
+          <div className="flex flex-col gap-3 w-full mt-auto mb-5">
+            <div className="bg-[#F4F7F7] px-4 py-3 rounded-2xl border border-[#1A3D3D]/5 flex items-center gap-3 relative">
+              <div className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-black px-2 py-1 rounded uppercase tracking-wider shadow-sm z-10">Oferta</div>
+              <ShoppingCart className="w-6 h-6 text-[#2D6A6A] shrink-0" />
+              <div className="text-left">
+                <p className="text-[11px] font-semibold text-[#1A3D3D]/60 uppercase tracking-widest leading-none mb-1">Aparatología</p>
+                <p className="text-[14px] font-bold text-[#1A3D3D] leading-none">Ecógrafo Doppler</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+    }
+  ];
+
+  const handleCardClick = (e, index, route) => {
+    e.stopPropagation();
+    if (index === activeIndex) {
+      navigate(route);
+    } else {
+      setActiveIndex(index);
+    }
+  };
+
+  const nextMockup = (e) => {
+    e?.stopPropagation();
+    setActiveIndex((prev) => (prev + 1) % mockups.length);
+  };
+
+  return (
+    <div className="w-full flex flex-col items-center">
+     
+     <div className="text-[#1A3D3D] text-[11px] md:text-[12px] font-black uppercase tracking-[0.2em] mt-8 mb-6 text-center px-4 leading-relaxed">
+  <span>Presioná la tarjeta para ver un ejemplo real</span>
+  <ArrowDown className="w-4 h-4 text-[#1A3D3D] inline-block ml-1 align-middle" />
+</div>
+
+      <div className="relative w-full max-w-[320px] lg:max-w-[350px] h-[450px] perspective-1000">
+        {mockups.map((m, idx) => {
+          const offset = (idx - activeIndex + mockups.length) % mockups.length;
+          const isFront = offset === 0;
+          
+          const zIndex = 30 - offset * 10;
+          const scale = 1 - offset * 0.05;
+          const translateY = offset * 20; 
+          const translateX = offset * 15; 
+          const opacity = 1 - offset * 0.2;
+
+          return (
+            <div 
+              key={m.id}
+              onClick={(e) => handleCardClick(e, idx, m.route)}
+              /* TRANSICIÓN SUAVE Y FLUIDA (700ms ease-in-out) */
+              className={`absolute top-0 left-0 w-full transition-all duration-700 ease-in-out cursor-pointer ${isFront ? 'hover:-translate-y-2' : ''}`}
+              style={{
+                zIndex,
+                transform: `translate(${translateX}px, ${translateY}px) scale(${scale})`,
+                opacity,
+              }}
+            >
+              {/* Eliminé el overlay interno que oscurecía la carta */}
+              {m.content}
+            </div>
+          );
+        })}
+
+        {/* FLECHITA LATERAL con un z-index altísimo para que no se superponga con la sombra de las cards */}
+        <button 
+          onClick={nextMockup}
+          className="absolute -right-[15px] md:-right-12 top-[40%] z-[60] bg-white border border-[#1A3D3D]/10 text-[#2D6A6A] p-3 md:p-4 rounded-full shadow-[0_8px_20px_rgba(0,0,0,0.15)] hover:bg-[#1A3D3D] hover:text-white hover:scale-110 transition-all duration-300"
+          aria-label="Siguiente perfil"
+        >
+          <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const ZigZagSection = ({ title, subtitle, text, image, customMockup, isReversed, icon: Icon, bgClass = "bg-transparent", paddingClass = "py-12 md:py-20", badge, isDark = false, mobileMockup }) => {
   return (
     <section className={`${paddingClass} relative overflow-hidden ${bgClass}`}>
       {!isDark && (
@@ -105,7 +287,7 @@ const ZigZagSection = ({ title, subtitle, text, image, isReversed, icon: Icon, b
       
       <div className="max-w-[1100px] mx-auto px-8 md:px-10 relative z-10">
         <div className={`flex flex-col gap-8 lg:gap-16 items-center ${isReversed ? 'lg:flex-row-reverse' : 'lg:flex-row'}`}>
-          <div className="flex-1 flex flex-col items-start text-left">
+          <div className="flex-1 flex flex-col items-start text-left relative z-20">
             <Icon className={`w-6 h-6 mb-4 md:mb-5 ${isDark ? 'text-white' : 'text-[#2D6A6A]'} shrink-0`} />
             <h3 className={`${isDark ? 'text-white/60' : 'text-[#2D6A6A]'} font-bold text-[13px] uppercase tracking-[0.2em] mb-3`}>{subtitle}</h3>
             <h2 className={`text-3xl md:text-4xl lg:text-5xl font-black mb-5 tracking-tighter font-['Montserrat'] leading-[1.1] ${isDark ? 'text-white' : 'text-[#1A3D3D]'}`}>
@@ -114,22 +296,41 @@ const ZigZagSection = ({ title, subtitle, text, image, isReversed, icon: Icon, b
             <p className={`${isDark ? 'text-white/80' : 'text-[#333333]/90'} text-[15px] md:text-[16px] leading-[1.7] font-medium`}>
               {text}
             </p>
-          </div>
-          <div className="flex-1 w-full relative group mt-4 lg:mt-0 flex justify-center">
-            <div className={`relative w-full ${mobileMockup ? 'hidden md:block' : 'block'}`}>
-              <div className={`absolute inset-0 bg-gradient-to-tr rounded-[32px] md:rounded-[40px] transform group-hover:scale-105 transition-transform duration-700 ${isDark ? 'from-black/40' : 'from-[#1A3D3D]/20'} to-transparent z-20 pointer-events-none`}></div>
-              <img 
-                src={image} 
-                alt={title} 
-                className="w-full h-[320px] md:h-[380px] object-cover rounded-[32px] md:rounded-[40px] shadow-[0_8px_32px_rgba(0,0,0,0.15)] transform group-hover:-translate-y-2 transition-transform duration-700 relative z-10"
-              />
-              {badge && (
-                <div className={`absolute ${isReversed ? '-left-4 md:-left-8' : '-right-4 md:-right-8'} -bottom-6 z-30 animate-float-delayed`}>
+             {/* Badge en móvil si existiese */}
+             {badge && (
+               <div className="mt-8 z-30 relative block md:hidden w-full max-w-[320px]">
                   {badge}
-                </div>
-              )}
-            </div>
-            {mobileMockup && (
+               </div>
+             )}
+          </div>
+          
+          <div className="flex-1 w-full relative group mt-4 lg:mt-0 flex justify-center h-[450px]">
+            {customMockup ? (
+              <div className="relative w-full max-w-[320px] md:max-w-[380px] z-20 h-full flex items-center justify-center">
+                {customMockup}
+                {badge && (
+                  <div className={`hidden md:block absolute ${isReversed ? '-left-2 md:-left-8' : '-right-2 md:-right-8'} -bottom-4 z-30 animate-float-delayed`}>
+                    {badge}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className={`relative w-full ${mobileMockup ? 'hidden md:block' : 'block'} h-full`}>
+                <div className={`absolute inset-0 bg-gradient-to-tr rounded-[32px] md:rounded-[40px] transform group-hover:scale-105 transition-transform duration-700 ${isDark ? 'from-black/40' : 'from-[#1A3D3D]/20'} to-transparent z-20 pointer-events-none`}></div>
+                <img 
+                  src={image} 
+                  alt={title} 
+                  className="w-full h-full object-cover rounded-[32px] md:rounded-[40px] shadow-[0_8px_32px_rgba(0,0,0,0.15)] transform group-hover:-translate-y-2 transition-transform duration-700 relative z-10"
+                />
+                {badge && (
+                  <div className={`hidden md:block absolute ${isReversed ? '-left-4 md:-left-8' : '-right-4 md:-right-8'} -bottom-6 z-30 animate-float-delayed`}>
+                    {badge}
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {mobileMockup && !customMockup && (
               <div className="block md:hidden w-full max-w-[360px] relative z-20">
                 {mobileMockup}
               </div>
@@ -161,19 +362,26 @@ const TypewriterTitle = () => {
   const displayedText2 = charIndex > text1.length ? text2.slice(0, charIndex - text1.length) : "";
 
   return (
-    <h1 className="text-[40px] md:text-[54px] lg:text-[62px] font-black text-[#1A3D3D] mb-4 md:mb-6 tracking-tighter font-['Montserrat'] leading-[1.05]">
-      {displayedText1}
-      {charIndex <= text1.length && (
-        <span className="inline-block w-1 h-[32px] md:h-[48px] bg-[#2D6A6A] ml-1 animate-pulse align-middle"></span>
-      )}
-      <br />
-      <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#1A3D3D] to-[#2D6A6A]">
-        {displayedText2}
-      </span>
-      {charIndex > text1.length && (
-        <span className="inline-block w-1 h-[32px] md:h-[48px] bg-[#2D6A6A] ml-1 animate-pulse align-middle"></span>
-      )}
-    </h1>
+    <div className="relative w-full mb-4 md:mb-6">
+      <h1 className="text-[40px] md:text-[54px] lg:text-[62px] font-black tracking-tighter font-['Montserrat'] leading-[1.05] opacity-0 pointer-events-none select-none invisible">
+        {text1}
+        <br />
+        {text2}
+      </h1>
+      <h1 className="absolute top-0 left-0 w-full text-[40px] md:text-[54px] lg:text-[62px] font-black text-[#1A3D3D] tracking-tighter font-['Montserrat'] leading-[1.05]">
+        {displayedText1}
+        {charIndex <= text1.length && (
+          <span className="inline-block w-1 h-[32px] md:h-[48px] bg-[#2D6A6A] ml-1 animate-pulse align-middle"></span>
+        )}
+        <br />
+        <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#1A3D3D] to-[#2D6A6A]">
+          {displayedText2}
+        </span>
+        {charIndex > text1.length && (
+          <span className="inline-block w-1 h-[32px] md:h-[48px] bg-[#2D6A6A] ml-1 animate-pulse align-middle"></span>
+        )}
+      </h1>
+    </div>
   );
 };
 
@@ -251,15 +459,8 @@ export default function LandingPage() {
     const element = document.getElementById(id);
     if (element) {
       const y = element.getBoundingClientRect().top + window.scrollY;
-      
-      // Detectamos si es una pantalla de celular (ancho menor a 768px)
       const isMobile = window.innerWidth < 768;
-      
-      // Acá definís el ajuste perfecto para cada dispositivo.
-      // Positivo (ej: 80) hace que frene más arriba. 
-      // Negativo (ej: -50) hace que scrollee más hacia abajo.
       const offset = isMobile ? -50 : -41; 
-      
       window.scrollTo({ top: y - offset, behavior: 'smooth' });
     }
   };
@@ -294,22 +495,21 @@ export default function LandingPage() {
             <div className="absolute top-[45%] md:top-[50%] right-[-10%] w-[80vw] md:w-[45vw] h-[80vw] md:h-[45vw] bg-[#2D6A6A]/[0.12] rounded-full blur-[120px] mix-blend-multiply"></div>
           </div>
 
-          <main className="relative z-10 w-full pt-5 pb-10 md:pt-9 md:pb-16">
+          <main className="relative z-10 w-full pt-5 pb-2 md:pt-9 md:pb-16">
             <div className="max-w-[1100px] mx-auto px-8 md:px-10 grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-              
               <div className="flex flex-col items-start text-left">
-                <div className="mb-6 inline-flex items-center gap-2 bg-white/60 backdrop-blur-md border border-white/50 px-4 py-2 rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.03)]">
-                  <span className="flex h-2.5 w-2.5 rounded-full bg-[#2D6A6A] animate-pulse"></span>
-                  <span className="text-[#2D6A6A] font-bold text-[12px] uppercase tracking-[0.2em] leading-none mt-0.5">Primera Cartilla veterinaria Argentina</span>
-                </div>
+              <div className="mb-6 inline-flex items-center gap-2 bg-white/60 backdrop-blur-md border border-white/50 px-4 py-2 rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.03)]">
+                <span className="flex h-2.5 w-2.5 rounded-full bg-[#2D6A6A] animate-pulse"></span>
+                <span className="text-[#2D6A6A] font-bold text-[12px] uppercase tracking-[0.2em] leading-none mt-0.5">Primera Cartilla veterinaria Argentina</span>
+              </div>
                 
-                <TypewriterTitle />
-                
+                  <TypewriterTitle />
+              
                 <p className="text-[16px] md:text-[18px] text-[#333333]/90 font-medium leading-relaxed mb-8 max-w-[500px]">
-                  La primera red exclusiva pensada para el sector veterinario, diseñada para garantizar una máxima presencia digital con el mínimo mantenimiento. Un espacio que optimiza el uso de tu tiempo hoy y asegura tu posicionamiento a futuro, conectando de forma orgánica con las audiencias clave de la profesión sin la exigencia de generar contenido constante.
+                  La primera Cartilla pensada exclusivamente para el sector veterinario, diseñada para garantizar una máxima presencia digital con el mínimo mantenimiento. Un espacio que optimiza el uso de tu tiempo y asegura tu posicionamiento a futuro, conectando de forma orgánica con las audiencias clave de la profesión sin la exigencia de generar contenido constante.
                 </p>
                 
-                <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+                <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto mb-2 md:mb-0 relative z-10">
                   <button 
                     onClick={() => scrollToSection('registro-final')} 
                     className="bg-[#1A3D3D] text-white px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-[13px] hover:bg-[#2D6A6A] hover:-translate-y-1 transition-all duration-300 shadow-[0_10px_20px_rgba(26,61,61,0.2)] text-center w-full sm:w-auto"
@@ -325,198 +525,39 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              {/* ARTE VISUAL UI ABTRACTO HERO (Remplaza la foto) */}
-              <div className="relative hidden lg:flex items-center justify-center w-full h-[400px]">
-                <div className="absolute inset-0 bg-gradient-to-tr from-[#2D6A6A]/10 to-transparent rounded-[40px] blur-3xl opacity-50"></div>
-                
-                {/* Dashboard / UI Cards Abstractas */}
-                <div className="relative w-full max-w-[380px] pointer-events-none">
-                  <div className="bg-white/80 backdrop-blur-md p-4 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.06)] mb-4 ml-8 border border-[#1A3D3D]/5 animate-float-delayed">
-                    <div className="flex gap-4 items-center">
-                      <div className="w-10 h-10 rounded-full bg-[#F4F7F7] flex items-center justify-center"><User className="w-5 h-5 text-[#2D6A6A]" /></div>
-                      <div>
-                        <div className="w-24 h-2 bg-[#1A3D3D]/20 rounded-full mb-2"></div>
-                        <div className="w-16 h-2 bg-[#1A3D3D]/10 rounded-full"></div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-white p-5 rounded-[24px] shadow-[0_20px_50px_rgba(0,0,0,0.1)] relative z-10 border border-[#1A3D3D]/5 animate-float">
-                    <div className="flex gap-4 items-center mb-5">
-                      <div className="w-12 h-12 rounded-full bg-[#4DB6AC]/20 flex items-center justify-center"><Building2 className="w-6 h-6 text-[#2D6A6A]" /></div>
-                      <div>
-                        <div className="w-32 h-2.5 bg-[#1A3D3D]/30 rounded-full mb-2"></div>
-                        <div className="w-20 h-2 bg-[#1A3D3D]/10 rounded-full"></div>
-                      </div>
-                    </div>
-                    <div className="w-full bg-[#F4F7F7] h-14 rounded-xl border border-[#1A3D3D]/5 flex items-center px-4 gap-3">
-                      <ShieldCheck className="w-5 h-5 text-[#4DB6AC]" /> 
-                      <div className="w-1/2 h-2.5 bg-[#1A3D3D]/10 rounded-full"></div>
-                    </div>
-                  </div>
-
-                  <div className="bg-white/80 backdrop-blur-md p-4 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.06)] mt-4 mr-8 ml-auto border border-[#1A3D3D]/5 relative -z-10 animate-float-fast">
-                    <div className="flex gap-4 items-center">
-                      <div className="w-10 h-10 rounded-full bg-[#F4F7F7] flex items-center justify-center"><Package className="w-5 h-5 text-[#2D6A6A]" /></div>
-                      <div>
-                        <div className="w-28 h-2 bg-[#1A3D3D]/20 rounded-full mb-2"></div>
-                        <div className="w-12 h-2 bg-[#1A3D3D]/10 rounded-full"></div>
-                      </div>
-                    </div>
-                  </div>
+              <div 
+                className="relative flex lg:hidden -mt-4 -mb-[80px] items-center justify-center w-full cursor-pointer z-0"
+                onClick={() => navigate('/cartilla')}
+              >
+                <div className="transform scale-[0.80] sm:scale-90 origin-top"> 
+                  <CartillaHeroMockup />
                 </div>
+              </div>
+
+              <div 
+                className="relative hidden lg:flex -mt-16 items-center justify-center w-full cursor-pointer transition-transform hover:scale-[1.02] duration-300"
+                onClick={() => navigate('/cartilla')}
+              >
+                <CartillaHeroMockup />
               </div>
 
             </div>
           </main>
-
-        {/* 1.5 MOCKUPS (Con textos ajustados para menor ruido visual) */}
-        <section className="relative z-30 w-full pb-8 md:pb-12 pt-4 hidden md:block">
-          <div className="max-w-[1050px] mx-auto px-8 relative z-10">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 items-stretch">
-              
-              {/* MOCKUP CLÍNICAS */}
-              <div className="h-full">
-                <div className="bg-white border border-[#1A3D3D]/10 rounded-[32px] md:rounded-[40px] p-6 shadow-[0_12px_32px_rgba(0,0,0,0.06)] transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(45,106,106,0.15)] h-full relative flex flex-col">
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-[13px] font-black text-[#2D6A6A] uppercase tracking-widest flex items-center gap-2">
-                      <Building2 className="w-4 h-4" /> Clínicas
-                    </span>
-                    <span className="flex items-center gap-1.5 bg-red-50 text-red-700 px-2.5 py-1 rounded-full text-[10px] md:text-[11px] font-bold border border-red-200/50">
-                      <span className="flex h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse"></span>
-                      GUARDIA 24HS
-                    </span>
-                  </div>
-                  <div className="relative mb-8">
-                    <div className="w-full h-[120px] rounded-[24px] bg-[#F4F7F7] overflow-hidden relative z-10 border border-[#1A3D3D]/5 shadow-sm">
-                      <img src="https://images.unsplash.com/photo-1584820927498-cafe8c11a686?auto=format&fit=crop&w=400&q=80" alt="Hospital San Marcos" className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#1A3D3D]/80 via-[#1A3D3D]/20 to-transparent"></div>
-                    </div>
-                    <div className="absolute -bottom-3 right-3 bg-[#789A9A] p-2 rounded-xl border-[3px] border-white shadow-sm text-white z-20">
-                      <ShieldCheck className="w-4 h-4" />
-                    </div>
-                  </div>
-                  <div className="pl-1 mb-4">
-                    <h3 className="text-[18px] font-black text-[#1A3D3D] font-['Montserrat'] leading-tight mb-2">Hospital San Marcos</h3>
-                    <p className="text-[#1A3D3D]/70 text-[13px] font-bold flex items-center gap-1">
-                      <MapPin className="w-3.5 h-3.5 text-[#2D6A6A]" /> CABA y GBA Norte
-                    </p>
-                  </div>
-                  <div className="flex flex-col gap-3 w-full mt-auto mb-5">
-                    <div className="bg-[#F4F7F7] px-4 py-3 rounded-2xl border border-[#1A3D3D]/5 flex items-center gap-3">
-                      <Building className="w-6 h-6 text-[#2D6A6A] shrink-0" />
-                      <div className="text-left">
-                        <p className="text-[11px] font-semibold text-[#1A3D3D]/60 uppercase tracking-widest leading-none mb-1">Infraestructura</p>
-                        <p className="text-[14px] font-bold text-[#1A3D3D] leading-none">Tomógrafo y Quirófano</p>
-                      </div>
-                    </div>
-                  </div>
-                  <button className="w-full bg-[#1A3D3D] text-white py-4 rounded-2xl font-black uppercase tracking-widest text-[13px] hover:bg-[#2D6A6A] hover:-translate-y-1 transition-all flex items-center justify-center gap-2">
-                    Ver Institución <ArrowUpRight className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-
-              {/* MOCKUP PROFESIONALES */}
-              <div className="z-30 h-full">
-                <div className="bg-white border border-[#1A3D3D]/10 rounded-[32px] md:rounded-[40px] p-6 shadow-[0_12px_32px_rgba(0,0,0,0.06)] transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(45,106,106,0.15)] h-full relative flex flex-col items-center text-center">
-                  <div className="w-full flex items-center justify-start mb-5">
-                    <span className="text-[13px] font-black text-[#2D6A6A] uppercase tracking-widest flex items-center gap-2">
-                      <User className="w-4 h-4" /> Profesionales
-                    </span>
-                  </div>
-                  <div className="relative mb-5">
-                    <div className="w-24 h-24 rounded-[24px] bg-[#F4F7F7] overflow-hidden relative z-10 border border-[#1A3D3D]/5 shadow-sm mx-auto">
-                      <img src="https://images.unsplash.com/photo-1594824436951-7f12bc3ac92e?auto=format&fit=crop&w=300&q=80" alt="Dra. Arenas" className="w-full h-full object-cover" />
-                    </div>
-                    <div className="absolute -bottom-2 -right-2 bg-[#789A9A] p-2 rounded-xl border-[3px] border-white shadow-sm text-white z-20">
-                      <ShieldCheck className="w-4 h-4" />
-                    </div>
-                  </div>
-                  <div className="bg-yellow-50 text-yellow-700 text-[11px] font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 mb-3 border border-yellow-200/50 uppercase tracking-widest">
-                      <Award className="w-3.5 h-3.5 fill-current" /> Referente Destacada
-                  </div>
-                  <h3 className="text-[18px] font-black text-[#1A3D3D] font-['Montserrat'] leading-tight mb-1">Dra. Mercedes Arenas</h3>
-                  <p className="text-[#2D6A6A] text-[12px] font-semibold uppercase tracking-widest mb-5">Cirujana Traumatóloga</p>
-                  
-                  <div className="flex flex-col gap-3 w-full mt-auto mb-5">
-                    <div className="bg-[#F4F7F7] px-4 py-3 rounded-2xl border border-[#1A3D3D]/5 flex items-center gap-3">
-                      <Stethoscope className="w-6 h-6 text-[#2D6A6A] shrink-0" />
-                      <div className="text-left">
-                        <p className="text-[11px] font-semibold text-[#1A3D3D]/60 uppercase tracking-widest leading-none mb-1">Modalidad</p>
-                        <p className="text-[14px] font-bold text-[#1A3D3D] leading-none">Derivaciones y Quirófano</p>
-                      </div>
-                    </div>
-                  </div>
-                  <button className="w-full bg-[#2D6A6A] text-white py-4 rounded-2xl font-black uppercase tracking-widest text-[13px] hover:bg-[#1A3D3D] hover:-translate-y-1 transition-all flex items-center justify-center gap-2">
-                    Ver trayectoria <ArrowUpRight className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-
-              {/* MOCKUP PROVEEDORES */}
-              <div className="h-full">
-                <div className="bg-white border border-[#1A3D3D]/10 rounded-[32px] md:rounded-[40px] p-6 shadow-[0_12px_32px_rgba(0,0,0,0.06)] transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(45,106,106,0.15)] h-full relative flex flex-col items-center text-center">
-                  <div className="w-full flex items-center justify-start mb-5">
-                    <span className="text-[13px] font-black text-[#2D6A6A] uppercase tracking-widest flex items-center gap-2">
-                      <Package className="w-4 h-4" /> Proveedores
-                    </span>
-                  </div>
-                  <div className="relative mb-5">
-                    <div className="w-24 h-24 rounded-[24px] bg-[#F4F7F7] overflow-hidden relative z-10 border border-[#1A3D3D]/5 shadow-sm mx-auto">
-                      <img src="https://images.unsplash.com/photo-1581594549595-35f6edc7b762?auto=format&fit=crop&w=300&q=80" alt="Equipamiento" className="w-full h-full object-cover" />
-                    </div>
-                    <div className="absolute -bottom-2 -right-2 bg-[#789A9A] p-2 rounded-xl border-[3px] border-white shadow-sm text-white z-20">
-                      <ShieldCheck className="w-4 h-4" />
-                    </div>
-                  </div>
-                  <div className="bg-[#4DB6AC]/10 text-[#4DB6AC] text-[11px] font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 mb-3 border border-[#4DB6AC]/30 uppercase tracking-widest">
-                      <Tag className="w-3.5 h-3.5 fill-current" /> Distribuidor Oficial
-                  </div>
-                  <h3 className="text-[18px] font-black text-[#1A3D3D] font-['Montserrat'] leading-tight mb-1">Mindray Argentina</h3>
-                  <p className="text-[#2D6A6A] text-[12px] font-semibold uppercase tracking-widest mb-5">Catálogo Mayorista</p>
-                  
-                  <div className="flex flex-col gap-3 w-full mt-auto mb-5">
-                    <div className="bg-[#F4F7F7] px-4 py-3 rounded-2xl border border-[#1A3D3D]/5 flex items-center gap-3 relative">
-                      <div className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-black px-2 py-1 rounded uppercase tracking-wider shadow-sm z-10">Oferta</div>
-                      <ShoppingCart className="w-6 h-6 text-[#2D6A6A] shrink-0" />
-                      <div className="text-left">
-                        <p className="text-[11px] font-semibold text-[#1A3D3D]/60 uppercase tracking-widest leading-none mb-1">Aparatología</p>
-                        <p className="text-[14px] font-bold text-[#1A3D3D] leading-none">Ecógrafo Doppler</p>
-                      </div>
-                    </div>
-                  </div>
-                  <button className="w-full bg-[#F4F7F7] text-[#1A3D3D] border border-[#1A3D3D]/10 py-4 rounded-2xl font-black uppercase tracking-widest text-[13px] hover:bg-[#E8EFEF] hover:-translate-y-1 transition-all flex items-center justify-center gap-2">
-                    Contactar <ArrowUpRight className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section> 
-
         </div>
 
-        {/* 2. STORYTELLING ZIG-ZAG */}
+       {/* 2. STORYTELLING ZIG-ZAG */}
         <div id="historia">
+          
           <ZigZagSection 
             paddingClass="pt-6 pb-12 md:pt-10 md:pb-20"
             bgClass="bg-transparent"
             icon={Clock}
             subtitle="Atemporalidad"
             title="Foco en tu vocación, no en el algoritmo."
-            text="El Portal está diseñado para que no pierdas tiempo en redes sociales que exigen creación de contenido constante y no están pensadas para profesionales de la salud. Acá, tu perfil es atemporal: no necesitás depender del algoritmo para que encuentren tu informacion esencial."
-            image="/1.%20profesion.jpg"
+            text="El Portal está diseñado para que no pierdas tiempo en redes sociales que exigen creación de contenido constante y no están pensadas para profesionales de la salud. Acá, tu perfil es atemporal: no necesitás depender del algoritmo para que encuentren tu información esencial."
             isReversed={false}
-            badge={
-              <div className="bg-white/60 backdrop-blur-xl p-4 rounded-[24px] shadow-[0_8px_32px_rgba(0,0,0,0.1)] flex items-center gap-4 border border-white/60">
-                <Globe className="w-6 h-6 text-[#2D6A6A] shrink-0" />
-                <div>
-                  
-                  <p className="text-[15px] font-black text-[#1A3D3D]">Presencia 24/7</p>
-                </div>
-              </div>
-            }
+            customMockup={<StackedMockups navigate={navigate} />}
+            /* ACÁ ELIMINAMOS EL BADGE QUE FLOTABA ABAJO */
           />
 
           <ZigZagSection 
@@ -549,11 +590,9 @@ export default function LandingPage() {
             text="Te ofrecemos un espacio exclusivo donde tu perfil funciona como tu propia página institucional. Centralizá tu conocimiento, infraestructura o catálogo frente a la audiencia exacta que necesita contactarte."
             image="/3.perfil-verificado.png"
             isReversed={false}
-            
           />
         </div>
 
-        {/* 2.5 AUTO-SEGMENTACIÓN */}
        {/* 2.5 AUTO-SEGMENTACIÓN */}
         <section id="ecosistema-completo" className="pt-8 pb-12 md:py-20 bg-[#1A3D3D] relative overflow-hidden border-t border-white/10">
           <div className="absolute top-[20%] left-[-10%] w-[40vw] h-[40vw] bg-[#2D6A6A]/30 rounded-full blur-[120px] pointer-events-none"></div>
@@ -566,7 +605,7 @@ export default function LandingPage() {
           </div>
           
           <div className="w-full max-w-[1100px] mx-auto relative z-10">
-            {/* Grid Desktop - NUEVO ORDEN: Profesional (Izq), Clínica (Centro), Proveedor (Der) */}
+            {/* Grid Desktop */}
             <div className="hidden md:grid md:grid-cols-3 gap-6 lg:gap-8 items-start">
               {[
                 strategicCardsData.find(c => c.id === 'profesionales'),
@@ -577,7 +616,7 @@ export default function LandingPage() {
               ))}
             </div>
 
-            {/* Carrusel Mobile - ORDEN: Profesional (1ro), Clínica (2do), Proveedor (3ro) */}
+            {/* Carrusel Mobile */}
             <div 
               className="flex md:hidden gap-5 overflow-x-auto snap-x snap-mandatory hide-scrollbar pt-4 pb-12 px-[5vw]"
               onScroll={(e) => {
@@ -655,7 +694,7 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              {/* Tarjeta Vertical: Servicios Holísticos (Con vibrante Próximamente) */}
+              {/* Tarjeta Vertical: Servicios Holísticos */}
               <div className="md:col-span-1 md:row-span-2 bg-[#1A3D3D] border border-white/10 p-8 rounded-[32px] md:rounded-[40px] hover:shadow-[0_15px_40px_rgba(0,0,0,0.3)] transition-all duration-300 flex flex-col group relative overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.2)]">
                 <div className="mb-4 text-left">
                   <span className="bg-gradient-to-r from-[#FFB74D] to-[#FF9800] text-[#1A3D3D] text-[11px] font-black px-3 py-1.5 rounded-lg uppercase tracking-wider inline-block mb-4 shadow-sm">
@@ -670,9 +709,8 @@ export default function LandingPage() {
                   Damos visibilidad a profesionales y servicios especializados difíciles de hallar: fisioterapia, terapias holísticas, etología y nutrición natural. Conectamos todo el ecosistema de bienestar animal.</p>
                 <div className="mt-auto flex flex-col gap-3 relative z-10 text-left">
                   <div className="bg-white/5 p-4 rounded-2xl border border-white/10 hover:bg-white/10 transition-all cursor-pointer shadow-sm flex justify-between">
-                    <span className="text-white font-bold text-[15px]">Etología</span><ChevronRight className="w-4 h-4 text-white/50" />
+                    <span className="text-white font-bold text-[15px]">Acupuntura</span><ChevronRight className="w-4 h-4 text-white/50" />
                   </div>
-                  
                 </div>
               </div>
 
@@ -691,7 +729,6 @@ export default function LandingPage() {
                 <p className="text-[#333333]/90 leading-[1.6] font-medium text-[14px] text-left">
                   Mantenete al tanto de las ultimas novedades sobre cursos y charlas. Encontrá fácilmente quién dicta el próximo seminario, fechas y modalidades.
                 </p>
-                
               </div>
 
               {/* Tarjeta: Insumos */}
@@ -705,7 +742,6 @@ export default function LandingPage() {
                   <Truck className="w-6 h-6 text-[#2D6A6A] shrink-0" />
                   <div className="flex-1">
                          <p className="text-[10px] font-bold text-[#1A3D3D]/50 uppercase tracking-widest text-left">En camino • Prótesis</p>
-                  
                     <div className="h-2 w-full bg-white rounded-full overflow-hidden border border-[#1A3D3D]/5"><div className="h-full w-[70%] bg-[#2D6A6A]"></div></div>
                   </div>
                 </div>
@@ -731,7 +767,7 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              {/* Tarjeta Inferior: Noticias (Con vibrante Próximamente) */}
+              {/* Tarjeta Inferior: Noticias */}
               <div className="md:col-span-2 bg-[#E8EFEF] border border-[#2D6A6A]/20 p-8 md:p-10 rounded-[32px] hover:bg-[#DCE7E7] transition-all duration-300 flex flex-col md:flex-row gap-8 items-center text-left overflow-hidden group shadow-[0_8px_32px_rgba(0,0,0,0.04)]">
                 <div className="flex-1 text-left">
                   <span className="bg-gradient-to-r from-[#FFB74D] to-[#FF9800] text-[#1A3D3D] text-[11px] font-black px-3 py-1.5 rounded-lg uppercase tracking-wider inline-block mb-4 shadow-sm">
@@ -760,7 +796,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* 4. CALL TO ACTION Y FORMULARIO (Diseño a dos columnas para no hacer el scroll tan largo) */}
+        {/* 4. CALL TO ACTION Y FORMULARIO */}
         <section 
           id="registro-final"
           className="py-12 md:py-20 relative overflow-hidden"
@@ -768,7 +804,7 @@ export default function LandingPage() {
         >
           <div className="max-w-[1100px] mx-auto px-8 md:px-10 relative z-10 flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
             
-            {/* Mitad Izquierda: Textos (Apilada arriba en mobile) */}
+            {/* Mitad Izquierda: Textos */}
             <div className="flex-1 text-center lg:text-left">
               <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-[#1A3D3D] mb-6 font-['Montserrat'] tracking-tight leading-[1.1]">
                 ¿Listo para darle a tu perfil el prestigio que merece?

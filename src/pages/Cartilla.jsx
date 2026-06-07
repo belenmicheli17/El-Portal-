@@ -4,7 +4,7 @@ import {
   Search, MapPin, Home, 
   ChevronRight, Award, Dog, Cat, Filter, 
   Heart, Stethoscope, Layers, ChevronDown,
-  Bird, Rabbit, PawPrint
+  Bird, Rabbit, PawPrint, Hospital, TreeDeciduous 
 } from 'lucide-react';
 // import { db } from '../firebase'; 
 // import { collection, getDocs } from 'firebase/firestore';
@@ -143,9 +143,7 @@ const Cartilla = () => {
     <main className="min-h-screen bg-[#F9F5F0] pb-24 relative flex flex-col gap-4 sm:gap-6 animate-in fade-in duration-500 overflow-hidden">
       {/* BURBUJAS DE FONDO LIBRES */}
       <div className="absolute top-[-10%] left-[-15%] w-[600px] h-[600px] bg-[#4DB6AC]/20 rounded-full blur-[120px] pointer-events-none z-0"></div>
-      <div className="absolute top-[10%] right-[-10%] w-[700px] h-[700px] bg-[#2D6A6A]/15 rounded-full blur-[150px] pointer-events-none z-0"></div>
-       {/* <div className="absolute top-[10%] right-[-10%] w-[700px] h-[700px] bg-[#FF9800]/15 rounded-full blur-[150px] pointer-events-none z-0"></div> */}
-      {/* Tercera burbuja (Inferior Izquierda) agregada */}
+        <div className="absolute top-[10%] right-[-10%] w-[700px] h-[700px] bg-[#FF9800]/15 rounded-full blur-[150px] pointer-events-none z-0"></div> 
       <div className="absolute bottom-[0%] left-[-10%] w-[500px] h-[500px] bg-[#4DB6AC]/15 rounded-full blur-[130px] pointer-events-none z-0"></div>
 
       {/* HEADER B2C - Espaciado Superior/Inferior Reducido */}
@@ -206,7 +204,7 @@ const Cartilla = () => {
                 activeTab === 'clinicas' ? 'bg-white text-[#1A3D3D] shadow-sm' : 'text-[#666666] hover:text-[#1A3D3D]'
               }`}
             >
-              <Home className="w-4 h-4 hidden sm:block" />
+              <Hospital className="w-4 h-4 hidden sm:block" />
               <span className="inline">Clínicas</span>
             </button>
           </div>
@@ -253,7 +251,13 @@ const Cartilla = () => {
                     onClick={() => setOpenSection(openSection === 'zona' ? null : 'zona')}
                     className="font-montserrat font-black text-[#1A3D3D] text-[11px] lg:text-[12px] uppercase tracking-[0.2em] pt-1 pb-4 lg:py-0 lg:mb-4 flex items-center justify-between cursor-pointer lg:cursor-default transition-opacity hover:opacity-80 lg:hover:opacity-100 select-none"
                   >
-                    <span className="flex items-center gap-2"><MapPin className="w-4 h-4 lg:w-3.5 lg:h-3.5 text-[#2D6A6A]" /> Zona</span>
+                    <span className="flex items-center gap-2"><MapPin className="w-4 h-4 lg:w-3.5 lg:h-3.5 text-[#2D6A6A]" /> Zona
+                    {openSection !== 'zona' && filtros.zonas.length > 0 && (
+  <span className="text-[11px] text-gray-400 font-medium ml-0.5 lowercase truncate max-w-[190px]">
+    {filtros.zonas.join(', ')}
+  </span>
+)}
+                    </span>
                     <ChevronDown className={`w-5 h-5 text-[#2D6A6A] lg:hidden transition-transform duration-300 ${openSection === 'zona' ? 'rotate-180' : ''}`} />
                   </h3>
                   
@@ -293,7 +297,14 @@ const Cartilla = () => {
                     onClick={() => setOpenSection(openSection === 'especialidad' ? null : 'especialidad')}
                     className="font-montserrat font-black text-[#1A3D3D] text-[11px] lg:text-[12px] uppercase tracking-[0.2em] py-4 lg:py-0 lg:mb-4 flex items-center justify-between cursor-pointer lg:cursor-default transition-opacity hover:opacity-80 lg:hover:opacity-100 select-none"
                   >
-                    <span className="flex items-center gap-2"><Stethoscope className="w-4 h-4 lg:w-3.5 lg:h-3.5 text-[#2D6A6A]" /> Especialidad</span>
+                    <span className="flex items-center gap-2"><Stethoscope className="w-4 h-4 lg:w-3.5 lg:h-3.5 text-[#2D6A6A]" /> Especialidad
+                    {openSection !== 'especialidad' && filtros.especialidades.length > 0 && (
+
+  <span className="text-[11px] text-gray-400 font-medium ml-0.5 lowercase truncate max-w-[150px]">
+    {filtros.especialidades.join(', ')}
+  </span>
+)}
+                    </span>
                     <ChevronDown className={`w-5 h-5 text-[#2D6A6A] lg:hidden transition-transform duration-300 ${openSection === 'especialidad' ? 'rotate-180' : ''}`} />
                   </h3>
 
@@ -319,12 +330,21 @@ const Cartilla = () => {
                 <div className="flex flex-col gap-0 lg:gap-8 lg:pl-10">
                   
                   {/* Modalidad */}
-                  <div className="border-b border-gray-100 lg:border-none">
+                <div className="border-b border-gray-100 lg:border-none">
                     <h3 
                       onClick={() => setOpenSection(openSection === 'modalidad' ? null : 'modalidad')}
                       className="font-montserrat font-black text-[#1A3D3D] text-[11px] lg:text-[12px] uppercase tracking-[0.2em] py-4 lg:py-0 lg:mb-4 flex items-center justify-between cursor-pointer lg:cursor-default transition-opacity hover:opacity-80 lg:hover:opacity-100 select-none"
                     >
-                      <span className="flex items-center gap-2"><Layers className="w-4 h-4 lg:w-3.5 lg:h-3.5 text-[#2D6A6A]" /> Modalidad</span>
+                      <span className="flex items-center gap-2">
+                        <Layers className="w-4 h-4 lg:w-3.5 lg:h-3.5 text-[#2D6A6A]" /> Modalidad
+                        
+                        {openSection !== 'modalidad' && (filtros.domicilio || filtros.guardia24hs) && (
+                          <span className="text-[11px] text-gray-400 font-medium ml-0.5 lowercase truncate max-w-[190px]">
+                            {filtros.domicilio && filtros.guardia24hs ? 'domicilio, guardia' : 
+                             filtros.domicilio ? 'domicilio' : 'guardia 24hs'}
+                          </span>
+                        )}
+                      </span>
                       <ChevronDown className={`w-5 h-5 text-[#2D6A6A] lg:hidden transition-transform duration-300 ${openSection === 'modalidad' ? 'rotate-180' : ''}`} />
                     </h3>
 
@@ -359,21 +379,28 @@ const Cartilla = () => {
                   </div>
 
                   {/* Mascotas */}
-                  {/* CORRECCIÓN 2: Se eliminaron las clases border-b border-gray-100 de este div para que no genere línea doble */}
-                  <div className="border-none">
-                    <h3 
-                      onClick={() => setOpenSection(openSection === 'mascotas' ? null : 'mascotas')}
-                      className="font-montserrat font-black text-[#1A3D3D] text-[11px] lg:text-[12px] uppercase tracking-[0.2em] py-4 lg:py-0 lg:mb-4 flex items-center justify-between cursor-pointer lg:cursor-default transition-opacity hover:opacity-80 lg:hover:opacity-100 select-none"
-                    >
-                      <span className="flex items-center gap-2"><Dog className="w-4 h-4 lg:w-3.5 lg:h-3.5 text-[#2D6A6A]" /> Mascotas</span>
-                      <ChevronDown className={`w-5 h-5 text-[#2D6A6A] lg:hidden transition-transform duration-300 ${openSection === 'mascotas' ? 'rotate-180' : ''}`} />
-                    </h3>
+                    <div className="border-none">
+                   <h3 
+  onClick={() => setOpenSection(openSection === 'mascotas' ? null : 'mascotas')}
+  className="font-montserrat font-black text-[#1A3D3D] text-[11px] lg:text-[12px] uppercase tracking-[0.2em] py-4 lg:py-0 lg:mb-4 flex items-center justify-between cursor-pointer lg:cursor-default transition-opacity hover:opacity-80 lg:hover:opacity-100 select-none"
+>
+  <span className="flex items-center gap-2">
+    <Dog className="w-4 h-4 lg:w-3.5 lg:h-3.5 text-[#2D6A6A]" /> Mascotas
+    
+    {openSection !== 'mascotas' && filtros.mascotas.length > 0 && (
+      <span className="text-[11px] text-gray-400 font-medium ml-0.5 lowercase truncate max-w-[190px]">
+        {filtros.mascotas.join(', ')}
+      </span>
+    )}
+  </span>
+  <ChevronDown className={`w-5 h-5 text-[#2D6A6A] lg:hidden transition-transform duration-300 ${openSection === 'mascotas' ? 'rotate-180' : ''}`} />
+</h3>
 
                     <div className={`overflow-hidden transition-all duration-300 ease-in-out lg:max-h-none lg:opacity-100 ${openSection === 'mascotas' ? 'max-h-[400px] opacity-100 pb-4 lg:pb-0' : 'max-h-0 opacity-0'}`}>
                       <div className="flex flex-wrap gap-2">
                         {[
                           { nombre: 'Perros y Gatos', icon: Cat },
-                          { nombre: 'Grandes Animales', icon: Home }, 
+                          { nombre: 'Grandes Animales', icon: TreeDeciduous }, 
                           { nombre: 'Aves', icon: Bird },
                           { nombre: 'Exóticos', icon: PawPrint },
                          
@@ -466,13 +493,13 @@ const Cartilla = () => {
                   <article 
                     key={item.id} 
                     onClick={() => navigate(`/${item.tipo}/${item.id}`)}
-                    // Agregamos min-h-[220px] para forzar que ambas tengan alturas visuales similares
-                    className={`bg-white rounded-[24px] p-4 sm:p-5 border border-gray-100 shadow-sm hover:border-[#2D6A6A]/30 hover:shadow-[0_15px_30px_rgba(45,106,106,0.08)] transition-all duration-300 ease-in-out cursor-pointer group flex h-full min-h-[220px] relative mt-4 z-20 ${isProfesional ? 'flex-col text-center' : 'flex-col'}`}
+                    // En móvil la hacemos compacta (min-h-[170px]), en PC mantiene su tamaño normal (sm:min-h-[220px])
+                    // AUMENTAMOS EL MARGEN SUPERIOR EN MÓVIL (mt-6) PARA QUE LOS BADGES NO SE PISEN
+                    className={`bg-white rounded-[24px] p-4 sm:p-5 border border-gray-100 shadow-sm hover:border-[#2D6A6A]/30 hover:shadow-[0_15px_30px_rgba(45,106,106,0.08)] transition-all duration-300 ease-in-out cursor-pointer group flex flex-col h-full min-h-[170px] sm:min-h-[220px] relative mt-6 sm:mt-4 z-20 ${isProfesional ? 'text-center' : ''}`}
                   >
                    {/* BADGES FLOTANTES */}
                     {isProfesional ? (
                       <div className="absolute -top-4 right-4 flex items-center z-30">
-                        {/* Mostramos solo UN badge: Prioridad al Destacado, luego al Domicilio */}
                         {item.planActual === 'pro' ? (
                           <div className="w-10 h-10 rounded-2xl bg-yellow-50 flex items-center justify-center text-yellow-600 border border-yellow-100 shadow-sm hover:-translate-y-0.5 transition-transform cursor-help" title="Profesional Destacado">
                             <Award className="w-5 h-5" />
@@ -484,7 +511,6 @@ const Cartilla = () => {
                         ) : null}
                       </div>
                     ) : (
-                      /* Badge Clínica 24hs (Rojo) */
                       item.es24hs && (
                         <div className="absolute -top-3 right-4 inline-flex items-center gap-2 bg-red-50 border border-red-100 px-3 py-1.5 rounded-full shadow-sm z-30">
                           <span className="relative flex h-2 w-2">
@@ -495,8 +521,9 @@ const Cartilla = () => {
                         </div>
                       )
                     )}
+                    
                     {isProfesional ? (
-                      /* --- DISEÑO VERTICAL (TARJETA DE CRÉDITO) PARA PROFESIONALES --- */
+                      /* --- DISEÑO VERTICAL PARA PROFESIONALES --- */
                       <>
                         <div className="relative mx-auto mb-3 shrink-0">
                           {item.foto ? (
@@ -513,20 +540,21 @@ const Cartilla = () => {
                             {lastName && <span className="block truncate">{lastName}</span>}
                           </h2>
                         </div>
-                        {/* Se redujo mb-4 a mb-1 para acortar la altura de la tarjeta */}
-                        <div className="mb-1 mt-auto">
+                        
+                        {/* SE QUITÓ EL mt-auto PARA ELIMINAR EL HUECO EN EL MEDIO DE LA TARJETA */}
+                        <div className="mb-2">
                           <span className="inline-flex flex-col justify-center bg-[#F4F7F7] px-3 py-2 rounded-xl w-full">
                             <span className="text-[#2D6A6A] text-[11px] sm:text-[12px] font-semibold leading-[1.3] truncate">
                               {item.especialidad}
                             </span>
                           </span>
                         </div>
-                        {/* Se redujo pt-3 a pt-2 para achicar el padding superior del footer */}
+                        
                         <div className="flex items-center justify-between pt-2 border-t border-gray-50 mt-auto">
-                          <div className="flex items-center gap-1 text-[#666666] font-medium text-[11px] sm:text-[12px] min-w-0">
-  <MapPin className="w-3.5 h-3.5 shrink-0" />
-  <span className="truncate font-bold text-[#1A3D3D]">{item.provincia}</span>
-</div>
+                          <div className="flex items-center gap-1 text-[#666666] font-medium text-[11px] sm:text-[12px] min-w-0 max-w-[70%]">
+                            <MapPin className="w-3.5 h-3.5 shrink-0" />
+                            <span className="truncate font-bold text-[#1A3D3D]">{item.provincia}</span>
+                          </div>
                           <div className="flex items-center gap-1 text-[#9CA3AF] group-hover:text-[#2D6A6A] transition-colors shrink-0">
                             <span className="text-[12px] font-medium hidden sm:inline-block">Ver perfil</span>
                             <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
@@ -534,61 +562,98 @@ const Cartilla = () => {
                         </div>
                       </>
                     ) : (
-                      /* --- DISEÑO HORIZONTAL (ALARGADO) PARA CLÍNICAS --- */
+                      /* --- DISEÑO HORIZONTAL PARA CLÍNICAS --- */
                       <>
-                        <div className="flex items-center gap-3 sm:gap-4 mb-2">
+                        <div className="flex items-center gap-3 sm:gap-4 mb-1">
                           <div className="relative shrink-0">
                             {item.foto ? (
-                              <img src={item.foto} alt={item.nombre} className="w-[52px] h-[52px] rounded-[16px] object-cover shadow-sm border border-gray-50" />
+                              <img src={item.foto} alt={item.nombre} className="w-[48px] h-[48px] sm:w-[52px] sm:h-[52px] rounded-[14px] sm:rounded-[16px] object-cover shadow-sm border border-gray-50" />
                             ) : (
-                              <div className="w-[52px] h-[52px] rounded-[16px] bg-[#FFF5EE] border border-[#FFE4D6] text-[#df803b] flex items-center justify-center shadow-sm">
-                                <Home className="w-6 h-6 opacity-80" />
+                              <div className="w-[48px] h-[48px] sm:w-[52px] sm:h-[52px] rounded-[14px] sm:rounded-[16px] bg-[#FFF5EE] border border-[#FFE4D6] text-[#df803b] flex items-center justify-center shadow-sm">
+                                <Hospital className="w-5 h-5 sm:w-6 sm:h-6 opacity-80" />
                               </div>
                             )}
                           </div>
                           <div className="flex-1 min-w-0 pr-2">
-                            <h2 className="font-montserrat font-extrabold text-[#1A3D3D] text-[14px] sm:text-[15px] leading-[1.2] line-clamp-2">
+                            <h2 className="font-montserrat font-extrabold text-[#1A3D3D] text-[13px] sm:text-[15px] leading-[1.2] line-clamp-2">
                               <span className="block truncate">{firstName}</span>
                               {lastName && <span className="block truncate">{lastName}</span>}
                             </h2>
                           </div>
                         </div>
 
-                        {/* Nuevo escalón con la dirección completa */}
-                        <div className="mb-3 flex items-center gap-1.5 text-[#666666]">
-  <MapPin className="w-3 h-3 shrink-0" />
-  <p className="text-[11px] sm:text-[12px] font-medium truncate">
-    {item.direccion ? (
-       // Si hay dirección, asumimos formato "Calle, Provincia"
-       <>
-         {item.direccion.split(',')[0]}, <span className="font-bold text-[#1A3D3D]">{item.direccion.split(',')[1]}</span>
-       </>
-    ) : (
-       // Formato por defecto
-       <>Av. San Martín 1234, <span className="font-bold text-[#1A3D3D]">{item.provincia}</span></>
-    )}
-  </p>
-</div>
+                        {/* DIRECCIÓN VERSIÓN PC */}
+                        <div className="hidden sm:flex mb-3 items-center gap-1.5 text-[#666666]">
+                          <MapPin className="w-3 h-3 shrink-0" />
+                          <p className="text-[12px] font-medium truncate">
+                            {item.direccion ? (
+                              <>
+                                {item.direccion.split(',')[0]}, <span className="font-bold text-[#1A3D3D]">{item.direccion.split(',')[1]}</span>
+                              </>
+                            ) : (
+                              <>Av. San Martín 1234, <span className="font-bold text-[#1A3D3D]">{item.provincia}</span></>
+                            )}
+                          </p>
+                        </div>
 
-                        <div className="mb-4 mt-auto">
+                        {/* SERVICIOS VERSIÓN MÓVIL (Línea dinámica y optimizada) */}
+                        <div className="flex sm:hidden mb-2 mt-1 w-full">
+                          {/* Usamos flex-nowrap y overflow-hidden para forzar 1 sola línea */}
+                          <div className="flex items-center gap-1.5 flex-nowrap w-full overflow-hidden">
+                            
+                            {/* Aumentamos a 4 servicios visibles. Con 'truncate min-w-0' se ajustan inteligentemente */}
+                            {item.servicios?.slice(0, 4).map((srv, i) => (
+                              <span key={i} className="bg-[#F4F7F7] text-[#666666] px-2 py-1 rounded-[8px] text-[10px] font-medium border border-gray-100 truncate min-w-0">
+                                {srv}
+                              </span>
+                            ))}
+                            
+                            {/* El contador se ajusta a + lo que sobre */}
+                            {item.servicios?.length > 4 && (
+                              <span className="bg-gray-50 text-gray-400 px-1.5 py-1 rounded-[8px] text-[10px] font-medium shrink-0">
+                                +{item.servicios.length - 4}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* SERVICIOS VERSIÓN PC (Multilínea hasta 6) */}
+                        <div className="hidden sm:flex mb-3 mt-auto">
                           <div className="flex flex-wrap gap-1.5">
                             {item.servicios?.slice(0, 6).map((srv, i) => (
-                              <span key={i} className="bg-[#F4F7F7] text-[#666666] px-2 py-1 rounded-[8px] text-[11px] sm:text-[12px] font-medium border border-gray-100">
+                              <span key={i} className="bg-[#F4F7F7] text-[#666666] px-2 py-1 rounded-[8px] text-[12px] font-medium border border-gray-100">
                                 {srv}
                               </span>
                             ))}
                             {item.servicios?.length > 6 && (
-                              <span className="bg-gray-50 text-gray-400 px-2 py-1 rounded-[8px] text-[11px] sm:text-[12px] font-medium">
+                              <span className="bg-gray-50 text-gray-400 px-2 py-1 rounded-[8px] text-[12px] font-medium">
                                 +{item.servicios.length - 6}
                               </span>
                             )}
                           </div>
                         </div>
-                        {/* Footer alineado solo a la derecha ya que la dirección pasó arriba */}
-                        <div className="flex items-center justify-end pt-3 border-t border-gray-50 mt-auto">
-                          <div className="flex items-center gap-1 text-[#9CA3AF] group-hover:text-[#2D6A6A] transition-colors shrink-0">
+                        
+                        {/* FOOTER: DIRECCIÓN (Solo en Móvil) + VER PERFIL */}
+                        <div className="flex items-center justify-between sm:justify-end pt-2.5 border-t border-gray-50 mt-auto">
+                          
+                          {/* DIRECCIÓN VERSIÓN MÓVIL */}
+                          <div className="flex sm:hidden items-center gap-1 text-[#666666] text-[11px] min-w-0 max-w-[70%]">
+                            <MapPin className="w-3.5 h-3.5 shrink-0" />
+                            <span className="truncate">
+                              {item.direccion ? (
+                                <>
+                                  {item.direccion.split(',')[0]}, <span className="font-bold text-[#1A3D3D]">{item.direccion.split(',')[1]}</span>
+                                </>
+                              ) : (
+                                <>San Martín 1234, <span className="font-bold text-[#1A3D3D]">{item.provincia}</span></>
+                              )}
+                            </span>
+                          </div>
+
+                          {/* BOTÓN VER PERFIL */}
+                          <div className="flex items-center gap-0.5 text-[#9CA3AF] group-hover:text-[#2D6A6A] transition-colors shrink-0">
                             <span className="text-[12px] font-medium hidden sm:inline-block">Ver perfil</span>
-                            <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                            <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                           </div>
                         </div>
                       </>
@@ -599,36 +664,34 @@ const Cartilla = () => {
 
             return (
                 <>
-                 {/* VISTA 1: TODOS (Grid de 5 columnas totales) */}
+                 {/* VISTA 1: TODOS */}
                   {activeTab === 'todos' && (
                     <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-6 pt-0 mt-0">
                       <div className="lg:col-span-2 flex flex-col gap-0">
                         <h3 className="font-['Montserrat'] font-bold text-[#1A3D3D] text-[16px] px-2 leading-none">Clínicas Cercanas</h3>
-                        {/* Reducimos a mt-3 para que la tarjeta quede bien cerca del título */}
-                        <div className="grid grid-cols-1 gap-x-4 gap-y-8 mt-3">
+                        <div className="grid grid-cols-1 gap-x-4 gap-y-3 sm:gap-y-8 mt-3">
                           {veterinariosFiltrados.filter(v => v.tipo === 'clinica').slice(0, 4).map(renderCard)}
                         </div>
                       </div>
                       <div className="lg:col-span-3 flex flex-col gap-0">
                         <h3 className="font-['Montserrat'] font-bold text-[#1A3D3D] text-[16px] px-2 leading-none">Especialistas</h3>
-                        {/* Reducimos a mt-3 para que la tarjeta quede bien cerca del título */}
-                        <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-8 mt-3">
+                        <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-3 sm:gap-x-4 gap-y-3 sm:gap-y-8 mt-3">
                           {veterinariosFiltrados.filter(v => v.tipo === 'profesional').slice(0, 9).map(renderCard)}
                         </div>
                       </div>
                     </div>
                   )}
 
-                  {/* VISTA 2: ESPECIALISTAS (5 Columnas) */}
+                  {/* VISTA 2: ESPECIALISTAS */}
                   {activeTab === 'especialistas' && (
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-x-3 gap-y-8 sm:gap-x-4 pt-0 mt-0">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-x-3 sm:gap-x-4 gap-y-3 sm:gap-y-8 pt-0 mt-0">
                       {veterinariosFiltrados.filter(v => v.tipo === 'profesional').map(renderCard)}
                     </div>
                   )}
 
-                  {/* VISTA 3: CLÍNICAS (3 Columnas) */}
+                  {/* VISTA 3: CLÍNICAS */}
                   {activeTab === 'clinicas' && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-8 sm:gap-x-6 pt-0 mt-0">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 sm:gap-x-6 gap-y-3 sm:gap-y-8 pt-0 mt-0">
                       {veterinariosFiltrados.filter(v => v.tipo === 'clinica').map(renderCard)}
                     </div>
                  )}

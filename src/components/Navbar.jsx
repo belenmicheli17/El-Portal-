@@ -34,7 +34,7 @@ export default function Navbar({ mostrarBotonCrear = false, mostrarBotonContacto
       case 'perfil-profesional': path = '/perfil-profesional'; break;
       case 'perfil-clinica': path = '/perfil-clinica'; break;
       case 'perfil-proveedores': path = '/perfil-proveedores'; break;
-  
+  case 'login': path = '/login'; break;
       case 'editor': path = '/editor-profesional'; break; 
       case 'editor-clinica': path = '/editor-clinica'; break;
       case 'editor-proveedores': path = '/editor-proveedores'; break;
@@ -81,20 +81,20 @@ export default function Navbar({ mostrarBotonCrear = false, mostrarBotonContacto
             </button>
 
             {mostrarBotonContacto ? (
-              <button 
-                onClick={scrollToContacto}
-                className="hidden md:block bg-[#2D6A6A] text-white rounded-full px-8 py-2.5 text-[13px] font-semibold shadow-lg hover:bg-[#1A3D3D] transition-all hover:-translate-y-0.5"
-              >
-                Contactar
-              </button>
-            ) : mostrarBotonCrear ? (
-              <button 
-                onClick={() => handleNav('editor')}
-                className="hidden md:block bg-[#1A3D3D] text-white rounded-full px-7 py-2.5 text-[13px] font-semibold shadow-lg hover:bg-[#2D6A6A] transition-all hover:-translate-y-0.5"
-              >
-                Crear mi perfil
-              </button>
-            ) : null}
+  <button 
+    onClick={scrollToContacto}
+    className="hidden md:block bg-[#2D6A6A] text-white rounded-full px-8 py-2.5 text-[13px] font-semibold shadow-lg hover:bg-[#1A3D3D] transition-all hover:-translate-y-0.5"
+  >
+    Contactar
+  </button>
+) : mostrarBotonCrear ? (
+  <button 
+    onClick={() => handleNav('login')} // <--- CAMBIADO DE 'editor' A 'login'
+    className="hidden md:block bg-[#1A3D3D] text-white rounded-full px-7 py-2.5 text-[13px] font-semibold shadow-lg hover:bg-[#2D6A6A] transition-all hover:-translate-y-0.5"
+  >
+    Iniciar sesión
+  </button>
+) : null}
 
             <div className="relative">
               <button 
@@ -115,7 +115,7 @@ export default function Navbar({ mostrarBotonCrear = false, mostrarBotonContacto
                       {/* NUEVO ITEM EN EL MENÚ (Para móvil) */}
                       <button onClick={() => handleNav('Cartilla')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><div className="flex items-center gap-3"><Search className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Cartilla</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
 
-                      <button onClick={() => handleNav('landing')} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><Info className="w-4 h-4 text-gray-400 group-hover:text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Entrada</span></button>
+                      <button onClick={() => handleNav('landing')} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><Info className="w-4 h-4 text-gray-400 group-hover:text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Landing page</span></button>
                       <button onClick={() => handleNav('ecosistema')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><div className="flex items-center gap-3"><LayoutGrid className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Repertorio Clínico</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
                       <button onClick={() => handleNav('novedades')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><div className="flex items-center gap-3"><Sparkles className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Novedades</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
                       <button onClick={() => handleNav('bolsa-de-trabajo')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><div className="flex items-center gap-3"><Briefcase className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Bolsa de Trabajo</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
