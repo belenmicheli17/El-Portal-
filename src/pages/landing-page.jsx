@@ -41,6 +41,7 @@ const strategicCardsData = [
     id: 'proveedores',
     roleKey: 'proveedor',
     icon: Package,
+    badge: 'Solo disponible para profesionales registrados*',
     title: 'Proveedores',
     subtitle: 'Tu catálogo frente a los que toman las decisiones de compra.',
     features: [
@@ -52,7 +53,7 @@ const strategicCardsData = [
 ];
 
 const StrategicCard = ({ data, isMobile, index, onSelectRole }) => {
-  const { icon: Icon, title, subtitle, features, roleKey } = data;
+  const { icon: Icon, title, subtitle, badge, features, roleKey } = data;
 
   const getDesktopPosition = (idx) => {
     if (idx === 0) return '';
@@ -63,14 +64,23 @@ const StrategicCard = ({ data, isMobile, index, onSelectRole }) => {
   return (
     <div className={`bg-white/[0.96] backdrop-blur-2xl border border-white/80 p-6 md:px-8 md:py-8 rounded-[32px] md:rounded-[40px] transition-all flex flex-col items-start text-left relative overflow-hidden group hover:z-20 z-10 ${
       isMobile 
-        ? "w-[85vw] max-w-[380px] snap-center shrink-0 shadow-[0_8px_25px_rgba(0,0,0,0.4)]" 
+        ? "w-[85vw] max-w-[380px] snap-center snap-always shrink-0 shadow-[0_8px_25px_rgba(0,0,0,0.4)]" 
         : `w-full duration-500 shadow-[0_12px_35px_-10px_rgba(0,0,0,0.5)] hover:-translate-y-3 hover:shadow-[0_20px_50px_-10px_rgba(0,0,0,0.7)] hover:bg-white ${getDesktopPosition(index)}`
     }`}>
 
+      {/* --- ETIQUETA NARANJA POR ENCIMA DE TODO --- */}
+      {badge && (
+        <h4 className="text-[#FF9800] font-bold text-[13px] md:text-[13px] leading-[1.6] mb-3 relative z-10">
+          {badge}
+        </h4>
+      )}
+
+      {/* ÍCONO Y TÍTULO NORMALES */}
       <div className="flex items-center gap-3 mb-4 relative z-10">
         <Icon className="w-6 h-6 text-[#2D6A6A] shrink-0" />
         <h3 className="text-xl md:text-2xl font-black text-[#1A3D3D] font-['Montserrat'] leading-tight">{title}</h3>
       </div>
+
       <h4 className="text-[#2D6A6A] font-bold text-[14px] leading-[1.6] mb-6 relative z-10">{subtitle}</h4>
       <ul className="flex flex-col gap-4 flex-1 relative z-10 w-full">
         {features.map((feature, idx) => (
@@ -84,11 +94,15 @@ const StrategicCard = ({ data, isMobile, index, onSelectRole }) => {
       </ul>
       
       <button 
-        onClick={() => onSelectRole(roleKey)}
-        className="mt-8 w-full bg-[#1A3D3D] hover:bg-[#2D6A6A] text-white font-bold py-3.5 rounded-xl transition-all duration-300 text-[14px] flex justify-center items-center gap-2 shadow-[0_4px_15px_rgba(26,61,61,0.15)] hover:shadow-[0_6px_20px_rgba(26,61,61,0.25)] relative z-10"
-      >
-        Unirme como {title.split(' ')[0]} <ChevronRight className="w-4 h-4" />
-      </button>
+  onClick={() => onSelectRole(roleKey)}
+  className={`mt-8 w-full font-bold py-3.5 rounded-xl transition-all duration-300 text-[14px] flex justify-center items-center gap-2 relative z-10 
+    ${roleKey === 'proveedor' 
+      ? 'bg-[#FF9800] hover:bg-[#FFB74D] text-white shadow-[0_4px_15px_rgba(255,152,0,0.2)] hover:shadow-[0_6px_20px_rgba(255,152,0,0.35)]' 
+      : 'bg-[#1A3D3D] hover:bg-[#2D6A6A] text-white shadow-[0_4px_15px_rgba(26,61,61,0.15)] hover:shadow-[0_6px_20px_rgba(26,61,61,0.25)]'
+    }`}
+>
+  Unirme como {title.split(' ')[0]} <ChevronRight className="w-4 h-4" />
+</button>
     </div>
   );
 };
@@ -229,7 +243,7 @@ const StackedMockups = ({ navigate }) => {
   return (
     <div className="w-full flex flex-col items-center">
      
-     <div className="text-[#1A3D3D] text-[11px] md:text-[12px] font-black uppercase tracking-[0.2em] mt-8 mb-6 text-center px-4 leading-relaxed">
+     <div className="text-[#1A3D3D] text-[11px] md:text-[12px] font-black uppercase tracking-[0.2em] mt-30 mb-6 text-center px-4 leading-relaxed">
   <span>Presioná la tarjeta para ver un ejemplo real</span>
   <ArrowDown className="w-4 h-4 text-[#1A3D3D] inline-block ml-1 align-middle" />
 </div>
@@ -499,14 +513,22 @@ export default function LandingPage() {
             <div className="max-w-[1100px] mx-auto px-8 md:px-10 grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
               <div className="flex flex-col items-start text-left">
               <div className="mb-6 inline-flex items-center gap-2 bg-white/60 backdrop-blur-md border border-white/50 px-4 py-2 rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.03)]">
-                <span className="flex h-2.5 w-2.5 rounded-full bg-[#2D6A6A] animate-pulse"></span>
-                <span className="text-[#2D6A6A] font-bold text-[12px] uppercase tracking-[0.2em] leading-none mt-0.5">Primera Cartilla veterinaria Argentina</span>
+                <span className="flex h-2 w-2 rounded-full bg-[#2D6A6A] animate-pulse"></span>
+                <span className="text-[#2D6A6A] font-bold text-[12px] uppercase leading-none mt-0.5 flex items-center gap-2">
+  <span className="tracking-[0.2em]">Primera Cartilla veterinaria Argentina</span>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480" className="w-4 h-3 shrink-0 shadow-[0_1px_2px_rgba(0,0,0,0.1)] ">
+    <path fill="#74acdf" d="M0 0h640v480H0z"/>
+    <path fill="#fff" d="M0 160h640v160H0z"/>
+    <circle cx="320" cy="240" r="40" fill="#f6b40e"/>
+  </svg>
+</span>
               </div>
                 
                   <TypewriterTitle />
               
                 <p className="text-[16px] md:text-[18px] text-[#333333]/90 font-medium leading-relaxed mb-8 max-w-[500px]">
-                  La primera Cartilla pensada exclusivamente para el sector veterinario, diseñada para garantizar una máxima presencia digital con el mínimo mantenimiento. Un espacio que optimiza el uso de tu tiempo y asegura tu posicionamiento a futuro, conectando de forma orgánica con las audiencias clave de la profesión sin la exigencia de generar contenido constante.
+                  La primera Cartilla pensada exclusivamente para el sector veterinario, diseñada para garantizar una máxima presencia digital con el mínimo mantenimiento. Una plataforma dedicada a brindarte herramientas reales: derivá pacientes, publicá búsquedas laborales, contactá proveedores y descubrí nuevas capacitaciones, todo en un solo lugar.
                 </p>
                 
                 <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto mb-2 md:mb-0 relative z-10">
@@ -554,7 +576,8 @@ export default function LandingPage() {
             icon={Clock}
             subtitle="Atemporalidad"
             title="Foco en tu vocación, no en el algoritmo."
-            text="El Portal está diseñado para que no pierdas tiempo en redes sociales que exigen creación de contenido constante y no están pensadas para profesionales de la salud. Acá, tu perfil es atemporal: no necesitás depender del algoritmo para que encuentren tu información esencial."
+            text="El Portal está diseñado para que no pierdas tiempo en redes sociales que exigen creación de contenido constante y no están pensadas para profesionales de la salud.
+            Acá, tu perfil actua como portafolio y es atemporal: no necesitás depender tus seguidores para que encuentren tu información esencial."
             isReversed={false}
             customMockup={<StackedMockups navigate={navigate} />}
             /* ACÁ ELIMINAMOS EL BADGE QUE FLOTABA ABAJO */
@@ -566,7 +589,7 @@ export default function LandingPage() {
             icon={Users}
             subtitle="Comunidad"
             title="Rompé con el aislamiento del consultorio."
-            text="Mantenete conectado con colegas y referentes de tu área. Encontrá el contacto exacto para derivar un caso complejo, armar equipos de trabajo o acceder a nuevas oportunidades de capacitación. Una red sólida te abre puertas reales."
+            text="Mantenete conectado con colegas de todo el país y referentes de tu área. Encontrá el contacto exacto para derivar un caso complejo, armar equipos de trabajo o acceder a nuevas oportunidades de capacitación. Una red sólida te abre puertas reales."
             image="/2.consultorio.png"
             isReversed={true}
             badge={
@@ -650,7 +673,7 @@ export default function LandingPage() {
         <section id="ecosistema" className="py-12 md:py-20 bg-transparent relative overflow-hidden border-t border-white/30">
           <div className="max-w-[1100px] mx-auto px-8 md:px-10 relative z-10 text-center">
             <div className="text-center mb-10 md:mb-16">
-              <h3 className="text-[#2D6A6A] font-bold text-[13px] uppercase tracking-[0.3em] mb-4 text-center">Contactos al instante</h3>
+              <h3 className="text-[#2D6A6A] font-bold text-[13px] uppercase tracking-[0.3em] mb-4 text-center">Áreas privadas para usuarios registrados la plataforma</h3>
               <h2 className="text-3xl md:text-5xl font-black text-[#1A3D3D] font-['Montserrat'] leading-[1.1] tracking-tighter text-center">
                 Espacios diseñados para<br/>agilizar tu práctica diaria.
               </h2>
@@ -668,7 +691,7 @@ export default function LandingPage() {
                     <h3 className="text-2xl font-bold font-['Montserrat'] text-[#1A3D3D]">Bolsa de Trabajo</h3>
                   </div>
                   <p className="text-[#333333]/90 leading-[1.6] font-medium mb-8 text-[15px] md:text-[16px] max-w-lg text-left">
-                    Accedé a oportunidades laborales de primer nivel. Conectamos talento con centros veterinarios que buscan especialidades específicas.
+                    El punto de encuentro entre quienes buscan sumar profesionales a su equipo y aquellos abiertos a nuevas oportunidades. Publicá acá para postularte o reclutar.
                   </p>
                 </div>
                 <div className="bg-[#F4F7F7] border border-[#1A3D3D]/5 rounded-[28px] p-6 w-full md:w-[85%] transform group-hover:-translate-y-2 transition-transform duration-300 relative text-left shadow-sm">
@@ -733,7 +756,7 @@ export default function LandingPage() {
 
               {/* Tarjeta: Insumos */}
               <div className="md:col-span-1 bg-white border border-[#1A3D3D]/10 p-8 rounded-[32px] md:rounded-[40px] hover:shadow-[0_15px_40px_rgba(45,106,106,0.1)] transition-all duration-300 group text-left shadow-[0_8px_32px_rgba(0,0,0,0.04)] relative">
-                <span className="absolute top-6 right-6 bg-[#F4F7F7] text-[#1A3D3D]/60 text-[11px] font-bold px-2 py-1 rounded-lg uppercase tracking-wider">Clínicas/Empresas</span>
+                <span className="absolute top-6 right-6 bg-[#F4F7F7] text-[#1A3D3D]/60 text-[11px] font-bold px-2 py-1 rounded-lg uppercase tracking-wider">Empresas</span>
                 <div className="flex items-center gap-3 mb-4">
                   <Package className="w-6 h-6 text-[#2D6A6A]" />
                   <h3 className="text-2xl font-bold font-['Montserrat'] text-[#1A3D3D]">Insumos</h3>
@@ -746,7 +769,8 @@ export default function LandingPage() {
                   </div>
                 </div>
                 <p className="text-[#333333]/90 leading-[1.6] font-medium text-[14px] text-left">
-                  Cartilla optimizado para contactar proveedores de insumos médicos complejos y aparatología.
+                  Cartilla optimizada para contactar proveedores de insumos médicos de todo tipo.
+                  <br></br>Unicamente disponible para usuarios registrados*
                 </p>
               </div>
 
@@ -767,7 +791,7 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              {/* Tarjeta Inferior: Noticias */}
+              {/* Tarjeta Inferior: Novedades */}
               <div className="md:col-span-2 bg-[#E8EFEF] border border-[#2D6A6A]/20 p-8 md:p-10 rounded-[32px] hover:bg-[#DCE7E7] transition-all duration-300 flex flex-col md:flex-row gap-8 items-center text-left overflow-hidden group shadow-[0_8px_32px_rgba(0,0,0,0.04)]">
                 <div className="flex-1 text-left">
                   <span className="bg-gradient-to-r from-[#FFB74D] to-[#FF9800] text-[#1A3D3D] text-[11px] font-black px-3 py-1.5 rounded-lg uppercase tracking-wider inline-block mb-4 shadow-sm">
@@ -775,17 +799,17 @@ export default function LandingPage() {
                   </span>
                   <div className="flex items-center gap-3 mb-4">
                     <Newspaper className="w-6 h-6 text-[#2D6A6A]" />
-                    <h3 className="text-2xl font-bold font-['Montserrat'] text-[#1A3D3D]">Noticias</h3>
+                    <h3 className="text-2xl font-bold font-['Montserrat'] text-[#1A3D3D]">Novedades</h3>
                   </div>
                   <p className="text-[#333333]/90 leading-[1.6] font-medium text-[15px]">
-                    Mantenete al día con los avances de la medicina veterinaria en Argentina. Un feed exclusivo para descubrir innovaciones de colegas y más.
+                    Mantenete al día con los avances de la medicina veterinaria en Argentina. Un espacio exclusivo para la comunicación, presentación de casos cientificos y más.
                   </p>
                 </div>
                 <div className="w-full md:w-[50%] flex flex-col gap-4 relative z-10 text-left">
                   <div className="bg-white p-5 rounded-2xl shadow-sm border border-[#1A3D3D]/5 transform group-hover:-translate-y-1 transition-transform duration-300 w-full">
                     <div className="flex gap-2 items-center mb-2">
                       <div className="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse"></div>
-                      <span className="text-[13px] text-[#2D6A6A] uppercase tracking-widest font-black">Tendencia</span>
+                      <span className="text-[13px] text-[#2D6A6A] uppercase tracking-widest font-black">Nuevo</span>
                     </div>
                     <p className="font-bold text-[15px] leading-tight text-[#1A3D3D]">Nueva técnica en cirugía de tejidos blandos. Casos de éxito.</p>
                   </div>
