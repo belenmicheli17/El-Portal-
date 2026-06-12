@@ -5,67 +5,30 @@ import {
   ChevronRight, MapPin, Check, Briefcase, Info, AlertTriangle, 
   Send, Stethoscope, GraduationCap, RotateCcw,
   Activity, User, Trash2, Mail, Loader2, ChevronLeft, 
-  Filter, Clock, ChevronDown, CalendarDays, UserCheck, Building
+  Filter, Clock, ChevronDown, CalendarDays, UserCheck, Building, Upload
 } from 'lucide-react';
+import { cargarSeeds } from '../seeds'; // Ajustá la ruta según dónde guardes el archivo seeds.js
 
-// ==========================================
-// DATOS ESTÁTICOS (Bolsa de Trabajo)
-// ==========================================
+// === IMPORTACIONES DE FIREBASE ===
+import { db } from '../firebase'; // Ajustá la ruta si tu archivo firebase.js está en otro lado
+import { collection, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
+
 const PROVINCIAS = ["Buenos Aires", "CABA", "Córdoba", "Santa Fe", "Mendoza", "Neuquén", "Río Negro", "Tucumán", "Salta", "Entre Ríos", "Otra"];
 const PUESTOS_TRABAJO = ["Clínico General", "Guardia / Urgencias", "Especialista (Interconsulta)", "Cirujano", "Ecografista", "Enfermero / Asistente", "Pasantía / Estudiante", "Laboratorio / Comercial", "Otro"];
 const EXPERIENCIA_REQUERIDA = ["Sin experiencia (Estudiantes/Junior)", "1 a 3 años (Semi-Senior)", "Más de 3 años (Senior)", "Especialista Certificado"];
 
-const OFERTAS_EMPLEO = [
-  {
-    id: 1,
-    puesto: "Cirujano Tejidos Blandos (Interconsultas)",
-    clinica: "Hospital Veterinario Norte",
-    logoClinica: "https://api.dicebear.com/7.x/initials/svg?seed=HVN&backgroundColor=1A3D3D",
-    provincia: "Buenos Aires",
-    ciudad: "San Isidro",
-    experiencia: "Más de 3 años (Senior)",
-    tipoContacto: ["whatsapp"],
-    contacto: "+5491112345678",
-    fechaPublicacion: "Hace 2 días",
-    diasRestantes: 28,
-    descripcion: "Buscamos cirujano especializado en tejidos blandos para cubrir interconsultas programadas y urgencias quirúrgicas en nuestro hospital. Modalidad a convenir (porcentaje por cirugía o guardia pasiva). Contamos con un volumen alto de casos derivados.",
-    requisitos: ["Matrícula provincial activa", "Experiencia comprobable en cirugías abdominales y torácicas", "Movilidad propia (excluyente)", "Disponibilidad para urgencias (deseable)"],
-    equipamiento: ["Quirófano totalmente equipado", "Anestesia inhalatoria (Isofluorano)", "Monitor multiparamétrico", "Electrobisturí", "Bomba de infusión", "Personal de asistencia capacitado"],
-    cursoRecomendado: {
-      titulo: "Ecografía Abdominal Básica",
-      modalidad: "Online",
-      level: "Principiante",
-      imagen: "https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&q=80&w=800"
-    }
-  }
-];
-
-const PROFESIONALES_DISPONIBLES = [
-  {
-    id: "veterinario_prueba_123",
-    nombre: "Dr. Veterinario Prueba",
-    especialidad: "Clínico General",
-    provincia: "Buenos Aires",
-    experiencia: "Más de 3 años (Senior)",
-    tiempo: "Full-time",
-    momentoDia: "Mañana / Tarde",
-    servicios: ["Guardias activas", "Atención en consultorio"],
-    buscando: "Busco puesto fijo para atención de pequeños animales en clínica con buen volumen de casos.",
-    avatar: "https://ui-avatars.com/api/?name=Veterinario+Prueba&background=F4F7F7&color=1A3D3D",
-    diasRestantes: 30
-  }
-];
-
-// ==========================================
-// COMPONENTE PRINCIPAL: BOLSA DE TRABAJO
-// ==========================================
 export default function BolsaTrabajo() {
-  const [view, setView] = useState('list'); // 'list', 'detail', 'publish_job', 'publish_prof'
+  const [view, setView] = useState('list'); 
   
+  // Estados para datos de Firebase
+  const [ofertas, setOfertas] = useState([]);
+  const [profesionales, setProfesionales] = useState([]);
+  const [isLoadingData, setIsLoadingData] = useState(true);
+
   // Estados de la lista, filtros y acordeones
   const [selectedJob, setSelectedJob] = useState(null);
   const [jobSearchTerm, setJobSearchTerm] = useState('');
-  const [searchTarget, setSearchTarget] = useState('ambos'); // 'ambos', 'ofertas', 'profesionales'
+  const [searchTarget, setSearchTarget] = useState('ambos'); 
   const [provinciasSel, setProvinciasSel] = useState([]);
   const [puestosSel, setPuestosSel] = useState([]);
   const [showFilters, setShowFilters] = useState(false);
@@ -76,13 +39,18 @@ export default function BolsaTrabajo() {
   const [profFormStep, setProfFormStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
+  
   const [jobForm, setJobForm] = useState({
     clinica: '', provincia: 'Buenos Aires', ciudad: '', puesto: 'Clínico General', experiencia: 'Sin experiencia (Estudiantes/Junior)',
-    descripcion: '', requisitos: [''], equipamiento: [''], tipoContacto: [], contactoEmail: '', contactoWhatsapp: ''
+    descripcion: '', requisitos: [''], equipamiento: [''], tipoContacto: [], contactoEmail: '', contactoWhatsapp: '',
+    logoFile: null // Archivo de imagen local
   });
+  
   const [profForm, setProfForm] = useState({
+    nombre: '', // ¡Agregado el nombre!
     especialidad: 'Clínico General', experiencia: 'Sin experiencia (Estudiantes/Junior)', provincia: 'Buenos Aires',
-    tiempo: 'Part-time', momentoDia: 'A convenir', servicios: [''], buscando: ''
+    tiempo: 'Part-time', momentoDia: 'A convenir', servicios: [''], buscando: '',
+    avatarFile: null // Archivo de imagen local
   });
 
   const navigate = useNavigate();
@@ -96,12 +64,8 @@ export default function BolsaTrabajo() {
 
     const style = document.createElement('style');
     style.innerHTML = `
-      @keyframes slideUp {
-        from { transform: translateY(100%); opacity: 0; }
-        to { transform: translateY(0); opacity: 1; }
-      }
+      @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
       .animate-slide-up { animation: slideUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
-      /* Hide scrollbar for segmented control */
       .hide-scrollbar::-webkit-scrollbar { display: none; }
       .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     `;
@@ -113,15 +77,37 @@ export default function BolsaTrabajo() {
     };
   }, []);
 
+  // === CARGAR DATOS DESDE FIREBASE ===
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoadingData(true);
+      try {
+        const ofertasSnap = await getDocs(collection(db, 'ofertasEmpleo'));
+        const profSnap = await getDocs(collection(db, 'profesionalesDisponibles'));
+
+        const ofertasData = ofertasSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const profData = profSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        setOfertas(ofertasData);
+        setProfesionales(profData);
+      } catch (error) {
+        console.error("Error cargando datos de Firebase:", error);
+      } finally {
+        setIsLoadingData(false);
+      }
+    };
+    fetchData();
+  }, []);
+
   // Funciones de filtrado
-  const jobsFiltrados = OFERTAS_EMPLEO.filter(job => {
+  const jobsFiltrados = ofertas.filter(job => {
     const matchProvincia = provinciasSel.length === 0 || provinciasSel.includes(job.provincia);
     const matchPuesto = puestosSel.length === 0 || puestosSel.some(p => job.puesto.includes(p));
     const matchBusqueda = !jobSearchTerm || job.puesto.toLowerCase().includes(jobSearchTerm.toLowerCase()) || job.clinica.toLowerCase().includes(jobSearchTerm.toLowerCase());
     return matchProvincia && matchPuesto && matchBusqueda;
   });
 
-  const profesionalesFiltrados = PROFESIONALES_DISPONIBLES.filter(prof => {
+  const profesionalesFiltrados = profesionales.filter(prof => {
     const matchProvincia = provinciasSel.length === 0 || provinciasSel.includes(prof.provincia);
     const matchPuesto = puestosSel.length === 0 || puestosSel.some(p => prof.especialidad.includes(p));
     const matchBusqueda = !jobSearchTerm || prof.especialidad.toLowerCase().includes(jobSearchTerm.toLowerCase()) || prof.nombre.toLowerCase().includes(jobSearchTerm.toLowerCase());
@@ -133,7 +119,6 @@ export default function BolsaTrabajo() {
   };
 
   const handleJobClick = (job) => { setSelectedJob(job); setView('detail'); window.scrollTo(0,0); };
-
   const handleClearFilters = () => { setProvinciasSel([]); setPuestosSel([]); setJobSearchTerm(''); };
 
   // Funciones Formulario Clínica
@@ -166,14 +151,59 @@ export default function BolsaTrabajo() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const submitJobForm = () => {
+  const submitJobForm = async () => {
     if (!validateJobStep(3)) return;
     setIsSubmitting(true);
-    setTimeout(() => {
+    
+    try {
+      // 1. Manejo del Logo (Automático si no suben nada)
+      let logoUrlFinal = "";
+      if (jobForm.logoFile) {
+        // Acá a futuro conectaremos Firebase Storage. Por ahora creamos una URL local temporal para la UX.
+        logoUrlFinal = URL.createObjectURL(jobForm.logoFile);
+      } else {
+        // Generador de iniciales automático con color de la app
+        logoUrlFinal = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(jobForm.clinica)}&backgroundColor=1A3D3D`;
+      }
+
+      // 2. Preparamos los datos para Firebase
+      const nuevaOferta = {
+        puesto: jobForm.puesto,
+        clinica: jobForm.clinica,
+        logoClinica: logoUrlFinal,
+        provincia: jobForm.provincia,
+        ciudad: jobForm.ciudad,
+        experiencia: jobForm.experiencia,
+        tipoContacto: jobForm.tipoContacto,
+        contactoWhatsapp: jobForm.contactoWhatsapp,
+        contactoEmail: jobForm.contactoEmail,
+        descripcion: jobForm.descripcion,
+        requisitos: jobForm.requisitos.filter(r => r.trim() !== ''), // Limpiamos vacíos
+        equipamiento: jobForm.equipamiento.filter(e => e.trim() !== ''),
+        fechaPublicacion: "Recién publicado", // Podés usar formateo de Date() si preferís
+        creadorId: "usuario_mock_temporal_123", // Cuando haya Auth, esto será user.uid
+        estado: "activo",
+        createdAt: serverTimestamp()
+      };
+
+      // 3. Guardamos en Firestore
+      const docRef = await addDoc(collection(db, 'ofertasEmpleo'), nuevaOferta);
+
+      // 4. Actualizamos la vista local para que aparezca al instante
+      setOfertas(prev => [{ id: docRef.id, ...nuevaOferta }, ...prev]);
+
       setIsSubmitting(false);
-      alert("¡Tu oferta de empleo fue enviada a revisión! Se publicará por 30 días.");
-      setView('list'); setJobFormStep(1); window.scrollTo(0,0);
-    }, 2000);
+      alert("¡Tu oferta de empleo fue publicada con éxito!");
+      setView('list'); 
+      setJobFormStep(1); 
+      setJobForm({ clinica: '', provincia: 'Buenos Aires', ciudad: '', puesto: 'Clínico General', experiencia: 'Sin experiencia (Estudiantes/Junior)', descripcion: '', requisitos: [''], equipamiento: [''], tipoContacto: [], contactoEmail: '', contactoWhatsapp: '', logoFile: null });
+      window.scrollTo(0,0);
+
+    } catch (error) {
+      console.error("Error publicando oferta:", error);
+      alert("Hubo un error al publicar. Intentá nuevamente.");
+      setIsSubmitting(false);
+    }
   };
 
   // Funciones Formulario Profesional
@@ -184,6 +214,9 @@ export default function BolsaTrabajo() {
 
   const validateProfStep = (step) => {
     const newErrors = {};
+    if (step === 1) {
+      if (!profForm.nombre.trim()) newErrors.nombre = 'Tu nombre completo es obligatorio.';
+    }
     if (step === 2) {
       if (!profForm.buscando.trim()) newErrors.buscando = 'Contanos brevemente qué estás buscando.';
       if (profForm.servicios.filter(i => i.trim()).length === 0) newErrors.servicios = 'Agregá al menos un servicio/disposición.';
@@ -192,14 +225,53 @@ export default function BolsaTrabajo() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const submitProfForm = () => {
+  const submitProfForm = async () => {
     if (!validateProfStep(2)) return;
     setIsSubmitting(true);
-    setTimeout(() => {
+    
+    try {
+      // 1. Manejo del Avatar (Automático si no suben nada)
+      let avatarUrlFinal = "";
+      if (profForm.avatarFile) {
+        avatarUrlFinal = URL.createObjectURL(profForm.avatarFile);
+      } else {
+        avatarUrlFinal = `https://ui-avatars.com/api/?name=${encodeURIComponent(profForm.nombre)}&background=F4F7F7&color=1A3D3D`;
+      }
+
+      // 2. Preparamos los datos
+      const nuevoProfesional = {
+        nombre: profForm.nombre,
+        especialidad: profForm.especialidad,
+        provincia: profForm.provincia,
+        experiencia: profForm.experiencia,
+        tiempo: profForm.tiempo,
+        momentoDia: profForm.momentoDia,
+        servicios: profForm.servicios.filter(s => s.trim() !== ''),
+        buscando: profForm.buscando,
+        avatar: avatarUrlFinal,
+        creadorId: "usuario_mock_temporal_123", // Futuro user.uid
+        estado: "activo",
+        createdAt: serverTimestamp()
+      };
+
+      // 3. Guardamos en Firestore
+      const docRef = await addDoc(collection(db, 'profesionalesDisponibles'), nuevoProfesional);
+
+      // 4. Actualizamos vista local
+      setProfesionales(prev => [{ id: docRef.id, ...nuevoProfesional }, ...prev]);
+
       setIsSubmitting(false);
-      alert("¡Tu perfil de disponibilidad ya está visible para las clínicas! Expirará en 30 días si no lo renovás.");
-      setView('list'); setProfFormStep(1); window.scrollTo(0,0);
-    }, 2000);
+      alert("¡Tu perfil de disponibilidad ya está visible para las clínicas!");
+      setView('list'); 
+      setProfFormStep(1); 
+      setProfForm({ nombre: '', especialidad: 'Clínico General', experiencia: 'Sin experiencia (Estudiantes/Junior)', provincia: 'Buenos Aires', tiempo: 'Part-time', momentoDia: 'A convenir', servicios: [''], buscando: '', avatarFile: null });
+      window.scrollTo(0,0);
+
+    } catch (error) {
+      console.error("Error publicando perfil:", error);
+      alert("Hubo un error al publicar. Intentá nuevamente.");
+      setIsSubmitting(false);
+    }
   };
 
   // =========================================================
@@ -208,37 +280,33 @@ export default function BolsaTrabajo() {
   const renderList = () => (
     <div className="flex flex-col animate-in fade-in duration-500 pb-24 relative">
       
-      {/* INNER HEADER (Fondo Petróleo, nunca blanco) */}
-      <section className="relative bg-[#1A3D3D] pt-16 pb-20 overflow-hidden rounded-b-[40px] md:rounded-b-[60px] shadow-[0_10px_30px_rgba(26,61,61,0.1)] z-10 text-center">
+     {/* INNER HEADER (Fondo Claro con Burbujas Mejor Distribuidas) */}
+      <section className="relative bg-white pt-16 pb-20 overflow-hidden rounded-b-[40px] md:rounded-b-[60px] shadow-[0_10px_30px_rgba(26,61,61,0.05)] z-10 text-center">
         
-        {/* Burbujas decorativas difuminadas */}
-        <div className="absolute top-0 left-10 w-72 h-72 bg-[#4DB6AC]/10 rounded-full blur-[80px] pointer-events-none"></div>
-        <div className="absolute bottom-10 right-20 w-96 h-96 bg-white/5 rounded-full blur-[100px] pointer-events-none"></div>
+        <div className="absolute top-[-10%] left-[-15%] w-[600px] h-[600px] bg-[#4DB6AC]/20 rounded-full blur-[120px] pointer-events-none z-0"></div>
+        <div className="absolute bottom-[0%] left-[-10%] w-[500px] h-[500px] bg-[#4DB6AC]/15 rounded-full blur-[130px] pointer-events-none z-0"></div>
+        <div className="absolute top-[10%] right-[-10%] w-[550px] h-[550px] bg-[#1A3D3D]/10 rounded-full blur-[140px] pointer-events-none z-0"></div>
         
         <div className="relative z-10 max-w-3xl mx-auto flex flex-col items-center px-4">
+          <Briefcase className="w-8 h-8 text-[#1A3D3D] mb-6 relative z-10" />
           
-          {/* Ícono estilo Cartilla, sin caja, en color blanco/translúcido */}
-          <Briefcase className="w-8 h-8 text-white mb-4" />
-          
-          <h1 className="text-[32px] md:text-[42px] lg:text-[48px] font-black font-['Montserrat'] text-white tracking-tighter leading-none mb-4">
+          <h1 className="text-[32px] md:text-[42px] lg:text-[48px] font-black font-['Montserrat'] text-[#1A3D3D] tracking-tighter leading-none mb-4">
             Bolsa de Trabajo
           </h1>
-          <p className="text-[#F4F7F7] opacity-80 text-[14px] md:text-[16px] font-medium mb-6 max-w-lg mx-auto leading-relaxed">
+          <p className="text-[#666666] text-[14px] md:text-[16px] font-medium mb-8 max-w-lg mx-auto leading-relaxed">
             La red de empleo exclusiva para profesionales veterinarios. Conectá con tu próximo desafío o encontrá al especialista ideal para tu clínica.
           </p>
           
           <div className="flex flex-col sm:flex-row items-center gap-4 w-full justify-center">
-            {/* Botón Primario */}
             <button 
               onClick={() => { setView('publish_job'); window.scrollTo(0,0); }}
-              className="w-full sm:w-auto bg-[#2D6A6A] text-white px-6 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-[#1A3D3D] hover:-translate-y-1 hover:shadow-2xl transition-all duration-300 ease-in-out flex items-center justify-center gap-2"
+              className="w-full sm:w-auto bg-[#1A3D3D] text-white px-8 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-[#2D6A6A] hover:-translate-y-1 shadow-lg transition-all duration-300 ease-in-out flex items-center justify-center gap-2"
             >
               <Building className="w-4 h-4" /> Publicar Oferta de Clínica
             </button>
-            {/* Botón Estilo Glassmorphism */}
             <button 
               onClick={() => { setView('publish_prof'); window.scrollTo(0,0); }}
-              className="w-full sm:w-auto bg-white/15 border border-white/20 text-white px-6 py-4 rounded-2xl font-bold text-[11px] uppercase tracking-widest hover:bg-white/25 hover:-translate-y-0.5 transition-all duration-300 ease-in-out flex items-center justify-center gap-2"
+              className="w-full sm:w-auto bg-white border-2 border-gray-100 text-[#1A3D3D] px-8 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:border-[#4DB6AC]/50 hover:text-[#2D6A6A] hover:-translate-y-1 shadow-sm transition-all duration-300 ease-in-out flex items-center justify-center gap-2"
             >
               <UserCheck className="w-4 h-4" /> Marcarme Disponible
             </button>
@@ -322,7 +390,6 @@ export default function BolsaTrabajo() {
               </div>
             </div>
             
-            {/* Controles Inferiores del Filtro */}
             <div className="mt-8 pt-6 border-t border-gray-50 flex flex-col-reverse md:flex-row justify-between items-center gap-4">
                <button onClick={handleClearFilters} className="text-[#666666] hover:text-[#1A3D3D] font-bold text-[11px] uppercase tracking-widest transition-colors flex items-center gap-1.5 py-3 md:py-0 w-full md:w-auto justify-center">
                  <RotateCcw className="w-3.5 h-3.5" /> Limpiar Filtros
@@ -335,157 +402,165 @@ export default function BolsaTrabajo() {
         )}
       </div>
 
-      {/* Grid Dinámica */}
-      <div className={`grid gap-8 lg:gap-10 mt-10 px-4 relative z-10 ${searchTarget === 'ambos' ? 'grid-cols-1 xl:grid-cols-2' : 'grid-cols-1 max-w-4xl mx-auto w-full'}`}>
-        
-        {/* Columna Izquierda: Instituciones Buscando */}
-        {(searchTarget === 'ambos' || searchTarget === 'ofertas') && (
-          <section className="flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-4">
-            <div className="flex items-center justify-between border-b border-gray-200 pb-3">
-              <h2 className="font-['Montserrat'] font-bold text-[#1A3D3D] text-[14px] uppercase tracking-widest flex items-center gap-2">
-                 <Building className="w-5 h-5 text-[#2D6A6A] hidden sm:block" /> Ofertas de Clínicas
-              </h2>
-              <span className="bg-[#F4F7F7] text-[#1A3D3D] text-[11px] font-bold px-2.5 py-1 rounded-md">{jobsFiltrados.length}</span>
-            </div>
-            
-            {jobsFiltrados.length > 0 ? jobsFiltrados.map(job => (
-             <article 
-  key={job.id} 
-  onClick={() => handleJobClick(job)} 
-  className="bg-white rounded-[24px] p-5 md:p-6 border border-gray-100 shadow-sm hover:border-[#2D6A6A]/30 hover:shadow-[0_15px_30px_rgba(45,106,106,0.08)] transition-all duration-300 ease-in-out cursor-pointer flex flex-col sm:flex-row gap-5 group"
->
-   <div className="w-16 h-16 md:w-20 md:h-20 rounded-[20px] bg-[#F4F7F7] border border-gray-100 p-2.5 shrink-0 hidden sm:block">
-                  <img src={job.logoClinica} alt={job.clinica} className="w-full h-full object-contain rounded-xl" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="bg-[#F4F7F7] text-[#666666] text-[12px] font-semibold px-3 py-1.5 rounded-lg">{job.fechaPublicacion}</span>
-                    <span className="text-[#666666] text-[12px] font-semibold flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" /> {job.provincia}</span>
-                  </div>
-                  <h3 className="font-bold font-['Montserrat'] text-[#1A3D3D] text-[18px] md:text-[20px] group-hover:text-[#2D6A6A] transition-colors leading-tight mb-1">{job.puesto}</h3>
-                  <p className="text-[#666666] text-[14px] md:text-[15px] font-medium mb-3">{job.clinica}</p>
-                  
-                  <div className="flex flex-wrap items-center justify-between gap-2 mt-3 pt-4 border-t border-gray-50">
-                    <div className="flex gap-2">
-                      <span className="bg-[#F4F7F7] text-[#333333] text-[12px] font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5"><GraduationCap className="w-3.5 h-3.5 text-[#2D6A6A]" /> {job.experiencia}</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center justify-end">
-                   <ChevronRight className="w-6 h-6 text-[#666666]/30 group-hover:text-[#2D6A6A] group-hover:translate-x-1 transition-all" />
-                </div>
-              </article>
-            )) : (
-              <div className="bg-white border border-gray-100 rounded-[32px] p-12 text-center flex flex-col items-center justify-center shadow-sm">
-                 <div className="w-16 h-16 bg-[#F4F7F7] rounded-full flex items-center justify-center mb-5">
-                   <Building className="w-8 h-8 text-[#2D6A6A]/50" />
-                 </div>
-                 <h3 className="text-[#1A3D3D] text-[18px] font-bold font-['Montserrat'] mb-2">No encontramos ofertas</h3>
-                 <p className="text-[#666666] text-[14px] font-medium mb-6 max-w-sm">Intentá ajustar los filtros o buscar con otros términos para ver más resultados.</p>
-                 <button onClick={handleClearFilters} className="bg-[#F4F7F7] text-[#1A3D3D] font-bold text-[11px] uppercase tracking-widest px-6 py-3 rounded-xl hover:bg-gray-200 transition-colors">Limpiar todos los filtros</button>
+      {isLoadingData ? (
+        <div className="flex flex-col items-center justify-center py-20 mt-10">
+           <Loader2 className="w-10 h-10 text-[#2D6A6A] animate-spin mb-4" />
+           <p className="text-[#666666] font-medium">Cargando bolsa de trabajo...</p>
+        </div>
+      ) : (
+        <div className={`grid gap-8 lg:gap-10 mt-10 px-4 relative z-10 ${searchTarget === 'ambos' ? 'grid-cols-1 xl:grid-cols-2' : 'grid-cols-1 max-w-4xl mx-auto w-full'}`}>
+          
+          {/* Columna Izquierda: Instituciones Buscando */}
+          {(searchTarget === 'ambos' || searchTarget === 'ofertas') && (
+            <section className="flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-4">
+              <div className="flex items-center justify-between border-b border-gray-200 pb-3">
+                <h2 className="font-['Montserrat'] font-bold text-[#1A3D3D] text-[14px] uppercase tracking-widest flex items-center gap-2">
+                   <Building className="w-5 h-5 text-[#2D6A6A] hidden sm:block" /> Ofertas de Clínicas
+                </h2>
+                <span className="bg-[#F4F7F7] text-[#1A3D3D] text-[11px] font-bold px-2.5 py-1 rounded-md">{jobsFiltrados.length}</span>
               </div>
-            )}
-          </section>
-        )}
-
-        {/* Columna Derecha: Profesionales Disponibles */}
-        {(searchTarget === 'ambos' || searchTarget === 'profesionales') && (
-          <section className="flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-4">
-            <div className="flex items-center justify-between border-b border-gray-200 pb-3">
-              <h2 className="font-['Montserrat'] font-bold text-[#2D6A6A] text-[14px] uppercase tracking-widest flex items-center gap-2">
-                 <UserCheck className="w-5 h-5 text-[#1A3D3D] hidden sm:block" /> Profesionales Disponibles
-              </h2>
-              <span className="bg-green-50 text-green-600 text-[11px] font-bold px-2.5 py-1 rounded-md">{profesionalesFiltrados.length}</span>
-            </div>
-
-            {profesionalesFiltrados.length > 0 ? profesionalesFiltrados.map(prof => {
-              const isExpanded = expandedProfId === prof.id;
-              return (
-              <article 
-  key={prof.id} 
-  onClick={() => setExpandedProfId(isExpanded ? null : prof.id)}
-  className={`bg-white rounded-[24px] p-5 md:p-6 border transition-all duration-300 ease-in-out cursor-pointer group flex flex-col h-full ${
-    isExpanded 
-      ? 'border-[#2D6A6A] shadow-md ring-2 ring-[#2D6A6A]/5' 
-      : 'border-gray-100 shadow-sm hover:border-[#2D6A6A]/30 hover:shadow-[0_15px_30px_rgba(45,106,106,0.08)]'
-  }`}
->
-                <div className="flex gap-4 items-start">
-                  <div className="w-16 h-16 md:w-20 md:h-20 rounded-[20px] bg-[#F4F7F7] border border-gray-100 shadow-sm shrink-0 overflow-hidden relative">
-                    <img src={prof.avatar} alt={prof.nombre} className="w-full h-full object-cover" />
-                    <div className="absolute bottom-1 right-1 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full z-10 animate-pulse" title="Disponible"></div>
+              
+              {jobsFiltrados.length > 0 ? jobsFiltrados.map(job => (
+               <article 
+                  key={job.id} 
+                  onClick={() => handleJobClick(job)} 
+                  className="bg-white rounded-[24px] p-5 md:p-6 border border-gray-100 shadow-sm hover:border-[#2D6A6A]/30 hover:shadow-[0_15px_30px_rgba(45,106,106,0.08)] transition-all duration-300 ease-in-out cursor-pointer flex flex-col sm:flex-row gap-5 group"
+                >
+                  <div className="w-16 h-16 md:w-20 md:h-20 rounded-[20px] bg-[#F4F7F7] border border-gray-100 p-2.5 shrink-0 hidden sm:block">
+                    <img src={job.logoClinica} alt={job.clinica} className="w-full h-full object-contain rounded-xl" />
                   </div>
-                  
-                  <div className="flex-1 pt-1">
-                    <div className="flex items-center justify-between mb-1">
-                      <h3 className="font-bold font-['Montserrat'] text-[#1A3D3D] text-[18px] md:text-[20px] leading-tight">{prof.nombre}</h3>
-                      <span className="text-[#666666] text-[12px] font-semibold flex items-center gap-1.5 shrink-0"><MapPin className="w-3.5 h-3.5" /> {prof.provincia}</span>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="bg-[#F4F7F7] text-[#666666] text-[12px] font-semibold px-3 py-1.5 rounded-lg">{job.fechaPublicacion || "Reciente"}</span>
+                      <span className="text-[#666666] text-[12px] font-semibold flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" /> {job.provincia}</span>
                     </div>
-                    {/* Etiqueta Especialidad estilo Pill según manual */}
-                    <p className="inline-flex items-center gap-1.5 mt-1 mb-3 bg-[#F4F7F7] px-3 py-1.5 rounded-full">
-                      <span className="flex h-1.5 w-1.5 rounded-full bg-[#2D6A6A] animate-pulse"></span>
-                      <span className="text-[#2D6A6A] text-[11px] font-bold uppercase tracking-[0.2em]">{prof.especialidad}</span>
-                    </p>
+                    <h3 className="font-bold font-['Montserrat'] text-[#1A3D3D] text-[18px] md:text-[20px] group-hover:text-[#2D6A6A] transition-colors leading-tight mb-1">{job.puesto}</h3>
+                    <p className="text-[#666666] text-[14px] md:text-[15px] font-medium mb-3">{job.clinica}</p>
                     
-                    <div className="flex flex-wrap items-center justify-between gap-2 mt-1">
-                      <div className="flex gap-4 text-[12px] font-medium text-[#666666]">
-                        <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> {prof.tiempo}</span>
-                        <span className="flex items-center gap-1.5"><User className="w-3.5 h-3.5" /> {prof.momentoDia}</span>
+                    <div className="flex flex-wrap items-center justify-between gap-2 mt-3 pt-4 border-t border-gray-50">
+                      <div className="flex gap-2">
+                        <span className="bg-[#F4F7F7] text-[#333333] text-[12px] font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5"><GraduationCap className="w-3.5 h-3.5 text-[#2D6A6A]" /> {job.experiencia}</span>
                       </div>
                     </div>
                   </div>
-                </div>
-
-                {/* Contenido Expandible (Acordeón) */}
-                <div className={`grid transition-all duration-300 ease-in-out ${isExpanded ? 'grid-rows-[1fr] opacity-100 mt-5' : 'grid-rows-[0fr] opacity-0 mt-0'}`}>
-                   <div className="overflow-hidden">
-                     <div className="bg-[#F4F7F7] rounded-[24px] p-5 border border-gray-100">
-                        <p className="text-[#1A3D3D] text-[12px] font-bold mb-3 flex items-center gap-1.5 uppercase tracking-widest"><Activity className="w-4 h-4 text-[#4DB6AC]"/> Servicios Ofrecidos</p>
-                        <div className="flex flex-wrap gap-2 mb-5">
-                          {prof.servicios.map((s, idx) => (
-                            <span key={idx} className="bg-white border border-gray-200 text-[#333333] text-[12px] font-semibold px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-sm">
-                              <CircleCheck className="w-4 h-4 text-[#2D6A6A]" /> {s}
-                            </span>
-                          ))}
-                        </div>
-                        
-                        <div className="relative">
-                          <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#2D6A6A] rounded-full"></div>
-                          <p className="text-[#666666] text-[15px] italic bg-white p-5 rounded-2xl border border-gray-100 pl-6 shadow-sm">"{prof.buscando}"</p>
-                        </div>
-                     </div>
-                     
-                     <button 
-                       onClick={(e) => { e.stopPropagation(); alert(`Redirigiendo al perfil público verificado de ${prof.nombre}...`); }}
-                       className="w-full mt-4 bg-[#2D6A6A] text-white px-6 py-4 rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] transition-all duration-300 ease-in-out hover:bg-[#1A3D3D] hover:-translate-y-1 hover:shadow-xl shadow-md flex items-center justify-center gap-2 group/btn"
-                     >
-                       <User className="w-4 h-4" /> Ver perfil profesional <ChevronRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
-                     </button>
+                  <div className="flex items-center justify-end">
+                     <ChevronRight className="w-6 h-6 text-[#666666]/30 group-hover:text-[#2D6A6A] group-hover:translate-x-1 transition-all" />
+                  </div>
+                </article>
+              )) : (
+                <div className="bg-white border border-gray-100 rounded-[32px] p-12 text-center flex flex-col items-center justify-center shadow-sm">
+                   <div className="w-16 h-16 bg-[#F4F7F7] rounded-full flex items-center justify-center mb-5">
+                     <Building className="w-8 h-8 text-[#2D6A6A]/50" />
                    </div>
+                   <h3 className="text-[#1A3D3D] text-[18px] font-bold font-['Montserrat'] mb-2">No encontramos ofertas</h3>
+                   <p className="text-[#666666] text-[14px] font-medium mb-6 max-w-sm">Intentá ajustar los filtros o buscar con otros términos para ver más resultados.</p>
+                   <button onClick={handleClearFilters} className="bg-[#F4F7F7] text-[#1A3D3D] font-bold text-[11px] uppercase tracking-widest px-6 py-3 rounded-xl hover:bg-gray-200 transition-colors">Limpiar todos los filtros</button>
                 </div>
-                
-                <div className={`flex justify-center transition-all duration-300 ${isExpanded ? 'mt-5 border-t border-gray-50 pt-4' : 'mt-4'}`}>
-                   <span className={`flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest transition-colors ${isExpanded ? 'text-[#2D6A6A]' : 'text-[#666666]/50 group-hover:text-[#2D6A6A]'}`}>
-                     {isExpanded ? 'Ocultar detalles' : 'Ver detalles'}
-                     <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
-                   </span>
-                </div>
-              </article>
-              );
-            }) : (
-              <div className="bg-white border border-gray-100 rounded-[32px] p-12 text-center flex flex-col items-center justify-center shadow-sm">
-                 <div className="w-16 h-16 bg-[#F4F7F7] rounded-full flex items-center justify-center mb-5">
-                   <UserCheck className="w-8 h-8 text-[#2D6A6A]/50" />
-                 </div>
-                 <h3 className="text-[#1A3D3D] text-[18px] font-bold font-['Montserrat'] mb-2">No encontramos profesionales</h3>
-                 <p className="text-[#666666] text-[14px] font-medium mb-6 max-w-sm">Intentá ajustar los filtros o buscar con otros términos para ver más resultados.</p>
-                 <button onClick={handleClearFilters} className="bg-[#F4F7F7] text-[#1A3D3D] font-bold text-[11px] uppercase tracking-widest px-6 py-3 rounded-xl hover:bg-gray-200 transition-colors">Limpiar todos los filtros</button>
+              )}
+            </section>
+          )}
+
+          {/* Columna Derecha: Profesionales Disponibles */}
+          {(searchTarget === 'ambos' || searchTarget === 'profesionales') && (
+            <section className="flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-4">
+              <div className="flex items-center justify-between border-b border-gray-200 pb-3">
+                <h2 className="font-['Montserrat'] font-bold text-[#2D6A6A] text-[14px] uppercase tracking-widest flex items-center gap-2">
+                   <UserCheck className="w-5 h-5 text-[#1A3D3D] hidden sm:block" /> Profesionales Disponibles
+                </h2>
+                <span className="bg-green-50 text-green-600 text-[11px] font-bold px-2.5 py-1 rounded-md">{profesionalesFiltrados.length}</span>
               </div>
-            )}
-          </section>
-        )}
-      </div>
+
+              {profesionalesFiltrados.length > 0 ? profesionalesFiltrados.map(prof => {
+                const isExpanded = expandedProfId === prof.id;
+                return (
+                <article 
+                  key={prof.id} 
+                  onClick={() => setExpandedProfId(isExpanded ? null : prof.id)}
+                  className={`bg-white rounded-[24px] p-5 md:p-6 border transition-all duration-300 ease-in-out cursor-pointer group flex flex-col h-full ${
+                    isExpanded 
+                      ? 'border-[#2D6A6A] shadow-md ring-2 ring-[#2D6A6A]/5' 
+                      : 'border-gray-100 shadow-sm hover:border-[#2D6A6A]/30 hover:shadow-[0_15px_30px_rgba(45,106,106,0.08)]'
+                  }`}
+                >
+                  <div className="flex gap-4 items-start">
+                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-[20px] bg-[#F4F7F7] border border-gray-100 shadow-sm shrink-0 overflow-hidden relative">
+                      <img src={prof.avatar} alt={prof.nombre} className="w-full h-full object-cover" />
+                      <div className="absolute bottom-1 right-1 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full z-10 animate-pulse" title="Disponible"></div>
+                    </div>
+                    
+                    <div className="flex-1 pt-1">
+                      <div className="flex items-center justify-between mb-1">
+                        <h3 className="font-bold font-['Montserrat'] text-[#1A3D3D] text-[18px] md:text-[20px] leading-tight">{prof.nombre}</h3>
+                        <span className="text-[#666666] text-[12px] font-semibold flex items-center gap-1.5 shrink-0"><MapPin className="w-3.5 h-3.5" /> {prof.provincia}</span>
+                      </div>
+                      <p className="inline-flex items-center gap-1.5 mt-1 mb-3 bg-[#F4F7F7] px-3 py-1.5 rounded-full">
+                        <span className="flex h-1.5 w-1.5 rounded-full bg-[#2D6A6A] animate-pulse"></span>
+                        <span className="text-[#2D6A6A] text-[11px] font-bold uppercase tracking-[0.2em]">{prof.especialidad}</span>
+                      </p>
+                      
+                      <div className="flex flex-wrap items-center justify-between gap-2 mt-1">
+                        <div className="flex gap-4 text-[12px] font-medium text-[#666666]">
+                          <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> {prof.tiempo}</span>
+                          <span className="flex items-center gap-1.5"><User className="w-3.5 h-3.5" /> {prof.momentoDia}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Contenido Expandible (Acordeón) */}
+                  <div className={`grid transition-all duration-300 ease-in-out ${isExpanded ? 'grid-rows-[1fr] opacity-100 mt-5' : 'grid-rows-[0fr] opacity-0 mt-0'}`}>
+                     <div className="overflow-hidden">
+                       <div className="bg-[#F4F7F7] rounded-[24px] p-5 border border-gray-100">
+                          <p className="text-[#1A3D3D] text-[12px] font-bold mb-3 flex items-center gap-1.5 uppercase tracking-widest"><Activity className="w-4 h-4 text-[#4DB6AC]"/> Servicios Ofrecidos</p>
+                          <div className="flex flex-wrap gap-2 mb-5">
+                            {prof.servicios.map((s, idx) => (
+                              <span key={idx} className="bg-white border border-gray-200 text-[#333333] text-[12px] font-semibold px-3.5 py-2 rounded-xl flex items-center gap-1.5 shadow-sm">
+                                <CircleCheck className="w-4 h-4 text-[#2D6A6A]" /> {s}
+                              </span>
+                            ))}
+                          </div>
+                          
+                          <div className="relative">
+                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#2D6A6A] rounded-full"></div>
+                            <p className="text-[#666666] text-[15px] italic bg-white p-5 rounded-2xl border border-gray-100 pl-6 shadow-sm">"{prof.buscando}"</p>
+                          </div>
+                       </div>
+                       
+                       <button 
+                         onClick={(e) => { e.stopPropagation(); alert(`Redirigiendo al perfil público verificado de ${prof.nombre}...`); }}
+                         className="w-full mt-4 bg-[#2D6A6A] text-white px-6 py-4 rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] transition-all duration-300 ease-in-out hover:bg-[#1A3D3D] hover:-translate-y-1 hover:shadow-xl shadow-md flex items-center justify-center gap-2 group/btn"
+                       >
+                         <User className="w-4 h-4" /> Ver perfil profesional <ChevronRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
+                       </button>
+                     </div>
+                  </div>
+                  
+                  <div className={`flex justify-center transition-all duration-300 ${isExpanded ? 'mt-5 border-t border-gray-50 pt-4' : 'mt-4'}`}>
+                     <span className={`flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest transition-colors ${isExpanded ? 'text-[#2D6A6A]' : 'text-[#666666]/50 group-hover:text-[#2D6A6A]'}`}>
+                       {isExpanded ? 'Ocultar detalles' : 'Ver detalles'}
+                       <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+                     </span>
+                  </div>
+                </article>
+                );
+              }) : (
+                <div className="bg-white border border-gray-100 rounded-[32px] p-12 text-center flex flex-col items-center justify-center shadow-sm">
+                   <div className="w-16 h-16 bg-[#F4F7F7] rounded-full flex items-center justify-center mb-5">
+                     <UserCheck className="w-8 h-8 text-[#2D6A6A]/50" />
+                   </div>
+                   <h3 className="text-[#1A3D3D] text-[18px] font-bold font-['Montserrat'] mb-2">No encontramos profesionales</h3>
+                   <p className="text-[#666666] text-[14px] font-medium mb-6 max-w-sm">Intentá ajustar los filtros o buscar con otros términos para ver más resultados.</p>
+                   <button onClick={handleClearFilters} className="bg-[#F4F7F7] text-[#1A3D3D] font-bold text-[11px] uppercase tracking-widest px-6 py-3 rounded-xl hover:bg-gray-200 transition-colors">Limpiar todos los filtros</button>
+                </div>
+              )}
+            </section>
+          )}
+        </div>
+      )}
     </div>
+
+
+
   );
 
   // =========================================================
@@ -510,7 +585,7 @@ export default function BolsaTrabajo() {
              </div>
              <div className="flex-1 z-10">
                 <div className="flex items-center gap-3 mb-4">
-                  <span className="bg-white border border-gray-200 text-[#666666] text-[12px] font-semibold px-3 py-1.5 rounded-lg">{selectedJob.fechaPublicacion}</span>
+                  <span className="bg-white border border-gray-200 text-[#666666] text-[12px] font-semibold px-3 py-1.5 rounded-lg">{selectedJob.fechaPublicacion || "Reciente"}</span>
                   <span className="text-[#666666] text-[12px] font-semibold flex items-center gap-1.5"><MapPin className="w-4 h-4" /> {selectedJob.ciudad}, {selectedJob.provincia}</span>
                 </div>
                 <h1 className="text-[32px] md:text-[42px] font-black font-['Montserrat'] text-[#1A3D3D] leading-[1.1] mb-2 tracking-tight">
@@ -522,7 +597,7 @@ export default function BolsaTrabajo() {
                   <div className="bg-white border border-gray-200 px-4 py-2.5 rounded-xl flex items-center gap-2 text-[13px] font-bold text-[#333333] shadow-sm">
                     <GraduationCap className="w-4 h-4 text-[#2D6A6A]" /> {selectedJob.experiencia}
                   </div>
-                  {selectedJob.requisitos.some(r => r.toLowerCase().includes('matrícula')) && (
+                  {selectedJob.requisitos && selectedJob.requisitos.some(r => r.toLowerCase().includes('matrícula')) && (
                     <div className="bg-[#2D6A6A]/10 px-4 py-2.5 rounded-xl flex items-center gap-2 text-[13px] font-bold text-[#1A3D3D]">
                       <CircleCheck className="w-4 h-4 text-[#2D6A6A]" /> Requiere Matrícula Activa
                     </div>
@@ -545,7 +620,7 @@ export default function BolsaTrabajo() {
                   <CircleCheck className="w-6 h-6 text-[#4DB6AC]" /> Requisitos excluyentes
                 </h3>
                 <ul className="space-y-4">
-                  {selectedJob.requisitos.map((req, idx) => (
+                  {selectedJob.requisitos && selectedJob.requisitos.map((req, idx) => (
                     <li key={idx} className="flex items-start gap-3">
                       <span className="w-1.5 h-1.5 rounded-full bg-[#1A3D3D] mt-2.5 shrink-0"></span>
                       <span className="text-[16px] text-[#333333] font-medium leading-relaxed">{req}</span>
@@ -554,7 +629,7 @@ export default function BolsaTrabajo() {
                 </ul>
               </section>
 
-              {selectedJob.equipamiento.length > 0 && selectedJob.equipamiento[0] !== '' && (
+              {selectedJob.equipamiento && selectedJob.equipamiento.length > 0 && selectedJob.equipamiento[0] !== '' && (
                 <section className="bg-[#F4F7F7] p-8 rounded-[32px] border border-gray-100">
                   <h3 className="text-[18px] font-bold font-['Montserrat'] text-[#1A3D3D] mb-5 flex items-center gap-2">
                     <Stethoscope className="w-5 h-5 text-[#2D6A6A]" /> Equipamiento en clínica
@@ -577,12 +652,12 @@ export default function BolsaTrabajo() {
                  <p className="text-white/70 text-[13px] font-medium mb-8 relative z-10">La clínica prefiere contacto por:</p>
                  
                  <div className="space-y-4 relative z-10">
-                   {selectedJob.tipoContacto.includes('whatsapp') && (
+                   {selectedJob.tipoContacto && selectedJob.tipoContacto.includes('whatsapp') && (
                      <button className="w-full bg-[#25D366] text-white py-4 rounded-2xl font-black text-[12px] uppercase tracking-[0.2em] shadow-lg hover:bg-[#20bd5a] hover:-translate-y-1 transition-all duration-300 ease-in-out flex items-center justify-center gap-2">
                        <MessageCircle className="w-5 h-5" /> WhatsApp
                      </button>
                    )}
-                   {selectedJob.tipoContacto.includes('email') && (
+                   {selectedJob.tipoContacto && selectedJob.tipoContacto.includes('email') && (
                      <button className="w-full bg-white text-[#1A3D3D] py-4 rounded-2xl font-black text-[12px] uppercase tracking-[0.2em] shadow-lg hover:bg-gray-50 hover:-translate-y-1 transition-all duration-300 ease-in-out flex items-center justify-center gap-2">
                        <Send className="w-4 h-4" /> Enviar CV por Mail
                      </button>
@@ -634,35 +709,23 @@ export default function BolsaTrabajo() {
       <div className="bg-white rounded-[40px] border border-gray-100 shadow-xl overflow-hidden">
         <div className="bg-[#F4F7F7] border-b border-gray-100 py-10 px-6 md:px-12 relative overflow-hidden">
           <div className="max-w-2xl mx-auto relative">
-            {/* Línea conectora base (Gris) */}
             <div className="absolute top-[20px] md:top-[24px] left-[15%] right-[15%] h-1 bg-gray-200 rounded-full z-0 hidden md:block">
-              {/* Línea de progreso (Esmeralda) */}
               <div className="absolute top-0 left-0 h-full bg-[#2D6A6A] rounded-full transition-all duration-500 ease-in-out" style={{ width: `${((jobFormStep - 1) / 2) * 100}%` }}></div>
             </div>
 
-            {/* Steppers */}
             <div className="relative z-10 flex justify-between items-start">
               {[1, 2, 3].map((step) => {
                 const isActive = jobFormStep === step;
                 const isCompleted = jobFormStep > step;
-                
                 return (
-                  <div 
-                    key={step} 
-                    onClick={() => { if(isCompleted) setJobFormStep(step); }}
-                    className={`flex flex-col items-center gap-3 w-24 md:w-32 ${isCompleted ? 'cursor-pointer group' : ''}`}
-                  >
-                    {/* Círculo con Efecto Gap */}
+                  <div key={step} onClick={() => { if(isCompleted) setJobFormStep(step); }} className={`flex flex-col items-center gap-3 w-24 md:w-32 ${isCompleted ? 'cursor-pointer group' : ''}`}>
                     <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center font-bold text-[14px] md:text-[16px] transition-all duration-300 z-10 ${
                       isActive ? 'bg-[#1A3D3D] text-white shadow-[0_4px_12px_rgba(26,61,61,0.3)] scale-110 border-[4px] border-[#F4F7F7]' : 
                       isCompleted ? 'bg-[#2D6A6A] text-white border-[4px] border-[#F4F7F7]' : 'bg-white border-[2px] border-gray-200 text-gray-400'
                     }`}>
                       {isCompleted ? <Check className="w-5 h-5 md:w-6 md:h-6 text-white" strokeWidth={3} /> : step}
                     </div>
-                    {/* Etiqueta */}
-                    <span className={`text-[9px] md:text-[11px] uppercase tracking-[0.2em] font-black text-center ${
-                      isActive || isCompleted ? 'text-[#1A3D3D]' : 'text-gray-400'
-                    }`}>
+                    <span className={`text-[9px] md:text-[11px] uppercase tracking-[0.2em] font-black text-center ${isActive || isCompleted ? 'text-[#1A3D3D]' : 'text-gray-400'}`}>
                       {step === 1 ? 'Clínica' : step === 2 ? 'Puesto' : 'Contacto'}
                     </span>
                   </div>
@@ -676,6 +739,34 @@ export default function BolsaTrabajo() {
           {jobFormStep === 1 && (
             <div className="space-y-8 animate-in fade-in">
               <h2 className="text-[24px] font-bold font-['Montserrat'] text-[#1A3D3D] mb-2">Datos de la Institución</h2>
+              
+              {/* Botón de subida de Logo (Nuevo) */}
+              <div className="flex items-center gap-4">
+                 <div className="w-16 h-16 rounded-2xl bg-[#F4F7F7] border border-gray-200 flex items-center justify-center overflow-hidden shrink-0">
+                    {jobForm.logoFile ? (
+                      <img src={URL.createObjectURL(jobForm.logoFile)} alt="Logo" className="w-full h-full object-cover" />
+                    ) : (
+                      <Building className="w-6 h-6 text-gray-400" />
+                    )}
+                 </div>
+                 <div>
+                    <label className="cursor-pointer bg-white border border-gray-200 text-[#1A3D3D] font-bold text-[11px] uppercase tracking-widest px-4 py-2.5 rounded-xl hover:bg-gray-50 transition-colors inline-flex items-center gap-2">
+                      <Upload className="w-4 h-4" /> Subir Logo (Opcional)
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        className="hidden" 
+                        onChange={(e) => {
+                          if (e.target.files && e.target.files[0]) {
+                            handleJobFormChange('logoFile', e.target.files[0]);
+                          }
+                        }} 
+                      />
+                    </label>
+                    <p className="text-[11px] text-[#666666] mt-2">Si no subís nada, usaremos las iniciales.</p>
+                 </div>
+              </div>
+
               <div className="space-y-6">
                 <div>
                   <label className="block text-[11px] font-bold text-[#666666] uppercase tracking-widest mb-3" htmlFor="clinica">Nombre de la Clínica / Hospital *</label>
@@ -831,35 +922,23 @@ export default function BolsaTrabajo() {
       <div className="bg-white rounded-[40px] border border-gray-100 shadow-xl overflow-hidden">
         <div className="bg-[#F4F7F7] border-b border-gray-100 py-10 px-6 md:px-12 relative overflow-hidden">
           <div className="max-w-md mx-auto relative">
-            {/* Línea conectora base (Gris) */}
             <div className="absolute top-[20px] md:top-[24px] left-[25%] right-[25%] h-1 bg-gray-200 rounded-full z-0 hidden md:block">
-              {/* Línea de progreso (Esmeralda) */}
               <div className="absolute top-0 left-0 h-full bg-[#2D6A6A] rounded-full transition-all duration-500 ease-in-out" style={{ width: `${((profFormStep - 1) / 1) * 100}%` }}></div>
             </div>
 
-            {/* Steppers */}
             <div className="relative z-10 flex justify-between items-start">
               {[1, 2].map((step) => {
                 const isActive = profFormStep === step;
                 const isCompleted = profFormStep > step;
-                
                 return (
-                  <div 
-                    key={step} 
-                    onClick={() => { if(isCompleted) setProfFormStep(step); }}
-                    className={`flex flex-col items-center gap-3 w-32 md:w-40 ${isCompleted ? 'cursor-pointer group' : ''}`}
-                  >
-                    {/* Círculo con Efecto Gap */}
+                  <div key={step} onClick={() => { if(isCompleted) setProfFormStep(step); }} className={`flex flex-col items-center gap-3 w-32 md:w-40 ${isCompleted ? 'cursor-pointer group' : ''}`}>
                     <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center font-bold text-[14px] md:text-[16px] transition-all duration-300 z-10 ${
                       isActive ? 'bg-[#1A3D3D] text-white shadow-[0_4px_12px_rgba(26,61,61,0.3)] scale-110 border-[4px] border-[#F4F7F7]' : 
                       isCompleted ? 'bg-[#2D6A6A] text-white border-[4px] border-[#F4F7F7]' : 'bg-white border-[2px] border-gray-200 text-gray-400'
                     }`}>
                       {isCompleted ? <Check className="w-5 h-5 md:w-6 md:h-6 text-white" strokeWidth={3} /> : step}
                     </div>
-                    {/* Etiqueta */}
-                    <span className={`text-[9px] md:text-[11px] uppercase tracking-[0.2em] font-black text-center ${
-                      isActive || isCompleted ? 'text-[#1A3D3D]' : 'text-gray-400'
-                    }`}>
+                    <span className={`text-[9px] md:text-[11px] uppercase tracking-[0.2em] font-black text-center ${isActive || isCompleted ? 'text-[#1A3D3D]' : 'text-gray-400'}`}>
                       {step === 1 ? 'Perfil Básico' : 'Disponibilidad'}
                     </span>
                   </div>
@@ -873,7 +952,41 @@ export default function BolsaTrabajo() {
           {profFormStep === 1 && (
             <div className="space-y-8 animate-in fade-in">
               <h2 className="text-[24px] font-bold font-['Montserrat'] text-[#1A3D3D] mb-2">Tu perfil</h2>
+              
+              {/* Botón de subida de Avatar (Nuevo) */}
+              <div className="flex items-center gap-4">
+                 <div className="w-16 h-16 rounded-full bg-[#F4F7F7] border border-gray-200 flex items-center justify-center overflow-hidden shrink-0">
+                    {profForm.avatarFile ? (
+                      <img src={URL.createObjectURL(profForm.avatarFile)} alt="Avatar" className="w-full h-full object-cover" />
+                    ) : (
+                      <User className="w-6 h-6 text-gray-400" />
+                    )}
+                 </div>
+                 <div>
+                    <label className="cursor-pointer bg-white border border-gray-200 text-[#1A3D3D] font-bold text-[11px] uppercase tracking-widest px-4 py-2.5 rounded-xl hover:bg-gray-50 transition-colors inline-flex items-center gap-2">
+                      <Upload className="w-4 h-4" /> Subir Foto (Opcional)
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        className="hidden" 
+                        onChange={(e) => {
+                          if (e.target.files && e.target.files[0]) {
+                            handleProfFormChange('avatarFile', e.target.files[0]);
+                          }
+                        }} 
+                      />
+                    </label>
+                    <p className="text-[11px] text-[#666666] mt-2">Si no subís nada, usaremos tus iniciales.</p>
+                 </div>
+              </div>
+
               <div className="space-y-6">
+                <div>
+                  <label className="block text-[11px] font-bold text-[#666666] uppercase tracking-widest mb-3">Nombre y Apellido *</label>
+                  <input type="text" value={profForm.nombre} onChange={(e) => handleProfFormChange('nombre', e.target.value)} placeholder="Ej: Dr. Juan Pérez" className={`w-full bg-[#F4F7F7] border rounded-2xl px-5 py-4 text-[15px] font-medium focus:outline-none focus:bg-white focus:ring-4 focus:ring-[#2D6A6A]/10 text-[#333333] transition-all ${errors.nombre ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-[#2D6A6A]'}`} />
+                  {errors.nombre && <p className="text-red-500 text-[11px] font-bold mt-2">{errors.nombre}</p>}
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
                     <label className="block text-[11px] font-bold text-[#666666] uppercase tracking-widest mb-3">Especialidad *</label>
@@ -968,7 +1081,23 @@ export default function BolsaTrabajo() {
 
   return (
     <div className="bg-[#F4F7F7] min-h-screen font-['Inter'] antialiased relative">
-      {/* Removí los paddings laterales del main para que el hero toque los bordes al igual que el Cartilla */}
+
+    {/* BOTÓN TEMPORAL: Hacés un clic y cuando te avise el alert, ya podés borrar estas líneas de código 
+    <div className="bg-white p-4 border-b border-gray-200 flex justify-center relative z-50">
+      <button 
+        onClick={async () => {
+          try {
+            await cargarSeeds();
+            alert("¡Datos reales inyectados en Firebase con éxito!");
+          } catch (e) {
+            alert("Error al cargar los datos: " + e.message);
+          }
+        }} 
+        className="bg-red-600 text-white font-black text-[12px] uppercase tracking-widest px-6 py-3 rounded-xl hover:bg-red-700 hover:-translate-y-0.5 transition-all shadow-md"
+      >
+        🚨 Presionar una sola vez para cargar la Base de Datos
+      </button>
+    </div>*/}
       <main id="main-content" className="max-w-[1440px] mx-auto">
         {view === 'list' && renderList()}
         {view === 'detail' && renderDetail()}

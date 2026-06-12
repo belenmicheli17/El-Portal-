@@ -32,7 +32,7 @@ export default function Navbar({ mostrarBotonCrear = false, mostrarBotonContacto
       case 'novedades': path = '/novedades'; break;
       case 'bolsa-de-trabajo': path = '/bolsa-de-trabajo'; break;
       case 'perfil-profesional': path = '/perfil-profesional'; break;
-      case 'perfil-clinica': path = '/perfil-clinica'; break;
+      case 'perfil-clinica': path = '/clinica/${tudato.slug}'; break;
       case 'perfil-proveedores': path = '/perfil-proveedores'; break;
   case 'login': path = '/login'; break;
       case 'editor': path = '/editor-profesional'; break; 
@@ -120,11 +120,12 @@ export default function Navbar({ mostrarBotonCrear = false, mostrarBotonContacto
                       <button onClick={() => handleNav('novedades')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><div className="flex items-center gap-3"><Sparkles className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Novedades</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
                       <button onClick={() => handleNav('bolsa-de-trabajo')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><div className="flex items-center gap-3"><Briefcase className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Bolsa de Trabajo</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
                       
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] px-4 py-3 border-b border-gray-50 mb-2 mt-2 text-left">Perfiles Públicos</p>
+                     {/* <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] px-4 py-3 border-b border-gray-50 mb-2 mt-2 text-left">Perfiles Públicos</p>
                       <button onClick={() => handleNav('perfil-profesional')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><div className="flex items-center gap-3"><User className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Perfil Profesional</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
                       <button onClick={() => handleNav('perfil-clinica')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><div className="flex items-center gap-3"><Building className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Perfil Clínica</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
                       <button onClick={() => handleNav('perfil-proveedores')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><div className="flex items-center gap-3"><Truck className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Perfil Proveedores</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
-                      
+                      */}
+
                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] px-4 py-3 border-b border-gray-50 mb-2 mt-2 text-left">Editores / Gestión</p>
                       <button onClick={() => handleNav('editor')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><div className="flex items-center gap-3"><Edit className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Editor Profesional</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
                       <button onClick={() => handleNav('editor-clinica')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><div className="flex items-center gap-3"><Edit className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Editor Clínica</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>

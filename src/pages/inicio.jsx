@@ -70,7 +70,9 @@ export default function App() {
           <h1 className="text-xl md:text-2xl font-black text-[#1A3D3D] tracking-[0.2em] font-['Montserrat'] uppercase opacity-60">
             Sitio en <span className="text-[#2D6A6A]">construcción</span>
           </h1>
-          <div className="mt-4 h-[2px] w-10 bg-[#2D6A6A]/40 mx-auto rounded-full"></div>
+         <div className="mt-30 h-[2px] w-10 bg-[#2D6A6A]/40 mx-auto rounded-full"></div>
+        <p className="text-xs font-bold text-gray-500"> (Proximamente esta pagina sera la que integra todo, a la que ingresas directo cuando entras al portal. ahí decidis si sos profesional y queres inciar sesion o si sos tutor y queres ver la cartilla completa. Sería el inicio.) </p>
+          
         </div>
       </main>
 

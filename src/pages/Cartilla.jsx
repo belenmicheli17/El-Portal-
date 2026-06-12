@@ -6,8 +6,8 @@ import {
   Heart, Stethoscope, Layers, ChevronDown,
   Bird, Rabbit, PawPrint, Hospital, TreeDeciduous 
 } from 'lucide-react';
-// import { db } from '../firebase'; 
-// import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../firebase'; 
+import { collection, getDocs } from 'firebase/firestore';
 
 const HuellaPremium = ({ className }) => (
   <svg viewBox="0 0 24 24" fill="currentColor" className={className} xmlns="http://www.w3.org/2000/svg">
@@ -41,43 +41,49 @@ const Cartilla = () => {
   }, []);
 
   useEffect(() => {
-    // Función para mezclar aleatoriamente (Fisher-Yates)
-    const shuffleArray = (array) => {
-      let shuffled = [...array];
-      for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-      }
-      return shuffled;
-    };
+    const fetchDatos = async () => {
+      try {
+        // Hacemos la consulta real a la colección 'profesionales'
+        const querySnapshot = await getDocs(collection(db, 'profesionales'));
+        const profesionalesData = [];
 
-    const generarDatosDePrueba = () => {
-      // Subimos la cantidad de datos a 18 para que se note bien el grid
-      const mockData = Array.from({ length: 18 }).map((_, index) => {
-        const isClinica = index % 3 === 0; 
-        return {
-          id: `mock-${index + 1}`,
-          tipo: isClinica ? 'clinica' : 'profesional',
-          nombre: isClinica ? `Veterinaria San Roque ${index}` : `Dr. Especialista ${index + 1}`,
-          planActual: index % 4 === 0 ? 'pro' : 'basico', 
-          es24hs: isClinica && index === 0, 
-          foto: '', 
-          especialidad: !isClinica ? (index % 2 === 0 ? 'Cirugía especializada' : 'Veterinario clínico') : null,
-          servicios: isClinica ? ['Ecografía', 'Laboratorio', 'Rayos X', 'Cirugía', 'Farmacia'] : null,
-          provincia: ['Buenos Aires', 'CABA', 'Córdoba', 'Mendoza'][index % 4],
-          domicilio: !isClinica && index % 2 !== 0,
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          
+          // "Traducimos" los datos de Firebase para que la Cartilla los entienda perfecto
+          profesionalesData.push({
+            ...data,
+            id: doc.id, // El ID del documento (ej: 'clara-valdez') será el enlace de la tarjeta
+            tipo: data.tipo || 'profesional', // Forzamos el tipo para que la ruta sea /profesional/:slug
+            domicilio: data.atiendeDomicilio || false, // Emparejamos con el nombre que usa tu filtro
+            // Extraemos solo el título de los servicios para las etiquetas de la tarjeta
+            servicios: data.servicios ? data.servicios.map(s => s.titulo) : []
+          });
+        });
+
+        // Mantenemos tu excelente función para mezclar aleatoriamente
+        const shuffleArray = (array) => {
+          let shuffled = [...array];
+          for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+          }
+          return shuffled;
         };
-      });
-      
-      // Separamos por plan y mezclamos internamente para que no salgan siempre fijos
-      const premium = shuffleArray(mockData.filter(d => d.planActual === 'pro'));
-      const free = shuffleArray(mockData.filter(d => d.planActual !== 'pro'));
-      
-      setVeterinarios([...premium, ...free]);
-      setLoading(false);
+        
+        // Mantenemos la lógica de mostrar primero a los Pro
+        const premium = shuffleArray(profesionalesData.filter(d => d.planActual === 'pro'));
+        const free = shuffleArray(profesionalesData.filter(d => d.planActual !== 'pro'));
+        
+        setVeterinarios([...premium, ...free]);
+      } catch (error) {
+        console.error("Error cargando la cartilla desde Firebase:", error);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    generarDatosDePrueba();
+    fetchDatos();
   }, []);
 
   const [searchTerm, setSearchTerm] = useState('');

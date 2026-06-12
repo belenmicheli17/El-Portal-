@@ -2,10 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 
 // Si usas react-router-dom, descomenta la siguiente línea en tu entorno real:
 import { useNavigate } from 'react-router-dom';
-
-// ==========================================
-// IMPORTACIONES DE FIREBASE (COMENTADAS PARA EL PREVIEW)
-// ==========================================
 import { db } from '../../firebase'; 
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
@@ -314,8 +310,7 @@ const SimpleCropper = ({ imageSrc, onCrop, onCancel, type }) => {
 // APLICACIÓN PRINCIPAL (EDITOR PROFESIONAL)
 // ==========================================
 export default function EditorProfesional() { 
-  // const navigate = useNavigate(); // Descomentar en entorno real
-
+  const navigate = useNavigate(); 
   const [activeTab, setActiveTab] = useState('cuenta'); 
   const [modalConfig, setModalConfig] = useState({ isOpen: false, title: '', message: '', type: 'info', onConfirm: null });
   const [isSubModalOpen, setIsSubModalOpen] = useState(false); 
@@ -334,7 +329,7 @@ export default function EditorProfesional() {
     const fetchUserData = async () => {
       try {
         // En el futuro, acá irá el ID del usuario logueado (userId)
-        const docRef = doc(db, 'veterinarios', 'veterinario_prueba_123');
+        const docRef = doc(db, 'profesionales', 'veterinario_prueba_123');
         const docSnap = await getDoc(docRef);
         
         if (docSnap.exists()) {
@@ -353,53 +348,37 @@ export default function EditorProfesional() {
     fetchUserData();
   }, []);
   const fileInputRef = useRef(null);
-
-  // DATA INICIAL (Combinación de datos de cuenta y datos profesionales)
-  const initialData = {
-    // Cuenta
-    cuentaEmail: 'clara.valdez@gmail.com',
-    cuentaPassword: 'password123',
-    cuentaTelefono: '5491145678901',
-    planActual: 'pro',
-    
-    // Perfil Profesional
-    nombre: "Dra. Clara Valdez",
-    especialidad: "Cirugía de Tejidos Blandos",
-    matricula: "12345",
-    provincia: "Buenos Aires",
-    bio: "Especialista en cirugía de tejidos blandos y traumatología con más de 12 años de experiencia. Mi enfoque se centra en técnicas mínimamente invasivas para garantizar una recuperación rápida.",
-    foto: "https://images.unsplash.com/photo-1594824436998-ef22cc372134?auto=format&fit=crop&w=400&q=80",
-    fotosPerfil: ["https://images.unsplash.com/photo-1594824436998-ef22cc372134?auto=format&fit=crop&w=400&q=80"],
-    atiendeDomicilio: true,
-    emailContacto: "contacto@claravaldez.com",
-    instagram: "",
-    linkedin: "",
-    facebook: "",
-    whatsappActivo: false,
-    whatsappNum: "",
-    
-    // Arrays Profesionales
-    trayectoria: [
-      { id: 1, titulo: "Especialidad en Cirugía", desc: "UBA - 2015", extra: "Graduada con Diploma de Honor" }
-    ],
-    servicios: [
-      { id: 1, titulo: "Cirugía Avanzada", desc: "Recuperación rápida en caninos." }
-    ],
-    casos: [
-      { id: 1, nombre: "Luna", patologia: "Cirugía de Cadera", desc: "Recuperación exitosa de dsiplasia severa.", fotos: ["https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&w=400&q=80"] }
-    ],
-    zonas: [
-      { 
-        id: 1, 
-        nombre: "Zona Oeste", 
-        clinicas: [
-          { id: 101, nombre: "Veterinaria Patitos", direccion: "Morón, Centro", linkMaps: "https://maps.google.com" }
-        ] 
-      }
-    ]
-  };
-
-  const [_formData, _setFormData] = useState(initialData);
+  const [_formData, _setFormData] = useState({
+  // Cuenta
+  cuentaEmail: '',
+  cuentaPassword: '',
+  cuentaTelefono: '',
+  planActual: 'pro',
+  visible: true,
+  
+  // Perfil Profesional
+  slug: '',
+  nombre: '',
+  especialidad: '',
+  matricula: '',
+  provincia: 'Buenos Aires',
+  bio: '',
+  foto: '',
+  fotosPerfil: [],
+  atiendeDomicilio: false,
+  emailContacto: '',
+  instagram: '',
+  linkedin: '',
+  facebook: '',
+  whatsappActivo: false,
+  whatsappNum: '',
+  
+  // Arrays (Es vital que empiecen como arrays vacíos [])
+  trayectoria: [],
+  servicios: [],
+  casos: [],
+  zonas: []
+});
   const [past, setPast] = useState([]);
   const [future, setFuture] = useState([]);
   const isUndoRedAction = useRef(false);
@@ -564,6 +543,14 @@ const handleFileSelect = (e, target, caseId = null) => {
     });
   };
 
+const generarSlug = (texto) => {
+  return texto
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)+/g, "");
+};
+
   const handleSaveData = async () => {
     if (!formData.nombre.trim() || !formData.especialidad.trim() || !formData.foto) {
       setModalConfig({ 
@@ -580,31 +567,20 @@ const handleFileSelect = (e, target, caseId = null) => {
     setSaveStatus('saving');
     
     try {
-      // ==============================================================
-      // 1. CONEXIÓN REAL A FIREBASE (ESCRITURA)
-      // ==============================================================
+      // 1. Generamos el slug a partir del nombre del profesional
+      const slugGenerado = generarSlug(formData.nombre);
       
-      // NOTA PARA EL FUTURO (SISTEMA DE LOGIN):
-      // Cuando tengas la autenticación activada, no usarás un ID de prueba fijo.
-      // Obtendrás el ID del usuario logueado usando Firebase Auth así:
-      // 
-      // import { auth } from '../../firebase';
-      // const userId = auth.currentUser.uid;
-      // const docRef = doc(db, 'veterinarios', userId);
-      
-      // Por ahora, usamos tu documento de prueba para cerrar el circuito:
-      const docRef = doc(db, 'veterinarios', 'veterinario_prueba_123');
-      
-      // Impactamos todo el objeto formData en Firestore
-      await setDoc(docRef, formData);
-      // ==============================================================
+      // 2. Agregamos el slug a los datos que vamos a guardar
+      const dataToSave = { ...formData, slug: slugGenerado };
 
-      // Mantenemos este pequeño delay solo para la animación del botón
-      await new Promise(resolve => setTimeout(resolve, 800));
+      // 3. Usamos el slug como el ID del documento en Firebase 
+      const docRef = doc(db, 'profesionales', slugGenerado);
+      
+      // Impactamos todo el objeto en Firestore
+      await setDoc(docRef, dataToSave);
 
+      // 4. --- ¡CERRANDO EL CICLO DEL BOTÓN! ---
       setSaveStatus('saved');
-      
-      // Retraso para que el botón vuelva a su estado original sin abrir ningún cartel
       setTimeout(() => setSaveStatus('idle'), 2500);
 
     } catch (error) {
@@ -642,7 +618,7 @@ const handleFileSelect = (e, target, caseId = null) => {
     setIsPlanModalOpen(true);
   };
 
-  useEffect(() => {
+ useEffect(() => {
     const link = document.createElement('link');
     link.href = 'https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap';
     link.rel = 'stylesheet';
@@ -650,9 +626,11 @@ const handleFileSelect = (e, target, caseId = null) => {
     return () => document.head.removeChild(link);
   }, []);
 
+  
   return (
     <div className="bg-[#F4F7F7] min-h-screen font-['Inter'] antialiased text-left text-[#1A3D3D] selection:bg-[#4DB6AC] selection:text-white relative w-full overflow-x-hidden flex flex-col">
       
+
       {/* MODAL GENÉRICO DE AVISOS */}
       {modalConfig.isOpen && (
         <div className="fixed inset-0 bg-[#1A3D3D]/40 backdrop-blur-md z-[300] flex items-center justify-center p-4 transition-all">
@@ -1067,7 +1045,7 @@ const handleFileSelect = (e, target, caseId = null) => {
                     </div>
                   </div>
                 </div>
-
+ 
                 {/* FORMULARIO ACORDEONES */}
                 <div className="w-full bg-white rounded-[32px] shadow-sm border border-gray-100 mb-6">
                   
@@ -1437,13 +1415,22 @@ const handleFileSelect = (e, target, caseId = null) => {
             {/* LINK INFERIOR PARA VER PERFIL */}
             {/* ========================================================================= */}
             <div className="flex justify-center mt-8 pb-4">
+           
               <button 
-                type="button" 
-                // onClick={() => navigate('/perfil-profesional')} 
-                className="text-center block text-gray-400 font-bold text-xs uppercase tracking-[0.2em] hover:text-[#4DB6AC] transition-colors flex items-center justify-center gap-2 group bg-white px-6 py-3 rounded-full border border-gray-200 shadow-sm w-full md:w-auto"
-              >
-                Ver mi perfil público <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </button>
+  type="button" 
+  onClick={() => {
+    // 1. Generamos el slug usando el nombre del profesional
+    const slugActual = generarSlug(formData.nombre);
+    
+    // 2. Navegamos a la ruta de profesionales que armamos en App.jsx
+    navigate(`/profesional/${slugActual}`);
+  }} 
+  className="text-center block text-gray-400 font-bold text-xs uppercase tracking-[0.2em] hover:text-[#4DB6AC] transition-colors flex items-center justify-center gap-2 group bg-white px-6 py-3 rounded-full border border-gray-200 shadow-sm"
+>
+  Ver mi perfil público <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+</button>
+
+
             </div>
 
           </div>

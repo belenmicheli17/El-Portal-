@@ -18,10 +18,10 @@ const strategicCardsData = [
     roleKey: 'profesional',
     icon: User,
     title: 'Profesionales',
-    subtitle: 'Centralizá tu prestigio y accedé a oportunidades exclusivas.',
+    subtitle: 'Usa tu pagina como carta de presentación.',
     features: [
       { icon: Stethoscope, title: 'Casos a tu medida:', desc: 'Atraé consultas y derivaciones alineadas con tu especialidad.' },
-      { icon: TrendingUp, title: 'Evolución profesional:', desc: 'Destacá tu formación para ser descubierto por directores médicos.' },
+      { icon: TrendingUp, title: 'Evolución profesional:', desc: 'Destacá tu formación para ser descubierto por tutores y colegas que necesitan tus servicios.' },
       { icon: LayoutGrid, title: 'Llave al ecosistema:', desc: 'Usá tu cuenta para estar siempre al tanto de nuevas capacitaciones, ofertas laborales y siempre a mano los contactos de proveedores.' }
     ]
   },
@@ -621,10 +621,11 @@ export default function LandingPage() {
           <div className="absolute top-[20%] left-[-10%] w-[40vw] h-[40vw] bg-[#2D6A6A]/30 rounded-full blur-[120px] pointer-events-none"></div>
           
           <div className="max-w-[1200px] mx-auto px-8 md:px-10 relative z-10 text-center mb-8 md:mb-12">
-            <h3 className="text-[#4DB6AC] font-bold text-[13px] uppercase tracking-[0.3em] mb-3 drop-shadow-md">Socios Estratégicos</h3>
             <h2 className="text-3xl md:text-5xl font-black text-white font-['Montserrat'] leading-[1.1] tracking-tighter drop-shadow-lg">
-              Un ecosistema donde<br/>todos crecen.
+              Un ecosistema donde<br/>todos crecen
             </h2>
+            <h3 className="text-[#4DB6AC] font-bold text-[13px] uppercase tracking-[0.3em] mb-3 drop-shadow-md">Conocé los beneficios de tener tu propio perfil</h3>
+          
           </div>
           
           <div className="w-full max-w-[1100px] mx-auto relative z-10">
@@ -725,14 +726,15 @@ export default function LandingPage() {
                   </span>
                   <div className="flex items-center gap-3 mb-4">
                     <Activity className="w-6 h-6 text-[#4DB6AC]" />
-                    <h3 className="text-2xl font-bold font-['Montserrat'] text-white leading-tight">Servicios Holísticos</h3>
+                    <h3 className="text-2xl font-bold font-['Montserrat'] text-white leading-tight">Terapias complementarias</h3>
                   </div>
                 </div>
                 <p className="text-white/80 leading-[1.6] font-medium text-[15px] text-left mb-8">
-                  Damos visibilidad a profesionales y servicios especializados difíciles de hallar: fisioterapia, terapias holísticas, etología y nutrición natural. Conectamos todo el ecosistema de bienestar animal.</p>
+                  Damos visibilidad servicios holísticos como acupuntura, homeopatia, medicina antroposofica. Entre otras terapias profesionales dificiles de hallar como ozonoterapia, terapia neural, etologia, etc.
+                  Conectamos todo el ecosistema de bienestar animal.</p>
                 <div className="mt-auto flex flex-col gap-3 relative z-10 text-left">
                   <div className="bg-white/5 p-4 rounded-2xl border border-white/10 hover:bg-white/10 transition-all cursor-pointer shadow-sm flex justify-between">
-                    <span className="text-white font-bold text-[15px]">Acupuntura</span><ChevronRight className="w-4 h-4 text-white/50" />
+                    <span className="text-white font-bold text-[15px]">Osteopatía y Quiropraxia</span><ChevronRight className="w-4 h-4 text-white/50" />
                   </div>
                 </div>
               </div>
@@ -750,7 +752,7 @@ export default function LandingPage() {
                   <p className="text-[#1A3D3D]/60 text-[13px] font-semibold italic">Inicia el 15 de Abril</p>
                 </div>
                 <p className="text-[#333333]/90 leading-[1.6] font-medium text-[14px] text-left">
-                  Mantenete al tanto de las ultimas novedades sobre cursos y charlas. Encontrá fácilmente quién dicta el próximo seminario, fechas y modalidades.
+                  Usá este espacio para publicitar y también mantenerte al tanto de las ultimas novedades sobre cursos y charlas. Encontrá fácilmente que disertantes estarán presentes, fechas y modalidades. 
                 </p>
               </div>
 
@@ -831,7 +833,7 @@ export default function LandingPage() {
             {/* Mitad Izquierda: Textos */}
             <div className="flex-1 text-center lg:text-left">
               <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-[#1A3D3D] mb-6 font-['Montserrat'] tracking-tight leading-[1.1]">
-                ¿Listo para darle a tu perfil el prestigio que merece?
+                ¿Listo para ser parte de la red?
               </h2>
               <p className="text-[#333333]/90 text-[16px] md:text-[18px] font-medium leading-relaxed mb-1">
                 Formá parte de la primera cartilla veterinaria que potencia tu visibilidad mientras vos te enfocás en tu profesión.

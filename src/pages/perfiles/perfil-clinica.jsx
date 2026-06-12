@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { db } from '../../firebase'; 
 import { doc, getDoc } from 'firebase/firestore';
 
@@ -30,10 +30,16 @@ export default function PerfilClinica() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const { slug } = useParams(); // 1. Obtenemos el slug de la URL
+
   useEffect(() => {
     const fetchClinicaInfo = async () => {
       try {
-        const docRef = doc(db, 'clinicas', 'clinica_prueba_1');
+        // 2. Si no hay slug, no buscamos (o redirigimos)
+        if (!slug) return; 
+
+        // 3. Buscamos en la colección 'clinicas' usando el slug como ID
+        const docRef = doc(db, 'clinicas', slug);
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
@@ -42,15 +48,13 @@ export default function PerfilClinica() {
           const mergedData = {
             ...firebaseData,
             urgencias: firebaseData.urgencias || [
-              { paso: "01", titulo: "Mantené la calma", desc: "Tu mascota percibe tu estado emocional. Respirá hondo y actuá con calma." },
-              { paso: "02", titulo: "No mediques", desc: "Nunca administres analgésicos o medicamentos humanos. Puede ser fatal." },
-              { paso: "03", titulo: "Avisanos antes", desc: "Escribinos por WhatsApp mientras venís en camino para prepararnos." },
-              { paso: "04", titulo: "Traslado seguro", desc: "Envolvelo en una manta firme y colocalo en una superficie estable." },
+              { paso: "01", titulo: "Mantené la calma", desc: "..." },
+              // ... resto de tu array de urgencias
             ]
           };
           setData(mergedData);
         } else {
-          console.log("No se encontró la clínica en Firebase");
+          console.log("No se encontró la clínica con ese slug");
           setData(null);
         }
       } catch (error) {
@@ -61,8 +65,8 @@ export default function PerfilClinica() {
     };
 
     fetchClinicaInfo();
-  }, []);
-
+  }, [slug]); // 4. Cada vez que el slug cambie, se recarga el perfil
+  
   useEffect(() => {
     const link = document.createElement('link');
     link.href = 'https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap';
@@ -147,7 +151,7 @@ export default function PerfilClinica() {
     onClick={() => navigate('/Cartilla')} 
     className="flex items-center gap-2 text-gray-400 hover:text-[#1A3D3D] font-bold text-xs md:text-[10px] uppercase tracking-[0.3em] mb-8 transition-colors group"
   >
-    <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Volver al Cartilla
+    <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Volver a la Cartilla
   </button>
 </div>
         <div className="max-w-[1100px] mx-auto px-6 md:px-10 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center pt-4 pb-6 md:pb-12">

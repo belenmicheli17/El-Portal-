@@ -329,27 +329,33 @@ export default function EditorClinico() {
   const isPro = planType === 'pro';
 
   const initialData = {
-    cuentaEmail: 'clinica@vetsur.com.ar',
-    cuentaPassword: 'vetsur2026',
-    cuentaTelefono: '5491145678901',
-    nombre: "Clínica Veterinaria San Roque",
-    subtitulo: "Cuidado profesional para tu mejor amigo",
-    descripcion: "Más de 15 años cuidando mascotas en el Oeste del Gran Buenos Aires. Somos un centro médico veterinario de alta complejidad comprometido con el bienestar.",
-    historia: "Fundada en 2009 por la Dra. Valeria Rojas, San Roque nació de la convicción de que cada mascota merece atención de primer nivel sin importar dónde viva. Contamos con tecnología de punta y un equipo humano excepcional.",
-    añosExperiencia: 15,
+    cuentaEmail: '',
+    cuentaPassword: '',
+    cuentaTelefono: '',
+    nombre: "",
+    subtitulo: "",
+    descripcion: "",
+    historia: "",
+    añosExperiencia: "",
     foto: "", 
-    direccion: "Rivadavia 1234, Morón",
-    telefono: "+54 11 4567-8901",
-    whatsapp: "5491145678901",
-    email: "contacto@sanroquevet.com.ar",
-    planActual: 'pro',
-    redes: { instagram: "https://instagram.com", facebook: "https://facebook.com" },
+    direccion: "",
+    telefono: '',
+    whatsapp: "",
+    email: "",
+    planActual: '',
+    redes: { instagram: "", facebook: "" },
     guardia24hs: true,
     telefonoGuardia: "",
-    horarios: { semanaDesde: "09", semanaHasta: "20", sabadoDesde: "10", sabadoHasta: "14" },
+    horarios: { semanaDesde: "", semanaHasta: "", sabadoDesde: "", sabadoHasta: "" },
+    urgencias: [
+      { id: 1, paso: "01", titulo: "Mantené la calma", desc: "Asegurá a tu mascota y evitá movimientos bruscos." },
+      { id: 2, paso: "02", titulo: "Llamá o escribí", desc: "Avisanos que estás en camino para preparar la sala." },
+      { id: 3, paso: "03", titulo: "Transporte seguro", desc: "Usá una transportadora o manta rígida si hay fracturas." },
+      { id: 4, paso: "04", titulo: "Traé historial", desc: "Si toma medicación o tiene estudios previos, traelos con vos." }
+    ],
     staff: [
-      { id: 1, nombre: "Dr. Martín Suárez", especialidad: "Director Médico", matricula: "MV 4521", bio: "Especialista en cirugía general con más de 10 años de experiencia.", foto: "" },
-      { id: 2, nombre: "Dra. Valeria Rojas", especialidad: "Medicina Interna", matricula: "MV 3108", bio: "Enfocada en diagnóstico y tratamiento de patologías de alta complejidad.", foto: "" }
+      { id: 1, nombre: "", especialidad: "", matricula: "", bio: "", foto: "" },
+      { id: 2, nombre: "", especialidad: "", matricula: "", bio: "", foto: "" }
     ],
     servicios: {
       'guardia': { activo: true, subOpcionesSeleccionadas: ['Terapia Intensiva (UTI)'] },
@@ -366,7 +372,7 @@ export default function EditorClinico() {
   const [future, setFuture] = useState([]);
   const isUndoRedAction = useRef(false);
   const fileInputRef = useRef(null);
-
+const [personalizarUrgencias, setPersonalizarUrgencias] = useState(false);
   const formData = _formData;
   
   const setFormData = (action) => {
@@ -568,6 +574,14 @@ export default function EditorClinico() {
     }
   };
 
+const generarSlug = (texto) => {
+  return texto
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Quita acentos (é -> e)
+    .replace(/[^a-z0-9]+/g, "-") // Reemplaza espacios y símbolos por guiones
+    .replace(/(^-|-$)+/g, ""); // Limpia guiones sobrantes en las puntas
+};
+
   const handleSaveData = async () => {
     if (!formData.nombre.trim() || !formData.direccion.trim() || !formData.foto) {
       setModalConfig({ 
@@ -584,14 +598,22 @@ export default function EditorClinico() {
     setSaveStatus('saving');
     
     try {
-      const docRef = doc(db, 'clinicas', 'clinica_prueba_1');
-      await setDoc(docRef, formData);
-
-      setSaveStatus('saved');
+      // 1. Generamos el slug a partir del nombre ingresado
+      const slugGenerado = generarSlug(formData.nombre);
       
-      // Eliminamos el setModalConfig de éxito para no interrumpir con el cartel
+      // 2. Agregamos el slug a los datos que vamos a guardar
+      const dataToSave = { ...formData, slug: slugGenerado };
+if (!dataToSave.telefonoGuardia || dataToSave.telefonoGuardia.trim() === '') {
+        dataToSave.telefonoGuardia = null;
+      }
+
+      // 3. Usamos el slug como el ID del documento en Firebase en lugar de 'clinica_prueba_1'
+      const docRef = doc(db, 'clinicas', slugGenerado);
+      await setDoc(docRef, dataToSave);
+setSaveStatus('saved'); 
       setTimeout(() => setSaveStatus('idle'), 2500);
 
+      
     } catch (error) {
       console.error("Error al guardar en Firebase:", error);
       setSaveStatus('error');
@@ -1172,12 +1194,52 @@ export default function EditorClinico() {
                             tooltip="Agrega un cartel destacado en tu perfil indicando la atención continua de emergencias." 
                          />
                          {formData.guardia24hs && (
-                           <div className="pt-4 border-t border-red-200/50 mt-2 animate-in fade-in slide-in-from-top-2 flex flex-col gap-2">
+                           <div className="pt-4 border-t border-red-200/50 mt-2 animate-in fade-in slide-in-from-top-2 flex flex-col gap-4">
                              <InputGroup label="Línea Directa de Emergencias (Opcional)" id="telefonoGuardia" value={formData.telefonoGuardia} onChange={handleChange} placeholder="Dejar vacío para usar el teléfono principal" tooltip="Si tienes un celular o línea exclusiva para urgencias, ingrésalo aquí." />
-                             <div className="bg-red-50 border border-red-100 text-red-600 text-xs font-bold px-4 py-3 rounded-xl flex items-start gap-2 leading-relaxed mt-2">
-                               <Info className="w-4 h-4 shrink-0 mt-0.5" /> 
-                               <span>Todos los perfiles con Guardia 24hs mostrarán el aviso general: <i>"Por favor, avisar por WhatsApp al venir en camino para preparar la recepción."</i></span>
+                             
+                             {/* SECCIÓN NUEVA: PROTOCOLO EDITABLE */}
+                             <div className="bg-white border border-red-100 rounded-2xl p-5 shadow-sm mt-2">
+                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+                                  <div>
+                                    <h4 className="text-sm font-bold text-[#1A3D3D] mb-1">Protocolo Crítico de Acción</h4>
+                                    <p className="text-xs text-gray-500 font-medium">Instrucciones de 4 pasos para clientes en camino.</p>
+                                  </div>
+                                  <button 
+                                    onClick={() => setPersonalizarUrgencias(!personalizarUrgencias)}
+                                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors border ${personalizarUrgencias ? 'bg-red-50 text-red-600 border-red-200' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'}`}
+                                  >
+                                    {personalizarUrgencias ? 'Ocultar edición' : 'Personalizar pasos'}
+                                  </button>
+                                </div>
+
+                                {personalizarUrgencias ? (
+                                  <div className="space-y-4 pt-4 border-t border-gray-100 animate-in fade-in">
+                                    {formData.urgencias.map((urgencia, index) => (
+                                      <div key={urgencia.id} className="flex gap-4 items-start bg-gray-50 p-4 rounded-xl border border-gray-200">
+                                        <div className="w-10 h-10 rounded-lg bg-red-100 text-red-600 font-black flex items-center justify-center shrink-0 border border-red-200">
+                                          {urgencia.paso}
+                                        </div>
+                                        <div className="flex-1 space-y-3">
+                                          <div>
+                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Título corto</label>
+                                            <input type="text" value={urgencia.titulo} onChange={(e) => handleArrayUpdate('urgencias', urgencia.id, 'titulo', e.target.value)} className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm font-bold text-[#1A3D3D] focus:border-red-400 outline-none" maxLength={25} />
+                                          </div>
+                                          <div>
+                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Instrucción</label>
+                                            <input type="text" value={urgencia.desc} onChange={(e) => handleArrayUpdate('urgencias', urgencia.id, 'desc', e.target.value)} className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs font-medium text-gray-600 focus:border-red-400 outline-none" maxLength={90} />
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 mt-2 flex items-center gap-3">
+                                    <Info className="w-5 h-5 text-gray-400 shrink-0" />
+                                    <p className="text-xs text-gray-500 font-medium leading-relaxed">Se mostrará el protocolo estándar de 4 pasos recomendado por El Portal. Podés personalizarlo si tu clínica tiene otras normativas.</p>
+                                  </div>
+                                )}
                              </div>
+
                            </div>
                          )}
                       </div>
@@ -1498,12 +1560,17 @@ export default function EditorClinico() {
             {/* ========================================================================= */}
             <div className="flex justify-center mt-8 pb-4">
               <button 
-                type="button" 
-                onClick={() => navigate('/perfil-clinica')} 
-                className="text-center block text-gray-400 font-bold text-xs uppercase tracking-[0.2em] hover:text-[#4DB6AC] transition-colors flex items-center justify-center gap-2 group bg-white px-6 py-3 rounded-full border border-gray-200 shadow-sm w-full md:w-auto"
-              >
-                Ver mi perfil público <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </button>
+  type="button" 
+  onClick={() => {
+    // 1. Generamos el slug en el momento usando el nombre del formulario
+    const slugActual = generarSlug(formData.nombre);
+    // 2. Navegamos usando comillas invertidas (backticks)
+    navigate(`/clinica/${slugActual}`);
+  }} 
+  className="text-center block text-gray-400 font-bold text-xs uppercase tracking-[0.2em] hover:text-[#4DB6AC] transition-colors flex items-center justify-center gap-2 group bg-white px-6 py-3 rounded-full border border-gray-200 shadow-sm w-full md:w-auto"
+>
+  Ver mi perfil público <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+</button>
             </div>
 
           </div>

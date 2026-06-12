@@ -25,7 +25,6 @@ const IconoBisturi = ({ className }) => (
 );
 
 function PerfilPublico() {
-  const { id } = useParams(); 
   const navigate = useNavigate();
   
   const [data, setData] = useState(null);
@@ -38,39 +37,34 @@ function PerfilPublico() {
   const [selectedCaso, setSelectedCaso] = useState(null);
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
 
-  // EFECTO 1: BUSCAR DATOS
-  useEffect(() => {
-    const fetchPerfil = async () => {
-      const idBuscado = id ? id : 'veterinario_prueba_123';
+  const { slug } = useParams(); // 1. Capturamos el slug de la URL
 
+  useEffect(() => {
+    const fetchVeterinarioInfo = async () => {
       try {
-        const docRef = doc(db, 'veterinarios', idBuscado);
+        if (!slug) return; // Si no hay slug en la URL, no busca nada
+
+        // 2. Buscamos en 'profesionales' usando el slug como ID de documento
+        const docRef = doc(db, 'profesionales', slug);
         const docSnap = await getDoc(docRef);
-        
+
         if (docSnap.exists()) {
-          const dbData = docSnap.data();
-          setData({
-            ...dbData,
-            zonas: dbData.zonas || [],
-            servicios: dbData.servicios || [],
-            trayectoria: dbData.trayectoria || [],
-            casos: dbData.casos || [],
-            // Aseguramos que haya un mail de contacto para que los botones funcionen en la prueba
-            emailContacto: dbData.emailContacto || 'contacto@veterinario.com',
-            whatsappNum: dbData.whatsappNum || '5491123456789'
-          });
+          const firebaseData = docSnap.data();
+          // Acá mantenés tu lógica de combinar datos (mergedData) si la tenías:
+          setData(firebaseData); 
         } else {
-          setData(null); 
+          console.log("No se encontró el veterinario en Firebase");
+          setData(null);
         }
       } catch (error) {
-        console.error("Error al obtener el perfil de Firebase:", error);
+        console.error("Error obteniendo el perfil profesional:", error);
       } finally {
         setLoading(false);
       }
     };
-    
-    fetchPerfil();
-  }, [id]);
+
+    fetchVeterinarioInfo();
+  }, [slug]); // 3. Se ejecuta cada vez que cambia el slug en la URL
 
   // EFECTO 2: ESTILOS
   useEffect(() => {
@@ -218,7 +212,7 @@ function PerfilPublico() {
       {/* ========================================== */}
       <div className="w-full max-w-[412px] bg-[#F4F7F7] min-h-screen relative shadow-2xl flex flex-col md:hidden shrink-0 overflow-x-hidden">
         
-        {/* BOTÓN VOLVER AL Cartilla - MÓVIL */}
+        {/* BOTÓN VOLVER A La Cartilla - MÓVIL */}
         <div className="px-6 pt-6 pb-2 bg-[#1A3D3D]">
           <button onClick={() => navigate('/Cartilla')} className="flex items-center gap-2 text-white/70 hover:text-white font-bold text-[10px] uppercase tracking-[0.3em] transition-colors group">
             <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Volver
@@ -425,7 +419,7 @@ function PerfilPublico() {
           {/* BOTÓN VOLVER AL Cartilla - ESCRITORIO */}
           <div className="w-full flex justify-start">
             <button onClick={() => navigate('/Cartilla')} className="flex items-center gap-2 text-gray-400 hover:text-[#1A3D3D] font-bold text-[10px] md:text-[12px] uppercase tracking-[0.3em] mb-8 transition-colors group">
-              <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Volver al Cartilla
+              <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Volver a la Cartilla
             </button>
           </div>
 
@@ -592,7 +586,7 @@ function PerfilPublico() {
                   <div id="zonas" className="p-10 md:p-16 bg-white border-b border-gray-50">
                     <div className="mb-12 text-center">
                       <h2 className="text-[24px] md:text-[30px] font-extrabold text-[#1A3D3D] font-['Montserrat'] uppercase tracking-tight mb-4">Lugares de Atención</h2>
-                      <p className="text-gray-600 font-medium text-[17px]">Dónde encontrarme para consultas y cirugías</p>
+                      <p className="text-gray-600 font-medium text-[17px]">Dónde encontrarme para consultas</p>
                       <p className="text-[#4DB6AC] font-bold text-[15px] mt-2 uppercase tracking-widest">Actualmente en {data.provincia}</p>
                     </div>
                     
@@ -646,7 +640,7 @@ function PerfilPublico() {
                 <div className="text-[#2D6A6A] mb-8"><MessageCircle className="w-12 h-12" /></div>
                 
                 <h2 className="text-[24px] md:text-[30px] font-extrabold font-['Montserrat'] text-[#1A3D3D] mb-6 uppercase tracking-tight leading-none">Enviar Propuesta</h2>
-                <p className="text-gray-600 leading-relaxed mb-10 text-[17px] font-medium">Para invitaciones a seminarios, derivación de casos o colaboraciones académicas.</p>
+                <p className="text-gray-600 leading-relaxed mb-10 text-[17px] font-medium">Para invitaciones a capacitaciones, derivación de casos o colaboraciones académicas.</p>
                 {data.whatsappActivo && (
                   <div className="p-8 bg-[#F4F7F7] rounded-[40px] border border-gray-50">
                     <p className="text-[12px] font-bold text-[#1A3D3D] uppercase tracking-[0.3em] mb-5 leading-none text-left">Chatea directamente</p>

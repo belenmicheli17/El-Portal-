@@ -87,7 +87,7 @@ const CartillaHeroMockup = () => {
               <div className="flex-1 min-w-0 pr-2">
                 <h2 className="font-montserrat font-extrabold text-[#1A3D3D] text-[14px] sm:text-[15px] leading-[1.2] line-clamp-2">
                   <span className="block truncate">Veterinaria</span>
-                  <span className="block truncate">San Roque</span>
+                  <span className="block truncate">Dequivet</span>
                 </h2>
               </div>
             </div>
@@ -105,7 +105,7 @@ const CartillaHeroMockup = () => {
             <div className="flex items-center justify-between pt-2.5 border-t border-gray-50 mt-auto">
               <div className="flex items-center gap-1 text-[#666666] text-[11px] min-w-0 max-w-[70%]">
                 <MapPin className="w-3.5 h-3.5 shrink-0" />
-                <span className="truncate">Av. Libertador, <span className="font-bold text-[#1A3D3D]">San Isidro</span></span>
+                <span className="truncate"><span className="font-bold text-[#1A3D3D]">San Isidro</span></span>
               </div>
               <div className="flex items-center gap-0.5 text-[#9CA3AF] shrink-0">
                 <ChevronRight className="w-4 h-4" />
@@ -132,15 +132,15 @@ const CartillaHeroMockup = () => {
               
               <div className="mb-2">
                 <h2 className="font-montserrat font-extrabold text-[#1A3D3D] text-[13px] leading-[1.2] line-clamp-2">
-                  <span className="block truncate">Dra. Valentinancia</span>
-                  <span className="block truncate">López</span>
+                  <span className="block truncate">Mercedes</span>
+                  <span className="block truncate">Arenas</span>
                 </h2>
               </div>
               
               <div className="mb-2">
                 <span className="inline-flex flex-col justify-center bg-[#F4F7F7] px-2 py-1.5 rounded-xl w-full">
                   <span className="text-[#2D6A6A] text-[10px] sm:text-[11px] font-semibold leading-[1.3] truncate">
-                    Cardiología
+                    Cirujana Traumatóloga
                   </span>
                 </span>
               </div>
@@ -171,7 +171,7 @@ const CartillaHeroMockup = () => {
               </div>
               <div className="mb-2">
                 <h2 className="font-montserrat font-extrabold text-[#1A3D3D] text-[13px] leading-[1.2] line-clamp-2">
-                  <span className="block truncate">Dr. Martín</span>
+                  <span className="block truncate">Martín</span>
                   <span className="block truncate">Gómez</span>
                 </h2>
               </div>
