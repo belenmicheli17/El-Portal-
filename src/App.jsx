@@ -168,7 +168,7 @@ export default function App() {
         {/* RUTAS SIN NAVBAR NI FOOTER GLOBALES                       */}
         {/* ========================================================= */}
         
-        <Route path="/login" element={<Login />} />
+        <Route path="/Login" element={<Login />} />
 
         {/* Rutas de Editores */}
         <Route path="/editor-profesional" element={<Editor />} />
