@@ -22,7 +22,7 @@ const strategicCardsData = [
     features: [
       { icon: Stethoscope, title: 'Casos a tu medida:', desc: 'Atraé consultas y derivaciones alineadas con tu especialidad.' },
       { icon: TrendingUp, title: 'Evolución profesional:', desc: 'Destacá tu formación para ser descubierto por tutores y colegas que necesitan tus servicios.' },
-      { icon: LayoutGrid, title: 'Llave al ecosistema:', desc: 'Usá tu cuenta para estar siempre al tanto de nuevas capacitaciones, ofertas laborales y siempre a mano los contactos de proveedores.' }
+      { icon: LayoutGrid, title: 'Llave al ecosistema:', desc: 'Usá tu cuenta para estar siempre al tanto de nuevas capacitaciones, ofertas laborales y a mano los contactos de proveedores.' }
     ]
   },
   {
@@ -32,7 +32,7 @@ const strategicCardsData = [
     title: 'Centros Veterinarios',
     subtitle: 'Atraé nuevos pacientes y convertite en el centro de derivación de tu zona.',
     features: [
-      { icon: MapPin, title: 'Visibilidad ante tutores:', desc: 'que exploren los servicios que ofreces y conozcan a tu equipo de profesionales.' },
+      { icon: MapPin, title: 'Visibilidad ante tutores:', desc: 'desde tu propia pagina pueden explorar los servicios que ofreces y conozcan a tu equipo de profesionales.' },
       { icon: TrendingUp, title: 'Rentabilizá tu equipamiento:', desc: 'Atraé derivaciones directas de colegas.' },
       { icon: Briefcase, title: 'Reclutamiento ágil:', desc: 'Encontrá rápidamente a los especialistas que tu equipo necesita desde la Bolsa de Trabajo.' }
     ]
@@ -41,11 +41,11 @@ const strategicCardsData = [
     id: 'proveedores',
     roleKey: 'proveedor',
     icon: Package,
-    badge: 'Solo disponible para profesionales registrados*',
+    badge: 'Listado solo disponible para profesionales registrados*',
     title: 'Proveedores',
     subtitle: 'Tu catálogo frente a los que toman las decisiones de compra.',
     features: [
-      { icon: Target, title: 'Tráfico 100% calificado:', desc: 'Tu oferta llega directamente a profesionales matriculados y directores médicos interesados en tu catalogo.' },
+      { icon: Target, title: 'Tráfico 100% calificado:', desc: 'Tu oferta llega directamente a profesionales interesados en tu catalogo.' },
       { icon: Network, title: 'Networking de Ventas:', desc: 'Conectá de forma directa a tus distribuidores con las clínicas.' },
       { icon: ShoppingBag, title: 'Exhibición de Alta Gama:', desc: 'Mostrá todos tus productos destacando ofertas.' }
     ]
@@ -113,7 +113,7 @@ const StackedMockups = ({ navigate }) => {
   const mockups = [
     {
       id: 'profesionales',
-      route: '/perfiles',
+      route: '/profesional/clara-valdez',
       content: (
         <div className="bg-white border border-[#1A3D3D]/10 rounded-[32px] md:rounded-[40px] p-6 shadow-[0_12px_32px_rgba(0,0,0,0.06)] h-[400px] w-full flex flex-col items-center text-center">
           <div className="w-full flex items-center justify-start mb-5">
@@ -149,7 +149,7 @@ const StackedMockups = ({ navigate }) => {
     },
     {
       id: 'clinicas',
-      route: '/perfiles',
+      route: '/clinica/clinica-san-roque',
       content: (
         <div className="bg-white border border-[#1A3D3D]/10 rounded-[32px] md:rounded-[40px] p-6 shadow-[0_12px_32px_rgba(0,0,0,0.06)] h-[400px] w-full flex flex-col">
           <div className="flex items-center justify-between mb-4">
@@ -187,9 +187,9 @@ const StackedMockups = ({ navigate }) => {
         </div>
       )
     },
-    {
+   {
       id: 'proveedores',
-      route: '/perfiles',
+      route: '/proveedor/proveedor-vet',
       content: (
         <div className="bg-white border border-[#1A3D3D]/10 rounded-[32px] md:rounded-[40px] p-6 shadow-[0_12px_32px_rgba(0,0,0,0.06)] h-[400px] w-full flex flex-col items-center text-center">
           <div className="w-full flex items-center justify-start mb-5">
@@ -589,7 +589,7 @@ export default function LandingPage() {
             icon={Users}
             subtitle="Comunidad"
             title="Rompé con el aislamiento del consultorio."
-            text="Mantenete conectado con colegas de todo el país y referentes de tu área. Encontrá el contacto exacto para derivar un caso complejo, armar equipos de trabajo o acceder a nuevas oportunidades de capacitación. Una red sólida te abre puertas reales."
+            text="Mantenete conectado con colegas de todo el país y referentes de tu área. Tené siempre a mano los contactos para derivar casos complejoa, armar equipos de trabajo o acceder a nuevas oportunidades de capacitación. Una red sólida te abre puertas reales."
             image="/2.consultorio.png"
             isReversed={true}
             badge={
@@ -624,7 +624,7 @@ export default function LandingPage() {
             <h2 className="text-3xl md:text-5xl font-black text-white font-['Montserrat'] leading-[1.1] tracking-tighter drop-shadow-lg">
               Un ecosistema donde<br/>todos crecen
             </h2>
-            <h3 className="text-[#4DB6AC] font-bold text-[13px] uppercase tracking-[0.3em] mb-3 drop-shadow-md">Conocé los beneficios de tener tu propio perfil</h3>
+            <h3 className="text-[#4DB6AC] font-bold text-[13px] uppercase tracking-[0.3em] mb-3 drop-shadow-md">Cuando googleen tu nombre, tu perfil será lo primero que aparezca en la búsqueda. </h3>
           
           </div>
           
