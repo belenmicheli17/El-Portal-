@@ -19,11 +19,24 @@ import PerfilClinica from './pages/perfiles/perfil-clinica';
 import Editor from './pages/editores/editor-profesional'; 
 import EditorClinica from './pages/editores/editor-clinica'; 
 import EditorProveedor from './pages/editores/editor-proveedores'; 
-import Ecosistema from './pages/repertorio';
+
 import Novedades from './pages/novedades';
 import BolsaDeTrabajo from './pages/bolsa-de-trabajo';
 import LegalPage from './pages/legales/privacidad';
 import Login from './pages/Login';
+import Capacitaciones from './pages/Capacitaciones';
+import CartillaProveedores from './pages/CartillaProveedores';
+
+
+
+// --- NUEVOS IMPORTS PARA EL PANEL ADMIN ---
+import RutaProtegidaAdmin from './components/admin/RutaProtegidaAdmin';
+import AdminLayout from './pages/admin/AdminLayout';
+import DashboardAdmin from './pages/admin/DashboardAdmin';
+import GestionUsuarios from './pages/admin/GestionUsuarios';
+import Validaciones from './pages/admin/Validaciones';
+import GestionBolsa from './pages/admin/GestionBolsa';
+import Configuracion from './pages/admin/Configuracion';
 
 // ==========================================
 // COMPONENTE: SCROLL TO TOP
@@ -147,18 +160,19 @@ export default function App() {
           {/* Rutas Fijas Antiguas (opcionales, podés borrarlas más adelante si solo usas los slugs) */}
           <Route path="/perfil-profesional" element={<Perfil />} />
           <Route path="/perfil-proveedores" element={<PerfilProveedor />} />
-          <Route path="/clinica/clinica" element={<Navigate to="/ecosistema" replace />} />
-
+         
           {/* --- NUEVAS RUTAS DINÁMICAS (SLUGS) --- */}
           <Route path="/profesional/:slug" element={<Perfil />} />
           <Route path="/clinica/:slug" element={<PerfilClinica />} />
           <Route path="/proveedor/:slug" element={<PerfilProveedor />} />
           
           {/* Secciones de la plataforma */}
-          <Route path="/ecosistema" element={<Ecosistema />} />
+         
           <Route path="/novedades" element={<Novedades />} />
           <Route path="/bolsa-de-trabajo" element={<BolsaDeTrabajo />} />
-          
+          <Route path="/capacitaciones" element={<Capacitaciones />} />
+<Route path="/cartilla-proveedores" element={<CartillaProveedores />} />
+
           {/* Legales */}
           <Route path="/terminos-y-condiciones" element={<LegalPage />} />
           <Route path="/politica-de-privacidad" element={<LegalPage />} />
@@ -177,7 +191,26 @@ export default function App() {
 
         {/* Redirección por defecto */}
         <Route path="*" element={<Navigate to="/" replace />} />
+
+{/* ========================================================= */}
+        {/* PANEL DE ADMINISTRACIÓN (PROTEGIDO)                      */}
+        {/* ========================================================= */}
+        <Route path="/admin" element={
+          <RutaProtegidaAdmin>
+            <AdminLayout />
+          </RutaProtegidaAdmin>
+        }>
+          <Route index element={<DashboardAdmin />} />
+          <Route path="validaciones" element={<Validaciones />} />
+          <Route path="usuarios" element={<GestionUsuarios />} />
+          <Route path="bolsa" element={<GestionBolsa />} />
+          <Route path="configuracion" element={<Configuracion />} />
+        </Route>
+
+        {/* Redirección por defecto */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+
 
       <AccessibilityWidget />
     </div>

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Menu, X, Home, Info, LayoutGrid, ChevronRight, 
-  Sparkles, Briefcase, Building, Truck, Edit, User, CircleUserRound, Search
+  Sparkles, Briefcase, Building, Truck, Edit, User, CircleUserRound, Search, BookOpen
 } from 'lucide-react'; // <-- Agregué Search acá
 
 export default function Navbar({ mostrarBotonCrear = false, mostrarBotonContacto = false }) {
@@ -27,8 +27,10 @@ export default function Navbar({ mostrarBotonCrear = false, mostrarBotonContacto
     switch (page) {
       case 'landing': path = '/'; break;
       case 'inicio': path = '/inicio'; break;
-      case 'Cartilla': path = '/Cartilla'; break; // <-- NUEVA RUTA AGREGADA
-      case 'ecosistema': path = '/ecosistema'; break;
+      case 'Cartilla': path = '/Cartilla'; break; 
+   
+      case 'capacitaciones': path = '/capacitaciones'; break; 
+      case 'proveedores': path = '/cartilla-proveedores'; break;
       case 'novedades': path = '/novedades'; break;
       case 'bolsa-de-trabajo': path = '/bolsa-de-trabajo'; break;
       case 'perfil-profesional': path = '/perfil-profesional'; break;
@@ -65,9 +67,9 @@ export default function Navbar({ mostrarBotonCrear = false, mostrarBotonContacto
               El Portal<span className="text-[#2D6A6A]">.</span>
           </div>
 
-          <div className="hidden lg:flex items-center gap-8 text-gray-500 font-medium text-[12px] uppercase tracking-wider">
+         <div className="hidden lg:flex items-center gap-8 text-gray-500 font-medium text-[12px] uppercase tracking-wider">
               <a href="#historia" className="hover:text-[#2D6A6A] transition-colors">¿Por qué unirte?</a>
-              <a href="#ecosistema" className="hover:text-[#2D6A6A] transition-colors">Ecosistema</a>
+              <button onClick={() => handleNav('capacitaciones')} className="hover:text-[#2D6A6A] transition-colors uppercase tracking-wider">Capacitaciones</button>
           </div>
           
           <div className="flex items-center gap-4">
@@ -116,10 +118,12 @@ export default function Navbar({ mostrarBotonCrear = false, mostrarBotonContacto
                       <button onClick={() => handleNav('Cartilla')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><div className="flex items-center gap-3"><Search className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Cartilla</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
 
                       <button onClick={() => handleNav('landing')} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><Info className="w-4 h-4 text-gray-400 group-hover:text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Landing page</span></button>
-                      <button onClick={() => handleNav('ecosistema')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><div className="flex items-center gap-3"><LayoutGrid className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Repertorio Clínico</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
-                      <button onClick={() => handleNav('novedades')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><div className="flex items-center gap-3"><Sparkles className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Novedades</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
+                     <button onClick={() => handleNav('novedades')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><div className="flex items-center gap-3"><Sparkles className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Novedades</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
                       <button onClick={() => handleNav('bolsa-de-trabajo')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><div className="flex items-center gap-3"><Briefcase className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Bolsa de Trabajo</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
-                      
+                      <button onClick={() => handleNav('capacitaciones')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><div className="flex items-center gap-3"><BookOpen className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Capacitaciones</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
+                      <button onClick={() => handleNav('proveedores')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><div className="flex items-center gap-3"><Truck className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Proveedores</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
+
+
                      {/* <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] px-4 py-3 border-b border-gray-50 mb-2 mt-2 text-left">Perfiles Públicos</p>
                       <button onClick={() => handleNav('perfil-profesional')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><div className="flex items-center gap-3"><User className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Perfil Profesional</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
                       <button onClick={() => handleNav('perfil-clinica')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><div className="flex items-center gap-3"><Building className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Perfil Clínica</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>

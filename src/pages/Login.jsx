@@ -1,27 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  Mail, 
-  Lock, 
-  Eye, 
-  EyeOff, 
-  ShieldCheck, 
-  ChevronLeft,
-  ArrowRight,
-  KeyRound,
-  CheckCircle2,
-  Stethoscope,
-  Hospital,
-  Store,
-  Users,
-  TrendingUp,
-  Globe
+  Mail, Lock, Eye, EyeOff, ShieldCheck, ChevronLeft,
+  ArrowRight, KeyRound, CheckCircle2, Stethoscope,
+  Hospital, Store, Loader2, AlertCircle
 } from 'lucide-react';
+
+// === IMPORTACIONES DE FIREBASE ===
+import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../firebase'; // Ajustá la ruta si es necesario
 
 export default function Login() {
   const [view, setView] = useState('login');
   const [accountType, setAccountType] = useState(null); 
   const [showPassword, setShowPassword] = useState(false);
+  
+  // Estados para Firebase
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+
   const [formData, setFormData] = useState({
     nombre: '',
     email: '',
@@ -40,24 +38,68 @@ export default function Login() {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (errorMsg) setErrorMsg(''); // Limpia el error al escribir
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    
     if (view === 'login') {
-      console.log('Iniciando sesión con:', formData.email);
+      setIsLoading(true);
+      setErrorMsg('');
+      
+      try {
+        const auth = getAuth();
+        // 1. Autenticar con Firebase
+        const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password);
+        const user = userCredential.user;
+        console.log("1. ¡Autenticación exitosa! Tu UID de Firebase es:", user.uid);
+
+        // 2. Buscar el rol del usuario en Firestore
+        const userDocRef = doc(db, 'usuarios', user.uid);
+        const userDoc = await getDoc(userDocRef);
+
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          console.log("2. Documento encontrado en Firestore. Datos completos:", userData);
+          console.log("3. El rol detectado es:", userData.rol);
+          
+          // 3. Redirección inteligente según el rol
+          if (userData.rol === 'admin') {
+            console.log("4. ¡Confirmado! Sos admin. Redirigiendo a /admin");
+            navigate('/admin');
+          } else if (userData.rol === 'profesional') {
+            navigate('/editor-profesional');
+          } else if (userData.rol === 'clinica') {
+            navigate('/editor-clinica');
+          } else {
+            console.log("4. El rol no coincide con ninguna pantalla de edición conocida. Redirigiendo a /inicio");
+            navigate('/inicio');
+          }
+        } else {
+          console.log("2. ERROR: No existe ningún documento en la colección 'usuarios' con el ID:", user.uid);
+          navigate('/inicio');
+        }
+
+      } catch (error) {
+        console.error("Error en el proceso de login:", error);
+        setErrorMsg('Correo o contraseña incorrectos. Por favor, verificá tus datos.');
+      } finally {
+        setIsLoading(false);
+      }
+
     } else if (view === 'register') {
+      // Acá a futuro irá createUserWithEmailAndPassword
       console.log(`Registrando [${accountType}] con:`, formData);
     } else if (view === 'forgot_password') {
+      // Acá a futuro irá sendPasswordResetEmail
       setView('recovery_sent');
     }
   };
 
   const renderHeader = () => {
     if (view === 'forgot_password' || view === 'recovery_sent') return 'Recuperar Clave';
-    if (view === 'register') {
-        return accountType ? 'Completar Datos' : '¿Qué tipo de cuenta?';
-    }
+    if (view === 'register') return accountType ? 'Completar Datos' : '¿Qué tipo de cuenta?';
     return 'Iniciar Sesión';
   };
 
@@ -67,49 +109,32 @@ export default function Login() {
     } else {
         setView('login'); 
         setAccountType(null);
+        setErrorMsg('');
     }
   };
 
   return (
     <div className="min-h-screen bg-[#E8EFEF] flex font-['Inter'] antialiased relative">
       
-      {/* =========================================
-          NAVBAR EXACTA (Copia de estructura principal)
-          ========================================= */}
+      {/* NAVBAR */}
       <nav className="absolute top-0 left-0 w-full z-[100] h-[72px] flex items-center px-8 md:px-10 pointer-events-none">
         <div className="max-w-[1100px] mx-auto w-full flex justify-between items-center pointer-events-auto">
-          
-          {/* LOGO EXACTO */}
-          <div 
-            onClick={() => navigate('/')} 
-            className="font-['Montserrat'] font-extrabold text-2xl tracking-tighter cursor-pointer text-[#1A3D3D] md:text-white transition-transform hover:scale-105"
-          >
+          <div onClick={() => navigate('/')} className="font-['Montserrat'] font-extrabold text-2xl tracking-tighter cursor-pointer text-[#1A3D3D] md:text-white transition-transform hover:scale-105">
             El Portal<span className="text-[#2D6A6A] md:text-[#4DB6AC]">.</span>
           </div>
-
-          {/* BOTÓN ATRÁS EN LA NAVBAR GLOBAL */}
           {(view !== 'login' || accountType) && (
-            <button 
-              onClick={handleBack}
-              className="text-[#1A3D3D] bg-white/70 backdrop-blur-md p-2.5 md:p-2 rounded-full hover:bg-white hover:scale-105 transition-all shadow-sm border border-gray-200/50"
-              aria-label="Volver"
-            >
+            <button onClick={handleBack} className="text-[#1A3D3D] bg-white/70 backdrop-blur-md p-2.5 md:p-2 rounded-full hover:bg-white hover:scale-105 transition-all shadow-sm border border-gray-200/50">
               <ChevronLeft size={20} />
             </button>
           )}
         </div>
       </nav>
 
-      {/* =========================================
-          MITAD IZQUIERDA: PANEL PROMOCIONAL (Solo PC)
-          ========================================= */}
+      {/* PANEL PROMOCIONAL (PC) */}
       <div className="hidden md:flex md:w-[45%] lg:w-[50%] bg-[#1A3D3D] px-12 lg:px-20 pt-[120px] pb-12 flex-col justify-between relative overflow-hidden">
         <div className="absolute top-[-20%] left-[-10%] w-[70%] h-[70%] bg-[#2D6A6A]/30 rounded-full blur-[120px] pointer-events-none"></div>
         <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-emerald-500/10 rounded-full blur-[100px] pointer-events-none"></div>
-        
         <div className="relative z-10">
-         
-
           <h2 className="text-white font-['Montserrat'] font-extrabold text-4xl lg:text-5xl tracking-tight leading-[1.1] mb-6">
             Una plataforma <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4DB6AC] to-[#2D6A6A]">pensada exclusivamente</span> <br />
@@ -118,43 +143,28 @@ export default function Login() {
           <p className="text-white/70 text-[15px] lg:text-[16px] leading-relaxed max-w-[400px] mb-12">
             Únete a la primera cartilla diseñada exclusivamente para potenciar tu presencia, facilitar derivaciones y acceder a oportunidades laborales.
           </p>
-
         </div>
-
         <div className="relative z-10 mt-10">
           <p className="text-white/40 text-[12px] font-medium">© {new Date().getFullYear()} El Portal Veterinario.</p>
         </div>
       </div>
 
-      {/* =========================================
-          MITAD DERECHA: FORMULARIO DE LOGIN
-          ========================================= */}
+      {/* FORMULARIO DE LOGIN */}
       <div className="w-full md:w-[55%] lg:w-[50%] flex justify-center items-center md:p-6 relative pt-20 md:pt-6">
-        
-        {/* Se quitó el min-h-screen en móvil para usar h-auto y ajustarse mejor */}
         <div className="w-full max-w-[412px] md:max-w-[440px] bg-[#F4F7F7] min-h-[calc(100vh-80px)] md:min-h-[auto] md:h-auto relative shadow-2xl flex flex-col md:rounded-[40px] overflow-hidden">
           
-          {/* Header Verde Compactado */}
           <div className="bg-[#1A3D3D] pt-8 pb-14 px-8 md:pt-10 md:pb-12 rounded-b-[40px] md:rounded-t-[40px] relative overflow-hidden shrink-0 shadow-lg">
             <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-white via-transparent to-transparent"></div>
-            
             <div className="relative z-10 flex flex-col items-center text-center">
               <div className="bg-[#2D6A6A] p-3 md:p-2.5 rounded-2xl mb-2 shadow-inner border border-white/10">
-                {view === 'forgot_password' || view === 'recovery_sent' ? (
-                  <KeyRound className="text-white w-8 h-8 md:w-6 md:h-6" />
-                ) : (
-                  <ShieldCheck className="text-white w-8 h-8 md:w-6 md:h-6" />
-                )}
+                {view === 'forgot_password' || view === 'recovery_sent' ? <KeyRound className="text-white w-8 h-8 md:w-6 md:h-6" /> : <ShieldCheck className="text-white w-8 h-8 md:w-6 md:h-6" />}
               </div>
               <p className="text-white/80 text-[13px] font-medium max-w-[250px] leading-tight mt-2">
-                {view === 'forgot_password' || view === 'recovery_sent' 
-                  ? 'Protegemos tu acceso profesional.' 
-                  : 'Bienvenido a tu espacio exclusivo.'}
+                {view === 'forgot_password' || view === 'recovery_sent' ? 'Protegemos tu acceso profesional.' : 'Bienvenido a tu espacio exclusivo.'}
               </p>
             </div>
           </div>
 
-          {/* Contenedor del Formulario */}
           <div className="flex-1 px-6 md:px-8 -mt-10 md:-mt-8 relative z-20 pb-8 flex flex-col">
             <div className="bg-white rounded-[32px] shadow-[0_15px_40px_rgba(0,0,0,0.08)] p-6 md:p-6 border border-gray-50 flex-1 flex flex-col">
               
@@ -209,6 +219,14 @@ export default function Login() {
                     <p className="text-center text-gray-500 text-[12px] md:text-[12px] mb-6 md:mb-4 leading-relaxed">Ingresa tu correo y te enviaremos un enlace para restablecer tu contraseña.</p>
                   )}
 
+                  {/* Mensaje de Error */}
+                  {errorMsg && (
+                    <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-xl flex items-center gap-2 animate-in fade-in">
+                      <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
+                      <p className="text-red-600 text-[11px] font-semibold">{errorMsg}</p>
+                    </div>
+                  )}
+
                   <form onSubmit={handleSubmit} className="space-y-4 md:space-y-3">
                     {view === 'register' && accountType && (
                       <div className="relative group">
@@ -232,8 +250,12 @@ export default function Login() {
                     {view === 'login' && (
                       <div className="flex justify-end pt-1 md:pt-0"><button type="button" onClick={() => setView('forgot_password')} className="text-[11px] md:text-[11px] font-semibold text-[#2D6A6A] hover:text-[#1A3D3D] transition-colors">¿Olvidaste tu contraseña?</button></div>
                     )}
-                    <button type="submit" className="w-full mt-2 md:mt-2 bg-[#2D6A6A] text-white font-bold rounded-xl py-4 md:py-3 flex items-center justify-center gap-2 tracking-[0.1em] text-[12px] md:text-[12px] uppercase shadow-lg shadow-[#2D6A6A]/30 hover:bg-[#1A3D3D] hover:-translate-y-0.5 transition-all duration-300">
-                      {view === 'login' && 'Ingresar a mi cuenta'}{view === 'register' && 'Crear cuenta ahora'}{view === 'forgot_password' && 'Enviar enlace'}<ArrowRight size={16} />
+                    <button type="submit" disabled={isLoading} className="w-full mt-2 md:mt-2 bg-[#2D6A6A] text-white font-bold rounded-xl py-4 md:py-3 flex items-center justify-center gap-2 tracking-[0.1em] text-[12px] md:text-[12px] uppercase shadow-lg shadow-[#2D6A6A]/30 hover:bg-[#1A3D3D] hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed">
+                      {isLoading ? (
+                        <><Loader2 size={16} className="animate-spin" /> Ingresando...</>
+                      ) : (
+                        <>{view === 'login' && 'Ingresar a mi cuenta'}{view === 'register' && 'Crear cuenta ahora'}{view === 'forgot_password' && 'Enviar enlace'}<ArrowRight size={16} /></>
+                      )}
                     </button>
                   </form>
                 </>
@@ -243,7 +265,7 @@ export default function Login() {
             {(view === 'login' || view === 'register') && (
               <div className="mt-8 md:mt-6 text-center shrink-0">
                 <p className="text-[12px] md:text-[12px] text-gray-500 font-medium">{view === 'login' ? '¿Aún no eres parte de la red?' : '¿Ya tienes una cuenta?'}</p>
-                <button onClick={() => { setView(view === 'login' ? 'register' : 'login'); setAccountType(null); }} className="mt-2 md:mt-1 text-[12px] md:text-[12px] font-bold uppercase tracking-widest text-[#1A3D3D] hover:text-[#2D6A6A] transition-colors">
+                <button onClick={() => { setView(view === 'login' ? 'register' : 'login'); setAccountType(null); setErrorMsg(''); }} className="mt-2 md:mt-1 text-[12px] md:text-[12px] font-bold uppercase tracking-widest text-[#1A3D3D] hover:text-[#2D6A6A] transition-colors">
                   {view === 'login' ? 'Solicitar Registro' : 'Iniciar Sesión'} 
                 </button>
               </div>

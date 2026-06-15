@@ -35,11 +35,12 @@ export default function Footer() {
             
             {/* COLUMNA 2: Repertorio */}
             <div>
-              <h4 className="text-white font-bold text-[11px] md:text-[10px] uppercase tracking-[0.3em] mb-4 font-['Montserrat']">Repertorio</h4>
+              <h4 className="text-white font-bold text-[11px] md:text-[10px] uppercase tracking-[0.3em] mb-4 font-['Montserrat']">Ecosistema</h4>
               <ul className="space-y-2 text-white/40 text-sm">
-                <li><button onClick={() => handleNavClick('/ecosistema')} className="hover:text-white transition-colors">Cursos y Seminarios</button></li>
-                <li><button onClick={() => handleNavClick('/ecosistema')} className="hover:text-white transition-colors">Insumos</button></li>
                 <li><button onClick={() => handleNavClick('/')} className="hover:text-white transition-colors">Novedades</button></li>
+                
+                <li><button onClick={() => handleNavClick('/')} className="hover:text-white transition-colors">Proveedores</button></li>
+                <li><button onClick={() => handleNavClick('/bolsa-de-trabajo')} className="hover:text-white transition-colors">Bolsa de Trabajo</button></li>
               </ul>
             </div>
 
@@ -49,8 +50,6 @@ export default function Footer() {
               <ul className="space-y-2 text-white/40 text-sm">
                 <li><button onClick={() => handleNavClick('/')} className="hover:text-white transition-colors">Profesionales</button></li>
                 <li><button onClick={() => handleNavClick('/')} className="hover:text-white transition-colors">Clínicas</button></li>
-                <li><button onClick={() => handleNavClick('/')} className="hover:text-white transition-colors">Proveedores</button></li>
-                <li><button onClick={() => handleNavClick('/bolsa-de-trabajo')} className="hover:text-white transition-colors">Bolsa de Trabajo</button></li>
               </ul>
             </div>
 
@@ -124,8 +123,10 @@ export default function Footer() {
             <ShieldCheck className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
             <span className="text-[11px] md:text-[10px] font-bold uppercase tracking-[0.1em] leading-tight md:leading-none font-['Montserrat']">Única plataforma veterinaria</span>
           </div>
+          
         </div>
       </div>
+      
     </footer>
   );
 }

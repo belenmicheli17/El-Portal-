@@ -87,7 +87,7 @@ const CartillaHeroMockup = () => {
               <div className="flex-1 min-w-0 pr-2">
                 <h2 className="font-montserrat font-extrabold text-[#1A3D3D] text-[14px] sm:text-[15px] leading-[1.2] line-clamp-2">
                   <span className="block truncate">Veterinaria</span>
-                  <span className="block truncate">Dequivet</span>
+                  <span className="block truncate">Huellitas</span>
                 </h2>
               </div>
             </div>

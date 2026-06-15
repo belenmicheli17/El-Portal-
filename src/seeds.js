@@ -2,7 +2,7 @@ import { db } from './firebase';
 import { doc, setDoc } from 'firebase/firestore';
 
 // ==========================================
-// 1. PERFILES GENERALES DE LA CARTILLA (Ricos en información)
+// 1. PERFILES GENERALES DE LA CARTILLA
 // ==========================================
 const perfilesMuestra = [
   {
@@ -132,7 +132,7 @@ const perfilesMuestra = [
 ];
 
 // ==========================================
-// 2. DATA PARA LA BOLSA DE TRABAJO (Conectada e hiperdetallada)
+// 2. DATA PARA LA BOLSA DE TRABAJO
 // ==========================================
 const ofertasTrabajoMuestra = [
   {
@@ -188,6 +188,185 @@ const profesionalesDisponiblesMuestra = [
 ];
 
 // ==========================================
+// 3. DATA PARA CAPACITACIONES
+// ==========================================
+export const CURSOS_SEED = [
+  {
+    id: 'sem-cirugia-tejidos', // AGREGADO
+    titulo: "Cirugía de Tejidos Blandos: Procedimientos Avanzados",
+    marca: "Acare Veterinaria",
+    logoMarca: "https://api.dicebear.com/7.x/initials/svg?seed=AV&backgroundColor=1A3D3D",
+    imagen: "https://images.unsplash.com/photo-1576089238240-749e77163c44?auto=format&fit=crop&w=800&q=80",
+    descripcion: "Técnicas innovadoras para resolución de patologías complejas en cavidad abdominal. Aprenderás desde la planificación pre-quirúrgica hasta el manejo post-operatorio crítico. Este curso está diseñado para brindar las herramientas necesarias en intervenciones donde el tiempo y la precisión son fundamentales.",
+    instructor: "Dr. Julián Martínez",
+    nivel: "Intermedio",
+    duracion: "12h 30m",
+    modalidad: "Online",
+    precio: 45000,
+    precioOriginal: 55000,
+    badge: "Más Vendido",
+    categoria: "Cirugía General",
+    rating: 4.8,
+    reviews: 124,
+    incluye: [
+      "Certificado de validez nacional", 
+      "Material de estudio descargable", 
+      "Acceso de por vida", 
+      "Foro de consultas con el docente", 
+      "Análisis de casos clínicos reales", 
+      "Protocolos anestésicos actualizados"
+    ]
+  },
+  {
+    id: 'sem-dermatologia-clinica', // AGREGADO
+    titulo: "Dermatología Clínica: De la Atopia a la Citología",
+    marca: "VetLab Pro",
+    logoMarca: "https://api.dicebear.com/7.x/initials/svg?seed=VP&backgroundColor=2D6A6A",
+    imagen: "https://images.unsplash.com/photo-1584132967334-10e028bd69f7?auto=format&fit=crop&w=800&q=80",
+    descripcion: "Diagnóstico citológico y manejo terapéutico de las alergias más comunes. Un enfoque práctico para el consultorio diario con casos clínicos reales para mejorar la calidad de vida del paciente atópico.",
+    instructor: "Dra. Sofía Galván",
+    nivel: "Principiante",
+    duracion: "8h 15m",
+    modalidad: "Presencial",
+    precio: 32000,
+    precioOriginal: 38000,
+    badge: "Nuevo",
+    categoria: "Dermatología",
+    rating: 5.0,
+    reviews: 18,
+    incluye: [
+      "Kit de bienvenida", 
+      "Práctica en laboratorio microscópico", 
+      "Certificado físico", 
+      "Networking presencial", 
+      "Toma de muestras en vivo", 
+      "Guía rápida de fármacos"
+    ]
+  },
+  {
+    id: 'sem-ecocardiografia', // AGREGADO
+    titulo: "Ecocardiografía Doppler en Pequeños Animales",
+    marca: "CardioVet Argentina",
+    logoMarca: "https://api.dicebear.com/7.x/initials/svg?seed=CV&backgroundColor=4DB6AC",
+    imagen: "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=800&q=80",
+    descripcion: "Programa intensivo sobre evaluación hemodinámica y funcional del corazón. Aprenderás a realizar mediciones exactas, identificar patologías valvulares y congénitas, y establecer pronósticos precisos utilizando tecnología Doppler.",
+    instructor: "Dr. Roberto Favaloro",
+    nivel: "Avanzado",
+    duracion: "24h",
+    modalidad: "Híbrido",
+    precio: 85000,
+    precioOriginal: 95000,
+    badge: "Cupos Limitados",
+    categoria: "Diagnóstico por Imágenes",
+    rating: 4.9,
+    reviews: 56,
+    incluye: [
+      "Clases teóricas asincrónicas", 
+      "Jornada práctica intensiva con pacientes", 
+      "Software de simulación Doppler", 
+      "Soporte directo por WhatsApp", 
+      "Evaluación final integradora"
+    ]
+  },
+  {
+    id: 'sem-medicina-felina', // AGREGADO
+    titulo: "Medicina Felina: Abordaje del Paciente Crítico",
+    marca: "CatCare Academy",
+    logoMarca: "https://api.dicebear.com/7.x/initials/svg?seed=CC&backgroundColor=1A3D3D",
+    imagen: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=800&q=80",
+    descripcion: "El gato no es un perro pequeño. Descubrí las particularidades metabólicas y de manejo en la unidad de cuidados intensivos felina. Desde obstrucciones uretrales hasta cetoacidosis diabética.",
+    instructor: "Dra. Laura Montes",
+    nivel: "Intermedio",
+    duracion: "10h",
+    modalidad: "Online",
+    precio: 38000,
+    precioOriginal: 42000,
+    badge: "Tendencia",
+    categoria: "Clínica de Pequeños",
+    rating: 4.7,
+    reviews: 89,
+    incluye: [
+      "Tablas de fluidoterapia exclusivas para gatos", 
+      "Videos de procedimientos invasivos", 
+      "Certificación internacional", 
+      "Guía de analgesia felina"
+    ]
+  }
+];
+
+// ==========================================
+// 4. DATA PARA PROVEEDORES
+// ==========================================
+export const PARTNERS_SEED = [
+  {
+    id: 'prov-mindray', // AGREGADO
+    nombre: "Distribuidora MedVet", // CAMBIADO PARA COINCIDIR CON LA ESTRUCTURA DEL COMPONENTE
+    categoria: "Ecografía y Diagnóstico",
+    descripcionBreve: "Equipos de ecografía y diagnóstico de alta resolución.", // AGREGADO
+    descripcionLarga: "El Mindray V1 es la solución definitiva para el veterinario moderno que requiere movilidad sin sacrificar calidad de imagen. Su diseño ultraportátil y resistente al agua lo hace ideal tanto para el consultorio como para el trabajo de campo con grandes animales.",
+    logo: "https://api.dicebear.com/7.x/initials/svg?seed=DM&backgroundColor=2D6A6A", // CAMBIADO NOMBRE VARIABLE
+    ubicacion: "Buenos Aires", // AGREGADO
+    direccionExacta: "Av. Cabildo 2040, CABA", // AGREGADO
+    telefono: "5491144445555", // AGREGADO
+    email: "ventas@medvet.com.ar", // AGREGADO
+    web: "https://google.com", // AGREGADO
+    envios: true, // AGREGADO
+    color: "#2D6A6A",
+    productosDestacados: [ // ADAPTADO
+      {
+        titulo: "Ecógrafo Portátil Mindray V1",
+        precio: 2500000,
+        imagen: "https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=800&q=80"
+      }
+    ]
+  },
+  {
+    id: 'prov-surgivet', // AGREGADO
+    nombre: "SurgiVet Equipamientos",
+    categoria: "Equipamiento Quirúrgico",
+    descripcionBreve: "Monitoreo constante y preciso para cirugías de alta complejidad.",
+    descripcionLarga: "Diseñado específicamente para las variaciones fisiológicas de pequeños y grandes animales. Ofrecemos equipos estables con lecturas de ECG, SpO2, NIBP, Respiración y Temperatura.",
+    logo: "https://api.dicebear.com/7.x/initials/svg?seed=SV&backgroundColor=4DB6AC",
+    ubicacion: "Rosario, Santa Fe",
+    direccionExacta: "Bv. Oroño 1500, Rosario",
+    telefono: "5493415556666",
+    email: "info@surgivet.com.ar",
+    web: "https://google.com",
+    envios: true,
+    color: "#4DB6AC",
+    productosDestacados: [
+      {
+        titulo: "Monitor Multiparamétrico Vet Pro 8",
+        precio: 1250000,
+        imagen: "https://images.unsplash.com/photo-1551076805-e1869043e560?auto=format&fit=crop&w=800&q=80"
+      }
+    ]
+  },
+  {
+    id: 'prov-techvet', // AGREGADO
+    nombre: "TechVet Solutions",
+    categoria: "Software y Gestión",
+    descripcionBreve: "Digitalizá tu veterinaria: historias clínicas, stock y facturación.",
+    descripcionLarga: "CloudVet centraliza toda la administración de tu clínica en una plataforma segura y accesible desde cualquier dispositivo. Olvidate de las fichas de papel e integrá recordatorios de vacunación por WhatsApp.",
+    logo: "https://api.dicebear.com/7.x/initials/svg?seed=TV&backgroundColor=1A3D3D",
+    ubicacion: "Todo el país",
+    direccionExacta: "100% Digital",
+    telefono: "5491133332222",
+    email: "hola@techvet.com.ar",
+    web: "https://google.com",
+    envios: false,
+    color: "#1A3D3D",
+    productosDestacados: [
+      {
+        titulo: "Software CloudVet",
+        precio: 25000,
+        imagen: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80"
+      }
+    ]
+  }
+];
+
+// ==========================================
 // FUNCIÓN PRINCIPAL DE CARGA
 // ==========================================
 export const cargarSeeds = async () => {
@@ -207,7 +386,19 @@ export const cargarSeeds = async () => {
       await setDoc(doc(db, 'profesionalesDisponibles', prof.id), prof);
     }
 
-    console.log("¡Todo el ecosistema de muestras (Cartilla + Bolsa de Trabajo) se cargó con éxito en Firebase!");
+    // --- LO NUEVO EMPIEZA ACÁ ---
+
+    // 4. Cargar Capacitaciones
+    for (const sem of CURSOS_SEED) {
+      await setDoc(doc(db, 'capacitaciones', sem.id), sem);
+    }
+
+    // 5. Cargar Proveedores / Partners
+    for (const prov of PARTNERS_SEED) {
+      await setDoc(doc(db, 'proveedores', prov.id), prov);
+    }
+
+    console.log("¡Todo el ecosistema de muestras (Cartilla, Bolsa de trabajo, Capacitaciones y Proveedores) se cargó con éxito en Firebase!");
   } catch (error) {
     console.error("Error al inyectar los datos en la base de datos:", error);
     throw error;
