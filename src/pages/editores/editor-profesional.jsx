@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { db } from '../../firebase'; 
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
+import { useAuth } from '../../context/AuthContext';
 import { 
   Camera, Info, AlertCircle, Save, X, Plus, Trash2, 
   ArrowUp, ArrowDown, MapPin, ShieldCheck, Check, ArrowLeft,
@@ -310,6 +311,7 @@ const SimpleCropper = ({ imageSrc, onCrop, onCancel, type }) => {
 // APLICACIÓN PRINCIPAL (EDITOR PROFESIONAL)
 // ==========================================
 export default function EditorProfesional() { 
+  const { currentUser } = useAuth();
   const navigate = useNavigate(); 
   const [activeTab, setActiveTab] = useState('cuenta'); 
   const [modalConfig, setModalConfig] = useState({ isOpen: false, title: '', message: '', type: 'info', onConfirm: null });
@@ -328,8 +330,10 @@ export default function EditorProfesional() {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        // En el futuro, acá irá el ID del usuario logueado (userId)
-        const docRef = doc(db, 'profesionales', 'veterinario_prueba_123');
+        if (!currentUser) return; // Si el usuario no cargó, frena acá
+        
+        // Buscamos en la base de datos usando el UID real del profesional logueado
+        const docRef = doc(db, 'profesionales', currentUser.uid);
         const docSnap = await getDoc(docRef);
         
         if (docSnap.exists()) {
@@ -350,9 +354,9 @@ export default function EditorProfesional() {
   const fileInputRef = useRef(null);
   const [_formData, _setFormData] = useState({
   // Cuenta
-  cuentaEmail: '',
-  cuentaPassword: '',
-  cuentaTelefono: '',
+  cuentaEmail: 'mersolarenas@gmail.com',
+  cuentaPassword: 'Lanin2026',
+  cuentaTelefono: '1162477744',
   planActual: 'pro',
   visible: true,
   
@@ -566,17 +570,15 @@ const generarSlug = (texto) => {
 
     setSaveStatus('saving');
     
+    // ¡ACÁ ABRIMOS EL BLOQUE TRY!
     try {
-      // 1. Generamos el slug a partir del nombre del profesional
-      const slugGenerado = generarSlug(formData.nombre);
-      
-      // 2. Agregamos el slug a los datos que vamos a guardar
-      const dataToSave = { ...formData, slug: slugGenerado };
+      // 1 y 2. Mantenemos el slug original y oficial del usuario para no romper las URLs
+      const dataToSave = { ...formData, slug: currentUser.slug };
 
-      // 3. Usamos el slug como el ID del documento en Firebase 
-      const docRef = doc(db, 'profesionales', slugGenerado);
-      
-      // Impactamos todo el objeto en Firestore
+      // 3. El ID del documento sigue siendo el UID del usuario logueado
+      const docRef = doc(db, 'profesionales', currentUser.uid);
+
+      // ¡ACÁ FALTABA LA INSTRUCCIÓN DE GUARDAR EN FIREBASE!
       await setDoc(docRef, dataToSave);
 
       // 4. --- ¡CERRANDO EL CICLO DEL BOTÓN! ---
@@ -594,8 +596,7 @@ const generarSlug = (texto) => {
       });
       setTimeout(() => setSaveStatus('idle'), 2500);
     }
-  };
-
+  };  
   const handleConfirmChangePlan = () => {
     setPlanType(tempSelectedPlan);
     setFormData(prev => ({ ...prev, planActual: tempSelectedPlan })); 

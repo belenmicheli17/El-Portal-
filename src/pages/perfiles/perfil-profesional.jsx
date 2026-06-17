@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../../firebase'; // Ajustá esta ruta hacia tu archivo firebase.js
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, collection, query, where, getDocs, getDoc } from 'firebase/firestore';
 
 import { 
   ShieldCheck, MessageCircle, Star, Award, MapPin, 
@@ -41,27 +41,28 @@ function PerfilPublico() {
 
   useEffect(() => {
     const fetchVeterinarioInfo = async () => {
-      try {
-        if (!slug) return; // Si no hay slug en la URL, no busca nada
+    try {
+      if (!slug) return;
+      
+      const q = query(collection(db, 'profesionales'), where('slug', '==', slug));
+      const querySnapshot = await getDocs(q);
 
-        // 2. Buscamos en 'profesionales' usando el slug como ID de documento
-        const docRef = doc(db, 'profesionales', slug);
-        const docSnap = await getDoc(docRef);
-
-        if (docSnap.exists()) {
-          const firebaseData = docSnap.data();
-          // Acá mantenés tu lógica de combinar datos (mergedData) si la tenías:
-          setData(firebaseData); 
-        } else {
-          console.log("No se encontró el veterinario en Firebase");
-          setData(null);
-        }
-      } catch (error) {
-        console.error("Error obteniendo el perfil profesional:", error);
-      } finally {
-        setLoading(false);
+      if (!querySnapshot.empty) {
+         const datosProfesional = querySnapshot.docs[0].data();
+         
+         // ¡ACÁ ESTÁ EL CAMBIO! Usamos setData en lugar de setProfesional
+         setData(datosProfesional); 
+         setLoading(false); // No te olvides de desactivar el loading cuando termina
+      } else {
+         console.log("No se encontró el perfil público");
+         setLoading(false);
       }
-    };
+      
+    } catch (error) {
+      console.error("Error al buscar el perfil:", error);
+      setLoading(false);
+    }
+  };
 
     fetchVeterinarioInfo();
   }, [slug]); // 3. Se ejecuta cada vez que cambia el slug en la URL

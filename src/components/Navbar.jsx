@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Menu, X, Home, Info, LayoutGrid, ChevronRight, 
-  Sparkles, Briefcase, Building, Truck, Edit, User, CircleUserRound, Search, BookOpen
-} from 'lucide-react'; // <-- Agregué Search acá
+  Sparkles, Briefcase, Building, Truck, Edit, User, CircleUserRound, Search, BookOpen, Globe
+} from 'lucide-react'; 
 
 export default function Navbar({ mostrarBotonCrear = false, mostrarBotonContacto = false }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -124,11 +124,10 @@ export default function Navbar({ mostrarBotonCrear = false, mostrarBotonContacto
                       <button onClick={() => handleNav('proveedores')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><div className="flex items-center gap-3"><Truck className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Proveedores</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
 
 
-                     {/* <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] px-4 py-3 border-b border-gray-50 mb-2 mt-2 text-left">Perfiles Públicos</p>
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] px-4 py-3 border-b border-gray-50 mb-2 mt-2 text-left">Perfiles Públicos</p>
                       <button onClick={() => handleNav('perfil-profesional')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><div className="flex items-center gap-3"><User className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Perfil Profesional</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
                       <button onClick={() => handleNav('perfil-clinica')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><div className="flex items-center gap-3"><Building className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Perfil Clínica</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
                       <button onClick={() => handleNav('perfil-proveedores')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><div className="flex items-center gap-3"><Truck className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Perfil Proveedores</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
-                      */}
 
                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] px-4 py-3 border-b border-gray-50 mb-2 mt-2 text-left">Editores / Gestión</p>
                       <button onClick={() => handleNav('editor')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><div className="flex items-center gap-3"><Edit className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Editor Profesional</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
@@ -142,6 +141,12 @@ export default function Navbar({ mostrarBotonCrear = false, mostrarBotonContacto
             </div>
           </div>
       </div>
+      <button 
+        onClick={() => navigate('/ecosistema')}
+        className="bg-[#2D6A6A] text-white px-5 py-2 rounded-xl font-bold text-[13px] uppercase tracking-wider hover:bg-[#1A3D3D] transition-colors shadow-sm"
+      >
+         <User className="w-6 h-6 text-[#4DB6AC]" />
+      </button>
     </nav>
   );
 }

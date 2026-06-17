@@ -83,16 +83,19 @@ export default function CartillaProveedores() {
   };
 
   const handleProviderClick = (proveedor) => {
-    setSelectedProvider(proveedor);
-    setView('detail');
+    // Viaja a la ruta de tu perfil individual usando el slug (o el id si no tiene slug)
+    navigate(`/proveedor/${proveedor.slug || proveedor.id}`); 
     window.scrollTo(0,0);
   };
 
+const [soloEnvios, setSoloEnvios] = useState(false);
 
+  // 2. Modificá la constante proveedoresFiltrados (cerca de la línea 80) para que quede así:
   const proveedoresFiltrados = proveedores.filter(prov => {
     const matchCategoria = !filtroCategoria || prov.categoria === filtroCategoria;
     const matchBusqueda = !searchTerm || prov.nombre.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchCategoria && matchBusqueda;
+    const matchEnvio = !soloEnvios || prov.envios === true;
+    return matchCategoria && matchBusqueda && matchEnvio;
   });
 
   const proveedoresMostrados = proveedoresFiltrados.slice(0, visibleProviders);
@@ -117,13 +120,25 @@ export default function CartillaProveedores() {
         ))}
       </ul>
 
+{/* Botón de Envíos al interior */}
+      <div className="mb-8 pt-6 border-t border-gray-50">
+        <label className="flex items-center gap-3 cursor-pointer group">
+          <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${soloEnvios ? 'bg-[#2D6A6A] border-[#2D6A6A]' : 'border-gray-300 group-hover:border-[#2D6A6A]'}`}>
+            {soloEnvios && <Check className="w-3.5 h-3.5 text-white stroke-[3]" />}
+          </div>
+          <span className={`text-[13px] font-bold transition-colors ${soloEnvios ? 'text-[#1A3D3D]' : 'text-gray-500 group-hover:text-[#1A3D3D]'}`}>
+            Con envíos al interior
+          </span>
+        </label>
+      </div>
+
       <div className="mt-8 bg-[#F4F7F7] p-5 rounded-[20px] border border-gray-100 text-center">
         <Building2 className="w-8 h-8 text-[#2D6A6A] mx-auto mb-3" />
         <h4 className="text-[#1A3D3D] font-bold text-sm mb-2">¿Sos proveedor?</h4>
         <p className="text-xs text-gray-500 font-medium mb-4">Sumá tu empresa a la cartilla oficial y conectá con miles de clínicas.</p>
-        <button onClick={() => alert("Redirigiendo al formulario de alta...")} className="w-full bg-[#1A3D3D] text-white py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-[#2D6A6A] transition-all">
-          Dar de alta
-        </button>
+        <button onClick={() => navigate('/editor-proveedores')} className="w-full bg-[#1A3D3D] text-white py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-[#2D6A6A] transition-all">
+  Dar de alta
+</button>
       </div>
     </div>
   );
@@ -138,11 +153,6 @@ export default function CartillaProveedores() {
           <p className="text-gray-500 font-medium text-sm mt-2">Encontrá el equipamiento y los insumos que tu clínica necesita.</p>
         </div>
 
-{/* Pegalo acá adentro, al lado del div que tiene el título */}
-        <button onClick={handleCargarBaseDeDatos} className="bg-red-500 text-white px-5 py-2.5 rounded-xl font-bold uppercase tracking-widest text-[11px] hover:bg-red-600 transition-all shadow-md flex items-center gap-2 shrink-0">
-          <UploadCloud className="w-4 h-4" /> Cargar Base de Datos
-        </button>
-
       </header>
 
       <div className="w-full flex flex-col lg:grid lg:grid-cols-12 gap-5 lg:gap-8">
@@ -151,6 +161,7 @@ export default function CartillaProveedores() {
         </aside>
 
         <section className="lg:col-span-9 flex flex-col gap-5 md:gap-6 w-full">
+          
           <div className="relative w-full">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 w-4 h-4" />
             <input 
@@ -162,7 +173,13 @@ export default function CartillaProveedores() {
             />
           </div>
 
-          {proveedoresMostrados.length > 0 ? (
+
+{isLoading ? (
+  <div className="bg-white rounded-[32px] border border-gray-100 p-12 text-center flex flex-col items-center justify-center w-full h-64">
+    <div className="w-8 h-8 border-4 border-[#2D6A6A] border-t-transparent rounded-full animate-spin mb-4"></div>
+    <p className="text-gray-500 font-medium text-sm">Cargando proveedores...</p>
+  </div>
+) : proveedoresMostrados.length > 0 ? (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
                 {proveedoresMostrados.map(prov => (
@@ -324,8 +341,8 @@ export default function CartillaProveedores() {
   return (
     <div className="bg-[#F4F7F7] min-h-screen font-['Inter'] antialiased relative">
       <main id="main-content" className="relative z-10 w-full max-w-[1440px] mx-auto px-6 md:px-12 lg:px-24 pt-5 pb-10 md:pt-9 md:pb-16 flex-grow">
-        {view === 'grid' ? renderGrid() : renderDetail()}
-      </main>
+    {renderGrid()}
+  </main>
     </div>
   );
 }

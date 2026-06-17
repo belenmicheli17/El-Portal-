@@ -702,13 +702,7 @@ export default function PerfilProveedor() {
         </div>
       </div>
 
-      {/* FOOTER SIMPLE */}
-      <footer className="w-full bg-[#1A3D3D] py-6 mt-auto">
-          <div className="max-w-[1100px] mx-auto px-6 text-center text-white/60 text-xs font-medium">
-             © {new Date().getFullYear()} El Portal Veterinario. Perfil público de Proveedor Verificado.
-          </div>
-      </footer>
-
+      
       {/* ==========================================
           MODALES Y ELEMENTOS FLOTANTES
       ========================================== */}

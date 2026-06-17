@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
-import { doc, setDoc } from 'firebase/firestore';
+import { AuthProvider } from './context/AuthContext';
+import { doc, setDoc, getDoc } from "firebase/firestore";
 import { db } from './firebase';
 import { cargarSeeds } from './seeds';
 
@@ -26,8 +27,7 @@ import LegalPage from './pages/legales/privacidad';
 import Login from './pages/Login';
 import Capacitaciones from './pages/Capacitaciones';
 import CartillaProveedores from './pages/CartillaProveedores';
-
-
+import Ecosistema from './pages/Ecosistema';
 
 // --- NUEVOS IMPORTS PARA EL PANEL ADMIN ---
 import RutaProtegidaAdmin from './components/admin/RutaProtegidaAdmin';
@@ -128,91 +128,97 @@ const cargarPerfilPrueba = async () => {
 // ==========================================
 // 2. COMPONENTE PRINCIPAL (App)
 // ==========================================
+
 export default function App() {
+
+
+
+
+
   useEffect(() => {
     // Descomentá esta línea SOLO cuando quieras cargar los datos
-    cargarSeeds(); 
+   // cargarSeeds(); 
   }, []);
+
   return (
-    <div className="relative min-h-screen bg-gray-50 selection:bg-[#2D6A6A] selection:text-white">
-      
-      <style dangerouslySetInnerHTML={{ __html: `
-        #contacto {
-          scroll-margin-top: 100px;
-        }
-        html {
-          scroll-behavior: smooth;
-        }
-      `}} />
-
-      <ScrollToTop />
-
-      <Routes>
-        {/* ========================================================= */}
-        {/* RUTAS CON NAVBAR Y FOOTER PÚBLICOS (MainLayout)           */}
-        {/* ========================================================= */}
-        <Route element={<MainLayout />}>
-          {/* Páginas principales */}
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/inicio" element={<Inicio />} />
-          <Route path="/Cartilla" element={<Cartilla />} /> 
-
-          {/* Rutas Fijas Antiguas (opcionales, podés borrarlas más adelante si solo usas los slugs) */}
-          <Route path="/perfil-profesional" element={<Perfil />} />
-          <Route path="/perfil-proveedores" element={<PerfilProveedor />} />
-         
-          {/* --- NUEVAS RUTAS DINÁMICAS (SLUGS) --- */}
-          <Route path="/profesional/:slug" element={<Perfil />} />
-          <Route path="/clinica/:slug" element={<PerfilClinica />} />
-          <Route path="/proveedor/:slug" element={<PerfilProveedor />} />
-          
-          {/* Secciones de la plataforma */}
-         
-          <Route path="/novedades" element={<Novedades />} />
-          <Route path="/bolsa-de-trabajo" element={<BolsaDeTrabajo />} />
-          <Route path="/capacitaciones" element={<Capacitaciones />} />
-<Route path="/cartilla-proveedores" element={<CartillaProveedores />} />
-
-          {/* Legales */}
-          <Route path="/terminos-y-condiciones" element={<LegalPage />} />
-          <Route path="/politica-de-privacidad" element={<LegalPage />} />
-        </Route>
-
-        {/* ========================================================= */}
-        {/* RUTAS SIN NAVBAR NI FOOTER GLOBALES                       */}
-        {/* ========================================================= */}
+    <AuthProvider>
+      <div className="relative min-h-screen bg-gray-50 selection:bg-[#2D6A6A] selection:text-white">
         
-        <Route path="/Login" element={<Login />} />
+        <style dangerouslySetInnerHTML={{ __html: `
+          #contacto {
+            scroll-margin-top: 100px;
+          }
+          html {
+            scroll-behavior: smooth;
+          }
+        `}} />
 
-        {/* Rutas de Editores */}
-        <Route path="/editor-profesional" element={<Editor />} />
-        <Route path="/editor-clinica" element={<EditorClinica />} />
-        <Route path="/editor-proveedores" element={<EditorProveedor />} />
+        <ScrollToTop />
 
-        {/* Redirección por defecto */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Routes>
+          {/* ========================================================= */}
+          {/* RUTAS CON NAVBAR Y FOOTER PÚBLICOS (MainLayout)           */}
+          {/* ========================================================= */}
+          <Route element={<MainLayout />}>
+            {/* Páginas principales */}
+              <Route path="/" element={<Inicio />} /> 
+  <Route path="/landing" element={<LandingPage />} /> 
 
-{/* ========================================================= */}
-        {/* PANEL DE ADMINISTRACIÓN (PROTEGIDO)                      */}
-        {/* ========================================================= */}
-        <Route path="/admin" element={
-          <RutaProtegidaAdmin>
-            <AdminLayout />
-          </RutaProtegidaAdmin>
-        }>
-          <Route index element={<DashboardAdmin />} />
-          <Route path="validaciones" element={<Validaciones />} />
-          <Route path="usuarios" element={<GestionUsuarios />} />
-          <Route path="bolsa" element={<GestionBolsa />} />
-          <Route path="configuracion" element={<Configuracion />} />
-        </Route>
+  <Route path="/Cartilla" element={<Cartilla />} /> 
+  <Route path="/ecosistema" element={<Ecosistema />} />
+            
+            {/* Rutas Fijas Antiguas (opcionales, podés borrarlas más adelante si solo usas los slugs) */}
+            <Route path="/perfil-profesional" element={<Perfil />} />
+            <Route path="/perfil-proveedores" element={<PerfilProveedor />} />
+            
+            {/* --- NUEVAS RUTAS DINÁMICAS (SLUGS) --- */}
+            <Route path="/profesional/:slug" element={<Perfil />} />
+            <Route path="/clinica/:slug" element={<PerfilClinica />} />
+            <Route path="/proveedor/:slug" element={<PerfilProveedor />} />
+            
+            {/* Secciones de la plataforma */}
+            <Route path="/novedades" element={<Novedades />} />
+            <Route path="/bolsa-de-trabajo" element={<BolsaDeTrabajo />} />
+            <Route path="/capacitaciones" element={<Capacitaciones />} />
+            <Route path="/cartilla-proveedores" element={<CartillaProveedores />} />
 
-        {/* Redirección por defecto */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+            {/* Legales */}
+            <Route path="/terminos-y-condiciones" element={<LegalPage />} />
+            <Route path="/politica-de-privacidad" element={<LegalPage />} />
+          </Route>
 
+          {/* ========================================================= */}
+          {/* RUTAS SIN NAVBAR NI FOOTER GLOBALES                       */}
+          {/* ========================================================= */}
+          
+          <Route path="/Login" element={<Login />} />
 
-      <AccessibilityWidget />
-    </div>
+          {/* Rutas de Editores */}
+          <Route path="/editor-profesional" element={<Editor />} />
+          <Route path="/editor-clinica" element={<EditorClinica />} />
+          <Route path="/editor-proveedores" element={<EditorProveedor />} />
+
+          {/* ========================================================= */}
+          {/* PANEL DE ADMINISTRACIÓN (PROTEGIDO)                      */}
+          {/* ========================================================= */}
+          <Route path="/admin" element={
+            <RutaProtegidaAdmin>
+              <AdminLayout />
+            </RutaProtegidaAdmin>
+          }>
+            <Route index element={<DashboardAdmin />} />
+            <Route path="validaciones" element={<Validaciones />} />
+            <Route path="usuarios" element={<GestionUsuarios />} />
+            <Route path="bolsa" element={<GestionBolsa />} />
+            <Route path="configuracion" element={<Configuracion />} />
+          </Route>
+
+          {/* Redirección por defecto */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+
+        <AccessibilityWidget />
+      </div>
+    </AuthProvider>
   );
 }

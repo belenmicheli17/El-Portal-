@@ -4,7 +4,7 @@ import { doc, setDoc } from 'firebase/firestore';
 // ==========================================
 // 1. PERFILES GENERALES DE LA CARTILLA
 // ==========================================
-const perfilesMuestra = [
+{/*const perfilesMuestra = [
   {
     id: 'clara-valdez',
     planActual: 'pro',
@@ -292,75 +292,226 @@ export const CURSOS_SEED = [
       "Guía de analgesia felina"
     ]
   }
-];
-
+]; */}
 // ==========================================
-// 4. DATA PARA PROVEEDORES
+// 4. DATA PARA PROVEEDORES (COMPLETA Y REALISTA)
 // ==========================================
 export const PARTNERS_SEED = [
   {
-    id: 'prov-mindray', // AGREGADO
-    nombre: "Distribuidora MedVet", // CAMBIADO PARA COINCIDIR CON LA ESTRUCTURA DEL COMPONENTE
-    categoria: "Ecografía y Diagnóstico",
-    descripcionBreve: "Equipos de ecografía y diagnóstico de alta resolución.", // AGREGADO
-    descripcionLarga: "El Mindray V1 es la solución definitiva para el veterinario moderno que requiere movilidad sin sacrificar calidad de imagen. Su diseño ultraportátil y resistente al agua lo hace ideal tanto para el consultorio como para el trabajo de campo con grandes animales.",
-    logo: "https://api.dicebear.com/7.x/initials/svg?seed=DM&backgroundColor=2D6A6A", // CAMBIADO NOMBRE VARIABLE
-    ubicacion: "Buenos Aires", // AGREGADO
-    direccionExacta: "Av. Cabildo 2040, CABA", // AGREGADO
-    telefono: "5491144445555", // AGREGADO
-    email: "ventas@medvet.com.ar", // AGREGADO
-    web: "https://google.com", // AGREGADO
-    envios: true, // AGREGADO
-    color: "#2D6A6A",
-    productosDestacados: [ // ADAPTADO
-      {
-        titulo: "Ecógrafo Portátil Mindray V1",
-        precio: 2500000,
-        imagen: "https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=800&q=80"
-      }
-    ]
-  },
-  {
-    id: 'prov-surgivet', // AGREGADO
-    nombre: "SurgiVet Equipamientos",
-    categoria: "Equipamiento Quirúrgico",
-    descripcionBreve: "Monitoreo constante y preciso para cirugías de alta complejidad.",
-    descripcionLarga: "Diseñado específicamente para las variaciones fisiológicas de pequeños y grandes animales. Ofrecemos equipos estables con lecturas de ECG, SpO2, NIBP, Respiración y Temperatura.",
-    logo: "https://api.dicebear.com/7.x/initials/svg?seed=SV&backgroundColor=4DB6AC",
-    ubicacion: "Rosario, Santa Fe",
-    direccionExacta: "Bv. Oroño 1500, Rosario",
-    telefono: "5493415556666",
-    email: "info@surgivet.com.ar",
-    web: "https://google.com",
-    envios: true,
-    color: "#4DB6AC",
+    id: 'prov-medvet',
+    slug: 'distribuidora-medvet',
+    verificado: true,
+    cuentaEmail: 'gerencia@medvet.com.ar',
+    cuentaPassword: '',
+    cuentaTelefono: '5491144445555',
+    logo: "https://api.dicebear.com/7.x/initials/svg?seed=DM&backgroundColor=2D6A6A",
+    fotoPortada: "https://images.unsplash.com/photo-1551076805-e1869043e560?auto=format&fit=crop&w=1200&q=80",
+    nombre: "Distribuidora MedVet",
+    razonSocial: "MedVet Insumos S.A.",
+    cuit: "30-71234567-8",
+    categoria: "Distribuidor Oficial Nacional",
+    bioCorta: "Equipamiento médico e insumos descartables de alta calidad para clínicas y hospitales veterinarios.",
+    bioLarga: "Con más de 15 años en el mercado argentino, Distribuidora MedVet se consolida como el principal aliado estratégico de los profesionales veterinarios. \n\nNos especializamos en la importación y distribución de equipamiento de diagnóstico por imágenes, monitoreo multiparamétrico e insumos hospitalarios de uso diario. Nuestro compromiso no solo es la venta, sino ofrecer un servicio post-venta de excelencia, con stock permanente de repuestos y capacitación continua para el uso de nuestra tecnología.",
+    imagenNosotros: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=800&q=80",
+    videoNosotros: "https://youtube.com/watch?v=ejemplo",
+    direccion: "Av. Cabildo 2040, CABA",
+    mapaUrl: "https://goo.gl/maps/ejemplo1",
+    horariosAtencion: "Lunes a Viernes de 09:00 a 18:00 hs",
+    whatsappActivo: true,
+    whatsappVentas: "5491144445555",
+    emailVentas: "ventas@medvet.com.ar",
+    web: "https://medvet.com.ar",
+    instagram: "https://instagram.com/medvet.arg",
+    facebook: "https://facebook.com/medvet",
+    linkedin: "https://linkedin.com/company/medvet",
+    linkCatalogo: "https://drive.google.com/drive/folders/ejemplo",
+    marcasRepresentadas: "Mindray, Sonoscape, B. Braun, 3M",
+    zonaCobertura: ["CABA", "Buenos Aires", "Córdoba", "Santa Fe", "Mendoza", "Entre Ríos"],
+    rubros: ["Equipamiento Médico", "Descartables Hospitalarios", "Instrumental Quirúrgico"],
+    envios: ["Envíos a todo el país", "Despacho en 24/48hs", "Retiro en depósito local", "Embalaje de seguridad"],
+    pagos: ["Emitimos Factura A y B", "Desc. por Transferencia", "Cuotas c/ Tarjeta de Crédito", "Aceptamos E-Cheq"],
+    garantia: ["Garantía oficial de fábrica", "Servicio técnico propio", "Provisión repuestos originales", "Asesoramiento técnico continuo"],
+    modalidadTexto: "Venta Online 24/7, Showroom con cita previa",
     productosDestacados: [
       {
+        id: 1718000001,
+        titulo: "Ecógrafo Portátil Mindray DP-50 Vet",
+        categoria: "Equipamiento Médico",
+        etiqueta: "Promo",
+        precio: "3500000",
+        imagenes: [
+          "https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=800&q=80",
+          "https://images.unsplash.com/photo-1584820927498-cfe5e11838df?auto=format&fit=crop&w=800&q=80"
+        ],
+        descripcionLarga: "Sistema de ultrasonido en blanco y negro de nueva generación, compacto e inteligente. Diseñado específicamente para uso veterinario con transductores microconvexos y lineales de alta densidad. Ideal para diagnósticos rápidos en consultorio o salidas a campo por su batería de larga duración.",
+        caracteristicas: [
+          "Pantalla LCD de 15 pulgadas de alta resolución con ángulo ajustable",
+          "Batería recargable con autonomía de 2.5 horas de escaneo continuo",
+          "Software de medición veterinaria integrado (caninos, felinos, equinos, bovinos)",
+          "Disco duro de 500GB y puertos USB para exportación rápida"
+        ]
+      },
+      {
+        id: 1718000002,
         titulo: "Monitor Multiparamétrico Vet Pro 8",
-        precio: 1250000,
-        imagen: "https://images.unsplash.com/photo-1551076805-e1869043e560?auto=format&fit=crop&w=800&q=80"
+        categoria: "Equipamiento Médico",
+        etiqueta: "",
+        precio: "1250000",
+        imagenes: [
+          "https://images.unsplash.com/photo-1551076805-e1869043e560?auto=format&fit=crop&w=800&q=80"
+        ],
+        descripcionLarga: "Monitoreo constante y preciso para cirugías de alta complejidad. Diseñado específicamente para las variaciones fisiológicas de pequeños animales. Alarmas sonoras y visuales configurables según el peso y especie del paciente.",
+        caracteristicas: [
+          "Pantalla táctil a color de 12.1 pulgadas",
+          "Parámetros: ECG (3/5 derivaciones), SpO2, NIBP, TEMP, RESP",
+          "Incluye set completo de manguitos y pinzas veterinarias",
+          "Módulo de Capnografía (EtCO2) opcional"
+        ]
       }
     ]
   },
   {
-    id: 'prov-techvet', // AGREGADO
-    nombre: "TechVet Solutions",
-    categoria: "Software y Gestión",
-    descripcionBreve: "Digitalizá tu veterinaria: historias clínicas, stock y facturación.",
-    descripcionLarga: "CloudVet centraliza toda la administración de tu clínica en una plataforma segura y accesible desde cualquier dispositivo. Olvidate de las fichas de papel e integrá recordatorios de vacunación por WhatsApp.",
-    logo: "https://api.dicebear.com/7.x/initials/svg?seed=TV&backgroundColor=1A3D3D",
-    ubicacion: "Todo el país",
-    direccionExacta: "100% Digital",
-    telefono: "5491133332222",
-    email: "hola@techvet.com.ar",
-    web: "https://google.com",
-    envios: false,
-    color: "#1A3D3D",
+    id: 'prov-nutripet',
+    slug: 'nutripet-argentina',
+    verificado: true,
+    cuentaEmail: 'admin@nutripet.com.ar',
+    cuentaPassword: '',
+    cuentaTelefono: '5492322558899',
+    logo: "https://api.dicebear.com/7.x/initials/svg?seed=NP&backgroundColor=E4405F",
+    fotoPortada: "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&w=1200&q=80",
+    nombre: "NutriPet Argentina",
+    razonSocial: "Nutrición Animal S.R.L.",
+    cuit: "30-65432198-1",
+    categoria: "Fabricante Nacional",
+    bioCorta: "Línea de alimentos de prescripción clínica y suplementos dietarios de alta asimilación.",
+    bioLarga: "En NutriPet desarrollamos y fabricamos alimentos balanceados de prescripción médica veterinaria. Nuestra planta, ubicada en el Parque Industrial de Pilar, opera bajo los más estrictos estándares de bioseguridad y calidad nutricional.\n\nTrabajamos codo a codo con gastroenterólogos y nefrólogos veterinarios para formular dietas específicas que apoyen los tratamientos clínicos, utilizando proteínas hidrolizadas y materias primas de origen humano.",
+    imagenNosotros: "https://images.unsplash.com/photo-1590424693950-689b940e4ab7?auto=format&fit=crop&w=800&q=80",
+    videoNosotros: "",
+    direccion: "Parque Industrial Pilar, Calle 9 N° 120, Prov. de Buenos Aires",
+    mapaUrl: "https://goo.gl/maps/ejemplo2",
+    horariosAtencion: "Lunes a Viernes de 08:00 a 17:00 hs",
+    whatsappActivo: true,
+    whatsappVentas: "5492322558899",
+    emailVentas: "pedidos@nutripet.com.ar",
+    web: "https://nutripet.com.ar",
+    instagram: "https://instagram.com/nutripet.vet",
+    facebook: "",
+    linkedin: "https://linkedin.com/company/nutripet-argentina",
+    linkCatalogo: "https://drive.google.com/drive/folders/ejemplo2",
+    marcasRepresentadas: "NutriPet Clinical, NutriPet Suplementos, GastroCare",
+    zonaCobertura: ["Buenos Aires", "CABA", "Córdoba", "Mendoza", "Tucumán", "Salta", "Neuquén", "Río Negro", "Chubut"],
+    rubros: ["Alimentos y Dietas", "Fármacos e Insumos"],
+    envios: ["Envíos a todo el país", "Transporte a convenir"],
+    pagos: ["Emitimos Factura A y B", "Desc. por Transferencia", "Aceptamos E-Cheq"],
+    garantia: ["Garantía oficial de fábrica", "Asesoramiento técnico continuo"],
+    modalidadTexto: "Venta Online 24/7",
     productosDestacados: [
       {
-        titulo: "Software CloudVet",
-        precio: 25000,
-        imagen: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80"
+        id: 1718000003,
+        titulo: "Alimento Hepatic Care Plus - 15kg",
+        categoria: "Alimentos y Dietas",
+        etiqueta: "Nuevo",
+        precio: "48000",
+        imagenes: [
+          "https://images.unsplash.com/photo-1589924691995-400dc9ecc119?auto=format&fit=crop&w=800&q=80"
+        ],
+        descripcionLarga: "Fórmula terapéutica diseñada específicamente para perros con insuficiencia hepática crónica, derivación portosistémica o encefalopatía hepática. Alta digestibilidad energética para evitar el catabolismo proteico y sobrecarga del hígado.",
+        caracteristicas: [
+          "Bajo contenido de cobre y enriquecido con zinc",
+          "Proteínas de origen vegetal de altísima asimilación (soja hidrolizada)",
+          "Complejo antioxidante sinérgico (Vitamina E, C, Taurina y Luteína)",
+          "Presentación exclusiva para canales veterinarios"
+        ]
+      },
+      {
+        id: 1718000004,
+        titulo: "Suplemento Articular CondroVet x 60 comp",
+        categoria: "Fármacos e Insumos",
+        etiqueta: "",
+        precio: "18500",
+        imagenes: [
+          "https://images.unsplash.com/photo-1587854692152-cbe660dbde88?auto=format&fit=crop&w=800&q=80"
+        ],
+        descripcionLarga: "Condroprotector de última generación. Favorece la regeneración del cartílago articular, disminuye la inflamación y el dolor en pacientes con osteoartrosis, displasia o en recuperación post-quirúrgica traumatológica.",
+        caracteristicas: [
+          "Alta concentración de Glucosamina y Condroitín Sulfato",
+          "Incorpora Ácido Hialurónico y Colágeno tipo II nativo",
+          "Comprimidos palatables sabor carne, ranurados",
+          "Dosis de mantenimiento: 1 comprimido cada 20kg"
+        ]
+      }
+    ]
+  },
+  {
+    id: 'prov-techvet',
+    slug: 'techvet-solutions',
+    verificado: true,
+    cuentaEmail: 'soporte@techvet.io',
+    cuentaPassword: '',
+    cuentaTelefono: '5491133332222',
+    logo: "https://api.dicebear.com/7.x/initials/svg?seed=TV&backgroundColor=1A3D3D",
+    fotoPortada: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=80",
+    nombre: "TechVet Solutions",
+    razonSocial: "Veterinaria Digital S.A.",
+    cuit: "30-88889999-2",
+    categoria: "Laboratorio Veterinario", 
+    bioCorta: "Transformación digital para tu clínica: Software de gestión en la nube y sensores de radiología digital directa (DR).",
+    bioLarga: "En TechVet Solutions unimos la tecnología informática con la práctica veterinaria diaria. Nuestro ecosistema digital permite que las clínicas modernas se despidan del papel, optimicen su facturación y mejoren la comunicación con los tutores.\n\nAdemás de nuestro reconocido software CloudVet, somos integradores de salas de Rayos X, proveyendo digitalizadores CR y Flat Panels DR con software de adquisición veterinaria DICOM integrado. Llevamos tu clínica al siglo XXI.",
+    imagenNosotros: "https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=800&q=80",
+    videoNosotros: "",
+    direccion: "Av. Libertador 5500, Of. 4B, CABA (Oficinas Administrativas)",
+    mapaUrl: "",
+    horariosAtencion: "Soporte Técnico 24/7",
+    whatsappActivo: true,
+    whatsappVentas: "5491133332222",
+    emailVentas: "hola@techvet.io",
+    web: "https://techvet.io",
+    instagram: "https://instagram.com/techvet",
+    facebook: "",
+    linkedin: "https://linkedin.com/company/techvetsolutions",
+    linkCatalogo: "https://techvet.io/planes",
+    marcasRepresentadas: "CloudVet, Carestream, Venu",
+    zonaCobertura: ["Buenos Aires", "CABA", "Catamarca", "Chaco", "Chubut", "Córdoba", "Corrientes", "Entre Ríos", "Formosa", "Jujuy", "La Pampa", "La Rioja", "Mendoza", "Misiones", "Neuquén", "Río Negro", "Salta", "San Juan", "San Luis", "Santa Cruz", "Santa Fe", "Santiago del Estero", "Tierra del Fuego", "Tucumán"],
+    rubros: ["Software y Tecnología", "Equipamiento Médico"],
+    envios: ["Envíos a todo el país", "Embalaje de seguridad"],
+    pagos: ["Emitimos Factura A y B", "Desc. por Transferencia", "Cuotas c/ Tarjeta de Crédito", "Financiación Propia"],
+    garantia: ["Garantía oficial de fábrica", "Servicio técnico propio", "Asesoramiento técnico continuo"],
+    modalidadTexto: "Venta Online 24/7",
+    productosDestacados: [
+      {
+        id: 1718000005,
+        titulo: "Licencia CloudVet - Plan Clínica (Anual)",
+        categoria: "Software y Tecnología",
+        etiqueta: "Promo",
+        precio: "350000",
+        imagenes: [
+          "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80"
+        ],
+        descripcionLarga: "El software de gestión clínica más completo de Latinoamérica. Centraliza historias clínicas, recordatorios de vacunación por WhatsApp, control de stock automatizado y facturación electrónica AFIP.",
+        caracteristicas: [
+          "Acceso ilimitado para múltiples veterinarios y recepcionistas",
+          "Envío automático de recordatorios por WhatsApp a tutores",
+          "Firma digital de consentimientos informados",
+          "Integración de resultados de laboratorio directamente en la ficha"
+        ]
+      },
+      {
+        id: 1718000006,
+        titulo: "Panel Flat DR Inalámbrico 14x17",
+        categoria: "Equipamiento Médico",
+        etiqueta: "",
+        precio: "18500000",
+        imagenes: [
+          "https://images.unsplash.com/photo-1530497610245-94d3c16cda28?auto=format&fit=crop&w=800&q=80",
+          "https://images.unsplash.com/photo-1559757175-5700dde675bc?auto=format&fit=crop&w=800&q=80"
+        ],
+        descripcionLarga: "Transformá tu equipo de rayos X tradicional en un sistema digital de última generación. El panel Flat Detector inalámbrico ofrece imágenes de calidad diagnóstica en 3 segundos. Resistente a líquidos y caídas (IPX6).",
+        caracteristicas: [
+          "Tecnología de centelleador de Ioduro de Cesio (CsI)",
+          "Conexión WiFi ultrarrápida a la workstation",
+          "Incluye laptop con software de adquisición DICOM veterinario",
+          "Herramientas de medición automática (VHS, Ángulo Norberg)"
+        ]
       }
     ]
   }

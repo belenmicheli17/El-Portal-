@@ -41,7 +41,7 @@ const strategicCardsData = [
     id: 'proveedores',
     roleKey: 'proveedor',
     icon: Package,
-    badge: 'Listado solo disponible para profesionales registrados*',
+    badge: 'Cartilla solo disponible para profesionales registrados*',
     title: 'Proveedores',
     subtitle: 'Tu catálogo frente a los que toman las decisiones de compra.',
     features: [
@@ -194,7 +194,7 @@ const StackedMockups = ({ navigate }) => {
         <div className="bg-white border border-[#1A3D3D]/10 rounded-[32px] md:rounded-[40px] p-6 shadow-[0_12px_32px_rgba(0,0,0,0.06)] h-[400px] w-full flex flex-col items-center text-center">
           <div className="w-full flex items-center justify-start mb-5">
             <span className="text-[13px] font-black text-[#2D6A6A] uppercase tracking-widest flex items-center gap-2">
-              <Package className="w-4 h-4" /> Proveedores
+              <Package className="w-4 h-4" /> Cartilla de Proveedores
             </span>
           </div>
           <div className="relative mb-5">
@@ -577,7 +577,7 @@ export default function LandingPage() {
             subtitle="Atemporalidad"
             title="Foco en tu vocación, no en el algoritmo."
             text="El Portal está diseñado para que no pierdas tiempo en redes sociales que exigen creación de contenido constante y no están pensadas para profesionales de la salud.
-            Acá, tu perfil actua como portafolio y es atemporal: no necesitás depender tus seguidores para que encuentren tu información esencial."
+            Acá, tu perfil actua como portafolio atemporal: no necesitás depender tus seguidores para que encuentren tu información esencial."
             isReversed={false}
             customMockup={<StackedMockups navigate={navigate} />}
             /* ACÁ ELIMINAMOS EL BADGE QUE FLOTABA ABAJO */
@@ -595,7 +595,7 @@ export default function LandingPage() {
             badge={
               <div className="bg-white/10 backdrop-blur-xl p-4 rounded-[24px] shadow-[0_8px_32px_rgba(0,0,0,0.3)] flex items-center gap-4 border border-white/10 text-left">
                 <div className="flex -space-x-3">
-                  <div className="w-10 h-10 rounded-full border-2 border-white/20 bg-white/20 backdrop-blur-md flex items-center justify-center text-[13px] font-bold text-white shadow-sm">+10k</div>
+                  <div className="w-10 h-10 rounded-full border-2 border-white/20 bg-white/20 backdrop-blur-md flex items-center justify-center text-[13px] font-bold text-white shadow-sm">+100</div>
                 </div>
                 <div className="pr-2">
                   <p className="text-[13px] text-white/60 font-semibold uppercase tracking-widest leading-none mb-1">Networking</p>
@@ -621,10 +621,10 @@ export default function LandingPage() {
           <div className="absolute top-[20%] left-[-10%] w-[40vw] h-[40vw] bg-[#2D6A6A]/30 rounded-full blur-[120px] pointer-events-none"></div>
           
           <div className="max-w-[1200px] mx-auto px-8 md:px-10 relative z-10 text-center mb-8 md:mb-12">
-            <h2 className="text-3xl md:text-5xl font-black text-white font-['Montserrat'] leading-[1.1] tracking-tighter drop-shadow-lg">
+            <h2 className="text-3xl md:text-5xl font-black text-white font-['Montserrat'] leading-[1.1] tracking-normal drop-shadow-lg">
               Un ecosistema donde<br/>todos crecen
             </h2>
-            <h3 className="text-[#4DB6AC] font-bold text-[13px] uppercase tracking-[0.3em] mb-3 drop-shadow-md">Cuando googleen tu nombre, tu perfil será lo primero que aparezca en la búsqueda. </h3>
+            <h3 className="text-[#4DB6AC] font-bold text-[13px] uppercase tracking-[0.2em] mb-3 drop-shadow-md">Cuando busquen tu nombre, tu perfil será <br/> lo primero que aparezca en la búsqueda de Google. </h3>
           
           </div>
           

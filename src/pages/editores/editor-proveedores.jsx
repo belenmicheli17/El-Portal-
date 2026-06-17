@@ -7,7 +7,7 @@ import {
   Building2, AlertTriangle, Building, PackageSearch, ImagePlus,
   Globe, Truck, FileText, CreditCard, Wrench, Crop, Briefcase, User, Lock, Eye, EyeOff, Box, ArrowLeft, ArrowRight, Tag, DollarSign, List, Clock, Loader2, ArrowUpRight
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 // ==========================================
 // IMPORTACIONES DE FIREBASE
@@ -526,6 +526,15 @@ export default function EditorEmpresa() {
     };
     loadDataFromCloud();
   }, [user]);
+
+const location = useLocation();
+
+  useEffect(() => {
+    // Si viene un estado 'tab' desde la navegación (en este caso el Ecosistema), activamos la pestaña
+    if (location.state?.tab === 'productos') {
+      setActiveTab('catalogo');
+    }
+  }, [location.state]);
 
   const handleSaveData = async () => {
     const faltanCampos = [];

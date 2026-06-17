@@ -5,10 +5,9 @@ import {
   ArrowRight, KeyRound, CheckCircle2, Stethoscope,
   Hospital, Store, Loader2, AlertCircle
 } from 'lucide-react';
-
 // === IMPORTACIONES DE FIREBASE ===
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase'; // Ajustá la ruta si es necesario
 
 export default function Login() {
@@ -65,16 +64,12 @@ export default function Login() {
           console.log("3. El rol detectado es:", userData.rol);
           
           // 3. Redirección inteligente según el rol
+          // 3. Redirección inteligente al Ecosistema
           if (userData.rol === 'admin') {
-            console.log("4. ¡Confirmado! Sos admin. Redirigiendo a /admin");
             navigate('/admin');
-          } else if (userData.rol === 'profesional') {
-            navigate('/editor-profesional');
-          } else if (userData.rol === 'clinica') {
-            navigate('/editor-clinica');
           } else {
-            console.log("4. El rol no coincide con ninguna pantalla de edición conocida. Redirigiendo a /inicio");
-            navigate('/inicio');
+            // Profesionales, clínicas y proveedores van a su panel
+            navigate('/ecosistema');
           }
         } else {
           console.log("2. ERROR: No existe ningún documento en la colección 'usuarios' con el ID:", user.uid);
@@ -89,8 +84,38 @@ export default function Login() {
       }
 
     } else if (view === 'register') {
-      // Acá a futuro irá createUserWithEmailAndPassword
-      console.log(`Registrando [${accountType}] con:`, formData);
+      setIsLoading(true);
+      setErrorMsg('');
+      
+      try {
+        const auth = getAuth();
+        // 1. Crear usuario en Firebase Auth
+        const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+        const user = userCredential.user;
+
+        // 2. Crear un "slug" básico para su URL a partir del nombre (ej: "Juan Perez" -> "juan-perez")
+        const slugGenerado = formData.nombre.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+
+        // 3. Crear su puente en la base de datos Firestore (Colección "usuarios")
+        const userDocRef = doc(db, 'usuarios', user.uid);
+        await setDoc(userDocRef, {
+          nombre: formData.nombre,
+          email: formData.email,
+          rol: accountType, // 'profesional', 'clinica' o 'proveedor'
+          slug: slugGenerado,
+          fechaRegistro: new Date().toISOString()
+        });
+
+        // 4. ¡Listo! Lo mandamos al ecosistema
+        navigate('/ecosistema');
+
+      } catch (error) {
+        console.error("Error en registro:", error);
+        setErrorMsg('No se pudo crear la cuenta. El correo ya existe o la contraseña es muy débil (mínimo 6 caracteres).');
+      } finally {
+        setIsLoading(false);
+      }
+
     } else if (view === 'forgot_password') {
       // Acá a futuro irá sendPasswordResetEmail
       setView('recovery_sent');
@@ -182,9 +207,9 @@ export default function Login() {
                           <div className="bg-emerald-50 p-3 md:p-2.5 rounded-full text-emerald-600 group-hover:scale-110 transition-transform"><Hospital size={20} /></div>
                           <div><h3 className="font-bold text-[#1A3D3D] text-[15px] md:text-[14px]">Soy una Clínica</h3><p className="text-gray-500 text-[11px] md:text-[11px] leading-tight mt-1">Busco publicar ofertas de empleo y derivaciones.</p></div>
                       </button>
-                      <button onClick={() => setAccountType('empresa')} className="w-full text-left p-4 md:p-3.5 rounded-2xl border-2 border-gray-100 hover:border-[#2D6A6A] hover:bg-[#F4F7F7] transition-all group flex items-center gap-4">
+                      <button onClick={() => setAccountType('proveedor')} className="w-full text-left p-4 md:p-3.5 rounded-2xl border-2 border-gray-100 hover:border-[#2D6A6A] hover:bg-[#F4F7F7] transition-all group flex items-center gap-4">
                           <div className="bg-purple-50 p-3 md:p-2.5 rounded-full text-purple-600 group-hover:scale-110 transition-transform"><Store size={20} /></div>
-                          <div><h3 className="font-bold text-[#1A3D3D] text-[15px] md:text-[14px]">Empresa / Proveedor</h3><p className="text-gray-500 text-[11px] md:text-[11px] leading-tight mt-1">Ofrezco insumos, equipamiento o servicios.</p></div>
+                          <div><h3 className="font-bold text-[#1A3D3D] text-[15px] md:text-[14px]">Proveedor</h3><p className="text-gray-500 text-[11px] md:text-[11px] leading-tight mt-1">Ofrezco insumos, equipamiento o servicios.</p></div>
                       </button>
                   </div>
               ) : view === 'recovery_sent' ? (
@@ -233,7 +258,7 @@ export default function Login() {
                         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-[#2D6A6A] transition-colors">
                           {accountType === 'profesional' ? <Stethoscope size={18} /> : accountType === 'clinica' ? <Hospital size={18} /> : <Store size={18} />}
                         </div>
-                        <input type="text" name="nombre" value={formData.nombre} onChange={handleChange} placeholder={accountType === 'profesional' ? 'Tu Matrícula Profesional' : accountType === 'clinica' ? 'Nombre de la Clínica' : 'Nombre de la Empresa'} className="w-full pl-11 pr-4 py-3.5 md:py-3 bg-[#F4F7F7] border border-transparent rounded-xl text-[13px] md:text-[13px] text-[#1A3D3D] placeholder-gray-400 focus:bg-white focus:border-[#2D6A6A] focus:ring-2 focus:ring-[#2D6A6A]/20 transition-all outline-none" required />
+                        <input type="text" name="nombre" value={formData.nombre} onChange={handleChange} placeholder={accountType === 'profesional' ? 'Tu Matrícula Profesional' : accountType === 'clinica' ? 'Nombre de la Clínica' : 'Nombre de Proveedor'} className="w-full pl-11 pr-4 py-3.5 md:py-3 bg-[#F4F7F7] border border-transparent rounded-xl text-[13px] md:text-[13px] text-[#1A3D3D] placeholder-gray-400 focus:bg-white focus:border-[#2D6A6A] focus:ring-2 focus:ring-[#2D6A6A]/20 transition-all outline-none" required />
                       </div>
                     )}
                     <div className="relative group">
