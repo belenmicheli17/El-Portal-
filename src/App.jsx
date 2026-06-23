@@ -20,7 +20,7 @@ import PerfilClinica from './pages/perfiles/perfil-clinica';
 import Editor from './pages/editores/editor-profesional'; 
 import EditorClinica from './pages/editores/editor-clinica'; 
 import EditorProveedor from './pages/editores/editor-proveedores'; 
-
+import Papers from './pages/Papers';
 import Novedades from './pages/novedades';
 import BolsaDeTrabajo from './pages/bolsa-de-trabajo';
 import LegalPage from './pages/legales/privacidad';
@@ -181,7 +181,7 @@ export default function App() {
             <Route path="/bolsa-de-trabajo" element={<BolsaDeTrabajo />} />
             <Route path="/capacitaciones" element={<Capacitaciones />} />
             <Route path="/cartilla-proveedores" element={<CartillaProveedores />} />
-
+<Route path="/papers" element={<Papers />} />
             {/* Legales */}
             <Route path="/terminos-y-condiciones" element={<LegalPage />} />
             <Route path="/politica-de-privacidad" element={<LegalPage />} />

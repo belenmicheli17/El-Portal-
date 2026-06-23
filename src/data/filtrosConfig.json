@@ -10,5 +10,15 @@
     { "nombre": "Grandes Animales", "id": "grandes_animales" },
     { "nombre": "Aves", "id": "aves" },
     { "nombre": "Exóticos", "id": "exoticos" }
+  ],
+  "categorias_papers": [
+    "Clínica Médica",
+    "Cirugía",
+    "Nutrición",
+    "Comportamiento",
+    "Farmacología",
+    "Reporte de Casos",
+    "Diagnóstico por Imágenes",
+    "Otro"
   ]
 }

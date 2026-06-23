@@ -555,9 +555,10 @@ const handleFileSelect = (e, target, caseId = null) => {
   };
 
   // === NUEVA LÓGICA PARA SUBIR PDFs ===
+// === NUEVA LÓGICA PARA SUBIR PDFs ===
   const [isUploadingPdf, setIsUploadingPdf] = useState(false);
   const [pdfUploadProgress, setPdfUploadProgress] = useState(0);
-  const [draggingPaperId, setDraggingPaperId] = useState(null); // NUEVO: Estado para la animación Drag & Drop
+  const [draggingPaperId, setDraggingPaperId] = useState(null);
 
   const handlePdfUpload = async (e, paperId) => {
     const file = e.target.files ? e.target.files[0] : null;
@@ -568,7 +569,7 @@ const handleFileSelect = (e, target, caseId = null) => {
       return;
     }
     
-    if (file.size > 20 * 1024 * 1024) { // Límite de 20MB
+    if (file.size > 20 * 1024 * 1024) {
       setModalConfig({ isOpen: true, title: 'Archivo muy pesado', message: 'El PDF no debe superar los 20MB.', type: 'error' });
       return;
     }
@@ -582,7 +583,6 @@ const handleFileSelect = (e, target, caseId = null) => {
     setPdfUploadProgress(0);
 
     try {
-      // Limpiamos el nombre del archivo para que no rompa la URL
       const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
       const fileRef = ref(storage, `papers/${currentUser.uid}/${Date.now()}_${safeFileName}`);
       const uploadTask = uploadBytesResumable(fileRef, file);
@@ -595,7 +595,6 @@ const handleFileSelect = (e, target, caseId = null) => {
         (error) => {
           console.error("Error exacto de Firebase:", error);
           setIsUploadingPdf(false);
-          // Acá Firebase nos va a decir exactamente por qué falla
           setModalConfig({ isOpen: true, title: 'Error de Servidor', message: `No se pudo subir: ${error.message}`, type: 'error' });
         }, 
         async () => {
@@ -614,50 +613,6 @@ const handleFileSelect = (e, target, caseId = null) => {
       );
     } catch (error) {
       console.error("Error general:", error);
-      setIsUploadingPdf(false);
-    }
-  };
-    const file = e.target.files[0];
-    if (!file) return;
-    
-    if (file.type !== 'application/pdf') {
-      setModalConfig({ isOpen: true, title: 'Formato incorrecto', message: 'Por favor, subí un archivo en formato PDF.', type: 'error' });
-      return;
-    }
-    
-    if (file.size > 20 * 1024 * 1024) { // Límite de 20MB
-      setModalConfig({ isOpen: true, title: 'Archivo muy pesado', message: 'El PDF no debe superar los 20MB.', type: 'error' });
-      return;
-    }
-
-    setIsUploadingPdf(true);
-    setPdfUploadProgress(0);
-
-    try {
-      const fileRef = ref(storage, `papers/${currentUser.uid}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '')}`);
-      const uploadTask = uploadBytesResumable(fileRef, file);
-
-      uploadTask.on('state_changed', 
-        (snapshot) => {
-          const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-          setPdfUploadProgress(progress);
-        }, 
-        (error) => {
-          console.error("Error al subir:", error);
-          setIsUploadingPdf(false);
-          setModalConfig({ isOpen: true, title: 'Error', message: 'Hubo un problema al subir el PDF.', type: 'error' });
-        }, 
-        async () => {
-          const url = await getDownloadURL(uploadTask.snapshot.ref);
-          setFormData(prev => ({
-            ...prev,
-            papers: prev.papers.map(p => p.id === paperId ? { ...p, pdfUrl: url, fileName: file.name, storagePath: uploadTask.snapshot.ref.fullPath } : p)
-          }));
-          setIsUploadingPdf(false);
-        }
-      );
-    } catch (error) {
-      console.error("Error:", error);
       setIsUploadingPdf(false);
     }
   };

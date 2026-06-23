@@ -10,6 +10,31 @@ import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } f
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase'; // Ajustá la ruta si es necesario
 
+// === TRADUCTOR DE ERRORES DE FIREBASE ===
+const traducirErrorFirebase = (errorCode) => {
+  switch (errorCode) {
+    case 'auth/email-already-in-use':
+      return 'Este correo ya está registrado. ¿Intentaste iniciar sesión?';
+    case 'auth/invalid-email':
+      return 'El formato del correo no es válido. Revisá que no haya espacios al final.';
+    case 'auth/weak-password':
+      return 'La contraseña es muy débil. Debe tener al menos 6 caracteres.';
+    case 'auth/user-not-found':
+      return 'No encontramos ninguna cuenta con este correo.';
+    case 'auth/wrong-password':
+      return 'La contraseña es incorrecta.';
+    case 'auth/invalid-credential':
+      return 'El correo o la contraseña son incorrectos.';
+    case 'auth/too-many-requests':
+      return 'Demasiados intentos. Por seguridad, intentá de nuevo más tarde.';
+    case 'auth/network-request-failed':
+      return 'Error de conexión. Revisá tu internet y volvé a intentar.';
+    default:
+      return `Ocurrió un error inesperado (${errorCode || 'Desconocido'}). Intentá de nuevo.`;
+  }
+};
+
+
 export default function Login() {
   const [view, setView] = useState('login');
   const [accountType, setAccountType] = useState(null); 
@@ -78,7 +103,7 @@ export default function Login() {
 
       } catch (error) {
         console.error("Error en el proceso de login:", error);
-        setErrorMsg('Correo o contraseña incorrectos. Por favor, verificá tus datos.');
+        setErrorMsg(traducirErrorFirebase(error.code));
       } finally {
         setIsLoading(false);
       }
@@ -111,7 +136,7 @@ export default function Login() {
 
       } catch (error) {
         console.error("Error en registro:", error);
-        setErrorMsg('No se pudo crear la cuenta. El correo ya existe o la contraseña es muy débil (mínimo 6 caracteres).');
+        setErrorMsg(traducirErrorFirebase(error.code));
       } finally {
         setIsLoading(false);
       }

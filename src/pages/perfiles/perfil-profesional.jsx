@@ -9,7 +9,7 @@ import {
   Syringe, Send, Phone, Building2, Home, ChevronDown, 
   Instagram, Linkedin, Facebook, Mail, User, X,
   Activity, Microscope, Heart, Brain, Turtle, 
-  Clock, Eye, FileText, Sparkles, Globe
+  Clock, Eye, FileText, Sparkles, Globe, BookOpen, FileDown, Download
 } from 'lucide-react';
 
 const IconoHueso = ({ className }) => (
@@ -157,9 +157,9 @@ function PerfilPublico() {
     window.location.href = `mailto:${data.emailContacto}?subject=Consulta desde El Portal Veterinario`;
   };
 
+ 
   return (
     <div className="font-['Inter'] antialiased min-h-screen flex justify-center bg-gray-200 md:bg-[#F4F7F7] overflow-x-hidden w-full relative">
-      
       {/* ========================================== */}
       {/* MODAL: FOTO DE PERFIL AMPLIADA             */}
       {/* ========================================== */}
@@ -308,8 +308,9 @@ function PerfilPublico() {
             </div>
           )}
 
-          {activeTab === 'especialidad' && isPro && (
+{activeTab === 'especialidad' && isPro && (
             <div className="space-y-8">
+              {/* SERVICIOS */}
               {data.servicios && data.servicios.length > 0 && (
                 <div>
                   <h3 className="font-extrabold text-[16px] text-[#1A3D3D] font-['Montserrat'] uppercase tracking-widest mb-3 pl-2 text-left">Actualmente</h3>
@@ -327,6 +328,7 @@ function PerfilPublico() {
                 </div>
               )}
 
+              {/* TRAYECTORIA */}
               {data.trayectoria && data.trayectoria.length > 0 && (
                 <div>
                   <h3 className="font-extrabold text-[16px] text-[#1A3D3D] font-['Montserrat'] uppercase tracking-widest mb-3 pl-2 text-left">Trayectoria</h3>
@@ -348,16 +350,57 @@ function PerfilPublico() {
                       </div>
                       {data.trayectoria.length > 3 && (
                         <div className="mt-8 ml-[44px]">
-                          <button 
-                            onClick={() => setMostrarTodosLogros(!mostrarTodosLogros)} 
-                            className="text-[#2D6A6A] font-bold text-[12px] uppercase tracking-[0.2em] flex items-center gap-1.5 focus:outline-none"
-                          >
+                          <button onClick={() => setMostrarTodosLogros(!mostrarTodosLogros)} className="text-[#2D6A6A] font-bold text-[12px] uppercase tracking-[0.2em] flex items-center gap-1.5 focus:outline-none">
                             {mostrarTodosLogros ? 'Ver menos' : `Ver todo (+${data.trayectoria.length - 3})`}
                             <ChevronDown size={14} className={`transition-transform duration-300 ${mostrarTodosLogros ? 'rotate-180' : ''}`} />
                           </button>
                         </div>
                       )}
                     </div>
+                  </div>
+                </div>
+              )}
+
+             {/* === NUEVO: INVESTIGACIONES MÓVIL === */}
+              {data.papers && data.papers.length > 0 && (
+                <div className="mt-8 pt-8 border-t border-gray-100">
+                  <h3 className="font-extrabold text-[16px] text-[#1A3D3D] font-['Montserrat'] uppercase tracking-widest mb-4 pl-2 text-left">Investigaciones</h3>
+                  <div className="space-y-4">
+                    {data.papers.map((paper) => (
+                      <div key={paper.id} className="bg-white rounded-[20px] overflow-hidden border border-gray-100 shadow-sm flex flex-col hover:shadow-md transition-all">
+                        
+                        {/* 1. PORTADA SUPERIOR ALARGADA (Más baja) */}
+                        <div className="w-full h-28 bg-gray-100 relative overflow-hidden shrink-0 flex items-center justify-center">
+                          {paper.portada ? (
+                            <img src={paper.portada} alt="Portada" className="w-full h-full object-cover" />
+                          ) : (
+                            <BookOpen className="w-8 h-8 text-gray-300" />
+                          )}
+                        </div>
+                        
+                        {/* 2. CONTENIDO (Menos padding y más compacto) */}
+                        <div className="p-4 flex flex-col flex-1 text-left">
+                          <h4 className="font-bold text-[#1A3D3D] text-[15px] font-['Montserrat'] leading-tight mb-2">{paper.titulo}</h4>
+                          
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-gray-500 font-bold text-[12px]">{paper.anio}</span>
+                            <span className="bg-[#2D6A6A]/10 text-[#2D6A6A] text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest">
+                              {paper.categoria}
+                            </span>
+                          </div>
+                          
+                          <p className="text-gray-500 text-[12px] leading-relaxed line-clamp-2 mb-3">{paper.desc}</p>
+                          
+                          {/* 3. BOTÓN ÚNICO */}
+                          <div className="mt-auto pt-3 border-t border-gray-50">
+                            <a href={paper.pdfUrl} target="_blank" rel="noreferrer" className="w-full bg-[#2D6A6A] text-white font-bold py-2.5 rounded-xl flex items-center justify-center gap-1.5 hover:bg-[#1A3D3D] transition-colors text-[10px] uppercase tracking-widest">
+                              <FileDown className="w-3.5 h-3.5" /> Leer Investigación
+                            </a>
+                          </div>
+                        </div>
+
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
@@ -562,11 +605,7 @@ function PerfilPublico() {
                       {data.casos.map((caso) => (
                         <div key={caso.id} onClick={() => setSelectedCaso(caso)} className="bg-white rounded-[40px] overflow-hidden border border-gray-100 shadow-sm hover:shadow-2xl hover:-translate-y-3 transition-all group cursor-pointer">
                           <div className="h-64 relative overflow-hidden bg-gray-100 flex items-center justify-center">
-                            {caso.fotos && caso.fotos[0] ? (
-                              <img src={caso.fotos[0]} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={caso.nombre} />
-                            ) : (
-                              <span className="text-gray-400 text-[14px]">Sin imagen</span>
-                            )}
+                            {caso.fotos && caso.fotos[0] ? <img src={caso.fotos[0]} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={caso.nombre} /> : <span className="text-gray-400 text-[14px]">Sin imagen</span>}
                             <div className="absolute top-4 left-4">
                               <span className="bg-white/95 backdrop-blur-md text-[#2D6A6A] text-[11px] font-bold px-3 py-1.5 rounded-full shadow-sm uppercase tracking-widest">{caso.patologia}</span>
                             </div>
@@ -576,6 +615,55 @@ function PerfilPublico() {
                             <p className="text-gray-600 text-[17px] leading-relaxed mb-6 font-medium line-clamp-3">{caso.desc}</p>
                             <span className="text-[#4DB6AC] font-bold text-[12px] uppercase tracking-widest flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">Leer caso completo <ChevronRight className="w-4 h-4" /></span>
                           </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* === NUEVO: INVESTIGACIONES ESCRITORIO === */}
+                {data.papers && data.papers.length > 0 && (
+                  <div id="investigaciones" className="p-10 md:p-16 bg-[#F4F7F7]/30 border-t border-b border-gray-50 text-left">
+                    <div className="flex flex-col items-start mb-10 text-left">
+                      <h2 className="text-[24px] md:text-[30px] font-extrabold text-[#1A3D3D] font-['Montserrat'] uppercase tracking-tight">Investigaciones</h2>
+                      <p className="text-gray-500 text-[17px] font-bold uppercase tracking-[0.2em] opacity-80 leading-none mt-2">Publicaciones y Papers Científicos</p>
+                      <div className="w-14 h-1 bg-[#2D6A6A] rounded-full mt-4"></div>
+                    </div>
+                    
+                    {/* Usamos grid-cols-3 para que las tarjetas queden más angostas y finas */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {data.papers.map((paper) => (
+                        <div key={paper.id} className="bg-white rounded-[24px] overflow-hidden border border-gray-100 shadow-sm flex flex-col hover:shadow-xl hover:-translate-y-2 transition-all group">
+                          
+                          {/* 1. PORTADA SUPERIOR ALARGADA (Más baja) */}
+                          <div className="w-full h-36 bg-gray-100 relative overflow-hidden shrink-0 flex items-center justify-center">
+                            {paper.portada ? (
+                              <img src={paper.portada} alt="Portada" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                            ) : (
+                              <BookOpen className="w-10 h-10 text-gray-300" />
+                            )}
+                          </div>
+                          
+                          {/* 2. CONTENIDO (Menos padding general) */}
+                          <div className="p-5 flex flex-col flex-1">
+                            <h3 className="text-[17px] font-black font-['Montserrat'] text-[#1A3D3D] mb-2.5 leading-tight group-hover:text-[#2D6A6A] transition-colors line-clamp-2">{paper.titulo}</h3>
+                            
+                            <div className="flex items-center gap-2 mb-3">
+                              <span className="text-gray-500 font-bold text-[13px]">{paper.anio}</span>
+                              <span className="w-1 h-1 rounded-full bg-gray-200"></span>
+                              <span className="bg-[#2D6A6A]/10 text-[#2D6A6A] text-[9px] font-bold px-2.5 py-1 rounded-full uppercase tracking-widest">{paper.categoria}</span>
+                            </div>
+                            
+                            <p className="text-gray-600 text-[14px] leading-relaxed font-medium line-clamp-3 mb-4">{paper.desc}</p>
+                            
+                            {/* 3. BOTÓN ÚNICO MÁS ELEGANTE */}
+                            <div className="mt-auto pt-4 border-t border-gray-50">
+                              <a href={paper.pdfUrl} target="_blank" rel="noreferrer" className="w-full bg-white border border-[#2D6A6A]/20 text-[#2D6A6A] font-bold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-[#2D6A6A] hover:text-white transition-colors text-[11px] uppercase tracking-widest shadow-sm">
+                                <FileDown className="w-4 h-4" /> Abrir Documento
+                              </a>
+                            </div>
+                          </div>
+
                         </div>
                       ))}
                     </div>
