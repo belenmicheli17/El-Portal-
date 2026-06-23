@@ -113,7 +113,7 @@ const StackedMockups = ({ navigate }) => {
   const mockups = [
     {
       id: 'profesionales',
-      route: '/profesional/clara-valdez',
+      route: '/profesional/mercedes-arenas',
       content: (
         <div className="bg-white border border-[#1A3D3D]/10 rounded-[32px] md:rounded-[40px] p-6 shadow-[0_12px_32px_rgba(0,0,0,0.06)] h-[400px] w-full flex flex-col items-center text-center">
           <div className="w-full flex items-center justify-start mb-5">
@@ -149,7 +149,7 @@ const StackedMockups = ({ navigate }) => {
     },
     {
       id: 'clinicas',
-      route: '/clinica/clinica-san-roque',
+      route: '/clinica/clinica-veterinaria-san-roque',
       content: (
         <div className="bg-white border border-[#1A3D3D]/10 rounded-[32px] md:rounded-[40px] p-6 shadow-[0_12px_32px_rgba(0,0,0,0.06)] h-[400px] w-full flex flex-col">
           <div className="flex items-center justify-between mb-4">
@@ -162,7 +162,7 @@ const StackedMockups = ({ navigate }) => {
           </div>
           <div className="relative mb-8">
             <div className="w-full h-[120px] rounded-[24px] bg-[#F4F7F7] overflow-hidden relative z-10 border border-[#1A3D3D]/5 shadow-sm">
-              <img src="https://images.unsplash.com/photo-1584820927498-cafe8c11a686?auto=format&fit=crop&w=400&q=80" alt="Hospital San Marcos" className="w-full h-full object-cover" />
+              <img src="https://images.unsplash.com/photo-1584820927498-cafe8c11a686?auto=format&fit=crop&w=400&q=80" alt="Hospital San Roque" className="w-full h-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-[#1A3D3D]/80 via-[#1A3D3D]/20 to-transparent"></div>
             </div>
             <div className="absolute -bottom-3 right-3 bg-[#789A9A] p-2 rounded-xl border-[3px] border-white shadow-sm text-white z-20">
@@ -170,7 +170,7 @@ const StackedMockups = ({ navigate }) => {
             </div>
           </div>
           <div className="pl-1 mb-4 text-left">
-            <h3 className="text-[18px] font-black text-[#1A3D3D] font-['Montserrat'] leading-tight mb-2">Hospital San Marcos</h3>
+            <h3 className="text-[18px] font-black text-[#1A3D3D] font-['Montserrat'] leading-tight mb-2">Hospital San Roque</h3>
             <p className="text-[#1A3D3D]/70 text-[13px] font-bold flex items-center gap-1">
               <MapPin className="w-3.5 h-3.5 text-[#2D6A6A]" /> CABA y GBA Norte
             </p>
@@ -357,7 +357,7 @@ const ZigZagSection = ({ title, subtitle, text, image, customMockup, isReversed,
 };
 
 const TypewriterTitle = () => {
-  const [charIndex, setCharIndex] = useState(0);
+  const [charInx, setCharIndex] = useState(0);
   const text1 = "Enfocate en curar,";
   const text2 = "nosotros en conectarte.";
   const totalChars = text1.length + text2.length;

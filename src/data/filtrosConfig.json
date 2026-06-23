@@ -1,0 +1,14 @@
+{
+  "provincias": [
+    "Buenos Aires", "CABA", "Córdoba", "Santa Fe", "Mendoza", "Tucumán", "Salta", 
+    "Entre Ríos", "San Juan", "Neuquén", "Río Negro", "Corrientes", "Jujuy", 
+    "Chubut", "San Luis", "La Pampa", "Misiones", "Santiago del Estero", 
+    "La Rioja", "Catamarca", "Chaco", "Formosa", "Santa Cruz", "Tierra del Fuego"
+  ],
+  "mascotas": [
+    { "nombre": "Perros y Gatos", "id": "perros_gatos" },
+    { "nombre": "Grandes Animales", "id": "grandes_animales" },
+    { "nombre": "Aves", "id": "aves" },
+    { "nombre": "Exóticos", "id": "exoticos" }
+  ]
+}

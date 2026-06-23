@@ -404,7 +404,7 @@ export default function Capacitaciones() {
     return (
     <article className="max-w-[1200px] mx-auto animate-in fade-in duration-500">
       <button onClick={() => setView('grid')} className="flex items-center gap-2 text-gray-400 hover:text-[#1A3D3D] font-bold text-[10px] uppercase tracking-[0.3em] mb-8 transition-colors group">
-        <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Volver al Repertorio
+        <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Volver al listado
       </button>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">

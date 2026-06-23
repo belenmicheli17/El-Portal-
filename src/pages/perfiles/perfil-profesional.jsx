@@ -124,7 +124,7 @@ function PerfilPublico() {
       <div className="min-h-screen bg-[#F4F7F7] flex flex-col items-center justify-center text-center p-6">
         <h2 className="text-[24px] md:text-[30px] font-black text-[#1A3D3D] font-['Montserrat'] mb-2">Perfil no encontrado</h2>
         <p className="text-gray-500 mb-6 text-[17px]">El profesional que buscás no existe o el enlace es incorrecto.</p>
-        <button onClick={() => navigate('/')} className="bg-[#2D6A6A] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#1A3D3D] transition-colors text-[17px]">Volver al inicio</button>
+        <button onClick={() => navigate('/Cartilla')} className="bg-[#2D6A6A] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#1A3D3D] transition-colors text-[17px]">Volver atrás</button>
       </div>
     );
   }

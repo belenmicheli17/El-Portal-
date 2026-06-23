@@ -2,16 +2,17 @@ import React, { useState, useEffect, useRef } from 'react';
 
 // Si usas react-router-dom, descomenta la siguiente línea en tu entorno real:
 import { useNavigate } from 'react-router-dom';
-import { db } from '../../firebase'; 
+import { db, storage } from '../../firebase'; // <-- Sumamos storage
 import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage'; // <-- Sumamos funciones de Storage
 import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 import { useAuth } from '../../context/AuthContext';
 import { 
-  Camera, Info, AlertCircle, Save, X, Plus, Trash2, 
+  Camera, Info, AlertCircle, Save, X, Plus, Trash2,
   ArrowUp, ArrowDown, MapPin, ShieldCheck, Check, ArrowLeft,
   Smartphone, Home, Mail, Award, ChevronDown, 
   ArrowRight, ExternalLink, Lock, Zap, Clock, Heart, Brain, Turtle, CircleUserRound,
-  Menu, User, LayoutGrid, Edit, Briefcase, FileText, Undo2, Redo2, FileCheck, Building2, AlertTriangle, Syringe, Activity, Microscope, Stethoscope, Crop, Sparkles, Loader2, Globe, CreditCard, ArrowUpRight, Eye, EyeOff, MessageSquare, Image as ImageIcon
+  Menu, User, LayoutGrid, Edit, Briefcase, FileText, Undo2, Redo2, FileCheck, Building2, AlertTriangle, Syringe, Activity, Microscope, Stethoscope, Crop, Sparkles, Loader2, Globe, CreditCard, ArrowUpRight, Eye, EyeOff, MessageSquare, Image as ImageIcon, BookOpen, UploadCloud, FileDown 
 } from 'lucide-react';
 
 // ==========================================
@@ -377,11 +378,12 @@ export default function EditorProfesional() {
   whatsappActivo: false,
   whatsappNum: '',
   
-  // Arrays (Es vital que empiecen como arrays vacíos [])
+ // Arrays (Es vital que empiecen como arrays vacíos [])
   trayectoria: [],
   servicios: [],
   casos: [],
-  zonas: []
+  zonas: [],
+  papers: [] 
 });
   const [past, setPast] = useState([]);
   const [future, setFuture] = useState([]);
@@ -534,6 +536,11 @@ const handleFileSelect = (e, target, caseId = null) => {
         ...prev,
         casos: prev.casos.map(c => c.id === cropModal.caseId ? { ...c, fotos: [...c.fotos, croppedBase64] } : c)
       }));
+    } else if (cropModal.targetId === 'paper') {
+      setFormData(prev => ({
+        ...prev,
+        papers: prev.papers.map(p => p.id === cropModal.caseId ? { ...p, portada: croppedBase64 } : p)
+      }));
     }
     setCropModal({ isOpen: false, imageSrc: null, targetId: null, caseId: null, type: null });
   };
@@ -546,6 +553,130 @@ const handleFileSelect = (e, target, caseId = null) => {
       return { ...prev, fotosPerfil: newHistory, foto: newCurrent };
     });
   };
+
+  // === NUEVA LÓGICA PARA SUBIR PDFs ===
+  const [isUploadingPdf, setIsUploadingPdf] = useState(false);
+  const [pdfUploadProgress, setPdfUploadProgress] = useState(0);
+  const [draggingPaperId, setDraggingPaperId] = useState(null); // NUEVO: Estado para la animación Drag & Drop
+
+  const handlePdfUpload = async (e, paperId) => {
+    const file = e.target.files ? e.target.files[0] : null;
+    if (!file) return;
+    
+    if (file.type !== 'application/pdf') {
+      setModalConfig({ isOpen: true, title: 'Formato incorrecto', message: 'Por favor, subí un archivo en formato PDF.', type: 'error' });
+      return;
+    }
+    
+    if (file.size > 20 * 1024 * 1024) { // Límite de 20MB
+      setModalConfig({ isOpen: true, title: 'Archivo muy pesado', message: 'El PDF no debe superar los 20MB.', type: 'error' });
+      return;
+    }
+
+    if (!currentUser || !currentUser.uid) {
+      setModalConfig({ isOpen: true, title: 'Error de Autenticación', message: 'No se detectó tu usuario. Por favor, volvé a iniciar sesión.', type: 'error' });
+      return;
+    }
+
+    setIsUploadingPdf(true);
+    setPdfUploadProgress(0);
+
+    try {
+      // Limpiamos el nombre del archivo para que no rompa la URL
+      const safeFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+      const fileRef = ref(storage, `papers/${currentUser.uid}/${Date.now()}_${safeFileName}`);
+      const uploadTask = uploadBytesResumable(fileRef, file);
+
+      uploadTask.on('state_changed', 
+        (snapshot) => {
+          const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+          setPdfUploadProgress(progress);
+        }, 
+        (error) => {
+          console.error("Error exacto de Firebase:", error);
+          setIsUploadingPdf(false);
+          // Acá Firebase nos va a decir exactamente por qué falla
+          setModalConfig({ isOpen: true, title: 'Error de Servidor', message: `No se pudo subir: ${error.message}`, type: 'error' });
+        }, 
+        async () => {
+          try {
+            const url = await getDownloadURL(uploadTask.snapshot.ref);
+            setFormData(prev => ({
+              ...prev,
+              papers: prev.papers.map(p => p.id === paperId ? { ...p, pdfUrl: url, fileName: file.name, storagePath: uploadTask.snapshot.ref.fullPath } : p)
+            }));
+            setIsUploadingPdf(false);
+          } catch (urlError) {
+             setIsUploadingPdf(false);
+             setModalConfig({ isOpen: true, title: 'Error al obtener link', message: 'Se subió pero no pudimos generar el link.', type: 'error' });
+          }
+        }
+      );
+    } catch (error) {
+      console.error("Error general:", error);
+      setIsUploadingPdf(false);
+    }
+  };
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    if (file.type !== 'application/pdf') {
+      setModalConfig({ isOpen: true, title: 'Formato incorrecto', message: 'Por favor, subí un archivo en formato PDF.', type: 'error' });
+      return;
+    }
+    
+    if (file.size > 20 * 1024 * 1024) { // Límite de 20MB
+      setModalConfig({ isOpen: true, title: 'Archivo muy pesado', message: 'El PDF no debe superar los 20MB.', type: 'error' });
+      return;
+    }
+
+    setIsUploadingPdf(true);
+    setPdfUploadProgress(0);
+
+    try {
+      const fileRef = ref(storage, `papers/${currentUser.uid}/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '')}`);
+      const uploadTask = uploadBytesResumable(fileRef, file);
+
+      uploadTask.on('state_changed', 
+        (snapshot) => {
+          const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+          setPdfUploadProgress(progress);
+        }, 
+        (error) => {
+          console.error("Error al subir:", error);
+          setIsUploadingPdf(false);
+          setModalConfig({ isOpen: true, title: 'Error', message: 'Hubo un problema al subir el PDF.', type: 'error' });
+        }, 
+        async () => {
+          const url = await getDownloadURL(uploadTask.snapshot.ref);
+          setFormData(prev => ({
+            ...prev,
+            papers: prev.papers.map(p => p.id === paperId ? { ...p, pdfUrl: url, fileName: file.name, storagePath: uploadTask.snapshot.ref.fullPath } : p)
+          }));
+          setIsUploadingPdf(false);
+        }
+      );
+    } catch (error) {
+      console.error("Error:", error);
+      setIsUploadingPdf(false);
+    }
+  };
+
+  const handlePdfRemove = async (paperId, storagePath) => {
+    if (storagePath) {
+      try {
+        const fileRef = ref(storage, storagePath);
+        await deleteObject(fileRef);
+      } catch (error) {
+        console.error("No se pudo borrar el archivo de Storage:", error);
+      }
+    }
+    setFormData(prev => ({
+      ...prev,
+      papers: prev.papers.map(p => p.id === paperId ? { ...p, pdfUrl: '', fileName: '', storagePath: '' } : p)
+    }));
+  };
+  // === FIN LÓGICA PDFs ===
 
 const generarSlug = (texto) => {
   return texto
@@ -896,6 +1027,15 @@ const generarSlug = (texto) => {
                   ${!isPro ? 'opacity-50 grayscale cursor-not-allowed text-gray-400' : activeTab === 'casos' ? 'bg-[#2D6A6A]/10 text-[#1A3D3D]' : 'text-gray-500 hover:bg-white hover:text-[#4DB6AC]'}`}
               >
                 <div className="flex items-center gap-3"><Camera className={`w-5 h-5 ${activeTab === 'casos' ? 'text-[#2D6A6A]' : 'text-gray-400'}`} /> Casos Clínicos</div>
+                {!isPro && <Lock className="w-3.5 h-3.5 text-gray-400" />}
+              </button>
+
+              <button 
+                onClick={() => isPro && setActiveTab('papers')} disabled={!isPro}
+                className={`flex items-center justify-between px-4 py-3.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap outline-none
+                  ${!isPro ? 'opacity-50 grayscale cursor-not-allowed text-gray-400' : activeTab === 'papers' ? 'bg-[#2D6A6A]/10 text-[#1A3D3D]' : 'text-gray-500 hover:bg-white hover:text-[#4DB6AC]'}`}
+              >
+                <div className="flex items-center gap-3"><BookOpen className={`w-5 h-5 ${activeTab === 'papers' ? 'text-[#2D6A6A]' : 'text-gray-400'}`} /> Investigaciones</div>
                 {!isPro && <Lock className="w-3.5 h-3.5 text-gray-400" />}
               </button>
 
@@ -1407,6 +1547,193 @@ const generarSlug = (texto) => {
                   ))}
                   <button onClick={() => handleArrayAdd('casos', { nombre: "", patologia: "", desc: "", fotos: [] })} className="w-full py-4 border-2 border-dashed border-[#2D6A6A]/30 bg-white rounded-xl text-[#2D6A6A] text-xs font-bold hover:bg-[#2D6A6A]/5 hover:border-[#2D6A6A] transition-colors uppercase tracking-widest flex items-center justify-center gap-2">
                     <Plus className="w-4 h-4" /> Publicar Nuevo Caso
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'papers' && isPro && (
+              <div className="w-full bg-white rounded-[32px] shadow-sm border border-gray-100 p-6 md:p-10 relative animate-in fade-in duration-300 min-h-[500px]">
+                <div className="mb-8">
+                   <h3 className="text-2xl font-black text-[#1A3D3D] font-['Montserrat'] flex items-center gap-2">Publicaciones y Papers</h3>
+                   <p className="text-sm text-gray-500 mt-1">Compartí tus investigaciones científicas en formato PDF de forma directa.</p>
+                </div>
+
+                <div className="space-y-6">
+                 {formData.papers.map((item) => {
+                    const isEditing = item.isEditing !== false;
+
+                    // Función para validar obligatorios al colapsar
+                    const handleCollapse = () => {
+                      if (!item.titulo || !item.anio || !item.categoria || !item.desc || !item.pdfUrl) {
+                        setModalConfig({ isOpen: true, title: 'Campos incompletos', message: 'Por favor, completá todos los campos con asterisco (*) y asegurate de subir el archivo PDF.', type: 'error' });
+                        return;
+                      }
+                      handleArrayUpdate('papers', item.id, 'isEditing', false);
+                    };
+
+                    return (
+                      <div key={item.id} className={`bg-gray-50/50 rounded-3xl border border-gray-100 relative text-left shadow-sm transition-all duration-300 ${isEditing ? 'p-6 flex flex-col gap-5' : 'p-4'}`}>
+                        
+                        <button onClick={() => {
+                            if (item.storagePath) handlePdfRemove(item.id, item.storagePath);
+                            handleArrayRemove('papers', item.id);
+                          }} 
+                          className="absolute top-4 right-4 p-2 bg-white border border-gray-200 text-gray-300 hover:text-red-500 rounded-xl hover:border-red-200 shadow-sm transition-colors z-10" title="Eliminar publicación por completo">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+
+                        {!isEditing ? (
+                          <div className="flex items-center justify-between pr-12">
+                            <div className="flex items-center gap-4">
+                              <div className="w-12 h-12 bg-white rounded-xl border border-gray-200 shadow-sm flex items-center justify-center text-[#2D6A6A] overflow-hidden">
+                                {item.portada ? <img src={item.portada} alt="Portada" className="w-full h-full object-cover" /> : <BookOpen className="w-6 h-6" />}
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <h4 className="font-bold text-[#1A3D3D] text-sm md:text-base truncate">{item.titulo}</h4>
+                                <p className="text-xs text-gray-500 font-medium mt-0.5">{item.categoria} • {item.anio} • 📎 PDF Adjunto</p>
+                              </div>
+                            </div>
+                            <button onClick={() => handleArrayUpdate('papers', item.id, 'isEditing', true)} className="text-sm font-bold text-[#4DB6AC] hover:text-[#2D6A6A] transition-colors bg-white px-4 py-2 rounded-xl shadow-sm border border-gray-100">
+                              Editar
+                            </button>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="flex flex-col md:flex-row gap-6 mt-2">
+                              
+                              {/* ZONA MULTIMEDIA: PORTADA Y PDF */}
+                              <div className="w-full md:w-40 shrink-0 flex flex-col gap-4">
+                                
+                                {/* 1. PORTADA */}
+                                <div>
+                                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 block ml-1">Portada (Opcional)</label>
+                                  <div className="relative w-full aspect-square rounded-xl overflow-hidden border-2 border-gray-200 group/img shadow-sm bg-white">
+                                    {item.portada ? (
+                                      <>
+                                        <img src={item.portada} className="w-full h-full object-cover" alt="Portada" />
+                                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/img:opacity-100 flex items-center justify-center transition-opacity">
+                                          <button onClick={() => handleArrayUpdate('papers', item.id, 'portada', '')} className="text-red-400 hover:text-red-500"><X className="w-6 h-6" /></button>
+                                        </div>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <label htmlFor={`portada-${item.id}`} className="w-full h-full flex flex-col items-center justify-center text-gray-400 hover:bg-gray-50 hover:text-[#2D6A6A] cursor-pointer transition-colors border-dashed border-2 border-transparent hover:border-[#2D6A6A]/40">
+                                          <ImageIcon className="w-6 h-6 mb-1" />
+                                          <span className="text-[9px] font-black uppercase text-center px-2">Subir<br/>Imagen</span>
+                                        </label>
+                                        <input type="file" id={`portada-${item.id}`} className="hidden" accept="image/*" onChange={(e) => handleFileSelect(e, 'paper', item.id)} />
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* 2. PDF CON DRAG & DROP */}
+                                <div>
+                                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 block ml-1">Archivo <span className="text-red-400 ml-1">*</span></label>
+                                  {item.pdfUrl ? (
+                                    <div className="relative w-full py-4 bg-[#4DB6AC]/10 border-2 border-[#4DB6AC] rounded-xl flex flex-col items-center justify-center text-center gap-1 shadow-sm">
+                                      <FileDown className="w-6 h-6 text-[#2D6A6A]" />
+                                      <span className="text-[9px] font-bold text-[#1A3D3D] max-w-[120px] truncate block px-2" title={item.fileName}>{item.fileName}</span>
+                                      <button 
+                                        onClick={(e) => { e.preventDefault(); handlePdfRemove(item.id, item.storagePath); }} 
+                                        className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full shadow-md hover:bg-red-600"
+                                      >
+                                        <X className="w-3 h-3" strokeWidth={3} />
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <label 
+                                      htmlFor={`pdf-${item.id}`} 
+                                      onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setDraggingPaperId(item.id); }}
+                                      onDragEnter={(e) => { e.preventDefault(); e.stopPropagation(); setDraggingPaperId(item.id); }}
+                                      onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); setDraggingPaperId(null); }}
+                                      onDrop={(e) => {
+                                        e.preventDefault(); e.stopPropagation();
+                                        setDraggingPaperId(null);
+                                        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                                          handlePdfUpload({ target: { files: [e.dataTransfer.files[0]] } }, item.id);
+                                        }
+                                      }}
+                                      className={`w-full py-6 rounded-xl border-2 border-dashed transition-all duration-200 text-center shadow-sm relative overflow-hidden
+                                        ${draggingPaperId === item.id ? 'border-[#4DB6AC] bg-[#4DB6AC]/20 scale-[1.02]' : 
+                                          isUploadingPdf ? 'border-gray-300 bg-gray-100' : 
+                                          'border-[#2D6A6A]/40 bg-white hover:bg-[#2D6A6A]/5 hover:border-[#2D6A6A] cursor-pointer'} 
+                                        flex flex-col items-center justify-center text-[#2D6A6A]`}
+                                    >
+                                      {isUploadingPdf ? (
+                                        <>
+                                          <Loader2 className="w-5 h-5 animate-spin mb-1 text-[#4DB6AC]" />
+                                          <span className="text-[9px] font-black uppercase text-[#2D6A6A]">{pdfUploadProgress}%</span>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <UploadCloud className="w-6 h-6 mb-1" />
+                                          <span className="text-[9px] font-black uppercase tracking-widest leading-tight">Arrastrá o<br/>Subí PDF</span>
+                                        </>
+                                      )}
+                                    </label>
+                                  )}
+                                  <input type="file" id={`pdf-${item.id}`} className="hidden" accept="application/pdf" disabled={isUploadingPdf} onChange={(e) => handlePdfUpload(e, item.id)} />
+                                </div>
+                              </div>
+                              
+                              {/* CAMPOS DE TEXTO */}
+                              <div className="flex-1 space-y-4">
+                                <div>
+                                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 block ml-1">Título de la Investigación <span className="text-red-400 ml-1">*</span></label>
+                                  <input type="text" placeholder="Ej: Efectos de la dieta BARF en caninos..." value={item.titulo} onChange={(e) => handleArrayUpdate('papers', item.id, 'titulo', e.target.value)} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold focus:border-[#2D6A6A] outline-none shadow-sm" />
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  <div>
+                                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 block ml-1">Año de Publicación <span className="text-red-400 ml-1">*</span></label>
+                                    <input type="text" placeholder="Ej: 2025" value={item.anio} onChange={(e) => handleArrayUpdate('papers', item.id, 'anio', e.target.value.replace(/[^0-9]/g, '').slice(0, 4))} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-[#2D6A6A] outline-none shadow-sm" />
+                                  </div>
+                                  <div>
+                                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 block ml-1">Categoría / Etiqueta <span className="text-red-400 ml-1">*</span></label>
+                                    <select value={item.categoria} onChange={(e) => handleArrayUpdate('papers', item.id, 'categoria', e.target.value)} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm font-medium focus:border-[#2D6A6A] outline-none text-[#1A3D3D] shadow-sm">
+                                      <option value="">Seleccionar...</option>
+                                      <option value="Clínica Médica">Clínica Médica</option>
+                                      <option value="Cirugía">Cirugía</option>
+                                      <option value="Nutrición">Nutrición</option>
+                                      <option value="Comportamiento">Comportamiento</option>
+                                      <option value="Farmacología">Farmacología</option>
+                                      <option value="Reporte de Casos">Reporte de Casos</option>
+                                      <option value="Diagnóstico por Imágenes">Diagnóstico por Imágenes</option>
+                                      <option value="Otro">Otro</option>
+                                    </select>
+                                  </div>
+                                </div>
+                                <div>
+                                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 block ml-1">Resumen (Abstract) <span className="text-red-400 ml-1">*</span></label>
+                                  <textarea 
+                                    placeholder="Pegá acá el abstract de tu investigación..." 
+                                    value={item.desc} 
+                                    onChange={(e) => {
+                                      handleArrayUpdate('papers', item.id, 'desc', e.target.value);
+                                      e.target.style.height = 'auto';
+                                      e.target.style.height = `${e.target.scrollHeight}px`;
+                                    }} 
+                                    className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm min-h-[96px] overflow-hidden resize-none focus:border-[#2D6A6A] outline-none text-[#1A3D3D] shadow-sm transition-all" 
+                                  />
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex justify-end pt-4 border-t border-gray-200/50 mt-2">
+                              <button onClick={handleCollapse} className="px-6 py-2.5 bg-[#1A3D3D] text-white text-sm font-bold rounded-xl shadow-md hover:bg-[#2D6A6A] transition-colors">
+                                Guardar y Colapsar
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    );
+                  })}
+                  
+                  
+                  <button onClick={() => handleArrayAdd('papers', { titulo: "", desc: "", anio: "", categoria: "", pdfUrl: "", fileName: "", storagePath: "", isEditing: true })} className="w-full py-4 border-2 border-dashed border-[#2D6A6A]/30 bg-white rounded-xl text-[#2D6A6A] text-[11px] font-black hover:bg-[#2D6A6A]/5 hover:border-[#2D6A6A] transition-colors uppercase tracking-widest flex items-center justify-center gap-2">
+                    <Plus className="w-4 h-4" /> Cargar Nueva Investigación
                   </button>
                 </div>
               </div>

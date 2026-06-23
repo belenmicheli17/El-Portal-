@@ -2,16 +2,19 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
+import { getStorage } from "firebase/storage";
+
+
+
 
 // Tus llaves oficiales
 const firebaseConfig = {
-  apiKey: "AIzaSyA9DsYU4-LEelrXFIiPpk9_nYErpZSqYTM",
-  authDomain: "el-portal-veterinario-3ab72.firebaseapp.com",
-  projectId: "el-portal-veterinario-3ab72",
-  storageBucket: "el-portal-veterinario-3ab72.firebasestorage.app",
-  messagingSenderId: "939343810474",
-  appId: "1:939343810474:web:8e31c0f498330e85cfe5d3",
-  measurementId: "G-6VQ6GT3ZQ9"
+  apiKey: "TU_API_KEY",
+  authDomain: "TU_AUTH_DOMAIN",
+  projectId: "TU_PROJECT_ID",
+  storageBucket: "TU_STORAGE_BUCKET",
+  messagingSenderId: "TU_MESSAGING_SENDER_ID",
+  appId: "TU_APP_ID"
 };
 
 // Inicializamos la aplicación
@@ -20,3 +23,4 @@ const app = initializeApp(firebaseConfig);
 // Exportamos "db" (Base de datos) y "auth" (Autenticación) para usarlos en el resto de tu web
 export const db = getFirestore(app);
 export const auth = getAuth(app);
+export const storage = getStorage(app);  

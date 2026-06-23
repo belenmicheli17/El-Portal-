@@ -83,13 +83,13 @@
   "categoria": "quirurgicas_criticas",
   "subcategorias": ["Tejidos Blandos", "Traumatología", "Neurológica"],
   "tags": ["operacion", "cirujano"]
-}
+},
   {
-    "id": "traumatologia_ortopedia",
-    "nombre_mostrar": "Traumatología y Ortopedia",
-    "categoria": "quirurgicas_criticas",
-    "tags": ["huesos", "fractura", "quebrado", "rengo", "articulacion", "ligamentos", "traumatologo"]
-  },
+     "id": "traumatologia_ortopedia",
+     "nombre_mostrar": "Traumatología y Ortopedia",
+     "categoria": "quirurgicas_criticas",
+     "tags": ["huesos", "fractura", "quebrado", "rengo"]
+   },
   {
     "id": "anestesiologia_algiologia",
     "nombre_mostrar": "Anestesiología y Manejo del Dolor",

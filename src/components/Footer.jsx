@@ -67,7 +67,7 @@ export default function Footer() {
               </li>
               <li className="flex items-center gap-3 hover:text-white transition-colors cursor-pointer">
                 <Globe className="w-4 h-4 shrink-0" /> 
-                <span>elportal.vet</span>
+                <span>portalveterinario.ar</span>
               </li>
             </ul>
           </div>
