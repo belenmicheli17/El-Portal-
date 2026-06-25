@@ -26,7 +26,7 @@ import LegalPage from './pages/legales/privacidad';
 import Login from './pages/Login';
 import Capacitaciones from './pages/Capacitaciones';
 import CartillaProveedores from './pages/CartillaProveedores';
-import Ecosistema from './pages/ecosistema';
+import Ecosistema from './pages/Ecosistema';
 
 // --- NUEVOS IMPORTS PARA EL PANEL ADMIN ---
 import RutaProtegidaAdmin from './components/admin/RutaProtegidaAdmin';
