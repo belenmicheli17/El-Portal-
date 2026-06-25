@@ -21,7 +21,6 @@ import Editor from './pages/editores/editor-profesional';
 import EditorClinica from './pages/editores/editor-clinica'; 
 import EditorProveedor from './pages/editores/editor-proveedores'; 
 import Papers from './pages/Papers';
-import Novedades from './pages/novedades';
 import BolsaDeTrabajo from './pages/bolsa-de-trabajo';
 import LegalPage from './pages/legales/privacidad';
 import Login from './pages/Login';
@@ -177,7 +176,6 @@ export default function App() {
             <Route path="/proveedor/:slug" element={<PerfilProveedor />} />
             
             {/* Secciones de la plataforma */}
-            <Route path="/novedades" element={<Novedades />} />
             <Route path="/bolsa-de-trabajo" element={<BolsaDeTrabajo />} />
             <Route path="/capacitaciones" element={<Capacitaciones />} />
             <Route path="/cartilla-proveedores" element={<CartillaProveedores />} />
