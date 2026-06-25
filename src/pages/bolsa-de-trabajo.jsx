@@ -634,7 +634,7 @@ const toggleFiltro = (categoria, valor) => {
         <div className="absolute top-[10%] right-[-10%] w-[550px] h-[550px] bg-[#1A3D3D]/10 rounded-full blur-[140px] pointer-events-none z-0"></div>
         
         <div className="relative z-10 max-w-4xl mx-auto flex flex-col items-center px-4">
-          <Briefcase className="w-8 h-8 text-[#1A3D3D] mb-6 relative z-10" />
+          <Briefcase className="w-10 h-10 text-[#1A3D3D] mb-6 relative z-10" />
           
           <h1 className="text-[32px] md:text-[42px] lg:text-[48px] font-black font-['Montserrat'] text-[#1A3D3D] tracking-tighter leading-none mb-4">
             Bolsa de Trabajo

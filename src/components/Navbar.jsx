@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  Menu, X, Home, Info, LayoutGrid, ChevronRight, 
+  Menu, X, Home, Info, LayoutGrid, ChevronRight, Search, FileText,
   Sparkles, Briefcase, Building, Truck, Edit, User, CircleUserRound, BookOpen, Globe
 } from 'lucide-react'; 
 
@@ -31,7 +31,6 @@ export default function Navbar({ mostrarBotonCrear = false, mostrarBotonContacto
    
       case 'capacitaciones': path = '/capacitaciones'; break; 
       case 'cartilla de proveedores': path = '/cartilla-proveedores'; break;
-      case 'novedades': path = '/novedades'; break;
       case 'bolsa-de-trabajo': path = '/bolsa-de-trabajo'; break;
       case 'perfil-profesional': path = '/perfil-profesional'; break;
       case 'perfil-clinica': path = '/clinica/${tudato.slug}'; break;
@@ -79,7 +78,7 @@ export default function Navbar({ mostrarBotonCrear = false, mostrarBotonContacto
               onClick={() => handleNav('Cartilla')}
               className="hidden md:flex items-center gap-2 bg-white text-[#1A3D3D] border border-gray-200 rounded-full px-5 py-2 text-[13px] font-bold shadow-sm hover:bg-gray-50 hover:border-[#2D6A6A] transition-all"
             >
-              <circleuserround className="w-4 h-4" /> Buscar Profesionales
+              <Search className="w-4 h-4" /> Buscar Profesionales
             </button>
 
             {mostrarBotonContacto ? (
@@ -115,14 +114,13 @@ export default function Navbar({ mostrarBotonCrear = false, mostrarBotonContacto
                       <button onClick={() => handleNav('inicio')} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><Home className="w-4 h-4 text-gray-400 group-hover:text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Inicio</span></button>
                       
                       {/* NUEVO ITEM EN EL MENÚ (Para móvil) */}
-                      <button onClick={() => handleNav('Cartilla')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><div className="flex items-center gap-3"><circleuserround className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Cartilla</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
+                      <button onClick={() => handleNav('Cartilla')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><div className="flex items-center gap-3"><Search className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Cartilla</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
 
                       <button onClick={() => handleNav('landing')} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><Info className="w-4 h-4 text-gray-400 group-hover:text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Landing page</span></button>
-                     <button onClick={() => handleNav('novedades')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><div className="flex items-center gap-3"><Sparkles className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Novedades</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
-                      <button onClick={() => handleNav('bolsa-de-trabajo')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><div className="flex items-center gap-3"><Briefcase className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Bolsa de Trabajo</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
+                  <button onClick={() => handleNav('bolsa-de-trabajo')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><div className="flex items-center gap-3"><Briefcase className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Bolsa de Trabajo</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
                       <button onClick={() => handleNav('capacitaciones')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><div className="flex items-center gap-3"><BookOpen className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Capacitaciones</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
                       <button onClick={() => handleNav('cartilla de proveedores')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><div className="flex items-center gap-3"><Truck className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Cartilla de Proveedores</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
- <button onClick={() => handleNav('papers')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><div className="flex items-center gap-3"><Truck className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Publicaciones cientificas</span></div><BookOpen className="w-4 h-4 text-gray-300" /></button>
+ <button onClick={() => handleNav('papers')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><div className="flex items-center gap-3"><FileText className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Publicaciones cientificas</span></div></button>
 
                      {/* <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] px-4 py-3 border-b border-gray-50 mb-2 mt-2 text-left">Perfiles Públicos</p>
                       <button onClick={() => handleNav('perfil-profesional')} className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"><div className="flex items-center gap-3"><User className="w-4 h-4 text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Perfil Profesional</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>

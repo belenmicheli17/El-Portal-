@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 
 // Si usas react-router-dom, descomenta la siguiente línea en tu entorno real:
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { db, storage } from '../../firebase'; // <-- Sumamos storage
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, collection, query, where, getDocs, writeBatch, deleteDoc } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage'; // <-- Sumamos funciones de Storage
 import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 import { useAuth } from '../../context/AuthContext';
@@ -314,7 +314,17 @@ const SimpleCropper = ({ imageSrc, onCrop, onCancel, type }) => {
 export default function EditorProfesional() { 
   const { currentUser } = useAuth();
   const navigate = useNavigate(); 
+  const location = useLocation(); // <-- Inicializamos useLocation
   const [activeTab, setActiveTab] = useState('cuenta'); 
+
+  // <-- NUEVO: Si la URL trae un pedido de pestaña, la activamos
+  useEffect(() => {
+    if (location.state && location.state.tab) {
+      setActiveTab(location.state.tab);
+      // Limpiamos el historial para que no se vuelva a abrir si el usuario recarga la página manualmente
+      window.history.replaceState({}, document.title);
+    }
+  }, [location]); 
   const [modalConfig, setModalConfig] = useState({ isOpen: false, title: '', message: '', type: 'info', onConfirm: null });
   const [isSubModalOpen, setIsSubModalOpen] = useState(false); 
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
@@ -339,10 +349,17 @@ export default function EditorProfesional() {
         
         if (docSnap.exists()) {
           const dbData = docSnap.data();
-          // Actualizamos el formulario con lo que viene de la base de datos
+          
+          // NUEVO: Buscamos los papers en la nueva colección global
+          const qPapers = query(collection(db, 'papers'), where('autorId', '==', currentUser.uid));
+          const papersSnap = await getDocs(qPapers);
+          const misPapers = papersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+          // Actualizamos el formulario
           _setFormData(prev => ({
             ...prev,
-            ...dbData
+            ...dbData,
+            papers: misPapers // Sobrescribimos con los datos de la colección global
           }));
         }
       } catch (error) {
@@ -658,14 +675,29 @@ const generarSlug = (texto) => {
     
     // ¡ACÁ ABRIMOS EL BLOQUE TRY!
     try {
-      // 1 y 2. Mantenemos el slug original y oficial del usuario para no romper las URLs
-      const dataToSave = { ...formData, slug: currentUser.slug };
+      // 1. Separamos los papers del resto de la información
+      const { papers, ...perfilDataToSave } = formData;
+      perfilDataToSave.slug = currentUser.slug;
 
-      // 3. El ID del documento sigue siendo el UID del usuario logueado
+      // 2. Guardamos el perfil "limpio" (Esto borrará los papers viejos del documento del profesional automáticamente)
       const docRef = doc(db, 'profesionales', currentUser.uid);
+      await setDoc(docRef, perfilDataToSave);
 
-      // ¡ACÁ FALTABA LA INSTRUCCIÓN DE GUARDAR EN FIREBASE!
-      await setDoc(docRef, dataToSave);
+      // 3. Guardamos los papers en la colección global usando un Batch (Procesamiento en lote)
+      const batch = writeBatch(db);
+      papers.forEach(paper => {
+          // Usamos el ID del paper como nombre del documento
+          const paperRef = doc(db, 'papers', String(paper.id));
+          batch.set(paperRef, {
+              ...paper,
+              // Le inyectamos la data del autor para que el buscador no tenga que cruzar bases de datos
+              autorId: currentUser.uid,
+              autorNombre: formData.nombre,
+              autorFoto: formData.foto || null,
+              autorEspecialidad: formData.especialidad || 'Veterinario'
+          });
+      });
+      await batch.commit(); // Ejecutamos el guardado masivo
 
       // 4. --- ¡CERRANDO EL CICLO DEL BOTÓN! ---
       setSaveStatus('saved');
@@ -1524,15 +1556,21 @@ const generarSlug = (texto) => {
                         setModalConfig({ isOpen: true, title: 'Campos incompletos', message: 'Por favor, completá todos los campos con asterisco (*) y asegurate de subir el archivo PDF.', type: 'error' });
                         return;
                       }
+                      if (item.desc.length < 150 || item.desc.length > 1500) {
+                        setModalConfig({ isOpen: true, title: 'Longitud del resumen', message: 'El resumen debe tener entre 150 y 1500 caracteres. Te ayuda a dar un buen pantallazo sin excederte.', type: 'error' });
+                        return;
+                      }
                       handleArrayUpdate('papers', item.id, 'isEditing', false);
                     };
 
                     return (
                       <div key={item.id} className={`bg-gray-50/50 rounded-3xl border border-gray-100 relative text-left shadow-sm transition-all duration-300 ${isEditing ? 'p-6 flex flex-col gap-5' : 'p-4'}`}>
                         
-                        <button onClick={() => {
+                        <button onClick={async () => {
                             if (item.storagePath) handlePdfRemove(item.id, item.storagePath);
                             handleArrayRemove('papers', item.id);
+                            // NUEVO: Borramos directamente de la colección global en Firebase
+                            try { await deleteDoc(doc(db, 'papers', String(item.id))); } catch(e) { console.log(e) }
                           }} 
                           className="absolute top-4 right-4 p-2 bg-white border border-gray-200 text-gray-300 hover:text-red-500 rounded-xl hover:border-red-200 shadow-sm transition-colors z-10" title="Eliminar publicación por completo">
                           <Trash2 className="w-4 h-4" />
@@ -1642,7 +1680,7 @@ const generarSlug = (texto) => {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                   <div>
                                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 block ml-1">Año de Publicación <span className="text-red-400 ml-1">*</span></label>
-                                    <input type="text" placeholder="Ej: 2025" value={item.anio} onChange={(e) => handleArrayUpdate('papers', item.id, 'anio', e.target.value.replace(/[^0-9]/g, '').slice(0, 4))} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-[#2D6A6A] outline-none shadow-sm" />
+                                    <input type="number" max={new Date().getFullYear()} min="1950" placeholder="Ej: 2025" value={item.anio} onChange={(e) => handleArrayUpdate('papers', item.id, 'anio', e.target.value)} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-[#2D6A6A] outline-none shadow-sm" />
                                   </div>
                                   <div>
                                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 block ml-1">Categoría / Etiqueta <span className="text-red-400 ml-1">*</span></label>
@@ -1660,9 +1698,15 @@ const generarSlug = (texto) => {
                                   </div>
                                 </div>
                                 <div>
-                                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 block ml-1">Resumen (Abstract) <span className="text-red-400 ml-1">*</span></label>
+                                  <div className="flex justify-between items-end mb-1.5 ml-1">
+                                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block">Resumen (Abstract) <span className="text-red-400 ml-1">*</span></label>
+                                    <span className={`text-[10px] font-bold transition-colors ${(item.desc?.length || 0) < 150 || (item.desc?.length || 0) > 1500 ? 'text-red-400' : 'text-gray-400'}`}>
+                                      {item.desc?.length || 0} / 1500
+                                    </span>
+                                  </div>
                                   <textarea 
-                                    placeholder="Pegá acá el abstract de tu investigación..." 
+                                    maxLength={1500}
+                                    placeholder="Pegá acá el abstract de tu investigación (mínimo 150 caracteres)..." 
                                     value={item.desc} 
                                     onChange={(e) => {
                                       handleArrayUpdate('papers', item.id, 'desc', e.target.value);

@@ -44,15 +44,26 @@ function PerfilPublico() {
     try {
       if (!slug) return;
       
+      // 1. Buscamos el perfil del profesional
       const q = query(collection(db, 'profesionales'), where('slug', '==', slug));
       const querySnapshot = await getDocs(q);
 
       if (!querySnapshot.empty) {
-         const datosProfesional = querySnapshot.docs[0].data();
+         const docProfesional = querySnapshot.docs[0];
+         const datosProfesional = docProfesional.data();
          
-         // ¡ACÁ ESTÁ EL CAMBIO! Usamos setData en lugar de setProfesional
-         setData(datosProfesional); 
-         setLoading(false); // No te olvides de desactivar el loading cuando termina
+         // 2. NUEVO: Buscamos los papers de este profesional en la colección global
+         const qPapers = query(collection(db, 'papers'), where('autorId', '==', docProfesional.id));
+         const papersSnapshot = await getDocs(qPapers);
+         const papersDelProfesional = papersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+         
+         // 3. Juntamos la info del perfil con sus papers recuperados y lo mandamos a la pantalla
+         setData({
+           ...datosProfesional,
+           papers: papersDelProfesional
+         }); 
+         
+         setLoading(false);
       } else {
          console.log("No se encontró el perfil público");
          setLoading(false);
@@ -65,7 +76,7 @@ function PerfilPublico() {
   };
 
     fetchVeterinarioInfo();
-  }, [slug]); // 3. Se ejecuta cada vez que cambia el slug en la URL
+  }, [slug]);
 
   // EFECTO 2: ESTILOS
   useEffect(() => {
@@ -391,15 +402,14 @@ function PerfilPublico() {
                           
                           <p className="text-gray-500 text-[12px] leading-relaxed line-clamp-2 mb-3">{paper.desc}</p>
                           
-                          {/* 3. BOTÓN ÚNICO */}
+                          {/* 3. BOTÓN ÚNICO MODIFICADO */}
                           <div className="mt-auto pt-3 border-t border-gray-50">
-                            <a href={paper.pdfUrl} target="_blank" rel="noreferrer" className="w-full bg-[#2D6A6A] text-white font-bold py-2.5 rounded-xl flex items-center justify-center gap-1.5 hover:bg-[#1A3D3D] transition-colors text-[10px] uppercase tracking-widest">
+                            <a href={`https://docs.google.com/viewer?url=${encodeURIComponent(paper.pdfUrl)}&embedded=true`} target="_blank" rel="noreferrer" className="w-full bg-[#2D6A6A] text-white font-bold py-2.5 rounded-xl flex items-center justify-center gap-1.5 hover:bg-[#1A3D3D] transition-colors text-[10px] uppercase tracking-widest">
                               <FileDown className="w-3.5 h-3.5" /> Leer Investigación
                             </a>
                           </div>
                         </div>
-
-                      </div>
+</div>
                     ))}
                   </div>
                 </div>
@@ -658,7 +668,7 @@ function PerfilPublico() {
                             
                             {/* 3. BOTÓN ÚNICO MÁS ELEGANTE */}
                             <div className="mt-auto pt-4 border-t border-gray-50">
-                              <a href={paper.pdfUrl} target="_blank" rel="noreferrer" className="w-full bg-white border border-[#2D6A6A]/20 text-[#2D6A6A] font-bold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-[#2D6A6A] hover:text-white transition-colors text-[11px] uppercase tracking-widest shadow-sm">
+                              <a href={`https://docs.google.com/viewer?url=${encodeURIComponent(paper.pdfUrl)}&embedded=true`} target="_blank" rel="noreferrer" className="w-full bg-white border border-[#2D6A6A]/20 text-[#2D6A6A] font-bold py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-[#2D6A6A] hover:text-white transition-colors text-[11px] uppercase tracking-widest shadow-sm">
                                 <FileDown className="w-4 h-4" /> Abrir Documento
                               </a>
                             </div>

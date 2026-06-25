@@ -141,9 +141,9 @@ const Cartilla = () => {
         <div className="relative z-10 max-w-3xl mx-auto flex flex-col items-center px-4">
           
           <div className="flex items-center gap-3 mb-5">
-            <Dog className="w-8 h-8 text-[#FF9800]" strokeWidth={2.5} />
-            <Heart className="w-7 h-7 text-[#FF9800]" strokeWidth={2.5} />
-            <Cat className="w-8 h-8 text-[#FF9800]" strokeWidth={2.5} />
+            <Dog className="w-10 h-10 text-[#FF9800]" strokeWidth={2.5} />
+            <Heart className="w-9 h-9 text-[#FF9800]" strokeWidth={2.5} />
+            <Cat className="w-10 h-10 text-[#FF9800]" strokeWidth={2.5} />
           </div>
 
           <h1 className="text-[32px] md:text-[42px] lg:text-[48px] font-black font-['Montserrat'] text-[#1A3D3D] tracking-tighter leading-none mb-3">

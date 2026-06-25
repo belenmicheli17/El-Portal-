@@ -37,7 +37,6 @@ export default function Footer() {
             <div>
               <h4 className="text-white font-bold text-[11px] md:text-[10px] uppercase tracking-[0.3em] mb-4 font-['Montserrat']">Ecosistema</h4>
               <ul className="space-y-2 text-white/40 text-sm">
-                <li><button onClick={() => handleNavClick('/')} className="hover:text-white transition-colors">Novedades</button></li>
                 
                 <li><button onClick={() => handleNavClick('/')} className="hover:text-white transition-colors">Proveedores</button></li>
                 <li><button onClick={() => handleNavClick('/bolsa-de-trabajo')} className="hover:text-white transition-colors">Bolsa de Trabajo</button></li>
