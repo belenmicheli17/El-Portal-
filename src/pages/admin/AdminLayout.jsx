@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import { getAuth, signOut } from 'firebase/auth';
 import { 
   LayoutDashboard, Users, CheckSquare, Briefcase, 
-  Settings, LogOut, Menu, X, ShieldAlert 
+  Settings, LogOut, Menu, X, ShieldAlert, BookOpen
 } from 'lucide-react';
 
 export default function AdminLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
 
   // Inyección de la fuente de Google (si no está global)
   useEffect(() => {
@@ -24,12 +27,13 @@ export default function AdminLayout() {
     { path: '/admin/validaciones', icon: <CheckSquare className="w-5 h-5" />, label: 'Validaciones' },
     { path: '/admin/usuarios', icon: <Users className="w-5 h-5" />, label: 'Gestión Usuarios' },
     { path: '/admin/bolsa', icon: <Briefcase className="w-5 h-5" />, label: 'Bolsa de Trabajo' },
+{ path: '/admin/capacitaciones', icon: <BookOpen className="w-5 h-5" />, label: 'Capacitaciones' },
     { path: '/admin/configuracion', icon: <Settings className="w-5 h-5" />, label: 'Configuración' },
   ];
 
-  const handleLogout = () => {
-    // Acá a futuro irá la lógica de Firebase Auth: signOut(auth)
-    alert("Cerrando sesión segura...");
+  const handleLogout = async () => {
+    const auth = getAuth();
+    await signOut(auth);
     navigate('/');
   };
 
@@ -60,9 +64,8 @@ export default function AdminLayout() {
               <ShieldAlert className="w-5 h-5 text-[#4DB6AC]" />
             </div>
             <div>
-              <h1 className="font-['Montserrat'] font-black text-[16px] tracking-tight leading-none text-white">El Portal</h1>
-              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#4DB6AC]">Admin Panel</span>
-            </div>
+              <h1 className="font-['Montserrat'] font-black text-[20px] tracking-tight leading-none text-white">El Portal</h1>
+              </div>
           </div>
           <button onClick={() => setIsMobileMenuOpen(false)} className="lg:hidden text-white/50 hover:text-white">
             <X className="w-6 h-6" />
@@ -128,7 +131,7 @@ export default function AdminLayout() {
               <p className="text-[11px] font-semibold text-[#2D6A6A] uppercase tracking-widest">Super Admin</p>
             </div>
             <div className="w-10 h-10 bg-[#1A3D3D] rounded-full flex items-center justify-center border-2 border-[#4DB6AC]/30 shadow-sm">
-              <span className="font-['Montserrat'] font-black text-white text-[14px]">B</span>
+              <span className="font-['Montserrat'] font-black text-white text-[18px]">{currentUser?.nombre?.charAt(0) || 'B'}</span>
             </div>
           </div>
         </header>

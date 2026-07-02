@@ -6,7 +6,7 @@ import {
   Hospital, Store, Loader2, AlertCircle
 } from 'lucide-react';
 // === IMPORTACIONES DE FIREBASE ===
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase'; // Ajustá la ruta si es necesario
 
@@ -98,7 +98,7 @@ export default function Login() {
           }
         } else {
           console.log("2. ERROR: No existe ningún documento en la colección 'usuarios' con el ID:", user.uid);
-          navigate('/inicio');
+          navigate('/ecosistema');
         }
 
       } catch (error) {
@@ -121,16 +121,18 @@ export default function Login() {
         // 2. Crear un "slug" básico para su URL a partir del nombre (ej: "Juan Perez" -> "juan-perez")
         const slugGenerado = formData.nombre.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
 
-        // 3. Crear su puente en la base de datos Firestore (Colección "usuarios")
+       // 3. Crear su puente en la base de datos Firestore (Colección "usuarios")
+        console.log("Intentando crear documento para:", user.uid, "con rol:", accountType);
         const userDocRef = doc(db, 'usuarios', user.uid);
+        const necesitaValidacion = accountType === 'profesional' || accountType === 'clinica';
         await setDoc(userDocRef, {
           nombre: formData.nombre,
           email: formData.email,
-          rol: accountType, // 'profesional', 'clinica' o 'proveedor'
+          rol: accountType,
           slug: slugGenerado,
-          fechaRegistro: new Date().toISOString()
+          fechaRegistro: new Date().toISOString(),
+          estado: necesitaValidacion ? 'pendiente' : 'activo'
         });
-
         // 4. ¡Listo! Lo mandamos al ecosistema
         navigate('/ecosistema');
 
@@ -142,8 +144,17 @@ export default function Login() {
       }
 
     } else if (view === 'forgot_password') {
-      // Acá a futuro irá sendPasswordResetEmail
-      setView('recovery_sent');
+      setIsLoading(true);
+      setErrorMsg('');
+      try {
+        const auth = getAuth();
+        await sendPasswordResetEmail(auth, formData.email);
+        setView('recovery_sent');
+      } catch (error) {
+        seterrormsg(traducirerrorfirebase(error.code));
+      } finally {
+        setisloading(false);
+      }
     }
   };
 
@@ -248,6 +259,7 @@ export default function Login() {
                 </div>
               ) : (
                 <>
+                  {/* GOOGLE LOGIN — pendiente de implementar
                   {(view === 'login') && (
                     <>
                       <button className="w-full flex items-center justify-center gap-3 bg-white border border-gray-200 text-gray-700 font-semibold py-3.5 md:py-3 px-4 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm mb-6 md:mb-4">
@@ -264,6 +276,7 @@ export default function Login() {
                       </div>
                     </>
                   )}
+                  */}
 
                   {view === 'forgot_password' && (
                     <p className="text-center text-gray-500 text-[12px] md:text-[12px] mb-6 md:mb-4 leading-relaxed">Ingresa tu correo y te enviaremos un enlace para restablecer tu contraseña.</p>

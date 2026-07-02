@@ -59,9 +59,9 @@ export default function Footer() {
             <h4 className="text-white font-bold text-[11px] md:text-[10px] uppercase tracking-[0.3em] mb-4 font-['Montserrat']">Soporte</h4>
             <ul className="space-y-3 text-white/40 text-sm leading-none">
               <li>
-                <a href="mailto:elportalveterinario.arg@gmail.com" className="flex items-start gap-3 hover:text-white transition-colors max-w-full">
+                <a href="mailto:portalveterinario.ar@gmail.com" className="flex items-start gap-3 hover:text-white transition-colors max-w-full">
                   <Mail className="w-4 h-4 shrink-0 mt-0.5" /> 
-                  <span className="break-all leading-snug">elportalveterinario.arg@gmail.com</span>
+                  <span className="break-all leading-snug">portalveterinario.ar@gmail.com</span>
                 </a>
               </li>
               <li className="flex items-center gap-3 hover:text-white transition-colors cursor-pointer">

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase'; // Asegurate de que esta ruta apunte a tu archivo de configuración de Firebase
 
@@ -42,8 +42,15 @@ export function AuthProvider({ children }) {
     return unsubscribe;
   }, []);
 
+  // 👇 Función para cerrar sesión en Firebase
+  const logout = () => {
+    const auth = getAuth();
+    return signOut(auth);
+  };
+
   return (
-    <AuthContext.Provider value={{ currentUser, loading }}>
+    // 👇 Agregamos logout para que Ecosistema.jsx pueda usarlo
+    <AuthContext.Provider value={{ currentUser, loading, logout }}>
       {!loading && children}
     </AuthContext.Provider>
   );

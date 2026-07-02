@@ -12,10 +12,10 @@ import { cargarSeeds } from '../seeds';
 import especialidadesData from '../data/especialidades.json'; 
 import filtrosConfig from '../data/filtrosConfig.json';
 import BarraFiltros from '../components/BarraFiltros';
-
+import TourGuia from '../components/TourGuia';
 // === IMPORTACIONES DE FIREBASE Y AUTH ===
 import { db } from '../firebase'; 
-import { collection, getDocs, addDoc, serverTimestamp, doc, updateDoc, query, orderBy, limit } from 'firebase/firestore';
+import { collection, getDocs, addDoc, serverTimestamp, doc, updateDoc, query, orderBy, limit, Timestamp } from 'firebase/firestore';
 import imageCompression from 'browser-image-compression'; // Para el paso 4
 import { useAuth } from '../context/AuthContext'; 
 
@@ -28,6 +28,24 @@ export default function BolsaTrabajo() {
   const { currentUser, loading: authLoading } = useAuth();
   const userRole = currentUser?.rol || 'visitante';
   const [roleAlert, setRoleAlert] = useState(null);
+  const [mostrarTourBolsa, setMostrarTourBolsa] = useState(false);
+
+  useEffect(() => {
+    if (currentUser && !currentUser.tourVisto?.bolsa && view === 'list') {
+      setTimeout(() => setMostrarTourBolsa(true), 800);
+    }
+  }, [currentUser, view]);
+
+  const PASOS_BOLSA_CLINICA = [
+    { targetId: 'tour-publicar-oferta', titulo: 'Publicá una búsqueda', desc: 'Creá ofertas laborales para encontrar al especialista que necesita tu clínica. Es gratis y dura 30 días.' },
+    { targetId: 'tour-ofertas', titulo: 'Ofertas activas', desc: 'Acá ves todas las búsquedas publicadas por otras instituciones de la red.' },
+  ];
+
+  const PASOS_BOLSA_PROF = [
+    { targetId: 'tour-disponible', titulo: 'Marcate como disponible', desc: 'Publicá tu perfil de disponibilidad para que las clínicas te encuentren. Dura 30 días y podés renovarlo.' },
+    { targetId: 'tour-ofertas', titulo: 'Ofertas de trabajo', desc: 'Explorá las búsquedas activas de clínicas de toda la red.' },
+    { targetId: 'tour-publicar-oferta', titulo: 'Publicar oferta', desc: 'Si representás una institución, también podés publicar búsquedas de personal desde acá.' },
+  ];
   const [successModal, setSuccessModal] = useState({ show: false, title: '', message: '' });
 
   // === ESTADOS DE NAVEGACIÓN Y SELECCIÓN ===
@@ -231,7 +249,7 @@ const toggleFiltro = (categoria, valor) => {
 
   const ahora = Date.now();
   
-  const ofertasActivas = ofertas.filter(job => !job.vencimientoMillis || job.vencimientoMillis > ahora);
+  const ofertasActivas = ofertas.filter(job => (!job.vencimientoMillis || job.vencimientoMillis > ahora) && job.estado !== 'pausado');
   const jobsFiltrados = ofertasActivas.filter(job => {
     const matchProvincia = filtros.zonas.length === 0 || filtros.zonas.includes(job.provincia);
     const matchPuesto = filtros.especialidades.length === 0 || filtros.especialidades.some(p => job.puesto.includes(p));
@@ -242,7 +260,7 @@ const toggleFiltro = (categoria, valor) => {
     return matchProvincia && matchPuesto && matchBusqueda;
   });
 
-  const profesionalesActivos = profesionales.filter(prof => !prof.vencimientoMillis || prof.vencimientoMillis > ahora);
+  const profesionalesActivos = profesionales.filter(prof => (!prof.vencimientoMillis || prof.vencimientoMillis > ahora) && prof.estado !== 'pausado');
   const profesionalesFiltrados = profesionalesActivos.filter(prof => {
     const matchProvincia = filtros.zonas.length === 0 || filtros.zonas.includes(prof.provincia);
     
@@ -341,6 +359,18 @@ const toggleFiltro = (categoria, valor) => {
         // Crear nueva
         const docRef = await addDoc(collection(db, 'ofertasEmpleo'), nuevaOferta);
         setOfertas(prev => [{ id: docRef.id, ...nuevaOferta }, ...prev]);
+
+        // Notificación automática para profesionales y alumnos
+        await addDoc(collection(db, 'notificaciones'), {
+          tipo: 'empleo',
+          rolDestino: ['profesional', 'alumno'],
+          clinica: nuevaOferta.clinica,
+          puesto: nuevaOferta.puesto,
+          ciudad: nuevaOferta.ciudad,
+          provincia: nuevaOferta.provincia,
+          referenciaId: docRef.id,
+          fecha: serverTimestamp()
+        });
       }
 
       setIsSubmitting(false);
@@ -417,6 +447,21 @@ const toggleFiltro = (categoria, valor) => {
         // Creamos nuevo
         const docRef = await addDoc(collection(db, 'profesionalesDisponibles'), nuevoProfesional);
         setProfesionales(prev => [{ id: docRef.id, ...nuevoProfesional }, ...prev]);
+
+        // Notificación automática para clínicas
+        const especialidades = Array.isArray(nuevoProfesional.especialidad) 
+          ? nuevoProfesional.especialidad.join(', ') 
+          : nuevoProfesional.especialidad;
+        await addDoc(collection(db, 'notificaciones'), {
+          tipo: 'profesional_disponible',
+          rolDestino: ['clinica'],
+          nombre: nuevoProfesional.nombre,
+          especialidad: nuevoProfesional.especialidad,
+          tiempo: nuevoProfesional.tiempo,
+          provincia: nuevoProfesional.provincia,
+          referenciaId: docRef.id,
+          fecha: serverTimestamp()
+        });
       }
 
       setIsSubmitting(false);
@@ -645,8 +690,8 @@ const toggleFiltro = (categoria, valor) => {
           
           <div className="flex flex-col sm:flex-row items-center gap-3 w-full justify-center flex-wrap">
             <button 
+              id="tour-publicar-oferta"
               onClick={() => { 
-                // Permiso abierto para que puedas testear y publicar sin problemas
                 setView('options_job'); window.scrollTo(0,0); 
               }}
               className="w-full sm:w-auto bg-[#1A3D3D] text-white px-6 py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest hover:bg-[#2D6A6A] hover:-translate-y-1 shadow-lg transition-all duration-300 ease-in-out flex items-center justify-center gap-2"
@@ -654,6 +699,7 @@ const toggleFiltro = (categoria, valor) => {
               <Building className="w-4 h-4" /> Publicar Oferta
             </button>
             <button 
+              id="tour-disponible"
               onClick={() => { 
                 if (['profesional', 'alumno'].includes(userRole)) {
                   setView('options_prof'); window.scrollTo(0,0); 
@@ -696,7 +742,7 @@ const toggleFiltro = (categoria, valor) => {
          
          {/* Columna Izquierda: Instituciones Buscando */}
          {(searchTarget === 'ambos' || searchTarget === 'ofertas') && (
-           <section className="flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-4">
+           <section id="tour-ofertas" className="flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-4">
              <div className="flex items-center justify-between border-b border-gray-200 pb-3">
                <h2 className="font-['Montserrat'] font-bold text-[#1A3D3D] text-[14px] uppercase tracking-widest flex items-center gap-2">
                   <Building className="w-5 h-5 text-[#2D6A6A] hidden sm:block" /> Ofertas de Clínicas
@@ -1726,6 +1772,14 @@ const toggleFiltro = (categoria, valor) => {
             </div>
           </div>
         )}
+      {mostrartourbolsa && view === 'list' && (
+        <tourguia
+          pasos={userrole === 'clinica' ? pasos_bolsa_clinica : pasos_bolsa_prof}
+          userid={currentuser?.uid}
+          clavestorage="bolsa"
+          onfin={() => setmostrartourbolsa(false)}
+        />
+      )}
       </main>
     </div>
   );

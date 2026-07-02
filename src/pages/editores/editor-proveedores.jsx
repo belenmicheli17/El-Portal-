@@ -12,9 +12,9 @@ import { useNavigate, useLocation } from 'react-router-dom';
 // ==========================================
 // IMPORTACIONES DE FIREBASE
 // ==========================================
-import { db, auth } from '../../firebase'; 
+import { db } from '../../firebase'; 
 import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
+import { useAuth } from '../../context/AuthContext';
 
 // ==========================================
 // CONSTANTES Y DICCIONARIOS DE CONVERSIÓN
@@ -132,8 +132,11 @@ const Tooltip = ({ text, isSection = false }) => {
   );
 };
 
-const InputGroup = ({ label, id, type = "text", placeholder, value, onChange, tooltip, error, required, maxLength, disabled, readOnly, canTest, rows = "4" }) => {
+const InputGroup = ({ label, id, type = "text", placeholder, value, onChange, tooltip, error, required, maxLength, minLength, disabled, readOnly, canTest, rows = "4" }) => {
   const isNearLimit = maxLength && value && value.length >= maxLength * 0.9;
+  const currentLength = value?.length || 0;
+  const isBelowMin = minLength && currentLength < minLength;
+  const showMinCounter = minLength && !maxLength;
   const [showPassword, setShowPassword] = useState(false);
   const isPassword = type === 'password';
   const currentType = isPassword ? (showPassword ? 'text' : 'password') : type;
@@ -148,6 +151,11 @@ const InputGroup = ({ label, id, type = "text", placeholder, value, onChange, to
         {maxLength && (
           <span className={`text-[11px] font-black tracking-wider leading-none transition-colors ${isNearLimit ? 'text-red-500' : 'text-gray-400'}`}>
             {value?.length || 0} / {maxLength}
+          </span>
+        )}
+        {showMinCounter && (
+          <span className={`text-[11px] font-black tracking-wider leading-none transition-colors ${isBelowMin ? 'text-red-400' : 'text-[#2D6A6A]'}`}>
+            {currentLength} / mín. {minLength}
           </span>
         )}
       </div>
@@ -213,7 +221,7 @@ const SelectGroup = ({ label, id, value, onChange, options, tooltip, required })
   </div>
 );
 
-const Accordion = ({ title, icon: Icon, children, isOpen, onToggle, tooltip }) => {
+const Accordion = ({ title, icon: Icon, children, isOpen, onToggle, tooltip, hasError }) => {
   return (
     <div className="border-b border-gray-100 last:border-0 group relative z-[1]">
       <button 
@@ -228,6 +236,9 @@ const Accordion = ({ title, icon: Icon, children, isOpen, onToggle, tooltip }) =
           <h3 className={`font-black text-sm md:text-base uppercase tracking-wider transition-colors duration-300 ${isOpen ? 'text-[#1A3D3D]' : 'text-gray-500 md:text-[#1A3D3D]'}`}>
             {title}
           </h3>
+          {hasError && !isOpen && (
+            <span className="w-2 h-2 rounded-full bg-red-500 shrink-0 animate-pulse" />
+          )}
           {tooltip && isOpen && (
             <div className="block animate-in fade-in zoom-in duration-300">
               <Tooltip text={tooltip} isSection />
@@ -393,13 +404,15 @@ const initialData = {
 
 export default function EditorEmpresa() { 
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
 
   const [user, setUser] = useState(null);
   const [saveStatus, setSaveStatus] = useState('idle'); 
   const [isSubscriptionActive, setIsSubscriptionActive] = useState(false);
   const [activeTab, setActiveTab] = useState('cuenta');
   const [modalConfig, setModalConfig] = useState({ isOpen: false, title: '', message: '', type: 'info' }); 
-  const [openSection, setOpenSection] = useState(null); 
+  const [openSection, setOpenSection] = useState(null);
+  const [camposFaltantes, setCamposFaltantes] = useState([]); 
   const [cropModal, setCropModal] = useState({ isOpen: false, imageSrc: null, type: null });
   const [isSubModalOpen, setIsSubModalOpen] = useState(false); 
   const [productoEnEdicion, setProductoEnEdicion] = useState(null);
@@ -423,25 +436,17 @@ export default function EditorEmpresa() {
   const formData = _formData;
 
   useEffect(() => {
-    const initAuth = async () => {
-      try { 
-        await signInAnonymously(auth); 
-      } catch (error) { 
-        console.error("Error Auth:", error); 
-      }
-    };
-    initAuth();
-    
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    if (currentUser) {
       setUser(currentUser);
-    });
-    return () => unsubscribe();
-  }, []);
+    }
+  }, [currentUser]);
 
   useEffect(() => {
+    if (!currentUser) return;
     const loadDataFromCloud = async () => {
       try {
-        const userId = user ? user.uid : "proveedor_prueba_123";
+        const userId = currentUser?.uid;
+        if (!userId) return;
         const docRef = doc(db, 'proveedores', userId);
         const docSnap = await getDoc(docRef);
         
@@ -484,7 +489,7 @@ export default function EditorEmpresa() {
           }));
 
           _setFormData({
-            cuentaEmail: cloudData.cuentaEmail || '',
+            cuentaEmail: currentUser?.email || cloudData.cuentaEmail || '',
             cuentaPassword: cloudData.cuentaPassword || '',
             cuentaTelefono: cloudData.cuentaTelefono || '',
             foto: cloudData.logo || '',
@@ -525,7 +530,7 @@ export default function EditorEmpresa() {
       } 
     };
     loadDataFromCloud();
-  }, [user]);
+  }, [currentUser]);
 
 const location = useLocation();
 
@@ -546,14 +551,16 @@ const location = useLocation();
     if (!formData.emailVentas.trim()) faltanCampos.push('Email Comercial');
 
     if (faltanCampos.length > 0) {
+      setCamposFaltantes(faltanCampos);
       setModalConfig({ 
         isOpen: true, 
         title: 'Faltan datos obligatorios', 
-        message: `Por favor completá los siguientes campos obligatorios: ${faltanCampos.join(', ')}.`, 
+        message: `Por favor completá los siguientes campos: ${faltanCampos.join(', ')}.`, 
         type: 'error' 
       });
       return;
     }
+    setCamposFaltantes([]);
 
     setSaveStatus('saving');
     try {
@@ -640,7 +647,8 @@ const location = useLocation();
         verificado: true
       };
 
-      const userId = user ? user.uid : "proveedor_prueba_123";
+      const userId = currentUser?.uid;
+        if (!userId) return;
       const docRef = doc(db, 'proveedores', userId);
       await setDoc(docRef, dataToSave);
       
@@ -1068,7 +1076,6 @@ const location = useLocation();
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 items-start">
                        <InputGroup label="Email de Acceso" id="cuentaEmail" type="email" value={formData.cuentaEmail} readOnly tooltip="Este email está vinculado a tu cuenta." />
-                       <InputGroup label="Contraseña" id="cuentaPassword" type="password" value={formData.cuentaPassword} onChange={handleChange} placeholder="••••••••" />
                        <div className="md:col-span-2">
                          <InputGroup label="Teléfono de Recuperación" id="cuentaTelefono" type="tel" value={formData.cuentaTelefono} readOnly />
                        </div>
@@ -1118,7 +1125,7 @@ const location = useLocation();
 
                     <div className="border-t border-gray-100">
                       {/* IDENTIDAD VISUAL */}
-                      <Accordion title="Identidad Visual e Info" icon={Building2} isOpen={openSection === 'identidad'} onToggle={() => setOpenSection(openSection === 'identidad' ? null : 'identidad')}>
+                      <Accordion title="Identidad Visual e Info" icon={Building2} isOpen={openSection === 'identidad'} onToggle={() => setOpenSection(openSection === 'identidad' ? null : 'identidad')} hasError={camposFaltantes.some(f => ['Nombre de la Empresa', 'CUIT', 'Categoría Principal', 'Descripción (mínimo 20 caracteres)'].includes(f))}>
                         <div className="flex flex-col sm:flex-row gap-6 mb-8 mt-2 md:mt-0">
                           <div className="relative shrink-0 text-left">
                             <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 block ml-1">Logo Empresa</label>
@@ -1179,7 +1186,7 @@ const location = useLocation();
                         />
                         
                         <InputGroup type="textarea" rows="2" label="Slogan o Bio Corta" id="bioCorta" value={formData.bioCorta} onChange={handleChange} maxLength={150} />
-                        <InputGroup type="textarea" rows="4" label="Descripción Completa (Mín. 20 caracteres)" id="descripcion" value={formData.descripcion} onChange={handleChange} required />
+                        <InputGroup type="textarea" rows="4" label="Descripción Completa" id="descripcion" value={formData.descripcion} onChange={handleChange} required minLength={20} />
 
                         <div className="pt-4 mt-6 border-t border-gray-100">
                            <h4 className="flex items-center text-xs font-bold text-[#1A3D3D] uppercase tracking-widest leading-none mb-4">Multimedia de Trayectoria</h4>
@@ -1210,7 +1217,7 @@ const location = useLocation();
                       </Accordion>
 
                       {/* RUBROS */}
-                      <Accordion title="Catálogo y Rubros" icon={PackageSearch} isOpen={openSection === 'catalogo-links'} onToggle={() => setOpenSection(openSection === 'catalogo-links' ? null : 'catalogo-links')}>
+                      <Accordion title="Catálogo y Rubros" icon={PackageSearch} isOpen={openSection === 'catalogo-links'} onToggle={() => setOpenSection(openSection === 'catalogo-links' ? null : 'catalogo-links')} haserror={false}>
                         <InputGroup type="url" label="Link a Catálogo o Drive de Precios" id="linkCatalogo" value={formData.linkCatalogo} onChange={handleChange} canTest />
                         <InputGroup label="Marcas que representan (Separadas por coma)" id="marcasRepresentadas" value={formData.marcasRepresentadas} onChange={handleChange} placeholder="Ej: Zoetis, Mindray..." />
 
@@ -1313,7 +1320,7 @@ const location = useLocation();
                       </Accordion>
 
                       {/* CONTACTO Y UBICACIÓN */}
-                      <Accordion title="Ubicación, Contacto y Redes" icon={MapPin} isOpen={openSection === 'contacto'} onToggle={() => setOpenSection(openSection === 'contacto' ? null : 'contacto')}>
+                      <Accordion title="Ubicación, Contacto y Redes" icon={MapPin} isOpen={openSection === 'contacto'} onToggle={() => setOpenSection(openSection === 'contacto' ? null : 'contacto')} hasError={camposFaltantes.some(f => ['Zona de Cobertura', 'Email Comercial'].includes(f))}>
                         <div className="mb-8 w-full bg-gray-50/50 border border-gray-200 rounded-3xl p-6">
                             <div className="flex justify-between items-end mb-5">
                               <label className="flex items-center text-xs font-bold text-gray-500 uppercase tracking-widest leading-none">Zona principal de Cobertura <span className="text-red-400 ml-1">*</span></label>

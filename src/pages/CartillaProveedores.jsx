@@ -199,12 +199,12 @@ const [soloEnvios, setSoloEnvios] = useState(false);
                     </div>
 
                     <p className="text-gray-500 text-xs font-medium line-clamp-2 mb-4 flex-grow">
-                      {prov.descripcionBreve}
+                      {prov.bioCorta || prov.descripcionBreve}
                     </p>
 
                     <div className="pt-4 border-t border-gray-50 grid grid-cols-2 gap-2 mt-auto">
                       <div className="flex items-center gap-1.5 text-[11px] text-gray-500 font-bold">
-                        <MapPin className="w-3.5 h-3.5 text-[#4DB6AC]" /> {prov.ubicacion}
+                        <MapPin className="w-3.5 h-3.5 text-[#4DB6AC]" /> {Array.isArray(prov.zonaCobertura) ? prov.zonaCobertura[0] : prov.ubicacion}
                       </div>
                       {prov.envios && (
                         <div className="flex items-center gap-1.5 text-[11px] text-gray-500 font-bold">

@@ -5,7 +5,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { db, storage } from '../../firebase'; // <-- Sumamos storage
 import { doc, setDoc, getDoc, collection, query, where, getDocs, writeBatch, deleteDoc } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage'; // <-- Sumamos funciones de Storage
-import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
+
 import { useAuth } from '../../context/AuthContext';
 import { 
   Camera, Info, AlertCircle, Save, X, Plus, Trash2,
@@ -372,9 +372,9 @@ export default function EditorProfesional() {
   const fileInputRef = useRef(null);
   const [_formData, _setFormData] = useState({
   // Cuenta
-  cuentaEmail: 'mersolarenas@gmail.com',
-  cuentaPassword: 'Lanin2026',
-  cuentaTelefono: '1162477744',
+  cuentaEmail: '',
+  cuentaPassword: '',
+  cuentaTelefono: '',
   planActual: 'pro',
   visible: true,
   

@@ -85,6 +85,12 @@ export default function LegalPage() {
       title: "4. Propiedad Intelectual",
       icon: <Copyright className="w-5 h-5 text-[#2D6A6A]" />,
       content: "El Servicio y su contenido original (excluyendo el contenido proporcionado por los usuarios), las características y la funcionalidad son y seguirán siendo propiedad exclusiva de El Portal y sus licenciantes. El Servicio está protegido por derechos de autor y marcas registradas tanto de Argentina como de países extranjeros."
+    },
+    {
+      id: 5,
+      title: "5. Publicación de Contenido Comercial (Capacitaciones, Bolsa de Trabajo y Proveedores)",
+      icon: <AlertCircle className="w-5 h-5 text-[#2D6A6A]" />,
+      content: "Quienes publiquen capacitaciones, ofertas laborales o productos/servicios en El Portal declaran bajo su responsabilidad que los datos proporcionados (identidad, matrícula profesional, DNI, razón social, precios, condiciones y demás información comercial) son verídicos, exactos y vigentes al momento de la publicación. El Portal se reserva el derecho de solicitar documentación adicional que respalde dicha información, así como de suspender o eliminar de forma preventiva cualquier publicación que presente indicios de información falsa, engañosa o fraudulenta, sin necesidad de aviso previo. La responsabilidad por el contenido, la veracidad de los datos y el cumplimiento de las obligaciones comerciales asumidas frente a terceros (alumnos, postulantes o compradores) corresponde exclusivamente a quien publica. El Portal actúa únicamente como intermediario tecnológico de difusión y, en los casos donde corresponda, de procesamiento de pagos, y no garantiza ni se responsabiliza por la calidad, idoneidad o resultado de los servicios ofrecidos por terceros. Cualquier usuario que detecte una publicación sospechosa de fraude puede reportarla a través de los canales de contacto oficiales para su revisión inmediata."
     }
   ];
 
@@ -184,24 +190,7 @@ export default function LegalPage() {
             </section>
           ))}
 
-          {/* Caja de Soporte/Contacto */}
-          <div className="mt-20 p-8 rounded-[32px] bg-gradient-to-br from-[#1A3D3D] to-[#2D6A6A] text-white relative overflow-hidden shadow-2xl">
-            <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
-              <div>
-                <h3 className="text-2xl font-black font-['Montserrat'] mb-2">¿Tenés dudas legales?</h3>
-                <p className="text-white/70 max-w-md">Nuestro equipo legal está disponible para responder cualquier consulta sobre el manejo de tus datos o los términos del servicio.</p>
-              </div>
-              <a 
-                href="mailto:elportalveterinario.arg@gmail.com"
-                className="bg-white text-[#1A3D3D] px-8 py-4 rounded-2xl font-bold text-sm hover:bg-[#F4F7F7] transition-all flex items-center gap-3 shadow-lg"
-              >
-                <Mail size={18} />
-                Contactar Soporte
-              </a>
-            </div>
-            {/* Elemento decorativo */}
-            <div className="absolute -right-20 -bottom-20 w-64 h-64 bg-white/5 rounded-full blur-3xl"></div>
-          </div>
+         
         </div>
       </main>
 
@@ -236,7 +225,7 @@ export default function LegalPage() {
               <div className="bg-white/5 p-5 rounded-2xl flex gap-4 items-start">
                 <ShieldCheck className="text-[#2D6A6A] shrink-0" size={20} />
                 <p className="text-white/30 text-[11px] leading-relaxed">
-                  Operamos bajo los estándares de la Agencia de Acceso a la Información Pública. Registro de Base de Datos Personales N° 2026-EPV. Todos los derechos reservados por Belén M. Arenas.
+                  Operamos bajo los estándares de la Agencia de Acceso a la Información Pública. Registro de Base de Datos Personales N° 2026-EPV. Todos los derechos reservados.
                 </p>
               </div>
             </div>

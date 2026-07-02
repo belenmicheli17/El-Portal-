@@ -1,47 +1,11 @@
 import React from 'react';
-import { Bell, BookOpen, Clock, ChevronRight, Briefcase, ChevronUp, ChevronDown, Users, Package } from 'lucide-react';
-
-// 💡 MOCK DATA: Base de datos falsa temporal. Luego esto vendrá de Firebase.
-const mockNotificaciones = [
-  {
-    id: 1,
-    roles: ['profesional', 'clinica', 'alumno'], // Esta la ven todos
-    etiqueta: 'Capacitaciones',
-    tiempo: 'Hoy',
-    texto: 'Nuevo curso disponible: Ecografía Doppler en pequeños animales.',
-    colorHover: 'group-hover:text-[#2D6A6A]',
-    colorEtiq: 'text-[#2D6A6A]',
-    Icono: BookOpen,
-    accion: 'Ver detalles'
-  },
-  {
-    id: 2,
-    roles: ['profesional', 'alumno'], // Solo para gente buscando trabajo
-    etiqueta: 'Trabajo',
-    tiempo: 'Ayer',
-    texto: 'Nueva búsqueda: Clínica San Marcos solicita especialista en cardiología.',
-    colorHover: '',
-    colorEtiq: 'text-[#FF9800]',
-    Icono: Briefcase,
-    accion: ''
-  },
-  {
-    id: 3,
-    roles: ['clinica'], // Solo para clínicas
-    etiqueta: 'Proveedores',
-    tiempo: 'Lun',
-    texto: 'Nuevo laboratorio distribuidor de vacunas añadido a tu cartilla.',
-    colorHover: 'group-hover:text-[#2D6A6A]',
-    colorEtiq: 'text-[#2D6A6A]',
-    Icono: Package,
-    accion: 'Ver catálogo'
-  },
+import { Bell, Clock, ChevronRight, ChevronUp, ChevronDown } from 'lucide-react';
+import useNotifications from '../hooks/useNotifications'; // Ajustá la ruta si tu carpeta hooks está en otro lado
+import { useNavigate } from 'react-router-dom';
+export default function NotificationBox({ isNotifOpen, setIsNotifOpen, userRole, userId }) {
+  const { notificaciones, cargando } = useNotifications(userRole, userId);
+  const navigate = useNavigate();
   
-];
-
-export default function NotificationBox({ isNotifOpen, setIsNotifOpen, userRole }) {
-  // Filtramos: Solo mostramos las notifs donde el rol del usuario esté incluido en el array de 'roles'
-  const notificacionesFiltradas = mockNotificaciones.filter(notif => notif.roles.includes(userRole));
   return (
     <div className={`order-2 lg:col-span-1 bg-[#E8EFEF]/80 backdrop-blur-xl border border-[#2D6A6A]/10 rounded-[24px] md:rounded-[32px] shadow-[0_12px_40px_rgba(0,0,0,0.04)] flex flex-col overflow-hidden w-full transition-all duration-500 ease-in-out ${isNotifOpen ? 'lg:row-span-2' : ''}`}>
       {/* 2. NOTIFICACIONES */}
@@ -57,11 +21,19 @@ export default function NotificationBox({ isNotifOpen, setIsNotifOpen, userRole 
       {/* Contenedor dinámico de la lista (Límite visual de 10 notificaciones, con scroll) */}
       <div className={`px-5 md:px-6 flex flex-col gap-3 transition-all duration-500 ease-in-out overflow-hidden ${isNotifOpen ? 'max-h-[400px] overflow-y-auto pb-4 hide-scrollbar' : 'max-h-[170px]'}`}>
         
-        {notificacionesFiltradas.length > 0 ? (
-          notificacionesFiltradas.slice(0, 10).map((notif) => {
+        {cargando ? (
+          <p className="text-center text-[#1A3D3D]/50 text-[13px] font-medium py-4 animate-pulse">
+            Buscando novedades...
+          </p>
+        ) : notificaciones.length > 0 ? (
+          notificaciones.slice(0, 10).map((notif) => {
             const IconoActivo = notif.Icono;
             return (
-              <div key={notif.id} className="bg-white/80 backdrop-blur-md p-4 rounded-2xl shadow-[0_4px_15px_rgba(0,0,0,0.02)] border border-white hover:border-[#2D6A6A]/30 transition-colors cursor-pointer group shrink-0">
+             <div 
+  key={notif.id} 
+  onClick={() => notif.link ? navigate(notif.link) : null}
+  className="bg-white/80 backdrop-blur-md p-4 rounded-2xl shadow-[0_4px_15px_rgba(0,0,0,0.02)] border border-white hover:border-[#2D6A6A]/30 transition-colors cursor-pointer group shrink-0"
+>
                 <div className="flex justify-between items-start mb-2">
                   <span className={`text-[11px] font-bold uppercase tracking-widest flex items-center gap-1 ${notif.colorEtiq}`}>
                     <IconoActivo className="w-3 h-3" /> {notif.etiqueta}

@@ -35,6 +35,7 @@ import DashboardAdmin from './pages/admin/DashboardAdmin';
 import GestionUsuarios from './pages/admin/GestionUsuarios';
 import Validaciones from './pages/admin/Validaciones';
 import GestionBolsa from './pages/admin/GestionBolsa';
+import GestionCapacitaciones from './pages/admin/GestionCapacitaciones';
 import Configuracion from './pages/admin/Configuracion';
 
 // ==========================================
@@ -208,6 +209,7 @@ export default function App() {
             <Route path="validaciones" element={<Validaciones />} />
             <Route path="usuarios" element={<GestionUsuarios />} />
             <Route path="bolsa" element={<GestionBolsa />} />
+<Route path="capacitaciones" element={<GestionCapacitaciones />} />
             <Route path="configuracion" element={<Configuracion />} />
           </Route>
 

@@ -1,41 +1,119 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import TourGuia from '../components/TourGuia';
 // IMPORTS DE FIREBASE ACÁ ARRIBA
-import { db } from '../firebase.js'; 
-import { collection, getDocs, addDoc } from 'firebase/firestore';
-
+import { db, storage } from '../firebase.js'; 
+import { collection, getDocs, addDoc, updateDoc, doc, increment, serverTimestamp } from 'firebase/firestore';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { 
   Star, Clock, ChevronLeft, Filter, Search, ShieldCheck,
   FileText, PlayCircle, Plus, MessageCircle, ChevronRight, Monitor, Check,
-  Award, BookOpen, Heart, UploadCloud, Save, Loader2, Trash2, Download, AlertCircle
+  Award, BookOpen, Heart, UploadCloud, Activity, Save, Loader2, Trash2, Download, AlertCircle, X, CheckCircle, Mail
 } from 'lucide-react';
-
 const CATEGORIAS = ["Cirugía General", "Diagnóstico por Imágenes", "Gestión Veterinaria", "Clínica de Pequeños", "Dermatología", "Anestesiología"];
+const COMISION_DEFAULT = 10;
 const MODALIDADES = ["Online", "Presencial", "Híbrido"];
 
+const enviarMailBrevo = async (destinatario, asunto, contenido) => {
+  const apiKey = import.meta.env.VITE_BREVO_API_KEY;
+  await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'api-key': apiKey },
+    body: JSON.stringify({
+      sender: { name: 'El Portal Veterinario', email: 'portalveterinario.ar@gmail.com' },
+      to: [{ email: destinatario }],
+      subject: asunto,
+      textContent: contenido,
+    }),
+  });
+};
+
 const FAQ_CATEGORIES = [
-  // ... (dejá el contenido de tus FAQs intacto) ...
+  {
+    title: "Honorarios",
+    items: [
+      { q: "¿De cuánto es la comisión por venta?", a: "Retenemos un 15% por cada alumnx generado efectivamente. Este margen ya cubre los costos de las pasarelas de pago y nuestras campañas de marketing. No hay costos ocultos." },
+      { q: "¿Cómo y cuándo recibo mis ganancias?", a: "Realizamos liquidaciones quincenales. El dinero de las ventas (menos la comisión) se transfiere directamente a tu cuenta bancaria institucional." },
+      { q: "¿Quién emite la factura al alumno?", a: "La institución o docente le factura el 100% del curso al alumnx. El Portal emite una factura a la institución por el servicio de intermediación (la comisión del 15%)." }
+    ]
+  },
+  {
+    title: "Propiedad y Control",
+    items: [
+      { q: "¿Sigo siendo dueñx de mi contenido?", a: "Absolutamente. La propiedad intelectual es 100% tuya. El Portal actúa únicamente como un canal de difusión y venta para potenciar tu alcance." },
+      { q: "¿Debo vender mi curso exclusivamente acá?", a: "No exigimos exclusividad. Sos libre de vender tu curso por otros canales; solo cobramos comisión por los alumnxs que nosotros generamos efectivamente." },
+      { q: "¿Tengo acceso a los datos de mis alumnxs?", a: "Sí. Una vez concretada la inscripción, recibís el perfil y contacto del profesional para que puedas integrarlo a tu propia comunidad y seguimiento académico." }
+    ]
+  },
+  {
+    title: "Operativa y Logística",
+    items: [
+      { q: "¿Dónde se alojan y dictan los cursos?", a: "Tu metodología no cambia. El alumnx paga en El Portal, pero consume las clases en tu propia plataforma (Zoom, Moodle, Web propia), manteniendo tu identidad." },
+      { q: "¿Mi curso se publica inmediatamente?", a: "No. Para garantizar el nivel de nuestra comunidad, todo el material pasa por un breve proceso de curaduría de 24/48hs por parte de nuestro comité antes de ser visible en el repertorio." },
+      { q: "¿Qué sucede si un alumnx solicita un reembolso?", a: "Nos regimos por una política de satisfacción de 7 días. Si el alumnx solicita la baja justificada dentro de ese período, gestionamos la devolución sin costo administrativo para la institución." }
+    ]
+  }
 ];
 
 export default function Capacitaciones() {
   const navigate = useNavigate();
-  const [view, setView] = useState('grid');
+  const { currentUser } = useAuth();
+  const location = useLocation();
+  const [view, setView] = useState(location.state?.vista || 'grid');
+  const [mostrarTourCaps, setMostrarTourCaps] = useState(false);
+
+  useEffect(() => {
+    if (currentUser && !currentUser.tourVisto?.capacitaciones && view === 'grid') {
+      setTimeout(() => setMostrarTourCaps(true), 800);
+    }
+  }, [currentUser, view]);
+
+  const PASOS_CAPS = [
+    { targetId: 'tour-busqueda-caps', titulo: 'Buscá por tema', desc: 'Escribí una especialidad o palabra clave para filtrar los cursos disponibles.' },
+    { targetId: 'tour-publicar-curso', titulo: '¿Sos docente o institución?', desc: 'Podés publicar tu propio curso acá. Es gratis y llega a toda la comunidad veterinaria.' },
+    { targetId: 'tour-mis-cursos', titulo: 'Tus cursos publicados', desc: 'Si publicaste cursos, desde acá podés verlos, editarlos o dar de baja los que ya no estén activos.' },
+  ];
   
   // ESTADOS NUEVOS PARA FIREBASE QUE AGREGAMOS
   const [seminarios, setSeminarios] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [comision, setComision] = useState(COMISION_DEFAULT);
+  const [cursosDeTodosLosEstados, setCursosDeTodosLosEstados] = useState([]);
 
   // EFECTO PARA TRAER LOS DATOS DE FIREBASE
+  useEffect(() => {
+    const fetchComision = async () => {
+      try {
+        const { doc, getDoc } = await import('firebase/firestore');
+        const snap = await getDoc(doc(db, 'settings', 'globales'));
+        if (snap.exists() && snap.data().comisionCapacitaciones) {
+          setComision(Number(snap.data().comisionCapacitaciones));
+        }
+      } catch (e) {
+        console.error("Error leyendo comisión:", e);
+      }
+    };
+    fetchComision();
+  }, []);
+
   useEffect(() => {
     const fetchCapacitaciones = async () => {
       try {
         const querySnapshot = await getDocs(collection(db, 'capacitaciones'));
-        const data = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-        setSeminarios(data);
+        const todos = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setCursosDeTodosLosEstados(todos);
+        const hoy = new Date();
+hoy.setHours(0, 0, 0, 0);
+setSeminarios(todos.filter(c => {
+  if (c.estado !== 'aprobado') return false;
+  if (c.tipoCurso === 'en_vivo' && c.fechaInscripcion) {
+    const fechaLimite = new Date(c.fechaInscripcion);
+    fechaLimite.setHours(23, 59, 59, 999);
+    if (fechaLimite < hoy) return false;
+  }
+  return true;
+}));
       } catch (error) {
         console.error("Error trayendo capacitaciones:", error);
       } finally {
@@ -55,17 +133,41 @@ export default function Capacitaciones() {
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   
   const [favoritos, setFavoritos] = useState([]);
-  const [visibleCourses, setVisibleCourses] = useState(6);
+ const [visibleCourses, setVisibleCourses] = useState(6);
+  const [filtroTipo, setFiltroTipo] = useState(null);
 
   // WIZARD CURSO
   const [wizardStep, setWizardStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+const [isUploadingImagen, setIsUploadingImagen] = useState(false);
+const [imagenUploadProgress, setImagenUploadProgress] = useState(0);
+const [imagenEditorModal, setImagenEditorModal] = useState(false);
+const [imagenParaEditar, setImagenParaEditar] = useState(null);
+const [imagenEditorZoom, setImagenEditorZoom] = useState(1);
+const [imagenEditorPos, setImagenEditorPos] = useState({ x: 0, y: 0 });
+const [imagenEditorDragging, setImagenEditorDragging] = useState(false);
+const [imagenEditorDragStart, setImagenEditorDragStart] = useState({ x: 0, y: 0 });
+const canvasEditorRef = useRef(null);
+const [editandoCursoId, setEditandoCursoId] = useState(null);
+const [inscripcionModal, setInscripcionModal] = useState(false);
+const [inscripcionForm, setInscripcionForm] = useState({ nombre: '', email: '', matricula: '', celular: '', esVeterinario: true });
+const [inscripcionEnviando, setInscripcionEnviando] = useState(false);
+const [inscripcionErrors, setInscripcionErrors] = useState({});
   const [errors, setErrors] = useState({});
   const [courseForm, setCourseForm] = useState({
     titulo: '', modalidad: 'Online', precio: '', nivel: 'Principiante', duracion: '',
     descripcion: '', incluye: [''],
-    instructorNombre: '', instructorBio: '',
-    email: '', password: '',
+    docentes: [{ nombre: '', bio: '', linkMas: '' }],
+    email: '',
+    tipoCurso: 'grabado',
+    fechaInscripcion: '',
+    fechaInicio: '',
+    linkExterno: '',
+    categoria: CATEGORIAS[0],
+    responsableNombre: '',
+    responsableDNI: '',
+    responsableMatricula: '',
+    aceptaTerminos: false,
     fotoDocente: null
   });
 
@@ -176,27 +278,186 @@ export default function Capacitaciones() {
     handleWizardChange('fotoDocente', null);
   };
 
+  const handleImagenCursoUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      alert('Solo se permiten imágenes.');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      alert('La imagen no puede superar los 5MB.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      imagenNaturalRef.current = null;
+      setImagenParaEditar(ev.target.result);
+      setImagenEditorZoom(1);
+      setImagenEditorPos({ x: 0, y: 0 });
+      setImagenEditorModal(true);
+    };
+    reader.readAsDataURL(file);
+    // Resetear el input para permitir re-seleccionar el mismo archivo
+    e.target.value = '';
+  };
+
+
+  useEffect(() => {
+    if (imagenEditorModal) dibujarEditorCanvas();
+  }, [imagenEditorModal, imagenEditorZoom, imagenEditorPos]);
+
+  const handleConfirmarEditorImagen = async () => {
+    const canvas = canvasEditorRef.current;
+    if (!canvas) return;
+    setImagenEditorModal(false);
+    setIsUploadingImagen(true);
+    setImagenUploadProgress(0);
+    canvas.toBlob(async (blob) => {
+      try {
+        const fileRef = ref(storage, `capacitaciones/${Date.now()}_portada.jpg`);
+        const uploadTask = uploadBytesResumable(fileRef, blob);
+        uploadTask.on('state_changed',
+          (snapshot) => setImagenUploadProgress(Math.round(snapshot.bytesTransferred / snapshot.totalBytes * 100)),
+          (error) => { console.error(error); setIsUploadingImagen(false); },
+          async () => {
+            const url = await getDownloadURL(uploadTask.snapshot.ref);
+            handleWizardChange('imagenUrl', url);
+            setIsUploadingImagen(false);
+          }
+        );
+      } catch (error) {
+        console.error(error);
+        setIsUploadingImagen(false);
+      }
+    }, 'image/jpeg', 0.92);
+  };
+
+  // Dibuja la imagen en el canvas del editor
+  const imagenNaturalRef = useRef(null);
+
+  const dibujarEditorCanvas = () => {
+    const canvas = canvasEditorRef.current;
+    if (!canvas || !imagenParaEditar) return;
+    const ctx = canvas.getContext('2d');
+    const img = imagenNaturalRef.current || new Image();
+    
+    const dibujar = () => {
+      // Zoom base: que la imagen entre completa en el canvas
+      const zoomBase = Math.min(canvas.width / img.naturalWidth, canvas.height / img.naturalHeight);
+      const escala = zoomBase * imagenEditorZoom;
+      const w = img.naturalWidth * escala;
+      const h = img.naturalHeight * escala;
+      const x = (canvas.width - w) / 2 + imagenEditorPos.x;
+      const y = (canvas.height - h) / 2 + imagenEditorPos.y;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      // Fondo gris para ver el área fuera de la imagen
+      ctx.fillStyle = '#F4F7F7';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, x, y, w, h);
+    };
+
+    if (!imagenNaturalRef.current) {
+      img.onload = () => {
+        imagenNaturalRef.current = img;
+        dibujar();
+      };
+      img.src = imagenParaEditar;
+    } else {
+      dibujar();
+    }
+  };
+
+  useEffect(() => {
+    if (imagenEditorModal) dibujarEditorCanvas();
+  }, [imagenEditorModal, imagenEditorZoom, imagenEditorPos]);
+
   const validateStep = (step) => {
     const newErrors = {};
     if (step === 1) {
+      if (!courseForm.imagenUrl) newErrors.imagenUrl = 'La imagen de portada es obligatoria.';
       if (!courseForm.titulo.trim()) newErrors.titulo = 'El título del curso es obligatorio.';
+      else if (courseForm.titulo.trim().length < 10) newErrors.titulo = 'El título debe tener al menos 10 caracteres.';
       if (!courseForm.precio || courseForm.precio <= 0) newErrors.precio = 'Ingresá un precio válido mayor a 0.';
+      if (!courseForm.formatoDuracion || !courseForm.duracion) newErrors.duracion = 'Seleccioná el formato y completá la duración.';
     }
     if (step === 2) {
       if (!courseForm.descripcion.trim()) newErrors.descripcion = 'La descripción general es obligatoria.';
       if (courseForm.incluye.filter(i => i.trim()).length === 0) newErrors.incluye = 'Agregá al menos un punto clave de aprendizaje.';
     }
     if (step === 3) {
-      if (!courseForm.instructorNombre.trim()) newErrors.instructorNombre = 'El nombre del docente es obligatorio.';
-      if (!courseForm.instructorBio.trim()) newErrors.instructorBio = 'La biografía breve es obligatoria.';
+      const docentes = courseForm.docentes || [];
+      if (docentes.length === 0 || !docentes[0].nombre.trim()) newErrors.instructorNombre = 'El nombre del docente principal es obligatorio.';
+      if (docentes.length === 0 || !docentes[0].bio.trim()) newErrors.instructorBio = 'La biografía del docente principal es obligatoria.';
+      if (!courseForm.email.trim()) newErrors.email = 'El email de contacto es obligatorio.';
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(courseForm.email)) newErrors.email = 'Ingresá un email válido.';
+      if (!courseForm.responsableNombre.trim()) newErrors.responsableNombre = 'El nombre completo del responsable es obligatorio.';
+      if (!courseForm.responsableDNI.trim()) newErrors.responsableDNI = 'El DNI del responsable es obligatorio.';
+      if (!courseForm.responsableMatricula.trim()) newErrors.responsableMatricula = 'La matrícula profesional es obligatoria.';
+      if (!courseForm.aceptaTerminos) newErrors.aceptaTerminos = 'Debés aceptar los términos y condiciones para continuar.';
+            if (courseForm.tipoCurso === 'en_vivo') {
+        if (!courseForm.fechaInscripcion) newErrors.fechaInscripcion = 'La fecha límite de inscripción es obligatoria.';
+        if (!courseForm.fechaInicio) newErrors.fechaInicio = 'La fecha de inicio del curso es obligatoria.';
+      }
     }
-    if (step === 4) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(courseForm.email)) newErrors.email = 'El formato del correo electrónico no es válido.';
-      if (courseForm.password.length < 6) newErrors.password = 'La contraseña debe tener al menos 6 caracteres.';
-    }
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+const handleArchivarCurso = async (cursoId) => {
+    if (!window.confirm('¿Seguro que querés dar de baja este curso? Va a dejar de ser visible en el listado público.')) return;
+    try {
+      await updateDoc(doc(db, 'capacitaciones', cursoId), { estado: 'archivado' });
+      const querySnapshot = await getDocs(collection(db, 'capacitaciones'));
+      const todos = querySnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      setCursosDeTodosLosEstados(todos);
+      const hoy = new Date();
+      hoy.setHours(0, 0, 0, 0);
+      setSeminarios(todos.filter(c => {
+        if (c.estado !== 'aprobado') return false;
+        if (c.tipoCurso === 'en_vivo' && c.fechaInscripcion) {
+          const fechaLimite = new Date(c.fechaInscripcion);
+          fechaLimite.setHours(23, 59, 59, 999);
+          if (fechaLimite < hoy) return false;
+        }
+        return true;
+      }));
+    } catch (error) {
+      console.error('Error al archivar curso:', error);
+      alert('Hubo un error al dar de baja el curso. Intentá de nuevo.');
+    }
+  };
+
+const handleEditarMiCurso = (curso) => {
+    setCourseForm({
+      titulo: curso.titulo || '',
+      modalidad: curso.modalidad || 'Online',
+      precio: curso.precio || '',
+      nivel: curso.nivel || 'Principiante',
+      duracion: curso.duracion || '',
+      formatoDuracion: curso.formatoDuracion || '',
+      descripcion: curso.descripcion || '',
+      incluye: curso.incluye?.length ? curso.incluye : [''],
+      docentes: curso.docentes?.length ? curso.docentes : [{ nombre: '', bio: '', linkMas: '' }],
+      email: curso.email || '',
+      tipoCurso: curso.tipoCurso || 'grabado',
+      fechaInscripcion: curso.fechaInscripcion || '',
+      fechaInicio: curso.fechaInicio || '',
+      linkExterno: curso.linkExterno || '',
+      categoria: curso.categoria || CATEGORIAS[0],
+      responsableNombre: curso.responsableNombre || '',
+      responsableDNI: curso.responsableDNI || '',
+      responsableMatricula: curso.responsableMatricula || '',
+      aceptaTerminos: curso.aceptaTerminos || false,
+      imagenUrl: curso.imagen || '',
+      fotoDocente: null
+    });
+    setEditandoCursoId(curso.id);
+    setErrors({});
+    setWizardStep(1);
+    setView('wizard');
+    window.scrollTo(0, 0);
   };
 
   const handleNextStep = () => {
@@ -206,17 +467,209 @@ export default function Capacitaciones() {
     }
   };
 
-  const submitWizard = () => {
-    if (!validateStep(4)) return;
+const submitWizard = async () => {
+    if (!validateStep(3)) return;
     setIsSubmitting(true);
-    setTimeout(() => {
+    try {
+      const datosCurso = {
+        titulo: courseForm.titulo,
+        modalidad: courseForm.modalidad,
+        precio: Math.round(Number(courseForm.precio) * (1 - comision / 100)),
+        precioOriginal: Number(courseForm.precio),
+        nivel: courseForm.nivel,
+        duracion: courseForm.duracion,
+        descripcion: courseForm.descripcion,
+        incluye: courseForm.incluye.filter(i => i.trim()),
+        instructor: courseForm.docentes?.[0]?.nombre || '',
+        instructorBio: courseForm.docentes?.[0]?.bio || '',
+        docentes: courseForm.docentes || [],
+        email: courseForm.email,
+        imagen: courseForm.imagenUrl || 'https://images.unsplash.com/photo-1584132967334-10e028bd69f7?auto=format&fit=crop&w=800&q=80',
+        logoMarca: '',
+        marca: currentUser?.nombre || courseForm.docentes?.[0]?.nombre || '',
+        badge: 'Nuevo',
+        rating: 0,
+        reviews: 0,
+        categoria: courseForm.categoria || CATEGORIAS[0],
+        tipoCurso: courseForm.tipoCurso || 'grabado',
+        fechaInscripcion: courseForm.fechaInscripcion || null,
+        fechaInicio: courseForm.fechaInicio || null,
+        linkExterno: courseForm.linkExterno || '',
+        responsableNombre: courseForm.responsableNombre,
+        responsableDNI: courseForm.responsableDNI,
+        responsableMatricula: courseForm.responsableMatricula,
+        aceptaTerminos: courseForm.aceptaTerminos,
+        fechaAceptacionTerminos: new Date().toISOString(),
+        creadorId: currentUser?.uid || null,
+        creadorNombre: currentUser?.nombre || currentUser?.displayName || '',
+        creadorRol: currentUser?.rol || '',
+        creadorSlug: currentUser?.slug || '',
+      };
+
+      if (editandoCursoId) {
+        // EDICIÓN: vuelve a pendiente, no pisa la fecha de creación original
+        await updateDoc(doc(db, 'capacitaciones', editandoCursoId), {
+          ...datosCurso,
+          estado: 'pendiente',
+          motivoRechazo: '',
+        });
+      } else {
+        // CREACIÓN nueva
+        await addDoc(collection(db, 'capacitaciones'), {
+          ...datosCurso,
+          estado: 'pendiente',
+          createdAt: new Date().toISOString()
+        });
+      }
+
+      // Recargar la lista de capacitaciones (solo aprobados, para que no se vea el recién creado/editado)
+      const querySnapshot = await getDocs(collection(db, 'capacitaciones'));
+      const todos = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setCursosDeTodosLosEstados(todos);
+      setSeminarios(todos.filter(c => c.estado === 'aprobado'));
+
       setIsSubmitting(false);
-      alert("¡Curso guardado como borrador! Redirigiendo a pasarela de pago segura...");
-      setView('grid');
       setWizardStep(1);
-      window.scrollTo(0,0);
-    }, 2000);
+      setEditandoCursoId(null);
+      setView('confirmacion');
+      setCourseForm({
+        titulo: '', modalidad: 'Online', precio: '', nivel: 'Principiante', duracion: '',
+        descripcion: '', incluye: [''],
+        docentes: [{ nombre: '', bio: '', linkMas: '' }],
+        email: '',
+        tipoCurso: 'grabado',
+        fechaInscripcion: '',
+        fechaInicio: '',
+        linkExterno: '',
+        categoria: CATEGORIAS[0],
+        responsableNombre: '',
+        responsableDNI: '',
+        responsableMatricula: '',
+        aceptaTerminos: false,
+        fotoDocente: null,
+        imagenUrl: '',
+        formatoDuracion: ''
+      });
+      window.scrollTo(0, 0);
+    } catch (error) {
+      console.error("Error guardando capacitación:", error);
+      setIsSubmitting(false);
+      alert("Hubo un error al guardar. Intentá de nuevo.");
+    }
   };
+
+const handleAbrirInscripcion = () => {
+    const esClinica = currentUser?.rol === 'clinica';
+    setInscripcionForm({
+      nombre: esClinica ? '' : (currentUser?.nombre || ''),
+      email: esClinica ? '' : (currentUser?.emailContacto || currentUser?.cuentaEmail || ''),
+      matricula: esClinica ? '' : (currentUser?.matricula || ''),
+      celular: esClinica ? '' : (currentUser?.whatsappNum || ''),
+      esVeterinario: !esClinica,
+    });
+    setInscripcionErrors({});
+    setInscripcionModal(true);
+  };
+
+  const handleCambioInscripcion = (campo, valor) => {
+    setInscripcionForm(prev => ({ ...prev, [campo]: valor }));
+    if (inscripcionErrors[campo]) setInscripcionErrors(prev => ({ ...prev, [campo]: null }));
+  };
+
+  const validarInscripcion = () => {
+    const errs = {};
+    if (!inscripcionForm.nombre.trim()) errs.nombre = 'El nombre es obligatorio.';
+    if (!inscripcionForm.email.trim()) errs.email = 'El email es obligatorio.';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(inscripcionForm.email)) errs.email = 'Ingresá un email válido.';
+    if (inscripcionForm.esVeterinario && !inscripcionForm.matricula.trim()) errs.matricula = 'La matrícula es obligatoria para veterinarios.';
+    setInscripcionErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const handleConfirmarInscripcion = async () => {
+    if (!validarInscripcion() || !selectedCourse) return;
+    setInscripcionEnviando(true);
+    try {
+      // Incrementar contador en el curso
+      await updateDoc(doc(db, 'capacitaciones', selectedCourse.id), {
+        totalInscriptos: increment(1)
+      });
+
+      // Notificación al docente
+      if (selectedCourse.creadorId) {
+        await addDoc(collection(db, 'notificaciones'), {
+          tipo: 'nueva_inscripcion',
+          userId: selectedCourse.creadorId,
+          rolDestino: [],
+          texto: `${inscripcionForm.nombre} se inscribió en "${selectedCourse.titulo}"`,
+          fecha: new Date(),
+        });
+      }
+      await addDoc(collection(db, 'inscripciones'), {
+        cursoId: selectedCourse.id,
+        cursoTitulo: selectedCourse.titulo,
+        usuarioId: currentUser?.uid || null,
+        usuarioRol: currentUser?.rol || '',
+        nombre: inscripcionForm.nombre,
+        email: inscripcionForm.email,
+        matricula: inscripcionForm.matricula || '',
+        celular: inscripcionForm.celular || '',
+        esVeterinario: inscripcionForm.esVeterinario,
+        docenteEmail: selectedCourse.email || '',
+        createdAt: new Date().toISOString(),
+      });
+
+      // Mail al docente con los datos del inscripto
+      if (selectedCourse.email) {
+        await enviarMailBrevo(
+          selectedCourse.email,
+          `🎓 Nueva inscripción — ${selectedCourse.titulo}`,
+          `Hola, ${selectedCourse.instructor || 'equipo docente'}.
+
+¡Tenés una nueva inscripción en tu curso "${selectedCourse.titulo}"!
+
+Datos del inscripto:
+Nombre: ${inscripcionForm.nombre}
+Email: ${inscripcionForm.email}
+Matrícula: ${inscripcionForm.matricula || 'No aplica'}
+Celular: ${inscripcionForm.celular || 'No informado'}
+
+Ya podés agregarlo a tu plataforma de dictado.
+
+El equipo de El Portal Veterinario`
+        );
+      }
+
+      // Mail de confirmación al inscripto
+      await enviarMailBrevo(
+        inscripcionForm.email,
+        `✅ Confirmación de inscripción — ${selectedCourse.titulo}`,
+        `Hola, ${inscripcionForm.nombre}.
+
+Confirmamos tu inscripción al curso "${selectedCourse.titulo}".
+
+Datos del curso:
+Modalidad: ${selectedCourse.modalidad}
+Duración: ${selectedCourse.duracion}
+${selectedCourse.linkExterno ? `Link de acceso: ${selectedCourse.linkExterno}` : ''}
+
+Si tenés consultas sobre el curso, podés escribirle directamente al docente a: ${selectedCourse.email || 'el contacto que figura en la plataforma'}.
+
+¡Gracias por confiar en El Portal!
+El equipo de El Portal Veterinario`
+      );
+
+      setInscripcionModal(false);
+      setView('inscripcion-confirmada');
+      window.scrollTo(0, 0);
+    } catch (error) {
+      console.error("Error al inscribir:", error);
+      alert("Hubo un error al procesar la inscripción. Intentá de nuevo.");
+    } finally {
+      setInscripcionEnviando(false);
+    }
+  };
+
 
   const handleDownloadPDF = async () => {
     setIsGeneratingPDF(true);
@@ -255,7 +708,8 @@ export default function Capacitaciones() {
     const matchCategoria = !filtroCategoria || curso.categoria === filtroCategoria;
     const matchModalidad = modalidadesSeleccionadas.length === 0 || modalidadesSeleccionadas.includes(curso.modalidad);
     const matchBusqueda = !searchTerm || curso.titulo.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchCategoria && matchModalidad && matchBusqueda;
+    const matchTipo = !filtroTipo || curso.tipoCurso === filtroTipo;
+    return matchCategoria && matchModalidad && matchBusqueda && matchTipo;
   });
   const cursosMostrados = cursosFiltrados.slice(0, visibleCourses);
 
@@ -294,6 +748,22 @@ export default function Capacitaciones() {
           </div>
         ))}
       </div>
+
+    <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[10px] uppercase tracking-[0.2em] mb-5 mt-8 flex items-center gap-2 border-b border-gray-50 pb-2">
+        <PlayCircle className="w-3.5 h-3.5 text-[#2D6A6A]" /> Tipo de curso
+      </h3>
+      <div className="space-y-3.5">
+        {['grabado', 'en_vivo'].map(tipo => (
+          <div key={tipo} onClick={() => setFiltroTipo(filtroTipo === tipo ? null : tipo)} className="flex items-center gap-3 group cursor-pointer">
+            <div className={`w-5 h-5 rounded-md border-2 transition-all flex items-center justify-center ${filtroTipo === tipo ? 'bg-[#2D6A6A] border-[#2D6A6A]' : 'border-gray-200 group-hover:border-[#2D6A6A]'}`}>
+              {filtroTipo === tipo && <Check className="w-3 h-3 text-white stroke-[4px]" />}
+            </div>
+            <span className={`text-[13px] font-semibold transition-colors ${filtroTipo === tipo ? 'text-[#1A3D3D]' : 'text-gray-400 group-hover:text-[#1A3D3D]'}`}>
+              {tipo === 'grabado' ? 'Grabado' : 'En vivo'}
+            </span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 
@@ -305,9 +775,16 @@ export default function Capacitaciones() {
             Capacitaciones
           </h1>
         </div>
-        <button onClick={() => setView('favoritos')} className="flex items-center justify-center gap-2 px-6 py-2.5 md:py-3 rounded-[16px] text-[11px] font-bold uppercase tracking-widest transition-all bg-white border border-gray-100 shadow-sm text-gray-500 hover:text-red-500 hover:bg-red-50">
-          <Heart className="w-4 h-4" /> Mis Guardados
-        </button>
+        <div className="flex items-center gap-3">
+          {currentUser && (
+            <button id="tour-mis-cursos" onClick={() => setView('miscursos')} className="flex items-center justify-center gap-2 px-6 py-2.5 md:py-3 rounded-[16px] text-[11px] font-bold uppercase tracking-widest transition-all bg-white border border-gray-100 shadow-sm text-gray-500 hover:text-[#2D6A6A] hover:bg-[#2D6A6A]/5">
+              <BookOpen className="w-4 h-4" /> Mis Cursos
+            </button>
+          )}
+          <button onClick={() => setView('favoritos')} className="flex items-center justify-center gap-2 px-6 py-2.5 md:py-3 rounded-[16px] text-[11px] font-bold uppercase tracking-widest transition-all bg-white border border-gray-100 shadow-sm text-gray-500 hover:text-red-500 hover:bg-red-50">
+            <Heart className="w-4 h-4" /> Mis Guardados
+          </button>
+        </div>
       </header>
 
       <div className="w-full flex flex-col lg:grid lg:grid-cols-12 gap-5 lg:gap-8">
@@ -318,7 +795,8 @@ export default function Capacitaciones() {
         <section className="lg:col-span-9 flex flex-col gap-5 md:gap-6 w-full">
           <div className="relative w-full">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 w-4 h-4" aria-hidden="true" />
-            <input 
+         <input 
+              id="tour-busqueda-caps"
               type="search" 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -327,7 +805,7 @@ export default function Capacitaciones() {
             />
           </div>
 
-          <article ref={bannerRef} onMouseMove={handleMouseMove} className="bg-[#1A3D3D] px-5 py-4 md:px-8 md:py-5 rounded-[20px] md:rounded-[24px] text-left relative overflow-hidden group shadow-md flex flex-row items-center justify-between gap-3 md:gap-6 border border-white/5">
+          <article id="tour-publicar-curso" ref={bannerRef} onMouseMove={handleMouseMove} className="bg-[#1A3D3D] px-5 py-4 md:px-8 md:py-5 rounded-[20px] md:rounded-[24px] text-left relative overflow-hidden group shadow-md flex flex-row items-center justify-between gap-3 md:gap-6 border border-white/5">
             <div className="absolute pointer-events-none transition-transform duration-300 ease-out bg-white opacity-5 rounded-full blur-3xl" style={{ width: '300px', height: '300px', left: mousePos.x - 150, top: mousePos.y - 150 }} />
             <div className="relative z-10 flex flex-col items-start gap-1">
               <h2 className="text-white font-['Montserrat'] font-black text-[13px] md:text-lg uppercase leading-none tracking-tight">¿Representás a una institución?</h2>
@@ -345,7 +823,7 @@ export default function Capacitaciones() {
                   <article key={curso.id} className="bg-white rounded-[24px] overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl transition-all group flex flex-col h-full relative">
                     <div className="h-36 md:h-40 relative overflow-hidden cursor-pointer shrink-0" onClick={() => handleCourseClick(curso)}>
                       <img src={curso.imagen} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={curso.titulo} />
-                      <div className="absolute top-3 left-3 flex gap-2">
+                     <div className="absolute top-3 left-3 flex gap-2">
                         <span className="bg-[#2D6A6A] text-white text-[11px] font-bold px-3 py-1.5 rounded-full uppercase tracking-[0.2em] shadow-md animate-pulse">{curso.badge}</span>
                       </div>
                     </div>
@@ -353,24 +831,32 @@ export default function Capacitaciones() {
                       <Heart className={`w-4 h-4 transition-colors ${favoritos.includes(`curso-${curso.id}`) ? 'fill-red-500 text-red-500' : 'text-[#666666] hover:text-red-500'}`} />
                     </button>
                     <div className="p-4 md:p-5 flex flex-col flex-grow text-left">
-                      <div className="flex items-center gap-2 mb-2">
-                        <img src={curso.logoMarca} className="w-5 h-5 rounded-[20px] border border-gray-100" alt="Logo" />
-                        <span className="text-[11px] font-bold text-[#2D6A6A] uppercase tracking-[0.2em] truncate">{curso.marca}</span>
-                      </div>
-                      <h3 onClick={() => handleCourseClick(curso)} className="font-['Montserrat'] font-black text-[#1A3D3D] text-[15px] leading-tight mb-1 group-hover:text-[#2D6A6A] transition-colors line-clamp-2 cursor-pointer">{curso.titulo}</h3>
-                      <div className="flex items-center gap-1.5 mb-4">
-                        <div className="flex items-center gap-0.5">
-                          <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
-                          <span className="text-[11px] font-bold text-[#333333]">{curso.rating.toFixed(1)}</span>
+                     {(curso.marca?.length >= 4 || curso.logoMarca) && (
+                        <div className="flex items-center gap-2 mb-2">
+                          {curso.logoMarca ? <img src={curso.logoMarca} className="w-5 h-5 rounded-[20px] border border-gray-100" alt="Logo" /> : null}
+                          {curso.marca?.length >= 4 && <span className="text-[11px] font-bold text-[#2D6A6A] uppercase tracking-[0.2em] truncate">{curso.marca}</span>}
                         </div>
-                        <span className="text-[11px] font-medium text-[#666666]">({curso.reviews})</span>
-                      </div>
-                      <div className="flex items-center gap-3 text-[11px] text-[#666666] font-semibold mb-4 mt-auto">
+                      )}
+                      <h3 onClick={() => handleCourseClick(curso)} className="font-['Montserrat'] font-black text-[#1A3D3D] text-[15px] leading-tight mb-1 group-hover:text-[#2D6A6A] transition-colors line-clamp-2 cursor-pointer">{curso.titulo}</h3>
+                      
+                      <div className="flex items-center gap-3 text-[11px] text-[#666666] font-semibold mb-4 mt-auto flex-wrap">
                         <span className="flex items-center gap-1"><Monitor className="w-3.5 h-3.5 text-[#4DB6AC]" /> {curso.modalidad}</span>
                         <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5 text-[#4DB6AC]" /> {curso.duracion}</span>
+                        {curso.totalInscriptos > 0 && (
+                          <span className="flex items-center gap-1 text-[#2D6A6A] font-bold">
+                            👥 {curso.totalInscriptos} inscripto{curso.totalInscriptos !== 1 ? 's' : ''}
+                          </span>
+                        )}
+                      <span className="flex items-center gap-1 font-bold">
+                          <PlayCircle className={`w-3.5 h-3.5 ${curso.tipoCurso === 'en_vivo' ? 'text-[#EAB308]' : 'text-[#4DB6AC]'}`} />
+                          <span className={curso.tipoCurso === 'en_vivo' ? 'text-[#EAB308]' : 'text-[#666666]'}>{curso.tipoCurso === 'en_ivo' ? 'En vivo' : 'Grabado'}</span>
+                        </span>
                       </div>
                       <div className="pt-4 border-t border-gray-50 flex items-center justify-between">
-                        <span className="text-lg font-black text-[#1A3D3D] tracking-tight">${curso.precio.toLocaleString('es-AR')}</span>
+                       <div className="flex items-baseline gap-2">
+                          <span className="text-lg font-black text-[#1A3D3D] tracking-tight">${Math.round((curso.precioOriginal || curso.precio) * (1 - comision / 100)).toLocaleString('es-AR')}</span>
+                          {comision > 0 && <span className="text-sm text-gray-400 line-through font-semibold">${(curso.precioOriginal || curso.precio).toLocaleString('es-AR')}</span>}
+                        </div>
                         <button onClick={() => handleCourseClick(curso)} className="bg-[#1A3D3D] text-white p-2.5 rounded-xl hover:bg-[#2D6A6A] transition-all">
                           <ChevronRight className="w-4 h-4" />
                         </button>
@@ -431,9 +917,7 @@ export default function Capacitaciones() {
             <button onClick={() => setActiveTab('speaker')} className={`pb-3 md:pb-4 text-[11px] md:text-[13px] font-bold uppercase tracking-widest transition-all ${activeTab === 'speaker' ? 'border-b-2 border-[#2D6A6A] text-[#1A3D3D]' : 'text-gray-400 hover:text-[#1A3D3D]'}`}>
               Instructorxs
             </button>
-            <button onClick={() => setActiveTab('reviews')} className={`pb-3 md:pb-4 text-[11px] md:text-[13px] font-bold uppercase tracking-widest transition-all ${activeTab === 'reviews' ? 'border-b-2 border-[#2D6A6A] text-[#1A3D3D]' : 'text-gray-400 hover:text-[#1A3D3D]'}`}>
-              Reseñas ({selectedCourse.rating.toFixed(1)})
-            </button>
+          
           </nav>
 
           {activeTab === 'about' && (
@@ -470,20 +954,14 @@ export default function Capacitaciones() {
                   <h3 className="text-lg md:text-2xl font-black font-['Montserrat'] text-[#1A3D3D] leading-tight">{selectedCourse.instructor}</h3>
                   <p className="text-[9px] md:text-[10px] font-bold text-[#2D6A6A] uppercase tracking-widest mb-3 md:mb-4 mt-1">Especialista Referente</p>
                   <p className="text-gray-600 text-xs md:text-sm leading-relaxed font-medium">
-                    Profesional con amplia experiencia clínica especializada. Disertante y autor de múltiples publicaciones científicas en la materia. Reconocido por su enfoque práctico y resolución de casos complejos.
+                    {selectedCourse.instructorBio || 'Este docente todavía no agregó una biografía.'}
                   </p>
                 </div>
               </div>
             </div>
           )}
 
-          {activeTab === 'reviews' && (
-            <div className="animate-in fade-in slide-in-from-bottom-2 bg-white p-8 rounded-[32px] border border-gray-100 text-center">
-               <Star className="w-12 h-12 text-yellow-400 fill-yellow-400 mx-auto mb-4 opacity-50" />
-               <p className="text-[#1A3D3D] font-bold text-lg mb-2">Reseñas Excelentes</p>
-               <p className="text-gray-500 font-medium text-sm">Este curso mantiene un promedio de {selectedCourse.rating.toFixed(1)} estrellas en {selectedCourse.reviews} evaluaciones de profesionales.</p>
-            </div>
-          )}
+          
 
         </section>
 
@@ -492,9 +970,9 @@ export default function Capacitaciones() {
             <div>
               <div className="flex items-baseline gap-3 mb-1">
                 <h4 className="text-4xl md:text-5xl font-black font-['Montserrat'] text-[#1A3D3D] tracking-tighter">
-                  ${selectedCourse.precio.toLocaleString('es-AR')}
+                  ${Math.round((selectedCourse.precioOriginal || selectedCourse.precio) * (1 - comision / 100)).toLocaleString('es-AR')}
                 </h4>
-                <span className="text-gray-400 line-through text-lg font-bold">${selectedCourse.precioOriginal.toLocaleString('es-AR')}</span>
+                <span className="text-gray-400 line-through text-lg font-bold">${(selectedCourse.precioOriginal || selectedCourse.precio).toLocaleString('es-AR')}</span>
               </div>
               <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest mt-2 flex items-center gap-1.5">
                 <Clock className="w-3 h-3" /> Oferta por tiempo limitado
@@ -503,7 +981,7 @@ export default function Capacitaciones() {
 
             <div className="space-y-4">
               <button 
-                onClick={() => alert(`Redirigiendo a la pasarela de pagos segura para adquirir el curso: ${selectedCourse.titulo}...`)} 
+                onClick={() => { if (!currentUser) { alert('Necesitás iniciar sesión para inscribirte.'); navigate('/login'); return; } handleAbrirInscripcion(); }} 
                 className="w-full py-5 bg-[#2D6A6A] text-white rounded-[20px] font-black text-xs uppercase tracking-[0.2em] hover:bg-[#1A3D3D] transition-all shadow-lg shadow-[#2D6A6A]/20 flex items-center justify-center gap-2 active:scale-95"
               >
                 Inscribirme Ahora
@@ -531,12 +1009,23 @@ export default function Capacitaciones() {
               </div>
             </div>
 
-            <div className="pt-6 border-t border-gray-100 text-center">
-              <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-4">Certificación avalada por</p>
-              <div className="flex items-center justify-center gap-3 bg-gray-50 p-3 rounded-2xl border border-gray-100">
-                <img src={selectedCourse.logoMarca} className="w-8 h-8 rounded-full border border-gray-200" alt="Marca" />
-                <span className="text-xs font-black text-[#1A3D3D] uppercase tracking-wider">{selectedCourse.marca}</span>
-              </div>
+           <div className="pt-6 border-t border-gray-100 text-center">
+              <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-4">Capacitación publicada por</p>
+              {selectedCourse.creadorSlug && selectedCourse.creadorRol ? (
+                <button
+                  onClick={() => navigate(`/${selectedCourse.creadorRol === 'clinica' ? 'clinica' : 'profesional'}/${selectedCourse.creadorSlug}`)}
+                  className="w-full flex items-center justify-center gap-3 bg-gray-50 p-3 rounded-2xl border border-gray-100 hover:border-[#2D6A6A]/30 hover:bg-[#2D6A6A]/5 transition-all group"
+                >
+                  {selectedCourse.logoMarca ? <img src={selectedCourse.logoMarca} className="w-8 h-8 rounded-full border border-gray-200" alt="Marca" /> : null}
+                  <span className="text-xs font-black text-[#1A3D3D] uppercase tracking-wider group-hover:text-[#2D6A6A] transition-colors">{selectedCourse.marca}</span>
+                  <ChevronRight className="w-3.5 h-3.5 text-gray-300 group-hover:text-[#2D6A6A] group-hover:translate-x-0.5 transition-all" />
+                </button>
+              ) : (
+                <div className="flex items-center justify-center gap-3 bg-gray-50 p-3 rounded-2xl border border-gray-100">
+                  {selectedCourse.logoMarca ? <img src={selectedCourse.logoMarca} className="w-8 h-8 rounded-full border border-gray-200" alt="Marca" /> : null}
+                  <span className="text-xs font-black text-[#1A3D3D] uppercase tracking-wider">{selectedCourse.marca}</span>
+                </div>
+              )}
             </div>
 
           </div>
@@ -667,6 +1156,12 @@ export default function Capacitaciones() {
           <ChevronLeft className="w-4 h-4" /> Volver
         </button>
         <button 
+              onClick={() => { setView('wizard'); window.scrollTo(0,0); }}
+              className="bg-[#2D6A6A] text-white px-10 py-5 rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] hover:bg-[#1A3D3D] transition-colors shadow-lg active:scale-95"
+            >
+              Publicar mi curso ahora
+            </button>
+        <button 
           onClick={handleDownloadPDF}
           disabled={isGeneratingPDF}
           className="flex items-center gap-2 bg-[#2D6A6A] text-white px-5 py-2.5 font-bold text-[11px] md:text-[10px] uppercase tracking-widest rounded-xl transition-all duration-300 hover:bg-[#1A3D3D] hover:-translate-y-1 hover:shadow-lg disabled:opacity-50 disabled:cursor-wait"
@@ -674,6 +1169,7 @@ export default function Capacitaciones() {
           {isGeneratingPDF ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
           {isGeneratingPDF ? 'Generando...' : 'Guardar como PDF'}
         </button>
+        
       </div>
 
       <div className="px-4 md:px-0 relative z-10">
@@ -697,7 +1193,7 @@ export default function Capacitaciones() {
           <div className="bg-white rounded-[32px] md:rounded-[48px] p-8 md:p-12 lg:p-16 border border-gray-200 shadow-sm flex flex-col md:flex-row gap-12 lg:gap-20 items-center">
             <div className="w-full md:w-1/2">
               <div className="aspect-[4/3] w-full rounded-[24px] md:rounded-[32px] overflow-hidden shadow-sm">
-                <img src="https://images.unsplash.com/photo-1584132967334-10e028bd69f7?auto=format&fit=crop&w=800&q=80" alt="Veterinario" className="w-full h-full object-cover" />
+                <img src="https://images.unsplash.com/photo-1628009368231-7bb7cfcb0def?auto=format&fit=crop&w=800&q=80" alt="Veterinario profesional" className="w-full h-full object-cover" />
               </div>
             </div>
             <div className="w-full md:w-1/2 text-left">
@@ -817,7 +1313,7 @@ export default function Capacitaciones() {
                     <p className="text-[14px] text-gray-500 font-medium">Nuestro equipo está listo para ayudarte.</p>
                   </div>
               </div>
-              <a href="mailto:elportalveterinario.arg@gmail.com?subject=Consulta institucional sobre publicaciones" className="w-full sm:w-auto bg-white px-6 py-3.5 rounded-xl text-[11px] font-bold text-[#1A3D3D] hover:bg-[#1A3D3D] hover:text-white border border-gray-200 transition-colors uppercase tracking-[0.2em] text-center shadow-sm whitespace-nowrap">
+              <a href="mailto:portalveterinario.ar@gmail.com?subject=Consulta%20institucional%20sobre%20capacitaciones&body=Hola%2C%20quisiera%20consultar%20sobre..." className="w-full sm:w-auto bg-white px-6 py-3.5 rounded-xl text-[11px] font-bold text-[#1A3D3D] hover:bg-[#1A3D3D] hover:text-white border border-gray-200 transition-colors uppercase tracking-[0.2em] text-center shadow-sm whitespace-nowrap">
                   Contactar Soporte
               </a>
             </div>
@@ -852,6 +1348,20 @@ export default function Capacitaciones() {
 
   const renderCourseWizard = () => (
     <section className="max-w-[800px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+      {editandoCursoId && (
+        <div className="relative bg-yellow-50 border border-yellow-200 rounded-2xl px-5 py-4 mb-6 flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-yellow-600 shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-[13px] font-black text-yellow-800 mb-1">Este curso volverá a revisión al guardar</p>
+            <p className="text-[12px] text-yellow-700 font-medium leading-relaxed">
+              Si modificás <strong>título, precio, descripción, temario, tipo de curso, fechas o link de acceso</strong>, nuestro equipo lo revisará nuevamente antes de republicarlo. Suele tardar menos de 48hs.
+            </p>
+          </div>
+          <button onClick={() => setEditandoCursoId(null)} className="text-yellow-400 hover:text-yellow-600 transition-colors shrink-0">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <button onClick={() => { setView('grid'); setWizardStep(1); setErrors({}); }} className="flex items-center gap-2 text-gray-400 hover:text-[#1A3D3D] font-bold text-xs md:text-[10px] uppercase tracking-[0.3em] transition-colors group">
           <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" aria-hidden="true" /> Cancelar
@@ -866,11 +1376,11 @@ export default function Capacitaciones() {
         <div className="bg-gray-50 border-b border-gray-100 p-6 md:p-8" aria-label={`Paso ${wizardStep} de 4`}>
           <div className="relative max-w-2xl mx-auto">
             <div className="absolute top-[22px] md:top-[22px] left-[10%] right-[10%] h-1 bg-gray-200 z-0 hidden md:block">
-              <div className="h-full bg-[#2D6A6A] transition-all duration-500 ease-in-out" style={{ width: `${((wizardStep - 1) / 3) * 100}%` }}></div>
+              <div className="h-full bg-[#2D6A6A] transition-all duration-500 ease-in-out" style={{ width: `${((wizardStep - 1) / 2) * 100}%` }}></div>
             </div>
 
             <div className="flex justify-between items-start relative z-10">
-              {[1, 2, 3, 4].map((step) => {
+              {[1, 2, 3].map((step) => {
                 const isActive = wizardStep === step;
                 const isCompleted = wizardStep > step;
                 
@@ -890,7 +1400,7 @@ export default function Capacitaciones() {
                     <span className={`text-[9px] md:text-[11px] uppercase font-black tracking-[0.2em] mt-2 hidden md:block text-center ${
                       isActive || isCompleted ? 'text-[#1A3D3D]' : 'text-gray-400'
                     }`}>
-                      {['Básicos', 'Temario', 'Docente', 'Publicar'][step - 1]}
+                      {['Básicos', 'Temario', 'Docente'][step - 1]}
                     </span>
                   </div>
                 );
@@ -907,10 +1417,43 @@ export default function Capacitaciones() {
                 <p className="text-gray-500 text-base md:text-sm font-medium">Atraé a tus colegas con un título claro y conciso.</p>
               </div>
               <div className="space-y-4">
+
+                {/* IMAGEN DEL CURSO */}
                 <div>
-                  <label className="block text-xs md:text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2" htmlFor="titulo">Título del Curso *</label>
-                  <input id="titulo" type="text" value={courseForm.titulo} onChange={(e) => handleWizardChange('titulo', e.target.value)} placeholder="Ej: Cirugía de Tejidos Blandos: Procedimientos Avanzados" className={`w-full bg-gray-50 border rounded-xl px-4 py-3.5 text-base md:text-sm font-medium focus:outline-none focus:bg-white transition-all text-[#1A3D3D] ${errors.titulo ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-[#2D6A6A]'}`} />
-                  {errors.titulo && <p className="text-red-500 text-[11px] md:text-[10px] font-bold mt-1.5 flex items-center gap-1"><AlertCircle className="w-3 h-3" />{errors.titulo}</p>}
+                  <label className="block text-xs md:text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Imagen de portada del curso <span className="text-red-500">*</span></label>
+                  {courseForm.imagenUrl ? (
+                    <div className="relative w-full h-40 rounded-2xl overflow-hidden border border-gray-200 shadow-sm">
+                      <img src={courseForm.imagenUrl} className="w-full h-full object-cover" alt="Portada" />
+                      <button type="button" onClick={() => handleWizardChange('imagenUrl', '')} className="absolute top-2 right-2 p-1.5 bg-white text-red-500 rounded-full shadow-md hover:bg-red-50">
+                        <X className="w-4 h-4" strokeWidth={3} />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className={`w-full h-40 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-2 cursor-pointer transition-all ${isUploadingImagen ? 'border-[#2D6A6A] bg-[#2D6A6A]/5' : 'border-gray-300 hover:border-[#2D6A6A] hover:bg-[#2D6A6A]/5'}`}>
+                      {isUploadingImagen ? (
+                        <>
+                          <Loader2 className="w-6 h-6 text-[#2D6A6A] animate-spin" />
+                          <span className="text-sm font-bold text-[#2D6A6A]">{imagenUploadProgress}% subiendo...</span>
+                        </>
+                      ) : (
+                        <>
+                          <UploadCloud className="w-6 h-6 text-[#2D6A6A]" />
+                          <span className="text-sm font-bold text-[#2D6A6A]">Subir imagen de portada</span>
+                          <span className="text-xs text-gray-400">JPG o PNG — máx. 5MB</span>
+                        </>
+                      )}
+                      <input type="file" className="hidden" accept="image/*" onChange={handleImagenCursoUpload} disabled={isUploadingImagen} />
+                    </label>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-xs md:text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2" htmlFor="titulo">Título del Curso <span className="text-red-500 not-italic">*</span></label>
+                  <input id="titulo" type="text" value={courseForm.titulo} onChange={(e) => { const v = e.target.value; handleWizardChange('titulo', v.charAt(0).toUpperCase() + v.slice(1)); }} placeholder="Ej: Cirugía de tejidos blandos: procedimientos avanzados" maxLength={100} autoCapitalize="sentences" spellCheck={true} className={`w-full bg-gray-50 border rounded-xl px-4 py-3.5 text-base md:text-sm font-medium focus:outline-none focus:bg-white transition-all text-[#1A3D3D] ${errors.titulo ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-[#2D6A6A]'}`} />
+                  <div className="flex justify-between mt-1">
+                    {errors.titulo ? <p className="text-red-500 text-[11px] font-bold flex items-center gap-1"><AlertCircle className="w-3 h-3" />{errors.titulo}</p> : <span/>}
+                    <span className={`text-[11px] font-bold ${courseForm.titulo.length < 10 ? 'text-red-400' : 'text-gray-400'}`}>{courseForm.titulo.length}/100</span>
+                  </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -923,11 +1466,35 @@ export default function Capacitaciones() {
                     <label className="block text-xs md:text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2" htmlFor="precio">Precio de lista (ARS) *</label>
                     <div className="relative">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">$</span>
-                      <input id="precio" type="number" value={courseForm.precio} onChange={(e) => handleWizardChange('precio', e.target.value)} placeholder="45000" className={`w-full bg-gray-50 border rounded-xl pl-8 pr-4 py-3.5 text-base md:text-sm font-medium focus:outline-none focus:bg-white transition-all text-[#1A3D3D] ${errors.precio ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-[#2D6A6A]'}`} />
+                      <input id="precio" type="number" min="0" step="1" value={courseForm.precio} onChange={(e) => { const val = e.target.value.replace(/^0+/, ''); handleWizardChange('precio', val === '' ? '' : Math.floor(Math.abs(Number(val)))); }} placeholder="45000" className={`w-full bg-gray-50 border rounded-xl pl-8 pr-4 py-3.5 text-base md:text-sm font-medium focus:outline-none focus:bg-white transition-all text-[#1A3D3D] ${errors.precio ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-[#2D6A6A]'}`} />
                     </div>
                     {errors.precio && <p className="text-red-500 text-[11px] md:text-[10px] font-bold mt-1.5 flex items-center gap-1"><AlertCircle className="w-3 h-3" />{errors.precio}</p>}
+                    {courseForm.precio > 0 && (
+                      <div className="mt-3 bg-[#F4F7F7] border border-gray-200 rounded-2xl p-4 space-y-2">
+                        <p className="text-[11px] font-black text-[#1A3D3D] uppercase tracking-widest mb-3">💰 Resumen por alumno inscripto</p>
+                        <div className="flex justify-between items-center">
+                          <span className="text-[13px] text-[#666666] font-medium">Precio del curso</span>
+                          <span className="text-[13px] font-bold text-[#1A3D3D]">$ {Number(courseForm.precio).toLocaleString('es-AR')}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-[13px] text-[#666666] font-medium">Comisión El Portal ({comision}%)</span>
+                          <span className="text-[13px] font-bold text-red-500">- $ {Math.round(Number(courseForm.precio) * comision / 100).toLocaleString('es-AR')}</span>
+                        </div>
+                        <div className="border-t border-gray-200 pt-2 flex justify-between items-center">
+                          <span className="text-[13px] font-black text-[#1A3D3D]">Vos recibís</span>
+                          <span className="text-[15px] font-black text-[#2D6A6A]">$ {Math.round(Number(courseForm.precio) * (100 - comision) / 100).toLocaleString('es-AR')}</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
+                <div>
+                  <label className="block text-xs md:text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Categoría *</label>
+                  <select value={courseForm.categoria} onChange={(e) => handleWizardChange('categoria', e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-base md:text-sm font-medium focus:outline-none focus:border-[#2D6A6A] focus:bg-white transition-all text-[#1A3D3D]">
+                    {CATEGORIAS.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                  </select>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs md:text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2" htmlFor="nivel">Nivel</label>
@@ -938,8 +1505,34 @@ export default function Capacitaciones() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs md:text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2" htmlFor="duracion">Duración aprox.</label>
-                    <input id="duracion" type="text" value={courseForm.duracion} onChange={(e) => handleWizardChange('duracion', e.target.value)} placeholder="Ej: 12h 30m / 4 Semanas" className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-base md:text-sm font-medium focus:outline-none focus:border-[#2D6A6A] focus:bg-white transition-all text-[#1A3D3D]" />
+                    <label className="block text-xs md:text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Formato y Duración <span className="text-red-500">*</span></label>
+                    <select value={courseForm.formatoDuracion || ''} onChange={(e) => handleWizardChange('formatoDuracion', e.target.value)} className={`w-full bg-gray-50 border rounded-xl px-4 py-3.5 text-base md:text-sm font-medium focus:outline-none focus:border-[#2D6A6A] focus:bg-white transition-all text-[#1A3D3D] mb-2 ${errors.duracion ? 'border-red-400' : 'border-gray-200'}`}>
+                      <option value="">Seleccioná el formato...</option>
+                      <option value="charla">Charla / Webinar (horas)</option>
+                      <option value="curso_clases">Curso por clases</option>
+                      <option value="curso_semanas">Curso por semanas</option>
+                      <option value="curso_meses">Curso por meses</option>
+                      <option value="taller">Taller presencial</option>
+                    </select>
+                    {courseForm.formatoDuracion === 'charla' && (
+                      <input type="number" min="1" max="12" value={courseForm.duracionHoras || ''} onChange={(e) => { handleWizardChange('duracionHoras', e.target.value); handleWizardChange('duracion', `Charla de ${e.target.value}hs`); }} placeholder="¿Cuántas horas dura? (ej: 3)" className="w-full bg-[#F4F7F7] border border-gray-200 rounded-2xl px-5 py-4 text-[15px] font-medium focus:outline-none focus:bg-white focus:ring-4 focus:ring-[#2D6A6A]/10 focus:border-[#2D6A6A] transition-all text-[#1A3D3D]" />
+                    )}
+                    {courseForm.formatoDuracion === 'curso_clases' && (
+                      <div className="flex gap-2">
+                        <input type="number" min="1" value={courseForm.duracionClases || ''} onChange={(e) => { handleWizardChange('duracionClases', e.target.value); handleWizardChange('duracion', `${e.target.value} clases de ${courseForm.duracionHorasClase || '?'}hs`); }} placeholder="Cantidad de clases" className="w-1/2 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-[#2D6A6A] focus:bg-white transition-all text-[#1A3D3D]" />
+                        <input type="number" min="1" value={courseForm.duracionHorasClase || ''} onChange={(e) => { handleWizardChange('duracionHorasClase', e.target.value); handleWizardChange('duracion', `${courseForm.duracionClases || '?'} clases de ${e.target.value}hs`); }} placeholder="Horas por clase" className="w-1/2 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-[#2D6A6A] focus:bg-white transition-all text-[#1A3D3D]" />
+                      </div>
+                    )}
+                    {courseForm.formatoDuracion === 'curso_semanas' && (
+                      <input type="number" min="1" max="52" value={courseForm.duracionSemanas || ''} onChange={(e) => { handleWizardChange('duracionSemanas', e.target.value); handleWizardChange('duracion', `${e.target.value} semanas`); }} placeholder="¿Cuántas semanas?" className="w-full bg-[#F4F7F7] border border-gray-200 rounded-2xl px-5 py-4 text-[15px] font-medium focus:outline-none focus:bg-white focus:ring-4 focus:ring-[#2D6A6A]/10 focus:border-[#2D6A6A] transition-all text-[#1A3D3D]" />
+                    )}
+                    {courseForm.formatoDuracion === 'curso_meses' && (
+                      <input type="number" min="1" max="24" value={courseForm.duracionMeses || ''} onChange={(e) => { handleWizardChange('duracionMeses', e.target.value); handleWizardChange('duracion', `${e.target.value} ${e.target.value === '1' ? 'mes' : 'meses'}`); }} placeholder="¿Cuántos meses?" className="w-full bg-[#F4F7F7] border border-gray-200 rounded-2xl px-5 py-4 text-[15px] font-medium focus:outline-none focus:bg-white focus:ring-4 focus:ring-[#2D6A6A]/10 focus:border-[#2D6A6A] transition-all text-[#1A3D3D]" />
+                    )}
+                    {courseForm.formatoDuracion === 'taller' && (
+                      <input type="number" min="1" max="5" value={courseForm.duracionDias || ''} onChange={(e) => { handleWizardChange('duracionDias', e.target.value); handleWizardChange('duracion', `Taller de ${e.target.value} ${e.target.value === '1' ? 'día' : 'días'}`); }} placeholder="¿Cuántos días?" className="w-full bg-[#F4F7F7] border border-gray-200 rounded-2xl px-5 py-4 text-[15px] font-medium focus:outline-none focus:bg-white focus:ring-4 focus:ring-[#2D6A6A]/10 focus:border-[#2D6A6A] transition-all text-[#1A3D3D]" />
+                    )}
+                    {errors.duracion && <p className="text-red-500 text-[11px] font-bold mt-1.5 flex items-center gap-1"><AlertCircle className="w-3 h-3" />{errors.duracion}</p>}
                   </div>
                 </div>
               </div>
@@ -987,78 +1580,185 @@ export default function Capacitaciones() {
           {wizardStep === 3 && (
             <div className="space-y-6 animate-in fade-in">
               <div>
-                <h2 className="text-2xl font-black font-['Montserrat'] text-[#1A3D3D] mb-1">Docente / Instructorx</h2>
-                <p className="text-gray-500 text-base md:text-sm font-medium">Humanizá tu curso presentando al especialista a cargo.</p>
+                <h2 className="text-2xl font-black font-['Montserrat'] text-[#1A3D3D] mb-1">Docentes / Instructorxs</h2>
+                <p className="text-gray-500 text-base md:text-sm font-medium">Podés agregar uno o varios docentes a cargo del curso.</p>
               </div>
               <div className="space-y-6">
-                <div>
-                  <label className="block text-xs md:text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2" htmlFor="instructorNombre">Nombre completo con título *</label>
-                  <input id="instructorNombre" type="text" value={courseForm.instructorNombre} onChange={(e) => handleWizardChange('instructorNombre', e.target.value)} placeholder="Ej: Dr. Julián Martínez" className={`w-full bg-gray-50 border rounded-xl px-4 py-3.5 text-base md:text-sm font-medium focus:outline-none focus:bg-white transition-all text-[#1A3D3D] ${errors.instructorNombre ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-[#2D6A6A]'}`} />
-                  {errors.instructorNombre && <p className="text-red-500 text-[11px] md:text-[10px] font-bold mt-1.5 flex items-center gap-1"><AlertCircle className="w-3 h-3" />{errors.instructorNombre}</p>}
-                </div>
-                <div>
-                  <label className="block text-xs md:text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2" htmlFor="instructorBio">Mini Bio del Docente *</label>
-                  <textarea id="instructorBio" value={courseForm.instructorBio} onChange={(e) => handleWizardChange('instructorBio', e.target.value)} placeholder="Resumí su experiencia, especialidades y reconocimientos (máx. 300 caracteres)..." rows="3" className={`w-full bg-gray-50 border rounded-xl px-4 py-3.5 text-base md:text-sm font-medium focus:outline-none focus:bg-white transition-all text-[#1A3D3D] resize-none ${errors.instructorBio ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-[#2D6A6A]'}`} ></textarea>
-                  {errors.instructorBio && <p className="text-red-500 text-[11px] md:text-[10px] font-bold mt-1.5 flex items-center gap-1"><AlertCircle className="w-3 h-3" />{errors.instructorBio}</p>}
-                </div>
-                <div>
-                  <label className="block text-xs md:text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Foto de perfil del docente</label>
-                  
-                  {courseForm.fotoDocente ? (
-                    <div className="flex items-center gap-6 p-4 border border-gray-200 rounded-2xl bg-gray-50">
-                      <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-white shadow-sm shrink-0">
-                        <img src={courseForm.fotoDocente.preview} alt="Preview Docente" className="w-full h-full object-cover" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-bold text-[#1A3D3D] line-clamp-1">{courseForm.fotoDocente.file.name}</p>
-                        <p className="text-xs text-gray-400">{(courseForm.fotoDocente.file.size / (1024 * 1024)).toFixed(2)} MB</p>
-                      </div>
-                      <button type="button" onClick={removeDocenteFoto} className="p-3 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all">
-                        <Trash2 className="w-5 h-5" />
+                {(courseForm.docentes || [{ nombre: '', bio: '', linkMas: '' }]).map((docente, idx) => (
+                  <div key={idx} className="bg-gray-50 rounded-2xl p-5 border border-gray-200 relative">
+                    {idx > 0 && (
+                      <button type="button" onClick={() => { const docs = [...courseForm.docentes]; docs.splice(idx, 1); handleWizardChange('docentes', docs); }} className="absolute top-4 right-4 p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all">
+                        <Trash2 className="w-4 h-4" />
                       </button>
-                    </div>
-                  ) : (
-                    <label className="w-full border-2 border-dashed border-gray-300 rounded-2xl bg-gray-50 hover:bg-white hover:border-[#2D6A6A] transition-all p-8 flex flex-col items-center justify-center text-center cursor-pointer group">
-                      <input type="file" accept="image/png, image/jpeg" className="hidden" onChange={handleDocenteFileUpload} />
-                      <div className="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                        <UploadCloud className="w-6 h-6 text-[#2D6A6A]" />
+                    )}
+                    <p className="text-[10px] font-black text-[#2D6A6A] uppercase tracking-widest mb-4">{idx === 0 ? 'Docente principal' : `Docente ${idx + 1}`}</p>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Nombre completo con título <span className="text-red-500">*</span></label>
+                        <input type="text" value={docente.nombre} onChange={(e) => { const docs = [...courseForm.docentes]; docs[idx].nombre = e.target.value.charAt(0).toUpperCase() + e.target.value.slice(1); handleWizardChange('docentes', docs); }} placeholder="Ej: Dr. Julián Martínez" spellCheck={true} className={`w-full bg-white border rounded-xl px-4 py-3.5 text-sm font-medium focus:outline-none focus:border-[#2D6A6A] transition-all text-[#1A3D3D] ${errors.instructorNombre ? 'border-red-400' : 'border-gray-200'}`} />
                       </div>
-                      <p className="text-sm font-bold text-[#1A3D3D]">Hacé clic para subir una imagen</p>
-                      <p className="text-xs text-gray-400 mt-1">o arrastrala y soltala acá (PNG, JPG hasta 5MB)</p>
+                      <div>
+                        <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Mini Bio <span className="text-red-500">*</span></label>
+                        <textarea value={docente.bio} onChange={(e) => { const docs = [...courseForm.docentes]; docs[idx].bio = e.target.value.charAt(0).toUpperCase() + e.target.value.slice(1); handleWizardChange('docentes', docs); }} placeholder="Resumí su experiencia y especialidades..." rows="3" spellCheck={true} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-sm font-medium focus:outline-none focus:border-[#2D6A6A] transition-all text-[#1A3D3D] resize-none" />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Link a más información del curso (opcional)</label>
+                        <input type="url" value={docente.linkMas} onChange={(e) => { const docs = [...courseForm.docentes]; docs[idx].linkMas = e.target.value; handleWizardChange('docentes', docs); }} placeholder="https://www.suinstitucion.com" className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-sm font-medium focus:outline-none focus:border-[#2D6A6A] transition-all text-[#1A3D3D]" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                <button type="button" onClick={() => handleWizardChange('docentes', [...(courseForm.docentes || []), { nombre: '', bio: '', linkMas: '' }])} className="w-full py-3 border-2 border-dashed border-[#2D6A6A]/30 rounded-xl text-[#2D6A6A] text-xs font-bold hover:bg-[#2D6A6A]/5 hover:border-[#2D6A6A] transition-colors flex items-center justify-center gap-2">
+                  <Plus className="w-4 h-4" /> Agregar otro docente
+                </button>
+              </div>
+
+              {/* DATOS DE CONTACTO Y LOGÍSTICA */}
+              <div className="bg-gray-50 rounded-2xl p-5 border border-gray-200 space-y-4">
+                <p className="text-[10px] font-black text-[#2D6A6A] uppercase tracking-widest">Datos de contacto y logística</p>
+
+                {/* EMAIL */}
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Email de contacto institucional <span className="text-red-500">*</span></label>
+                  <input
+                    type="email"
+                    value={courseForm.email}
+                    onChange={(e) => handleWizardChange('email', e.target.value)}
+                    placeholder="contacto@suinstitucion.com"
+                    className={`w-full bg-white border rounded-xl px-4 py-3.5 text-sm font-medium focus:outline-none focus:border-[#2D6A6A] transition-all text-[#1A3D3D] ${errors.email ? 'border-red-400' : 'border-gray-200'}`}
+                  />
+                  {errors.email && <p className="text-red-500 text-[11px] font-bold mt-1 flex items-center gap-1"><AlertCircle className="w-3 h-3" />{errors.email}</p>}
+                </div>
+
+                {/* LINK EXTERNO */}
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Link de la plataforma donde se dicta el curso (opcional)</label>
+                  <input
+                    type="url"
+                    value={courseForm.linkExterno}
+                    onChange={(e) => handleWizardChange('linkExterno', e.target.value)}
+                    placeholder="https://zoom.us/j/... o https://www.suaula.com"
+                    className={`w-full bg-white border rounded-xl px-4 py-3.5 text-sm font-medium focus:outline-none focus:border-[#2D6A6A] transition-all text-[#1A3D3D] ${errors.linkExterno ? 'border-red-400' : 'border-gray-200'}`}
+                  />
+                  <p className="text-[11px] text-gray-400 font-medium mt-1">Este link solo será visible para los inscriptos una vez confirmado el pago.</p>
+                  {errors.linkExterno && <p className="text-red-500 text-[11px] font-bold mt-1 flex items-center gap-1"><AlertCircle className="w-3 h-3" />{errors.linkExterno}</p>}
+                </div>
+
+                {/* TIPO DE CURSO */}
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3">Tipo de curso <span className="text-red-500">*</span></label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => handleWizardChange('tipoCurso', 'grabado')}
+                      className={`p-4 rounded-xl border-2 text-left transition-all ${courseForm.tipoCurso === 'grabado' ? 'border-[#2D6A6A] bg-[#2D6A6A]/5' : 'border-gray-200 bg-white'}`}
+                    >
+                      <p className={`text-[12px] font-black uppercase tracking-widest ${courseForm.tipoCurso === 'grabado' ? 'text-[#2D6A6A]' : 'text-gray-400'}`}>Grabado</p>
+                      <p className="text-[11px] text-gray-400 font-medium mt-1">Disponible siempre, sin fecha límite</p>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleWizardChange('tipoCurso', 'en_vivo')}
+                      className={`p-4 rounded-xl border-2 text-left transition-all ${courseForm.tipoCurso === 'en_vivo' ? 'border-[#2D6A6A] bg-[#2D6A6A]/5' : 'border-gray-200 bg-white'}`}
+                    >
+                      <p className={`text-[12px] font-black uppercase tracking-widest ${courseForm.tipoCurso === 'en_vivo' ? 'text-[#2D6A6A]' : 'text-gray-400'}`}>En vivo</p>
+                      <p className="text-[11px] text-gray-400 font-medium mt-1">Tiene fecha de inicio y cierre de inscripción</p>
+                    </button>
+                  </div>
+                </div>
+
+                {/* DATOS DEL RESPONSABLE */}
+                <div className="border-t border-gray-200 pt-4 space-y-4">
+                  <p className="text-[10px] font-black text-[#2D6A6A] uppercase tracking-widest">Datos del responsable de la publicación</p>
+                  <p className="text-[11px] text-gray-400 font-medium -mt-2">Esta información es privada y solo la usamos para verificar la identidad de quien publica.</p>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Nombre completo <span className="text-red-500">*</span></label>
+                    <input
+                      type="text"
+                      value={courseForm.responsableNombre}
+                      onChange={(e) => handleWizardChange('responsableNombre', e.target.value)}
+                      placeholder="Nombre y apellido de quien publica"
+                      className={`w-full bg-white border rounded-xl px-4 py-3.5 text-sm font-medium focus:outline-none focus:border-[#2D6A6A] transition-all text-[#1A3D3D] ${errors.responsableNombre ? 'border-red-400' : 'border-gray-200'}`}
+                    />
+                    {errors.responsableNombre && <p className="text-red-500 text-[11px] font-bold mt-1 flex items-center gap-1"><AlertCircle className="w-3 h-3" />{errors.responsableNombre}</p>}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">DNI <span className="text-red-500">*</span></label>
+                      <input
+                        type="text"
+                        value={courseForm.responsableDNI}
+                        onChange={(e) => handleWizardChange('responsableDNI', e.target.value.replace(/\D/g, ''))}
+                        placeholder="Sin puntos"
+                        maxLength={9}
+                        className={`w-full bg-white border rounded-xl px-4 py-3.5 text-sm font-medium focus:outline-none focus:border-[#2D6A6A] transition-all text-[#1A3D3D] ${errors.responsableDNI ? 'border-red-400' : 'border-gray-200'}`}
+                      />
+                      {errors.responsableDNI && <p className="text-red-500 text-[11px] font-bold mt-1 flex items-center gap-1"><AlertCircle className="w-3 h-3" />{errors.responsableDNI}</p>}
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Matrícula profesional <span className="text-red-500">*</span></label>
+                      <input
+                        type="text"
+                        value={courseForm.responsableMatricula}
+                        onChange={(e) => handleWizardChange('responsableMatricula', e.target.value)}
+                        placeholder="MP / MN"
+                        className={`w-full bg-white border rounded-xl px-4 py-3.5 text-sm font-medium focus:outline-none focus:border-[#2D6A6A] transition-all text-[#1A3D3D] ${errors.responsableMatricula ? 'border-red-400' : 'border-gray-200'}`}
+                      />
+                      {errors.responsableMatricula && <p className="text-red-500 text-[11px] font-bold mt-1 flex items-center gap-1"><AlertCircle className="w-3 h-3" />{errors.responsableMatricula}</p>}
+                    </div>
+                  </div>
+
+                  {/* CHECKBOX TÉRMINOS */}
+                  <div className="flex items-start gap-3 bg-white rounded-xl p-4 border border-gray-200">
+                    <input
+                      type="checkbox"
+                      id="aceptaTerminos"
+                      checked={courseForm.aceptaTerminos}
+                      onChange={(e) => handleWizardChange('aceptaTerminos', e.target.checked)}
+                      className="mt-0.5 w-4 h-4 accent-[#2D6A6A] cursor-pointer shrink-0"
+                    />
+                    <label htmlFor="aceptaTerminos" className="text-[13px] text-[#333333] font-medium cursor-pointer leading-relaxed">
+                      Declaro que los datos proporcionados son verídicos y acepto los{' '}
+                      <a href="/terminos-y-condiciones" target="_blank" rel="noreferrer" className="text-[#2D6A6A] font-bold underline">
+                        Términos y Condiciones
+                      </a>{' '}
+                      de publicación de contenido comercial de El Portal.
                     </label>
-                  )}
+                  </div>
+                  {errors.aceptaTerminos && <p className="text-red-500 text-[11px] font-bold flex items-center gap-1"><AlertCircle className="w-3 h-3" />{errors.aceptaTerminos}</p>}
                 </div>
+
+                {/* FECHAS — solo si es en vivo */}
+                {courseForm.tipoCurso === 'en_vivo' && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in duration-300">
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Fecha límite de inscripción <span className="text-red-500">*</span></label>
+                      <input
+                        type="date"
+                        value={courseForm.fechaInscripcion}
+                        onChange={(e) => handleWizardChange('fechaInscripcion', e.target.value)}
+                        className={`w-full bg-white border rounded-xl px-4 py-3.5 text-sm font-medium focus:outline-none focus:border-[#2D6A6A] transition-all text-[#1A3D3D] ${errors.fechaInscripcion ? 'border-red-400' : 'border-gray-200'}`}
+                      />
+                      {errors.fechaInscripcion && <p className="text-red-500 text-[11px] font-bold mt-1 flex items-center gap-1"><AlertCircle className="w-3 h-3" />{errors.fechaInscripcion}</p>}
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Fecha de inicio del curso <span className="text-red-500">*</span></label>
+                      <input
+                        type="date"
+                        value={courseForm.fechaInicio}
+                        onChange={(e) => handleWizardChange('fechaInicio', e.target.value)}
+                        className={`w-full bg-white border rounded-xl px-4 py-3.5 text-sm font-medium focus:outline-none focus:border-[#2D6A6A] transition-all text-[#1A3D3D] ${errors.fechaInicio ? 'border-red-400' : 'border-gray-200'}`}
+                      />
+                      {errors.fechaInicio && <p className="text-red-500 text-[11px] font-bold mt-1 flex items-center gap-1"><AlertCircle className="w-3 h-3" />{errors.fechaInicio}</p>}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
-
-          {wizardStep === 4 && (
-            <div className="space-y-6 animate-in fade-in">
-              <div className="text-center mb-8">
-                <div className="w-16 h-16 bg-[#2D6A6A]/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Award className="w-8 h-8 text-[#2D6A6A]" aria-hidden="true" />
-                </div>
-                <h2 className="text-2xl font-black font-['Montserrat'] text-[#1A3D3D] mb-2">¡Tu curso está casi listo!</h2>
-                <p className="text-gray-500 text-base md:text-sm font-medium max-w-sm mx-auto">
-                  Creá tu cuenta institucional para gestionar las ventas y proceder al pago de la publicación.
-                </p>
-              </div>
-              <div className="bg-gray-50 p-6 md:p-8 rounded-[24px] border border-gray-100 space-y-4 max-w-md mx-auto">
-                <div>
-                  <label className="block text-xs md:text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2" htmlFor="email">Email Institucional *</label>
-                  <input id="email" type="email" value={courseForm.email} onChange={(e) => handleWizardChange('email', e.target.value)} placeholder="contacto@tuinstitucion.com" className={`w-full bg-white border rounded-xl px-4 py-3.5 text-base md:text-sm font-medium focus:outline-none transition-all text-[#1A3D3D] ${errors.email ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-[#2D6A6A]'}`} />
-                  {errors.email && <p className="text-red-500 text-[11px] md:text-[10px] font-bold mt-1.5 flex items-center gap-1"><AlertCircle className="w-3 h-3" />{errors.email}</p>}
-                </div>
-                <div>
-                  <label className="block text-xs md:text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2" htmlFor="password">Contraseña *</label>
-                  <input id="password" type="password" value={courseForm.password} onChange={(e) => handleWizardChange('password', e.target.value)} placeholder="••••••••" className={`w-full bg-white border rounded-xl px-4 py-3.5 text-base md:text-sm font-medium focus:outline-none transition-all text-[#1A3D3D] ${errors.password ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-[#2D6A6A]'}`} />
-                  {errors.password && <p className="text-red-500 text-[11px] md:text-[10px] font-bold mt-1.5 flex items-center gap-1"><AlertCircle className="w-3 h-3" />{errors.password}</p>}
-                </div>
-              </div>
-            </div>
-          )}
-
-        </div>
+          </div>
 
         <div className="bg-gray-50 border-t border-gray-100 p-6 md:px-10 md:py-8 flex items-center justify-between">
           {wizardStep > 1 ? (
@@ -1067,19 +1767,103 @@ export default function Capacitaciones() {
             </button>
           ) : <div></div>}
 
-          {wizardStep < 4 ? (
+          {wizardStep < 3 ? (
             <button onClick={handleNextStep} className="px-8 py-3.5 bg-[#1A3D3D] text-white font-black text-xs md:text-[11px] uppercase tracking-widest hover:bg-[#2D6A6A] rounded-xl transition-all shadow-lg flex items-center gap-2">
               Siguiente <ChevronRight className="w-4 h-4" />
             </button>
           ) : (
             <button onClick={submitWizard} disabled={isSubmitting} className="px-8 py-3.5 bg-[#2D6A6A] text-white font-black text-xs md:text-[11px] uppercase tracking-widest hover:bg-[#1A3D3D] rounded-xl transition-all shadow-lg flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
-              {isSubmitting ? (<><Loader2 className="w-4 h-4 animate-spin" /> Procesando...</>) : (<><ShieldCheck className="w-4 h-4" /> Crear cuenta y Pagar</>)}
+              {isSubmitting ? (<><Loader2 className="w-4 h-4 animate-spin" /> Enviando...</>) : (<><ShieldCheck className="w-4 h-4" /> Enviar para revisión</>)}
             </button>
           )}
         </div>
       </div>
     </section>
   );
+
+  const renderMisCursos = () => {
+    const misCursos = seminarios.length >= 0 ? cursosDeTodosLosEstados.filter(c => c.creadorId === currentUser?.uid) : [];
+
+   const ESTADO_BADGE = {
+      pendiente: { label: 'En revisión', clase: 'bg-yellow-100 text-yellow-700' },
+      aprobado: { label: 'Publicado', clase: 'bg-green-100 text-green-700' },
+      rechazado: { label: 'Necesita ajustes', clase: 'bg-red-100 text-red-600' },
+      archivado: { label: 'Dado de baja', clase: 'bg-gray-100 text-gray-500' },
+    };
+
+    return (
+      <div className="flex flex-col gap-8 animate-in fade-in duration-500 max-w-[900px] mx-auto">
+        <header>
+          <button onClick={() => setView('grid')} className="flex items-center gap-2 text-gray-400 hover:text-[#1A3D3D] font-bold text-[10px] uppercase tracking-[0.3em] mb-4 transition-colors group">
+            <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Volver al Repertorio
+          </button>
+          <h1 className="text-3xl md:text-4xl font-black font-['Montserrat'] text-[#1A3D3D] tracking-tight uppercase leading-none">
+            Mis Cursos
+          </h1>
+          <p className="text-[#2D6A6A] text-[11px] md:text-[10px] font-bold uppercase tracking-[0.2em] mt-1.5">
+            Cursos que publicaste en El Portal ({misCursos.length})
+          </p>
+        </header>
+
+        {misCursos.length === 0 ? (
+          <div className="bg-white rounded-[40px] border border-gray-100 p-16 text-center flex flex-col items-center justify-center shadow-sm">
+            <BookOpen className="w-16 h-16 text-gray-100 mb-6" />
+            <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-2xl mb-4">Todavía no publicaste cursos</h3>
+            <p className="text-gray-500 max-w-sm mx-auto mb-8 font-medium">Compartí tu conocimiento con la comunidad veterinaria.</p>
+            <button onClick={() => setView('propuesta')} className="bg-[#1A3D3D] text-white px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-[#2D6A6A] transition-all shadow-lg">
+              Publicar mi primer curso
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {misCursos.map(curso => {
+              const badge = ESTADO_BADGE[curso.estado] || ESTADO_BADGE.pendiente;
+              return (
+                <div key={curso.id} className="bg-white rounded-[24px] border border-gray-100 shadow-sm p-5 md:p-6 flex flex-col md:flex-row items-start md:items-center gap-5">
+                  <img src={curso.imagen} alt={curso.titulo} className="w-20 h-20 rounded-2xl object-cover shrink-0 border border-gray-100" />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-1.5">
+                      <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[16px] leading-tight">{curso.titulo}</h3>
+                      <span className={`text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-md shrink-0 ${badge.clase}`}>{badge.label}</span>
+                    </div>
+                    <p className="text-[#666666] text-[13px] font-medium">{curso.modalidad} · {curso.duracion}</p>
+                    {curso.estado === 'rechazado' && curso.motivoRechazo && (
+                      <p className="mt-2 text-red-500 text-[12px] font-semibold bg-red-50 px-3 py-1.5 rounded-lg inline-block">
+                        Motivo: {curso.motivoRechazo}
+                      </p>
+                    )}
+                  </div>
+                 <div className="flex gap-2 shrink-0">
+                    {curso.estado !== 'archivado' && (
+                      <button
+                        onClick={() => handleEditarMiCurso(curso)}
+                        className="bg-[#F4F7F7] text-[#1A3D3D] px-5 py-3 rounded-xl font-bold text-[11px] uppercase tracking-widest hover:bg-[#2D6A6A] hover:text-white transition-all"
+                      >
+                        Editar
+                      </button>
+                    )}
+                    {curso.estado !== 'archivado' && (
+                      <button
+                        onClick={() => handleArchivarCurso(curso.id)}
+                        className="bg-red-50 text-red-500 px-5 py-3 rounded-xl font-bold text-[11px] uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all"
+                      >
+                        Dar de baja
+                      </button>
+                    )}
+                    {curso.estado === 'archivado' && (
+                      <span className="px-5 py-3 rounded-xl text-[11px] font-bold uppercase tracking-widest bg-gray-100 text-gray-400">
+                        Dado de baja
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const renderFavoritos = () => {
     // Solo filtramos los cursos acá
@@ -1146,15 +1930,212 @@ export default function Capacitaciones() {
     );
   };
 
+
   return (
+    <>
+    {/* MODAL DE INSCRIPCIÓN */}
+  {inscripcionModal && selectedCourse && (
+    <div className="fixed inset-0 bg-[#1A3D3D]/40 backdrop-blur-md z-[200] flex items-center justify-center p-4">
+      <div className="bg-white rounded-[32px] shadow-2xl w-full max-w-lg overflow-hidden max-h-[90vh] overflow-y-auto">
+        <div className="px-8 pt-8 pb-6 border-b border-gray-100 flex items-center justify-between">
+          <div>
+            <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[18px]">Confirmar inscripción</h3>
+            <p className="text-[#666666] text-[12px] font-medium mt-1">{selectedCourse.titulo}</p>
+          </div>
+          <button onClick={() => setInscripcionModal(false)} className="p-2 rounded-xl text-gray-400 hover:bg-gray-100 transition-colors">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        <div className="px-8 py-6 space-y-5">
+          {currentUser?.rol === 'clinica' && (
+            <div className="bg-[#F4F7F7] rounded-xl p-4 border border-gray-200">
+              <p className="text-[12px] text-[#666666] font-medium">Como institución, completá los datos de la persona que va a cursar.</p>
+            </div>
+          )}
+          <div>
+            <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Nombre completo <span className="text-red-500">*</span></label>
+            <input type="text" value={inscripcionForm.nombre} onChange={(e) => handleCambioInscripcion('nombre', e.target.value)} placeholder="Nombre y apellido" className={`w-full bg-[#F4F7F7] border rounded-2xl px-5 py-4 text-[15px] font-medium focus:outline-none focus:bg-white focus:ring-4 focus:ring-[#2D6A6A]/10 focus:border-[#2D6A6A] transition-all text-[#1A3D3D] ${inscripcionErrors.nombre ? 'border-red-400' : 'border-gray-200'}`} />
+            {inscripcionErrors.nombre && <p className="text-red-500 text-[11px] font-bold mt-1 flex items-center gap-1"><AlertCircle className="w-3 h-3" />{inscripcionErrors.nombre}</p>}
+          </div>
+          <div>
+            <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Email de contacto <span className="text-red-500">*</span></label>
+            <input type="email" value={inscripcionForm.email} onChange={(e) => handleCambioInscripcion('email', e.target.value)} placeholder="tu@email.com" className={`w-full bg-[#F4F7F7] border rounded-2xl px-5 py-4 text-[15px] font-medium focus:outline-none focus:bg-white focus:ring-4 focus:ring-[#2D6A6A]/10 focus:border-[#2D6A6A] transition-all text-[#1A3D3D] ${inscripcionErrors.email ? 'border-red-400' : 'border-gray-200'}`} />
+            {inscripcionErrors.email && <p className="text-red-500 text-[11px] font-bold mt-1 flex items-center gap-1"><AlertCircle className="w-3 h-3" />{inscripcionErrors.email}</p>}
+          </div>
+          {currentUser?.rol === 'clinica' && (
+            <div className="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-3 border border-gray-200">
+              <span className="text-[13px] font-bold text-[#1A3D3D]">¿La persona es veterinaria?</span>
+              <button type="button" onClick={() => handleCambioInscripcion('esVeterinario', !inscripcionForm.esVeterinario)} className={`w-12 h-6 rounded-full transition-all relative ${inscripcionForm.esVeterinario ? 'bg-[#2D6A6A]' : 'bg-gray-300'}`}>
+                <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${inscripcionForm.esVeterinario ? 'left-6' : 'left-0.5'}`} />
+              </button>
+            </div>
+          )}
+          {inscripcionForm.esVeterinario && (
+            <div className="animate-in fade-in duration-200">
+              <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Matrícula profesional <span className="text-red-500">*</span></label>
+             <input type="text" value={inscripcionForm.matricula} onChange={(e) => handleCambioInscripcion('matricula', e.target.value)} placeholder="MP / MN" className={`w-full bg-[#F4F7F7] border rounded-2xl px-5 py-4 text-[15px] font-medium focus:outline-none focus:bg-white focus:ring-4 focus:ring-[#2D6A6A]/10 focus:border-[#2D6A6A] transition-all text-[#1A3D3D] ${inscripcionErrors.matricula ? 'border-red-400' : 'border-gray-200'}`} />
+              {inscripcionErrors.matricula && <p className="text-red-500 text-[11px] font-bold mt-1 flex items-center gap-1"><AlertCircle className="w-3 h-3" />{inscripcionErrors.matricula}</p>}
+            </div>
+          )}
+          <div>
+            <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">
+              Celular {currentUser?.rol === 'clinica' ? <span className="text-red-500">*</span> : <span className="text-gray-400 normal-case tracking-normal font-normal">(opcional)</span>}
+            </label>
+            <input type="tel" value={inscripcionForm.celular} onChange={(e) => handleCambioInscripcion('celular', e.target.value)} placeholder="Ej: 1162477744" className="w-full bg-[#F4F7F7] border border-gray-200 rounded-2xl px-5 py-4 text-[15px] font-medium focus:outline-none focus:bg-white focus:ring-4 focus:ring-[#2D6A6A]/10 focus:border-[#2D6A6A] transition-all text-[#1A3D3D]" />
+          </div>
+          <div className="bg-[#F4F7F7] rounded-xl p-4 border border-gray-100 flex items-center justify-between">
+            <span className="text-[13px] font-bold text-[#666666]">Total a abonar</span>
+            <span className="text-[18px] font-black text-[#1A3D3D]">${Number(selectedCourse.precio).toLocaleString('es-AR')}</span>
+          </div>
+          <p className="text-[11px] text-gray-400 font-medium text-center">Al confirmar, el docente recibirá tus datos para agregarte a la plataforma del curso.</p>
+        </div>
+        <div className="px-8 py-6 border-t border-gray-100 flex gap-3">
+          <button onClick={() => setInscripcionModal(false)} className="flex-1 px-6 py-3 rounded-xl border border-gray-200 text-[#666666] font-bold text-[12px] uppercase tracking-widest hover:bg-gray-50 transition-colors">Cancelar</button>
+          <button onClick={handleConfirmarInscripcion} disabled={inscripcionEnviando} className="flex-1 px-6 py-3 rounded-xl bg-[#2D6A6A] text-white font-black text-[12px] uppercase tracking-widest hover:bg-[#1A3D3D] transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+            {inscripcionEnviando ? <><Loader2 className="w-4 h-4 animate-spin" /> Procesando...</> : 'Confirmar inscripción'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )}
+
+  {/* MODAL EDITOR DE IMAGEN */}
+  { imagenEditorModal && (
+    <div className="fixed inset-0 bg-[#1A3D3D]/80 backdrop-blur-sm z-[200] flex items-center justify-center p-4">
+      <div className="bg-white rounded-[32px] shadow-2xl w-full max-w-xl overflow-hidden">
+        <div className="p-6 border-b border-gray-100">
+          <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[18px]">Ajustá la imagen de portada</h3>
+          <p className="text-[#666666] text-[13px] font-medium mt-1">Usá el zoom y arrastrá para encuadrar como querés.</p>
+        </div>
+
+        <div className="p-6 flex flex-col items-center gap-5">
+          {/* Canvas editor */}
+          <div
+            className="relative overflow-hidden rounded-2xl border-2 border-[#2D6A6A]/30 cursor-grab active:cursor-grabbing"
+            style={{ width: '100%', aspectRatio: '16/9' }}
+            onMouseDown={(e) => {
+              setImagenEditorDragging(true);
+              setImagenEditorDragStart({ x: e.clientX - imagenEditorPos.x, y: e.clientY - imagenEditorPos.y });
+            }}
+            onMouseMove={(e) => {
+              if (!imagenEditorDragging) return;
+              setImagenEditorPos({ x: e.clientX - imagenEditorDragStart.x, y: e.clientY - imagenEditorDragStart.y });
+            }}
+            onMouseUp={() => setImagenEditorDragging(false)}
+            onMouseLeave={() => setImagenEditorDragging(false)}
+          >
+            <canvas
+              ref={canvasEditorRef}
+              width={800}
+              height={450}
+              className="w-full h-full"
+            />
+          </div>
+
+          {/* Control de zoom */}
+          <div className="w-full flex items-center gap-4">
+            <span className="text-[12px] font-bold text-[#666666] uppercase tracking-widest">Zoom</span>
+            <input
+              type="range"
+             min="1"
+              max="3"
+              step="0.05"
+              value={imagenEditorZoom}
+              onChange={(e) => setImagenEditorZoom(Number(e.target.value))}
+              className="flex-1 accent-[#2D6A6A]"
+            />
+            <span className="text-[13px] font-black text-[#1A3D3D] w-10 text-right">{Math.round(imagenEditorZoom * 100)}%</span>
+          </div>
+        </div>
+
+        <div className="p-6 border-t border-gray-100 flex gap-3 justify-end">
+          <button
+            onClick={() => { setImagenEditorModal(false); setImagenParaEditar(null); }}
+            className="px-6 py-3 rounded-xl border border-gray-200 text-[#666666] font-bold text-[12px] uppercase tracking-widest hover:bg-gray-50 transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={handleConfirmarEditorImagen}
+            className="px-6 py-3 rounded-xl bg-[#2D6A6A] text-white font-black text-[12px] uppercase tracking-widest hover:bg-[#1A3D3D] transition-colors"
+          >
+            Confirmar y subir
+          </button>
+        </div>
+      </div>
+    </div>
+  )}
     <div className="bg-[#F4F7F7] min-h-screen font-['Inter'] antialiased relative">
       <main id="main-content" className="relative z-10 w-full max-w-[1440px] mx-auto px-6 md:px-12 lg:px-24 pt-5 pb-10 md:pt-9 md:pb-16 flex-grow">
         {view === 'grid' ? renderGrid() : 
          view === 'detail' ? renderDetail() : 
          view === 'wizard' ? renderCourseWizard() : 
          view === 'propuesta' ? renderPropuesta() : 
-         view === 'favoritos' ? renderFavoritos() : null}
+         view === 'favoritos' ? renderFavoritos() :
+         view === 'miscursos' ? renderMisCursos() :
+         view === 'inscripcion-confirmada' ? (
+           <div className="max-w-lg mx-auto text-center py-12 animate-in fade-in duration-500">
+             <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6">
+               <CheckCircle className="w-10 h-10 text-green-500" />
+             </div>
+             <h2 className="text-2xl font-black text-[#1A3D3D] font-['Montserrat'] mb-3">¡Inscripción confirmada!</h2>
+             <p className="text-[#666666] text-[15px] font-medium mb-6 leading-relaxed">
+               Te enviamos un mail de confirmación. El docente recibirá tus datos y te contactará para sumarte a la plataforma del curso.
+             </p>
+             {selectedCourse && (
+               <div className="bg-white rounded-2xl p-5 mb-6 text-left border border-gray-200 space-y-3">
+                 <p className="text-[13px] font-black text-[#1A3D3D]">{selectedCourse.titulo}</p>
+                 <p className="text-[13px] text-[#666666] font-medium">{selectedCourse.modalidad} · {selectedCourse.duracion}</p>
+                 {selectedCourse.email && (
+                   <p className="text-[13px] text-[#666666] font-medium flex items-center gap-2">
+                     <Mail className="w-4 h-4 text-[#2D6A6A]" />
+                     Contacto del docente: <span className="text-[#2D6A6A] font-bold">{selectedCourse.email}</span>
+                   </p>
+                 )}
+                 {selectedCourse.linkExterno && (
+                   <a href={selectedCourse.linkExterno} target="_blank" rel="noreferrer" className="text-[13px] text-[#2D6A6A] font-bold flex items-center gap-2 hover:underline">
+                     <BookOpen className="w-4 h-4" /> Acceder al curso →
+                   </a>
+                 )}
+               </div>
+             )}
+             <button onClick={() => { setView('grid'); setSelectedCourse(null); window.scrollTo(0, 0); }} className="bg-[#1A3D3D] text-white px-8 py-4 rounded-2xl font-bold text-sm hover:bg-[#2D6A6A] transition-all shadow-md">
+               Volver a capacitaciones
+             </button>
+           </div>
+         ) :
+         view === 'confirmacion' ? (
+           <div className="max-w-lg mx-auto text-center py-8 animate-in fade-in duration-500">
+             <div className="w-20 h-20 bg-[#2D6A6A]/10 rounded-full flex items-center justify-center mx-auto mb-6">
+               <ShieldCheck className="w-10 h-10 text-[#2D6A6A]" />
+             </div>
+             <h2 className="text-2xl font-black text-[#1A3D3D] font-['Montserrat'] mb-3">¡Tu curso fue enviado para revisión!</h2>
+             <p className="text-[#666666] text-[15px] font-medium mb-6 leading-relaxed">
+               Nuestro equipo revisará tu propuesta y te contactaremos para confirmar la publicación o informarte si hay algún ajuste necesario.
+             </p>
+             <div className="bg-[#F4F7F7] rounded-2xl p-5 mb-8 text-left border border-gray-200">
+               <p className="text-[13px] font-bold text-[#1A3D3D] mb-1">¿Qué pasa ahora?</p>
+               <ul className="space-y-2 mt-3">
+                 <li className="flex items-start gap-2 text-[13px] text-[#666666] font-medium"><Check className="w-4 h-4 text-[#2D6A6A] shrink-0 mt-0.5" /> Revisamos tu curso en menos de 48hs hábiles</li>
+                 <li className="flex items-start gap-2 text-[13px] text-[#666666] font-medium"><Check className="w-4 h-4 text-[#2D6A6A] shrink-0 mt-0.5" /> Te enviamos un mail con la confirmación o los ajustes necesarios</li>
+                 <li className="flex items-start gap-2 text-[13px] text-[#666666] font-medium"><Check className="w-4 h-4 text-[#2D6A6A] shrink-0 mt-0.5" /> Una vez aprobado, aparece en la cartilla de capacitaciones</li>
+               </ul>
+             </div>
+             <button onClick={() => { setView('grid'); setWizardStep(1); setCourseForm({ titulo: '', modalidad: 'Online', precio: '', nivel: 'Principiante', duracion: '', descripcion: '', incluye: [''], docentes: [{ nombre: '', bio: '', linkMas: '' }], email: '', password: '', fotoDocente: null, imagenUrl: '', formatoDuracion: '' }); }} className="bg-[#1A3D3D] text-white px-8 py-4 rounded-2xl font-bold text-sm hover:bg-[#2D6A6A] transition-all shadow-md">
+               Volver a capacitaciones
+             </button>
+           </div>
+         ) : null}
       </main>
     </div>
+   {mostrarTourCaps && view === 'grid' && (
+  <TourGuia
+    pasos={PASOS_CAPS}
+    userId={currentUser?.uid}
+    claveStorage="capacitaciones"
+    onFin={() => setMostrarTourCaps(false)}
+  />
+)}
+    </>
   );
 }
