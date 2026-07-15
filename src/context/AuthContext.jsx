@@ -51,7 +51,7 @@ export function AuthProvider({ children }) {
   return (
     // 👇 Agregamos logout para que Ecosistema.jsx pueda usarlo
     <AuthContext.Provider value={{ currentUser, loading, logout }}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 }

@@ -1,17 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, ChevronRight } from 'lucide-react';
+import { X, ChevronRight, ChevronLeft } from 'lucide-react';
 import { db } from '../firebase';
 import { doc, updateDoc } from 'firebase/firestore';
 
-// Selector por defecto para encontrar la Navbar y medir su altura real.
-// Si tu Navbar.jsx NO usa la etiqueta <nav> como contenedor principal,
-// pasale el prop navbarSelector="#tu-id-o-clase" al usar <TourGuia />.
 const NAVBAR_SELECTOR_DEFAULT = 'nav';
 
-// Arma la forma del "agujero" redondeado en el fondo oscuro, como un molde de
-// cortar galletitas: recorta un rectángulo con esquinas curvas del tamaño de
-// la tarjeta resaltada, dejando esa zona visible y clickeable, y todo lo
-// demás tapado con el fondo oscuro.
 function construirFormaConAgujero(rect, pad, radio) {
   const W = window.innerWidth;
   const H = window.innerHeight;
@@ -33,21 +26,12 @@ export default function TourGuia({ pasos, userId, claveStorage, onFin, onPaso, n
   const [navbarHeight, setNavbarHeight] = useState(72);
   const [visible, setVisible] = useState(false);
   const tooltipRef = useRef(null);
-  // Guardamos la altura de la Navbar también en una "cajita" que no genera
-  // re-renders (useRef), para poder leerla desde las funciones sin que eso
-  // obligue a reiniciar todo el proceso de búsqueda del elemento cada vez
-  // que se mide la Navbar (antes esto hacía que el tour se cortara a mitad
-  // de camino y la cajita del tip nunca terminara de aparecer).
   const navbarHeightRef = useRef(72);
-  // Bandera para saber si el paso actual sigue "vigente" o ya se abandonó
-  // (porque el usuario avanzó de paso o cerró el tour). Sirve para que
-  // ningún timer atrasado pise el estado por error.
+
   const vigenteRef = useRef(true);
 
   const paso = pasos[pasoActual];
 
-  // Detecta la altura real de la Navbar (distinta en mobile vs PC)
-  // y se vuelve a medir cada vez que cambia el tamaño de la ventana.
   useEffect(() => {
     const detectarNavbar = () => {
       const nav = document.querySelector(navbarSelector);
@@ -62,9 +46,6 @@ export default function TourGuia({ pasos, userId, claveStorage, onFin, onPaso, n
     return () => window.removeEventListener('resize', detectarNavbar);
   }, [navbarSelector]);
 
-  // Esta función SOLO mide dónde está el elemento y ubica el cartelito.
-  // Nunca mueve la página. Es segura para llamarla todo el tiempo,
-  // incluso mientras el usuario scrollea con la mano.
   const reposicionar = () => {
     if (!vigenteRef.current) return;
 
@@ -87,22 +68,47 @@ export default function TourGuia({ pasos, userId, claveStorage, onFin, onPaso, n
     const tooltipW = Math.min(280, window.innerWidth - margen * 2);
     const tooltipH = tooltipRef.current?.offsetHeight || 180;
 
-    let left = rect.left + rect.width / 2 - tooltipW / 2;
-    left = Math.max(margen, Math.min(left, window.innerWidth - tooltipW - margen));
+    const posicionForzada = paso.posicion || 'auto';
+    const hayEspacioArriba = rect.top - tooltipH - 24 >= navbarActual + margen;
 
-    // Siempre arriba del elemento, con un margen generoso de 24px
-    // para que el tooltip no tape el borde superior de la caja resaltada.
-    // El Math.max garantiza que nunca se suba por encima de la Navbar.
-    const top = Math.max(navbarActual + margen, rect.top - tooltipH - 24);
-    const triangulo = 'abajo';
+    let top, left, triangulo;
+
+    if (posicionForzada === 'derecha') {
+      left = rect.right + 16;
+      if (left + tooltipW > window.innerWidth - margen) {
+        left = rect.left - tooltipW - 16;
+        triangulo = 'derecha';
+      } else {
+        triangulo = 'izquierda';
+      }
+      top = rect.top + rect.height / 2 - tooltipH / 2;
+      top = Math.max(navbarActual + margen, Math.min(top, window.innerHeight - tooltipH - margen));
+    } else if (posicionForzada === 'izquierda') {
+      left = rect.left - tooltipW - 16;
+      triangulo = 'derecha';
+      top = rect.top + rect.height / 2 - tooltipH / 2;
+      top = Math.max(navbarActual + margen, Math.min(top, window.innerHeight - tooltipH - margen));
+    } else if (posicionForzada === 'abajo') {
+      left = rect.left + rect.width / 2 - tooltipW / 2;
+      left = Math.max(margen, Math.min(left, window.innerWidth - tooltipW - margen));
+      top = rect.bottom + 16;
+      triangulo = 'arriba';
+    } else if (posicionForzada === 'arriba') {
+      left = rect.left + rect.width / 2 - tooltipW / 2;
+      left = Math.max(margen, Math.min(left, window.innerWidth - tooltipW - margen));
+      top = rect.top - tooltipH - 24;
+      triangulo = 'abajo';
+    } else {
+      left = rect.left + rect.width / 2 - tooltipW / 2;
+      left = Math.max(margen, Math.min(left, window.innerWidth - tooltipW - margen));
+      top = hayEspacioArriba ? rect.top - tooltipH - 24 : rect.bottom + 16;
+      triangulo = hayEspacioArriba ? 'abajo' : 'arriba';
+    }
 
     setTooltipPos({ top, left, triangulo, width: tooltipW });
     setVisible(true);
   };
 
-  // Esta función SÍ puede mover la página, pero se usa una sola vez:
-  // justo al abrir cada paso, para destapar el elemento si está
-  // escondido detrás de la Navbar. Después llama a reposicionar().
   const ajustarScrollYPosicionar = () => {
     if (!vigenteRef.current) return;
 
@@ -115,10 +121,6 @@ export default function TourGuia({ pasos, userId, claveStorage, onFin, onPaso, n
     const tooltipH = tooltipRef.current?.offsetHeight || 180;
     const pad = 10;
 
-    // Necesitamos que arriba del elemento haya lugar suficiente para el tooltip,
-    // Y que abajo del elemento la caja sea visible completa en pantalla.
-    // 24px de margen extra (igual que en reposicionar) para que el tooltip
-    // no quede pegado ni tape el borde superior de la caja resaltada.
     const espacioNecesarioArriba = navbarActual + margen + tooltipH + 24;
     const espacioNecesarioAbajo = window.innerHeight - margen;
 
@@ -126,26 +128,18 @@ export default function TourGuia({ pasos, userId, claveStorage, onFin, onPaso, n
     let scrollDelta = 0;
 
     if (rect.top < espacioNecesarioArriba) {
-      // Scrolleamos hacia abajo lo necesario para que el tooltip entre
-      // cómodo arriba sin tapar la caja. El factor 0.5 agrega medio alto
-      // de la caja como margen extra de aire visual.
-      scrollDelta = rect.top - espacioNecesarioArriba - rect.height * 0.5;
+     scrollDelta = rect.top - espacioNecesarioArriba - rect.height * 0.5;
       necesitaScroll = true;
     } else if (rect.bottom + pad > espacioNecesarioAbajo) {
-      // La caja está muy abajo y se corta: subimos la página para verla completa
+
       scrollDelta = rect.bottom + pad - espacioNecesarioAbajo;
       necesitaScroll = true;
     }
 
     if (necesitaScroll) {
-      // Desactivamos el listener de scroll manualmente antes de hacer el scroll
-      // programático, para que no interfiera con nuestro propio reposicionamiento.
       vigenteRef.current = false;
       window.scrollBy({ top: scrollDelta, behavior: 'instant' });
 
-      // Esperamos 3 frames: el primero aplica el scroll, el segundo recalcula
-      // el layout, el tercero asegura que elementos con altura variable
-      // (como NotificationBox) ya terminaron de pintarse con su tamaño real.
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
@@ -160,9 +154,6 @@ export default function TourGuia({ pasos, userId, claveStorage, onFin, onPaso, n
     reposicionar();
   };
 
-  // Busca el elemento del paso actual. Si todavía no existe en el DOM
-  // (por ejemplo, está esperando datos de Firebase, o no existe en esa vista),
-  // reintenta cada 300ms durante ~4.5s. Si nunca aparece, salta el paso solo.
   useEffect(() => {
     if (!paso?.targetId) return;
 
@@ -356,6 +347,26 @@ const rectSeguro = targetRect ? (() => {
             borderBottom: '9px solid white',
           }} />
         )}
+        {/* Triangulito izquierda (apunta hacia el elemento que está a la izquierda) */}
+        {tooltipPos.triangulo === 'izquierda' && (
+          <div className="absolute top-1/2 -translate-y-1/2" style={{
+            left: -9,
+            width: 0, height: 0,
+            borderTop: '9px solid transparent',
+            borderBottom: '9px solid transparent',
+            borderRight: '9px solid white',
+          }} />
+        )}
+        {/* Triangulito derecha (apunta hacia el elemento que está a la derecha) */}
+        {tooltipPos.triangulo === 'derecha' && (
+          <div className="absolute top-1/2 -translate-y-1/2" style={{
+            right: -9,
+            width: 0, height: 0,
+            borderTop: '9px solid transparent',
+            borderBottom: '9px solid transparent',
+            borderLeft: '9px solid white',
+          }} />
+        )}
 
         {/* Indicador de pasos */}
         <div className="flex items-center justify-between mb-3">
@@ -375,18 +386,36 @@ const rectSeguro = targetRect ? (() => {
         <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[15px] mb-2 leading-tight">
           {paso.titulo}
         </h3>
-        <p className="text-[13px] text-[#666666] font-medium leading-relaxed mb-4">
-          {paso.desc}
-        </p>
+        <p
+          className="text-[14px] text-[#666666] leading-relaxed mb-4 tour-desc"
+          dangerouslySetInnerHTML={{ __html: paso.desc }}
+        />
+        <style>{`
+          .tour-desc { font-weight: 500; }
+          .tour-desc strong { font-weight: 900; color: #1a3d3d; }
+        `}</style>
 
-      <div className="flex items-center justify-between">
-          {/* En mobile no tiene sentido mostrar "Enter para avanzar" */}
-          <span className="hidden md:flex text-[11px] text-gray-400 font-medium items-center gap-1">
-            <kbd className="bg-gray-100 px-1.5 py-0.5 rounded-md text-[10px] font-bold text-gray-500">Enter</kbd> para avanzar
-          </span>
+      <div className="flex items-center justify-between gap-2">
+          {/* Botón retroceder */}
+          <button
+            onClick={() => {
+              setVisible(false);
+              setTimeout(() => setPasoActual(p => p - 1), 180);
+            }}
+            disabled={pasoActual === 0}
+            className={`flex items-center gap-1 text-[11px] font-black uppercase tracking-widest px-3 py-2 rounded-xl transition-all duration-200 ${
+              pasoActual === 0
+                ? 'text-gray-300 cursor-not-allowed'
+                : 'text-[#2D6A6A] hover:bg-[#2D6A6A]/10'
+            }`}
+          >
+            <ChevronLeft className="w-3.5 h-3.5" /> Anterior
+          </button>
+
+          {/* Botón avanzar */}
           <button
             onClick={avanzar}
-            className="flex items-center gap-1.5 bg-[#1A3D3D] text-white text-[11px] font-black uppercase tracking-widest px-4 py-2 rounded-xl hover:bg-[#2D6A6A] transition-colors ml-auto"
+            className="flex items-center gap-1.5 bg-[#1A3D3D] text-white text-[11px] font-black uppercase tracking-widest px-4 py-2 rounded-xl hover:bg-[#2D6A6A] transition-colors"
           >
             {pasoActual < pasos.length - 1
               ? <><ChevronRight className="w-3.5 h-3.5" /> Siguiente</>

@@ -37,7 +37,7 @@ import Validaciones from './pages/admin/Validaciones';
 import GestionBolsa from './pages/admin/GestionBolsa';
 import GestionCapacitaciones from './pages/admin/GestionCapacitaciones';
 import Configuracion from './pages/admin/Configuracion';
-
+import Feedback from './pages/admin/Feedback';
 // ==========================================
 // COMPONENTE: SCROLL TO TOP
 // ==========================================
@@ -154,6 +154,7 @@ export default function App() {
         `}} />
 
         <ScrollToTop />
+        <AccessibilityWidget />
 
         <Routes>
           {/* ========================================================= */}
@@ -206,6 +207,7 @@ export default function App() {
             </RutaProtegidaAdmin>
           }>
             <Route index element={<DashboardAdmin />} />
+            <Route path="feedback" element={<Feedback />} />
             <Route path="validaciones" element={<Validaciones />} />
             <Route path="usuarios" element={<GestionUsuarios />} />
             <Route path="bolsa" element={<GestionBolsa />} />
@@ -217,8 +219,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
 
-        <AccessibilityWidget />
-      </div>
+        </div>
     </AuthProvider>
   );
 }

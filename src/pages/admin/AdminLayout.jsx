@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { getAuth, signOut } from 'firebase/auth';
 import { 
   LayoutDashboard, Users, CheckSquare, Briefcase, 
-  Settings, LogOut, Menu, X, ShieldAlert, BookOpen
+  Settings, LogOut, Menu, X, ShieldAlert, BookOpen, MessageCircle
 } from 'lucide-react';
 
 export default function AdminLayout() {
@@ -24,11 +24,12 @@ export default function AdminLayout() {
   // Lista de rutas del panel
   const menuItems = [
     { path: '/admin', icon: <LayoutDashboard className="w-5 h-5" />, label: 'Dashboard', exact: true },
+    { path: '/admin/feedback', icon: <MessageCircle className="w-5 h-5" />, label: 'Comentarios' },
     { path: '/admin/validaciones', icon: <CheckSquare className="w-5 h-5" />, label: 'Validaciones' },
     { path: '/admin/usuarios', icon: <Users className="w-5 h-5" />, label: 'Gestión Usuarios' },
     { path: '/admin/bolsa', icon: <Briefcase className="w-5 h-5" />, label: 'Bolsa de Trabajo' },
-{ path: '/admin/capacitaciones', icon: <BookOpen className="w-5 h-5" />, label: 'Capacitaciones' },
-    { path: '/admin/configuracion', icon: <Settings className="w-5 h-5" />, label: 'Configuración' },
+    { path: '/admin/capacitaciones', icon: <BookOpen className="w-5 h-5" />, label: 'Capacitaciones' },
+      { path: '/admin/configuracion', icon: <Settings className="w-5 h-5" />, label: 'Configuración' },
   ];
 
   const handleLogout = async () => {

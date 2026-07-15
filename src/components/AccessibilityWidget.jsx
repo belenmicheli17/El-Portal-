@@ -1,15 +1,23 @@
 import React, { useEffect, useState, useRef } from 'react';
 import {
   X, PersonStanding, ZoomIn, ZoomOut, Palette, Type, RotateCcw, 
-  ExternalLink, ZapOff, MinusSquare
+  ExternalLink, ZapOff, MinusSquare, MessageCircle, Send, Loader2
 } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { db } from '../firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 const FONT_SIZES = ['normal', 'grande'];
 
 export default function AccessibilityWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [readingGuideY, setReadingGuideY] = useState(0);
-  const widgetRef = useRef(null); 
+  const widgetRef = useRef(null);
+  const { currentUser } = useAuth();
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [feedbackTexto, setFeedbackTexto] = useState('');
+  const [feedbackEnviando, setFeedbackEnviando] = useState(false);
+  const [feedbackEnviado, setFeedbackEnviado] = useState(false); 
   
   const [hasCookiesBanner, setHasCookiesBanner] = useState(() => !localStorage.getItem('cookieConsent'));
   const [settings, setSettings] = useState(() => {
@@ -86,6 +94,33 @@ export default function AccessibilityWidget() {
       return;
     }
     setIsOpen(!isOpen);
+    setFeedbackOpen(false);
+  };
+
+  const handleFeedbackToggle = () => {
+    setFeedbackOpen(f => !f);
+    setIsOpen(false);
+    setFeedbackEnviado(false);
+  };
+
+  const handleEnviarFeedback = async () => {
+    if (!feedbackTexto.trim() || feedbackEnviando) return;
+    setFeedbackEnviando(true);
+    try {
+      await addDoc(collection(db, 'comentarios'), {
+        texto: feedbackTexto.trim(),
+        usuarioId: currentUser.uid,
+        usuarioNombre: currentUser.nombre || '',
+        usuarioEmail: currentUser.email || '',
+        usuarioRol: currentUser.rol || '',
+        creadoEn: serverTimestamp(),
+      });
+      setFeedbackTexto('');
+      setFeedbackEnviado(true);
+    } catch (e) {
+      console.error('Error enviando feedback:', e);
+    }
+    setFeedbackEnviando(false);
   };
 
   useEffect(() => {
@@ -96,6 +131,20 @@ export default function AccessibilityWidget() {
     };
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  useEffect(() => {
+    const abrirFeedback = () => { setFeedbackOpen(true); setIsOpen(false); };
+    const cerrarFeedback = () => { setFeedbackOpen(false); };
+    const abrirAccs = () => { setIsOpen(true); setFeedbackOpen(false); };
+    window.addEventListener('tour:abrirFeedback', abrirFeedback);
+    window.addEventListener('tour:cerrarFeedback', cerrarFeedback);
+    window.addEventListener('tour:abrirAccs', abrirAccs);
+    return () => {
+      window.removeEventListener('tour:abrirFeedback', abrirFeedback);
+      window.removeEventListener('tour:cerrarFeedback', cerrarFeedback);
+      window.removeEventListener('tour:abrirAccs', abrirAccs);
+    };
   }, []);
 
   useEffect(() => {
@@ -262,19 +311,80 @@ export default function AccessibilityWidget() {
           </div>
         )}
 
-        <button 
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          onPointerCancel={handlePointerUp}
-          onClick={handleToggle}
-          style={{ touchAction: 'none' }} 
-          className={`w-12 h-12 md:w-14 md:h-14 rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 ease-in-out text-white hover:scale-110 active:scale-95 cursor-grab active:cursor-grabbing
-            ${isOpen ? 'bg-red-500 rotate-90' : 'bg-[#1A3D3D]'}
-          `}
-        >
-          {isOpen ? <X /> : <PersonStanding size={28} />}
-        </button>
+        <div className="flex flex-col items-center gap-2">
+          {currentUser && (
+            <div className="relative">
+              {feedbackOpen && (
+                <div
+                  className={`absolute w-[calc(100vw-40px)] md:w-80 bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] border border-gray-100 p-5 animate-in fade-in duration-300
+                    bottom-[calc(100%+12px)] left-0
+                  `}
+                >
+                  <div className="flex justify-between items-center mb-3 pb-2 border-b border-gray-100">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Comentario beta</p>
+                    <button onClick={() => setFeedbackOpen(false)} className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-lg hover:bg-gray-100">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                  {feedbackEnviado ? (
+                    <div className="py-4 text-center">
+                      <p className="text-[#2D6A6A] font-black text-[15px] font-['Montserrat'] mb-1">¡Gracias!</p>
+                      <p className="text-[#666666] text-[13px] font-medium">Tu comentario nos ayuda a mejorar la plataforma.</p>
+                      <button onClick={() => { setFeedbackEnviado(false); setFeedbackOpen(false); }} className="mt-4 text-[11px] font-bold text-[#2D6A6A] hover:text-[#1A3D3D] uppercase tracking-widest transition-colors">
+                        Cerrar
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <p className="text-[13px] font-medium text-[#666666] mb-3 leading-relaxed">
+                        ¿Algo que no queda claro o que mejorarías? Contanos, estamos en fase beta y tu opinión cuenta.
+                      </p>
+                      <textarea
+                        value={feedbackTexto}
+                        onChange={e => setFeedbackTexto(e.target.value)}
+                        placeholder="Escribí acá tu comentario..."
+                        rows={3}
+                        className="w-full bg-[#F4F7F7] rounded-xl px-4 py-3 text-[13px] font-medium text-[#333333] placeholder-gray-400 resize-none focus:outline-none focus:bg-white focus:ring-4 focus:ring-[#FF9800]/20 focus:border-[#FF9800] border border-transparent transition-all duration-300"
+                        style={{ minHeight: '80px', fieldSizing: 'content' }}
+                      />
+                      <button
+                        onClick={handleEnviarFeedback}
+                        disabled={!feedbackTexto.trim() || feedbackEnviando}
+                        className="mt-3 w-full bg-[#FF9800] hover:bg-[#e68900] disabled:opacity-40 disabled:cursor-not-allowed text-white font-black text-[12px] uppercase tracking-widest py-3 rounded-xl flex items-center justify-center gap-2 transition-all duration-300"
+                      >
+                        {feedbackEnviando ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                        {feedbackEnviando ? 'Enviando...' : 'Enviar comentario'}
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
+              <button
+                id="tour-btn-feedback"
+                onClick={handleFeedbackToggle}
+                className={`w-12 h-12 md:w-14 md:h-14 rounded-full shadow-xl flex items-center justify-center transition-all duration-300 ease-in-out text-white hover:scale-110 active:scale-95
+                  ${feedbackOpen ? 'bg-[#e68900] rotate-90' : 'bg-[#FF9800]'}
+                `}
+              >
+                {feedbackOpen ? <X /> : <MessageCircle size={24} />}
+              </button>
+            </div>
+          )}
+
+          <button 
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerCancel={handlePointerUp}
+            onClick={handleToggle}
+            style={{ touchAction: 'none' }} 
+            className={`w-12 h-12 md:w-14 md:h-14 rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 ease-in-out text-white hover:scale-110 active:scale-95 cursor-grab active:cursor-grabbing
+              ${isOpen ? 'bg-red-500 rotate-90' : 'bg-[#1A3D3D]'}
+            `}
+          >
+            {isOpen ? <X /> : <PersonStanding size={28} />}
+          </button>
+        </div>
       </div>
     </>
   );

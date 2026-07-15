@@ -15,7 +15,9 @@ import BarraFiltros from '../components/BarraFiltros';
 import TourGuia from '../components/TourGuia';
 // === IMPORTACIONES DE FIREBASE Y AUTH ===
 import { db } from '../firebase'; 
-import { collection, getDocs, addDoc, serverTimestamp, doc, updateDoc, query, orderBy, limit, Timestamp } from 'firebase/firestore';
+import { collection, getDocs, getDoc, addDoc, serverTimestamp, doc, updateDoc, query, orderBy, limit, Timestamp } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { storage } from '../firebase'; // IMPORTANTE: Asegurate de exportar 'storage' desde tu firebase.js
 import imageCompression from 'browser-image-compression'; // Para el paso 4
 import { useAuth } from '../context/AuthContext'; 
 
@@ -29,22 +31,13 @@ export default function BolsaTrabajo() {
   const userRole = currentUser?.rol || 'visitante';
   const [roleAlert, setRoleAlert] = useState(null);
   const [mostrarTourBolsa, setMostrarTourBolsa] = useState(false);
+  const [tourBolsaContador, setTourBolsaContador] = useState(0);
 
-  useEffect(() => {
-    if (currentUser && !currentUser.tourVisto?.bolsa && view === 'list') {
-      setTimeout(() => setMostrarTourBolsa(true), 800);
-    }
-  }, [currentUser, view]);
 
-  const PASOS_BOLSA_CLINICA = [
-    { targetId: 'tour-publicar-oferta', titulo: 'Publicá una búsqueda', desc: 'Creá ofertas laborales para encontrar al especialista que necesita tu clínica. Es gratis y dura 30 días.' },
-    { targetId: 'tour-ofertas', titulo: 'Ofertas activas', desc: 'Acá ves todas las búsquedas publicadas por otras instituciones de la red.' },
-  ];
-
-  const PASOS_BOLSA_PROF = [
-    { targetId: 'tour-disponible', titulo: 'Marcate como disponible', desc: 'Publicá tu perfil de disponibilidad para que las clínicas te encuentren. Dura 30 días y podés renovarlo.' },
-    { targetId: 'tour-ofertas', titulo: 'Ofertas de trabajo', desc: 'Explorá las búsquedas activas de clínicas de toda la red.' },
-    { targetId: 'tour-publicar-oferta', titulo: 'Publicar oferta', desc: 'Si representás una institución, también podés publicar búsquedas de personal desde acá.' },
+  const PASOS_BOLSA = [
+    { targetId: 'tour-publicar-oferta', titulo: '📢 Publicá una oferta', desc: 'Creá ofertas laborales para encontrar al especialista que necesita tu clínica. Es gratis y dura 30 días. Podés renovarla desde "Mi Historial".', posicion: 'arriba' },
+    { targetId: 'tour-disponible', titulo: '🟢 Marcate como disponible', desc: 'Activá tu disponibilidad para que las clínicas sepan que estás en búsqueda activa. Dura 30 días y podés renovarla desde "Mi Historial".', posicion: 'arriba' },
+    { targetId: 'tour-ofertas-header', titulo: '🗂️ Explorá las ofertas', desc: 'Acá encontrás todas las búsquedas activas. Filtrá por especialidad, provincia o modalidad para encontrar la que mejor se adapte a vos.', posicion: 'arriba' },
   ];
   const [successModal, setSuccessModal] = useState({ show: false, title: '', message: '' });
 
@@ -53,6 +46,25 @@ export default function BolsaTrabajo() {
   const [searchParams, setSearchParams] = useSearchParams();
   const view = searchParams.get('v') || 'list';
   const [scrollPos, setScrollPos] = useState(0);
+
+ useEffect(() => {
+    if (!currentUser || view !== 'list') return;
+
+    const fetchContador = async () => {
+      try {
+        const snap = await getDoc(doc(db, 'usuarios', currentUser.uid));
+        const contador = snap.data()?.tourVisto?.bolsaContador || 0;
+        setTourBolsaContador(contador);
+        if (contador < 2) {
+          setTimeout(() => setMostrarTourBolsa(true), 800);
+        }
+      } catch (e) {
+        console.error('Error leyendo contador del tour:', e);
+      }
+    };
+
+    fetchContador();
+  }, [currentUser, view]);
 
   // Estados para datos de Firebase
   const [ofertas, setOfertas] = useState([]);
@@ -323,7 +335,9 @@ const toggleFiltro = (categoria, valor) => {
     try {
       let logoUrlFinal = "";
       if (jobForm.logoFile) {
-        logoUrlFinal = URL.createObjectURL(jobForm.logoFile);
+        const fileRef = ref(storage, `bolsa/logos/${Date.now()}_${jobForm.logoFile.name}`);
+        await uploadBytes(fileRef, jobForm.logoFile);
+        logoUrlFinal = await getDownloadURL(fileRef);
       } else {
         logoUrlFinal = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(jobForm.clinica)}&backgroundColor=1A3D3D`;
       }
@@ -415,7 +429,9 @@ const toggleFiltro = (categoria, valor) => {
     try {
       let avatarUrlFinal = currentUser?.photoURL || "";
       if (profForm.avatarFile) {
-        avatarUrlFinal = URL.createObjectURL(profForm.avatarFile);
+        const fileRef = ref(storage, `bolsa/avatars/${Date.now()}_${profForm.avatarFile.name}`);
+        await uploadBytes(fileRef, profForm.avatarFile);
+        avatarUrlFinal = await getDownloadURL(fileRef);
       } else if (!avatarUrlFinal) {
         avatarUrlFinal = `https://ui-avatars.com/api/?name=${encodeURIComponent(profForm.nombre)}&background=F4F7F7&color=1A3D3D`;
       }
@@ -739,10 +755,11 @@ const toggleFiltro = (categoria, valor) => {
         </div>
       ) : (
        <div className={`grid gap-8 lg:gap-10 mt-10 px-6 md:px-12 lg:px-24 xl:px-32 relative z-10 ${searchTarget === 'ambos' ? 'grid-cols-1 xl:grid-cols-2' : 'grid-cols-1 max-w-4xl mx-auto w-full'}`}>
+         <div id="tour-ofertas-header" className="absolute top-0 left-6 right-6 md:left-12 md:right-12 lg:left-24 lg:right-24 xl:left-32 xl:right-32 pointer-events-none" style={{ height: '250px' }} />
          
          {/* Columna Izquierda: Instituciones Buscando */}
          {(searchTarget === 'ambos' || searchTarget === 'ofertas') && (
-           <section id="tour-ofertas" className="flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-4">
+           <section className="flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-4">
              <div className="flex items-center justify-between border-b border-gray-200 pb-3">
                <h2 className="font-['Montserrat'] font-bold text-[#1A3D3D] text-[14px] uppercase tracking-widest flex items-center gap-2">
                   <Building className="w-5 h-5 text-[#2D6A6A] hidden sm:block" /> Ofertas de Clínicas
@@ -750,7 +767,7 @@ const toggleFiltro = (categoria, valor) => {
                <span className="bg-[#F4F7F7] text-[#1A3D3D] text-[11px] font-bold px-2.5 py-1 rounded-md">{jobsFiltrados.length}</span>
              </div>
              
-             {jobsFiltrados.length > 0 ? jobsFiltrados.map(job => (
+             {jobsFiltrados.length > 0 ? jobsFiltrados.map((job, jobIndex) => (
               <article 
                 key={job.id} 
                 onClick={() => handleJobClick(job)} 
@@ -793,8 +810,8 @@ const toggleFiltro = (categoria, valor) => {
          {/* Columna Derecha: Profesionales Disponibles */}
          {(searchTarget === 'ambos' || searchTarget === 'profesionales') && (
            <section className="flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-4">
-             <div className="flex items-center justify-between border-b border-gray-200 pb-3">
-               <h2 className="font-['Montserrat'] font-bold text-[#2D6A6A] text-[14px] uppercase tracking-widest flex items-center gap-2">
+             <div id="tour-ofertas-header" className="flex items-center justify-between border-b border-gray-200 pb-3">
+               <h2 className="font-['Montserrat'] font-bold text-[#1A3D3D] text-[14px] uppercase tracking-widest flex items-center gap-2">
                   <UserCheck className="w-5 h-5 text-[#1A3D3D] hidden sm:block" /> Profesionales Disponibles
                </h2>
                <span className="bg-green-50 text-green-600 text-[11px] font-bold px-2.5 py-1 rounded-md">{profesionalesFiltrados.length}</span>
@@ -1683,7 +1700,20 @@ const toggleFiltro = (categoria, valor) => {
              </div>
           )}
           
-          <div className="pt-4 text-center">
+          {/* Tip informativo sobre el sistema de publicaciones */}
+          <div className="bg-[#F4F7F7] border border-[#2D6A6A]/20 rounded-[20px] p-5 flex items-start gap-4">
+            <div className="w-9 h-9 rounded-xl bg-[#2D6A6A]/10 flex items-center justify-center shrink-0 mt-0.5">
+              <Info className="w-4 h-4 text-[#2D6A6A]" />
+            </div>
+            <div>
+              <p className="text-[#1A3D3D] text-[13px] font-bold mb-1">¿Cómo funciona el sistema de publicaciones?</p>
+              <p className="text-[#666666] text-[12px] font-medium leading-relaxed">
+                Las publicaciones en El Portal son <strong className="text-[#1A3D3D] font-black">100% gratuitas</strong> y tienen una vigencia de <strong className="text-[#1A3D3D] font-black">30 días</strong>. Una vez vencido ese plazo, la oferta deja de ser visible automáticamente. Desde esta misma pantalla, el día que venza, vas a poder <strong className="text-[#1A3D3D] font-black">renovarla con un solo clic</strong> sin perder ningún dato.
+              </p>
+            </div>
+          </div>
+
+          <div className="pt-2 text-center">
             <button 
               onClick={() => { setView('historial'); window.scrollTo(0,0); }}
               className="text-[#2D6A6A] font-bold text-[12px] hover:underline"
@@ -1772,14 +1802,25 @@ const toggleFiltro = (categoria, valor) => {
             </div>
           </div>
         )}
-      {mostrartourbolsa && view === 'list' && (
-        <tourguia
-          pasos={userrole === 'clinica' ? pasos_bolsa_clinica : pasos_bolsa_prof}
-          userid={currentuser?.uid}
-          clavestorage="bolsa"
-          onfin={() => setmostrartourbolsa(false)}
-        />
-      )}
+     {mostrarTourBolsa && view === 'list' && (
+  <TourGuia
+        pasos={PASOS_BOLSA}
+        userId={currentUser?.uid}
+        claveStorage="bolsa"
+        onFin={async () => {
+          setMostrarTourBolsa(false);
+          try {
+            const nuevoContador = tourBolsaContador + 1;
+            await updateDoc(doc(db, 'usuarios', currentUser.uid), {
+              'tourVisto.bolsaContador': nuevoContador
+            });
+            setTourBolsaContador(nuevoContador);
+          } catch (e) {
+            console.error('Error guardando contador del tour:', e);
+          }
+        }}
+      />
+)}
       </main>
     </div>
   );

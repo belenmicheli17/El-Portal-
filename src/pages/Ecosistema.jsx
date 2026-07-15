@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { db, storage } from '../firebase';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { 
   User, BookOpen, Package, Newspaper, Bell, ChevronRight, 
@@ -126,17 +126,44 @@ export default function Ecosistema() {
   
   const activeRole = currentUser?.rol || 'visitante';
   const [mostrarTour, setMostrarTour] = useState(false);
+  const [tourContador, setTourContador] = useState(0);
 
   useEffect(() => {
-    setTimeout(() => setMostrarTour(true), 800);
-  }, []);
+    if (!currentUser) return;
+
+    const fetchContador = async () => {
+      try {
+        const snap = await getDoc(doc(db, 'usuarios', currentUser.uid));
+        const contador = snap.data()?.tourVisto?.ecosistemaContador || 0;
+        setTourContador(contador);
+        if (contador < 29) {
+          setTimeout(() => setMostrarTour(true), 800);
+        }
+      } catch (e) {
+        console.error('Error leyendo contador del tour:', e);
+      }
+    };
+
+    fetchContador();
+  }, [currentUser]);
 
 const handlePasoTour = (paso) => {
     if (paso?.cerrarNotif) {
       setIsNotifOpen(false);
-     setTimeout(() => {
+      setTimeout(() => {
         window.scrollBy({ top: 200, behavior: 'instant' });
       }, 50);
+    }
+    if (paso?.abrirFeedback) {
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('tour:abrirFeedback'));
+      }, 600);
+    }
+    if (paso?.abrirAccs) {
+      window.dispatchEvent(new CustomEvent('tour:cerrarFeedback'));
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('tour:abrirAccs'));
+      }, 600);
     }
   };
 
@@ -149,6 +176,8 @@ const handlePasoTour = (paso) => {
      { targetId: 'tour-proveedores', titulo: 'Cartilla de proveedores', desc: 'Directorio de distribuidores y laboratorios con los que podés trabajar.' },
       { targetId: 'tour-publicaciones', titulo: 'Publicaciones científicas', desc: 'Papers, novedades y actualizaciones del mundo veterinario para mantenerte al día.' },
       { targetId: 'tour-actividad', titulo: 'Tu actividad', desc: 'Acá aparecen las novedades importantes: cursos nuevos, inscripciones y actualizaciones de la red.', cerrarNotif: true },
+      { targetId: 'tour-btn-feedback', titulo: '¿Algo para mejorar?', desc: 'Durante la beta, este botón naranja te permite enviarnos comentarios directamente. Tu opinión nos ayuda a mejorar la plataforma antes del lanzamiento.', abrirFeedback: true, posicion: 'derecha' },
+      { targetId: 'tour-btn-accesibilidad', titulo: 'Opciones de accesibilidad', desc: 'Este botón te permite ajustar el tamaño del texto, activar modo escala de grises, resaltar enlaces y más. Lo podés mover a donde quieras en la pantalla.', abrirAccs: true, posicion: 'derecha' },
      ],
     clinica: [
       { targetId: 'tour-editar-perfil', titulo: 'Tu perfil institucional', desc: 'Completá los datos de tu clínica: servicios, staff médico, horarios y contacto para aparecer en la cartilla.' },
@@ -158,12 +187,23 @@ const handlePasoTour = (paso) => {
      { targetId: 'tour-proveedores', titulo: 'Cartilla de proveedores', desc: 'Directorio de distribuidores y laboratorios de confianza.' },
       { targetId: 'tour-publicaciones', titulo: 'Publicaciones científicas', desc: 'Papers, novedades y actualizaciones del mundo veterinario para mantenerte al día.' },
       { targetId: 'tour-actividad', titulo: 'Tu actividad', desc: 'Novedades del sector, nuevos profesionales disponibles y actualizaciones importantes.' },
+      { targetId: 'tour-btn-feedback', titulo: '¿Algo para mejorar?', desc: 'Durante la beta, este botón naranja te permite enviarnos comentarios directamente. Tu opinión nos ayuda a mejorar la plataforma antes del lanzamiento.', abrirFeedback: true, posicion: 'derecha' },
+      { targetId: 'tour-btn-accesibilidad', titulo: 'Opciones de accesibilidad', desc: 'Este botón te permite ajustar el tamaño del texto, activar modo escala de grises, resaltar enlaces y más. Lo podés mover a donde quieras en la pantalla.', abrirAccs: true, posicion: 'derecha' },
     ],
     alumnx: [
       { targetId: 'tour-editar-perfil', titulo: 'Tu perfil', desc: 'Completá tu perfil para aparecer en búsquedas y mostrar tu trayectoria académica.' },
       { targetId: 'tour-cursos', titulo: 'Capacitaciones', desc: 'Explorá cursos y especializaciones pensados para estudiantes y recién recibidos.' },
       { targetId: 'tour-empleos', titulo: 'Bolsa de trabajo', desc: 'Marcate como disponible para que las clínicas puedan encontrarte.' },
       { targetId: 'tour-actividad', titulo: 'Tu actividad', desc: 'Novedades y oportunidades relevantes para vos.' },
+      { targetId: 'tour-btn-feedback', titulo: '¿Algo para mejorar?', desc: 'Durante la beta, este botón naranja te permite enviarnos comentarios directamente. Tu opinión nos ayuda a mejorar la plataforma antes del lanzamiento.', abrirFeedback: true, posicion: 'derecha' },
+      { targetId: 'tour-btn-accesibilidad', titulo: 'Opciones de accesibilidad', desc: 'Este botón te permite ajustar el tamaño del texto, activar modo escala de grises, resaltar enlaces y más. Lo podés mover a donde quieras en la pantalla.', abrirAccs: true, posicion: 'derecha' },
+    ],
+    proveedor: [
+      { targetId: 'tour-editar-perfil', titulo: 'Tu perfil de empresa', desc: 'Completá los datos de tu marca: descripción, contacto y redes para aparecer en la cartilla de proveedores.' },
+      { targetId: 'tour-cursos', titulo: 'Capacitaciones', desc: 'Explorá y publicá cursos para la comunidad veterinaria.' },
+      { targetId: 'tour-proveedores', titulo: 'Cartilla de proveedores', desc: 'Así es como te ven los profesionales y clínicas cuando buscan proveedores.' },
+      { targetId: 'tour-btn-feedback', titulo: '¿Algo para mejorar?', desc: 'Durante la beta, este botón naranja te permite enviarnos comentarios directamente. Tu opinión nos ayuda a mejorar la plataforma antes del lanzamiento.', abrirFeedback: true, posicion: 'derecha' },
+      { targetId: 'tour-btn-accesibilidad', titulo: 'Opciones de accesibilidad', desc: 'Este botón te permite ajustar el tamaño del texto, activar modo escala de grises, resaltar enlaces y más. Lo podés mover a donde quieras en la pantalla.', abrirAccs: true, posicion: 'derecha' },
     ],
   };
 
@@ -332,14 +372,14 @@ const handlePasoTour = (paso) => {
                 onClick={() => navigate(`/profesional/${currentUser?.slug}`)}
                 className="bg-white/60 backdrop-blur-md border border-white/50 text-[#1A3D3D] px-4 py-2.5 rounded-xl font-bold text-[12px] md:text-[13px] uppercase tracking-wider hover:bg-white hover:shadow-sm transition-all flex items-center justify-center gap-2 flex-1 md:flex-none"
               >
-                <Eye className="w-4 h-4 text-[#2D6A6A]" /> Ver mi perfil
+                <Eye className="w-4 h-4 text-[#2D6A6A]" /> Ver mi perfil público
               </button>
 
               <button 
                 onClick={handleLogout}
                 className="bg-[#1A3D3D]/5 hover:bg-red-50 text-[#1A3D3D]/70 hover:text-red-600 px-4 py-2.5 rounded-xl font-bold text-[12px] md:text-[13px] uppercase tracking-wider transition-colors flex items-center justify-center gap-2 flex-1 md:flex-none border border-transparent hover:border-red-100"
               >
-                <LogOut className="w-4 h-4" /> Salir
+                <LogOut className="w-4 h-4" /> Cerrar sesión
               </button>
             </div>
           </div>
@@ -372,7 +412,14 @@ const handlePasoTour = (paso) => {
           ) : (
             // El id va directo en el NotificationBox wrapper para que el tour
             // apunte al elemento real y no a un div vacío flotando afuera de la grilla
-            <div id="tour-actividad" className="order-2 lg:col-span-1 w-full">
+            <div id="tour-actividad" className="order-2 lg:col-span-1 w-full relative">
+              {/* TEMPORAL: capa "Próximamente" hasta tener notificaciones listas */}
+              <div className="absolute inset-0 z-10 rounded-[24px] md:rounded-[32px] bg-[#E8EFEF]/80 backdrop-blur-[2px] flex flex-col items-center justify-center gap-3 pointer-events-none">
+                <p className="text-[22px] font-black text-[#1A3D3D]/30 font-['Montserrat'] leading-none">Notificaciones</p>
+                <span className="bg-[#1A3D3D]/10 text-[#1A3D3D]/40 text-[10px] font-black uppercase tracking-[0.2em] px-3 py-1 rounded-full">
+                  Próximamente
+                </span>
+              </div>
               <NotificationBox 
                 isNotifOpen={isNotifOpen} 
                 setIsNotifOpen={setIsNotifOpen} 
@@ -403,6 +450,27 @@ const handlePasoTour = (paso) => {
                 customBg="bg-white/80"
                 onClick={() => navigate('/editor-proveedores', { state: { tab: 'productos' } })}
               />
+            )}
+
+            {activeRole === 'proveedor' && (
+              <div id="tour-cursos" className="bg-white/80 backdrop-blur-xl border border-white/60 rounded-[24px] md:rounded-[32px] shadow-[0_8px_32px_rgba(0,0,0,0.04)] flex flex-col overflow-hidden min-h-[180px] md:min-h-[210px]">
+                <button
+                  onClick={() => navigate('/capacitaciones')}
+                  className="flex-1 flex flex-col justify-center items-center text-center p-5 hover:bg-white/90 transition-all group"
+                >
+                  <BookOpen strokeWidth={1.5} className="w-8 h-8 md:w-10 md:h-10 text-[#2D6A6A] mb-2 group-hover:scale-110 group-hover:text-[#1A3D3D] transition-all duration-300" />
+                  <h2 className="text-[17px] md:text-[19px] font-black text-[#1A3D3D] font-['Montserrat'] mb-1 leading-tight">Cursos</h2>
+                  <p className="text-[#333333]/70 font-medium text-[13px] px-2 leading-normal">Especializaciones y capacitaciones</p>
+                </button>
+                <div className="border-t border-gray-100 px-4 py-3">
+                  <button
+                    onClick={() => navigate('/capacitaciones', { state: { vista: 'miscursos' } })}
+                    className="w-full text-[11px] font-bold text-[#2D6A6A] uppercase tracking-widest hover:text-[#1A3D3D] transition-colors flex items-center justify-center gap-1.5 py-1"
+                  >
+                    <BookOpen className="w-3 h-3" /> Ver mis cursos publicados
+                  </button>
+                </div>
+              </div>
             )}
 
             {activeRole !== 'proveedor' && (
@@ -476,7 +544,18 @@ const handlePasoTour = (paso) => {
           pasos={PASOS_TOUR[activeRole]}
           userId={currentUser?.uid}
           claveStorage="ecosistema"
-          onFin={() => setMostrarTour(false)}
+          onFin={async () => {
+            setMostrarTour(false);
+            try {
+              const nuevoContador = tourContador + 1;
+              await updateDoc(doc(db, 'usuarios', currentUser.uid), {
+                'tourVisto.ecosistemaContador': nuevoContador
+              });
+              setTourContador(nuevoContador);
+            } catch (e) {
+              console.error('Error guardando contador del tour:', e);
+            }
+          }}
           onPaso={handlePasoTour}
         />
       )}

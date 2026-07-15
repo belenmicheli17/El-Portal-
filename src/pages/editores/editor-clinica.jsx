@@ -1060,11 +1060,11 @@ setSaveStatus('saved');
                        </div>
 
                        {/* BOTÓN DE BAJA */}
-                       <div className="pt-4 border-t border-gray-200/60 flex justify-start">
+                       {/*<div className="pt-4 border-t border-gray-200/60 flex justify-start">
                          <button className="text-xs font-bold text-red-500 hover:text-red-700 transition-colors underline decoration-red-200 underline-offset-4">
-                           Darse de baja de la plataforma
+                           Suspender temporalmente mi cuenta
                          </button>
-                       </div>
+                       </div>*/}
                      </div>
                   </div>
 

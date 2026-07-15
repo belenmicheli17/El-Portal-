@@ -4,8 +4,9 @@ import { useAuth } from '../context/AuthContext';
 import TourGuia from '../components/TourGuia';
 // IMPORTS DE FIREBASE ACÁ ARRIBA
 import { db, storage } from '../firebase.js'; 
-import { collection, getDocs, addDoc, updateDoc, doc, increment, serverTimestamp } from 'firebase/firestore';
+import { collection, getDocs, addDoc, updateDoc, doc, getDoc, increment, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import imageCompression from 'browser-image-compression';
 import { 
   Star, Clock, ChevronLeft, Filter, Search, ShieldCheck,
   FileText, PlayCircle, Plus, MessageCircle, ChevronRight, Monitor, Check,
@@ -33,9 +34,9 @@ const FAQ_CATEGORIES = [
   {
     title: "Honorarios",
     items: [
-      { q: "¿De cuánto es la comisión por venta?", a: "Retenemos un 15% por cada alumnx generado efectivamente. Este margen ya cubre los costos de las pasarelas de pago y nuestras campañas de marketing. No hay costos ocultos." },
+      { q: "¿De cuánto es la comisión por venta?", a: "Retenemos un 5% por cada alumnx generado efectivamente. Este margen ya cubre los costos de las pasarelas de pago y nuestras campañas de marketing. No hay costos ocultos." },
       { q: "¿Cómo y cuándo recibo mis ganancias?", a: "Realizamos liquidaciones quincenales. El dinero de las ventas (menos la comisión) se transfiere directamente a tu cuenta bancaria institucional." },
-      { q: "¿Quién emite la factura al alumno?", a: "La institución o docente le factura el 100% del curso al alumnx. El Portal emite una factura a la institución por el servicio de intermediación (la comisión del 15%)." }
+      { q: "¿Quién emite la factura al alumno?", a: "La institución o docente le factura el 100% del curso al alumnx. El Portal emite una factura a la institución por el servicio de intermediación (la comisión del 5%)." }
     ]
   },
   {
@@ -62,17 +63,31 @@ export default function Capacitaciones() {
   const location = useLocation();
   const [view, setView] = useState(location.state?.vista || 'grid');
   const [mostrarTourCaps, setMostrarTourCaps] = useState(false);
+  const [tourCapsContador, setTourCapsContador] = useState(0);
 
   useEffect(() => {
-    if (currentUser && !currentUser.tourVisto?.capacitaciones && view === 'grid') {
-      setTimeout(() => setMostrarTourCaps(true), 800);
-    }
+    if (!currentUser || view !== 'grid') return;
+
+    const fetchContador = async () => {
+      try {
+        const snap = await getDoc(doc(db, 'usuarios', currentUser.uid));
+        const contador = snap.data()?.tourVisto?.capacitacionesContador || 0;
+        setTourCapsContador(contador);
+        if (contador < 2) {
+          setTimeout(() => setMostrarTourCaps(true), 800);
+        }
+      } catch (e) {
+        console.error('Error leyendo contador del tour de capacitaciones:', e);
+      }
+    };
+
+    fetchContador();
   }, [currentUser, view]);
 
   const PASOS_CAPS = [
-    { targetId: 'tour-busqueda-caps', titulo: 'Buscá por tema', desc: 'Escribí una especialidad o palabra clave para filtrar los cursos disponibles.' },
-    { targetId: 'tour-publicar-curso', titulo: '¿Sos docente o institución?', desc: 'Podés publicar tu propio curso acá. Es gratis y llega a toda la comunidad veterinaria.' },
-    { targetId: 'tour-mis-cursos', titulo: 'Tus cursos publicados', desc: 'Si publicaste cursos, desde acá podés verlos, editarlos o dar de baja los que ya no estén activos.' },
+    { targetId: 'tour-busqueda-caps', titulo: 'Buscá por tema', desc: 'Escribí una especialidad o palabra clave para filtrar los cursos disponibles. También podes usar la barra de filtros que se encuentra a la izquierda.', posicion: 'abajo' },
+    { targetId: 'tour-publicar-curso', titulo: '¿Sos docente o institución?', desc: 'Podés publicar tu propio curso acá. Publicar es gratis y llega a toda la comunidad veterinaria.', posicion: 'abajo' },
+    { targetId: 'tour-mis-cursos', titulo: 'Tus cursos publicados', desc: 'Si publicaste cursos, desde acá podés verlos, editarlos o dar de baja los que ya no estén activos.', posicion: 'abajo' },
   ];
   
   // ESTADOS NUEVOS PARA FIREBASE QUE AGREGAMOS
@@ -451,7 +466,8 @@ const handleEditarMiCurso = (curso) => {
       responsableMatricula: curso.responsableMatricula || '',
       aceptaTerminos: curso.aceptaTerminos || false,
       imagenUrl: curso.imagen || '',
-      fotoDocente: null
+      fotoDocente: null,
+      fotoDocenteUrl: curso.fotoDocente || ''
     });
     setEditandoCursoId(curso.id);
     setErrors({});
@@ -471,7 +487,23 @@ const submitWizard = async () => {
     if (!validateStep(3)) return;
     setIsSubmitting(true);
     try {
+      let fotoDocenteFinal = courseForm.fotoDocenteUrl || '';
+      
+      // Si el usuario subió una foto nueva en el input
+      if (courseForm.fotoDocente && courseForm.fotoDocente.file) {
+        try {
+          const options = { maxSizeMB: 0.2, maxWidthOrHeight: 400, useWebWorker: true };
+          const compressedFile = await imageCompression(courseForm.fotoDocente.file, options);
+          const fileRef = ref(storage, `capacitaciones/docentes/${Date.now()}_${compressedFile.name}`);
+          await uploadBytesResumable(fileRef, compressedFile);
+          fotoDocenteFinal = await getDownloadURL(fileRef);
+        } catch (error) {
+          console.error("Error comprimiendo/subiendo foto docente:", error);
+        }
+      }
+
       const datosCurso = {
+        fotoDocente: fotoDocenteFinal, // <-- Guardamos la URL acá
         titulo: courseForm.titulo,
         modalidad: courseForm.modalidad,
         precio: Math.round(Number(courseForm.precio) * (1 - comision / 100)),
@@ -947,8 +979,12 @@ El equipo de El Portal Veterinario`
           {activeTab === 'speaker' && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2">
               <div className="bg-white p-5 md:p-8 rounded-[24px] md:rounded-[32px] border border-gray-100 shadow-sm flex flex-row gap-4 md:gap-6 items-start">
-                <div className="w-16 h-16 md:w-24 md:h-24 rounded-full bg-[#2D6A6A]/10 flex items-center justify-center text-[#2D6A6A] font-black text-2xl border border-gray-100 shrink-0">
-                    {selectedCourse.instructor.charAt(0)}
+                <div className="w-16 h-16 md:w-24 md:h-24 rounded-full bg-[#2D6A6A]/10 flex items-center justify-center text-[#2D6A6A] font-black text-2xl border border-gray-100 shrink-0 overflow-hidden">
+                    {selectedCourse.fotoDocente ? (
+                      <img src={selectedCourse.fotoDocente} alt={selectedCourse.instructor} className="w-full h-full object-cover" />
+                    ) : (
+                      selectedCourse.instructor.charAt(0)
+                    )}
                 </div>
                 <div className="text-left flex-1 mt-1 md:mt-2">
                   <h3 className="text-lg md:text-2xl font-black font-['Montserrat'] text-[#1A3D3D] leading-tight">{selectedCourse.instructor}</h3>
@@ -1095,13 +1131,13 @@ El equipo de El Portal Veterinario`
                 <h2 className="pdf-h2" style={{marginTop: '10px'}}>3. Fomento de la especialización</h2>
                 <p className="pdf-p">Con el objetivo de fortalecer la formación continua dentro de la comunidad veterinaria, solicitamos a las instituciones colaboradoras que establezcan un valor preferencial para los colegas que se inscriban mediante nuestra plataforma.</p>
                 <div className="pdf-community">
-                    <div className="pdf-percent">15%</div>
-                    <div><h3 className="pdf-h3" style={{marginTop: 0}}>Bonificación Académica</h3><p className="pdf-p" style={{marginBottom: 0}}>Sugerimos aplicar una bonificación del 15% sobre el valor de lista de sus capacitaciones. Esta acción fomenta un mayor índice de inscripciones al acercar su propuesta a una red de veterinarios activamente orientados hacia la alta complejidad.</p></div>
+                    <div className="pdf-percent">5%</div>
+                    <div><h3 className="pdf-h3" style={{marginTop: 0}}>Bonificación Académica</h3><p className="pdf-p" style={{marginBottom: 0}}>Sugerimos aplicar una bonificación del 5% sobre el valor de lista de sus capacitaciones. Esta acción fomenta un mayor índice de inscripciones al acercar su propuesta a una red de veterinarios activamente orientados hacia la alta complejidad.</p></div>
                 </div>
                 
                 <h2 className="pdf-h2">4. Condiciones económicas y administrativas</h2>
-                <h3 className="pdf-h3">Comisión del 15% sobre inscripciones</h3>
-                <p className="pdf-p">El Portal retiene un 15% del valor abonado por el alumno inscrito a través de la plataforma. Este porcentaje es de carácter final y cubre integralmente los aranceles por transacciones bancarias, el mantenimiento de los servidores y las acciones de difusión.</p>
+                <h3 className="pdf-h3">Comisión del 5% sobre inscripciones</h3>
+                <p className="pdf-p">El Portal retiene un 5% del valor abonado por el alumno inscrito a través de la plataforma. Este porcentaje es de carácter final y cubre integralmente los aranceles por transacciones bancarias, el mantenimiento de los servidores y las acciones de difusión.</p>
                 <h3 className="pdf-h3">Rendiciones quincenales</h3>
                 <p className="pdf-p">Efectuamos un proceso de rendición claro y estructurado cada 15 días. El monto neto de las inscripciones se transfiere directamente a la cuenta bancaria designada por el profesional o la institución académica.</p>
                 <h3 className="pdf-h3">Manejo de la facturación</h3>
@@ -1245,7 +1281,7 @@ El equipo de El Portal Veterinario`
               <div className="absolute top-[-20%] right-[-10%] w-[300px] h-[300px] bg-[#2D6A6A]/40 rounded-full blur-[80px] pointer-events-none"></div>
               
               <div className="w-full md:w-1/3 flex flex-col items-center justify-center text-center border-b md:border-b-0 md:border-r border-white/10 pb-8 md:pb-0 relative z-10">
-                <span className="text-7xl md:text-8xl font-black text-[#4DB6AC] font-['Montserrat'] tracking-tighter leading-none">15%</span>
+                <span className="text-7xl md:text-8xl font-black text-[#4DB6AC] font-['Montserrat'] tracking-tighter leading-none">5%</span>
                 <p className="text-white/60 font-bold uppercase tracking-[0.2em] text-[10px] mt-4">Descuento Exclusivo</p>
               </div>
               
@@ -1593,6 +1629,33 @@ El equipo de El Portal Veterinario`
                     )}
                     <p className="text-[10px] font-black text-[#2D6A6A] uppercase tracking-widest mb-4">{idx === 0 ? 'Docente principal' : `Docente ${idx + 1}`}</p>
                     <div className="space-y-4">
+                      
+                      {/* INPUT DE FOTO SOLO PARA EL DOCENTE PRINCIPAL */}
+                      {idx === 0 && (
+                        <div className="flex items-center gap-4 mb-2">
+                          <div className="w-16 h-16 rounded-full overflow-hidden bg-white border border-gray-200 shrink-0 flex items-center justify-center">
+                            {courseForm.fotoDocente?.preview || courseForm.fotoDocenteUrl ? (
+                              <img src={courseForm.fotoDocente?.preview || courseForm.fotoDocenteUrl} alt="Docente" className="w-full h-full object-cover" />
+                            ) : (
+                              <span className="text-gray-300 font-bold text-xs">FOTO</span>
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Foto de perfil (Opcional)</label>
+                            {(courseForm.fotoDocente?.preview || courseForm.fotoDocenteUrl) ? (
+                              <button type="button" onClick={() => { removeDocenteFoto(); handleWizardChange('fotoDocenteUrl', ''); }} className="text-[11px] font-bold text-red-500 hover:text-red-700 uppercase tracking-widest flex items-center gap-1">
+                                <Trash2 className="w-3 h-3" /> Quitar foto
+                              </button>
+                            ) : (
+                              <label className="cursor-pointer text-[11px] font-bold text-[#2D6A6A] hover:text-[#1A3D3D] uppercase tracking-widest flex items-center gap-1">
+                                <UploadCloud className="w-4 h-4" /> Subir imagen
+                                <input type="file" accept="image/*" onChange={handleDocenteFileUpload} className="hidden" />
+                              </label>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
                       <div>
                         <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Nombre completo con título <span className="text-red-500">*</span></label>
                         <input type="text" value={docente.nombre} onChange={(e) => { const docs = [...courseForm.docentes]; docs[idx].nombre = e.target.value.charAt(0).toUpperCase() + e.target.value.slice(1); handleWizardChange('docentes', docs); }} placeholder="Ej: Dr. Julián Martínez" spellCheck={true} className={`w-full bg-white border rounded-xl px-4 py-3.5 text-sm font-medium focus:outline-none focus:border-[#2D6A6A] transition-all text-[#1A3D3D] ${errors.instructorNombre ? 'border-red-400' : 'border-gray-200'}`} />
@@ -2122,20 +2185,31 @@ El equipo de El Portal Veterinario`
                </ul>
              </div>
              <button onClick={() => { setView('grid'); setWizardStep(1); setCourseForm({ titulo: '', modalidad: 'Online', precio: '', nivel: 'Principiante', duracion: '', descripcion: '', incluye: [''], docentes: [{ nombre: '', bio: '', linkMas: '' }], email: '', password: '', fotoDocente: null, imagenUrl: '', formatoDuracion: '' }); }} className="bg-[#1A3D3D] text-white px-8 py-4 rounded-2xl font-bold text-sm hover:bg-[#2D6A6A] transition-all shadow-md">
-               Volver a capacitaciones
+          0     Volver a capacitaciones
              </button>
            </div>
          ) : null}
       </main>
     </div>
    {mostrarTourCaps && view === 'grid' && (
-  <TourGuia
-    pasos={PASOS_CAPS}
-    userId={currentUser?.uid}
-    claveStorage="capacitaciones"
-    onFin={() => setMostrarTourCaps(false)}
-  />
-)}
+        <TourGuia
+          pasos={PASOS_CAPS}
+          userId={currentUser?.uid}
+          claveStorage="capacitaciones"
+          onFin={async () => {
+            setMostrarTourCaps(false);
+            try {
+              const nuevoContador = tourCapsContador + 1;
+              await updateDoc(doc(db, 'usuarios', currentUser.uid), {
+                'tourVisto.capacitacionesContador': nuevoContador
+              });
+              setTourCapsContador(nuevoContador);
+            } catch (e) {
+              console.error('Error guardando contador del tour de capacitaciones:', e);
+            }
+          }}
+        />
+      )}
     </>
   );
 }

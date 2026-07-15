@@ -124,7 +124,7 @@ const Cartilla = () => {
     if (filtros.zonas.length > 0 && !filtros.zonas.includes(v.provincia)) return false;
     if (filtros.especialidades.length > 0 && v.tipo === 'profesional' && !filtros.especialidades.includes(v.especialidad)) return false;
     if (filtros.domicilio && !v.domicilio) return false;
-    if (filtros.guardia24hs && !v.es24hs) return false;
+    if (filtros.guardia24hs && !v.guardia24hs) return false;
     
     return true; // Si pasó todas las trabas, se muestra
   });
