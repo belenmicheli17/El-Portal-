@@ -5,10 +5,10 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { db, storage } from '../../firebase'; // <-- Sumamos storage
 import { doc, setDoc, getDoc, collection, query, where, getDocs, writeBatch, deleteDoc } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage'; // <-- Sumamos funciones de Storage
-
+import FooterSimple from '../../components/FooterSimple';
 import { useAuth } from '../../context/AuthContext';
 import { 
-  Camera, Info, AlertCircle, Save, X, Plus, Trash2,
+  Camera, Info, AlertCircle, Save, X, Plus, Trash2, Crown,
   ArrowUp, ArrowDown, MapPin, ShieldCheck, Check, ArrowLeft,
   Smartphone, Home, Mail, Award, ChevronDown, 
   ArrowRight, ExternalLink, Lock, Zap, Clock, Heart, Brain, Turtle, CircleUserRound,
@@ -341,7 +341,7 @@ export default function EditorProfesional() {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        if (!currentUser) return; // Si el usuario no cargó, frena acá
+        if (!currentUser?.uid) return;
         
         // Buscamos en la base de datos usando el UID real del profesional logueado
         const docRef = doc(db, 'profesionales', currentUser.uid);
@@ -349,8 +349,13 @@ export default function EditorProfesional() {
         
         if (docSnap.exists()) {
           const dbData = docSnap.data();
+          // Leemos socioVitalicio del documento del usuario en la colección usuarios
+          const userDocSnap = await getDoc(doc(db, 'usuarios', currentUser.uid));
+          if (userDocSnap.exists()) {
+            dbData.socioVitalicio = userDocSnap.data().socioVitalicio || false;
+          }
           
-          // NUEVO: Buscamos los papers en la nueva colección global
+          // Buscamos los papers en la colección global
           const qPapers = query(collection(db, 'papers'), where('autorId', '==', currentUser.uid));
           const papersSnap = await getDocs(qPapers);
           const misPapers = papersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -359,7 +364,7 @@ export default function EditorProfesional() {
           _setFormData(prev => ({
             ...prev,
             ...dbData,
-            papers: misPapers // Sobrescribimos con los datos de la colección global
+            papers: misPapers
           }));
         }
       } catch (error) {
@@ -368,7 +373,7 @@ export default function EditorProfesional() {
     };
 
     fetchUserData();
-  }, []);
+  }, [currentUser]);
   const fileInputRef = useRef(null);
   const [_formData, _setFormData] = useState({
   // Cuenta
@@ -935,9 +940,9 @@ const generarSlug = (texto) => {
         <div className="max-w-[1100px] w-full mx-auto flex justify-between items-center">
           
           <div className="flex items-center gap-6">
-            <button /* onClick={() => navigate('/')} */ className="flex items-center gap-2 text-gray-400 hover:text-[#4DB6AC] transition-colors bg-gray-50 hover:bg-gray-100 px-3 py-1.5 rounded-xl border border-gray-200">
-               <ArrowLeft className="w-4 h-4" /> <span className="text-xs font-bold hidden sm:block">Volver al Portal</span>
-            </button>
+           <button onClick={() => navigate('/ecosistema')} className="flex items-center gap-2 text-gray-400 hover:text-[#4DB6AC] transition-colors bg-gray-50 hover:bg-gray-100 px-3 py-1.5 rounded-xl border border-gray-200">
+   <ArrowLeft className="w-4 h-4" /> <span className="text-xs font-bold hidden sm:block">Volver al Ecosistema</span>
+</button>
             <div className="w-px h-6 bg-gray-200 hidden sm:block"></div>
             <div className="text-[#1A3D3D] font-['Montserrat'] font-extrabold text-xl tracking-tight cursor-pointer">
                El Portal<span className="text-[#2D6A6A]">.</span>
@@ -1072,6 +1077,19 @@ const generarSlug = (texto) => {
                      <h4 className="flex items-center gap-2 text-sm font-bold text-[#1A3D3D] uppercase tracking-widest leading-none mb-4">
                        <CreditCard className="w-5 h-5 text-[#2D6A6A]" /> Estado de la suscripción
                      </h4>
+
+                     {/* SOCIO VITALICIO: reemplaza toda la sección si aplica */}
+                     {formData.socioVitalicio ? (
+                       <div className="bg-gradient-to-br from-yellow-50 to-amber-50 border border-yellow-200 rounded-2xl p-6 flex items-center gap-5">
+                         <div className="w-14 h-14 bg-yellow-100 rounded-2xl flex items-center justify-center shrink-0">
+                           <Crown className="w-7 h-7 text-yellow-500" />
+                         </div>
+                         <div>
+                           <p className="font-black text-[#1A3D3D] text-lg font-['Montserrat'] leading-tight">Socio vitalicio</p>
+                           <p className="text-yellow-700 text-sm font-medium mt-1">Tu cuenta incluye todos los beneficios de la plataforma sin costo mensual.</p>
+                         </div>
+                       </div>
+                     ) : (
                      
                      <div className={`border p-5 md:p-6 rounded-2xl flex flex-col gap-5 transition-colors 
                        ${isPro && !isSubscriptionActive ? 'bg-red-50/50 border-red-200' : 'bg-gray-50 border-gray-200'}`}
@@ -1113,6 +1131,7 @@ const generarSlug = (texto) => {
                          </button>
                        </div>*/}
                      </div>
+                  )}
                   </div>
 
                   {/* DATOS DE ACCESO */}
@@ -1297,59 +1316,125 @@ const generarSlug = (texto) => {
 
                     {/* ZONAS DE ATENCIÓN (Solo visible para PRO en el editor) */}
 {isPro && (
-  <Accordion title="Zonas de Atención" icon={MapPin} isOpen={openSection === 'zonas'} onToggle={() => setOpenSection(openSection === 'zonas' ? null : 'zonas')} tooltip="Permite que los tutores encuentren las clínicas donde atendés en Google Maps.">
-    
-    <ToggleSwitch label="Ofrezco consultas a domicilio" checked={formData.atiendeDomicilio} onChange={(v) => setFormData(p => ({...p, atiendeDomicilio: v}))} tooltip="Añadirá un distintivo (badge) especial en tu perfil público." />
+  <Accordion title="Zonas de Atención" icon={MapPin} isOpen={openSection === 'zonas'} onToggle={() => setOpenSection(openSection === 'zonas' ? null : 'zonas')} tooltip="Así es exactamente como van a ver tus datos los tutores en tu perfil público.">
+
+    <ToggleSwitch label="Ofrezco consultas a domicilio" checked={formData.atiendeDomicilio} onChange={(v) => setFormData(p => ({...p, atiendeDomicilio: v}))} tooltip="Añadirá un distintivo especial en tu perfil público." />
     <div className="w-full h-px bg-gray-100 my-5"></div>
-    
-    <div className="space-y-6">
+
+    {/* AVISO EXPLICATIVO */}
+    <div className="flex items-start gap-3 bg-[#2D6A6A]/5 border border-[#2D6A6A]/15 rounded-2xl px-4 py-3.5 mb-6">
+      <MapPin className="w-4 h-4 text-[#2D6A6A] shrink-0 mt-0.5" />
+      <p className="text-xs font-medium text-[#1A3D3D] leading-relaxed">
+        Agrupá las clínicas por zona geográfica. Ej: <span className="font-black">Villa La Angostura</span> con todas las clínicas de esa zona, y otra tarjeta para <span className="font-black">San Martín de los Andes</span>.
+      </p>
+    </div>
+
+    <div className="space-y-5">
       {formData.zonas.map((z) => (
-        <div key={z.id} className="bg-gray-50/50 p-5 md:p-6 rounded-[24px] border border-gray-100 text-left shadow-sm transition-all">
-          
-          {/* HEADER DE LA ZONA (Input + Botón Borrar Zona unificados en estilo) */}
-          <div className="flex gap-4 items-start mb-6">
-            <input type="text" placeholder="Nombre de Zona Geográfica (Ej: CABA)" value={z.nombre} onChange={(e) => handleArrayUpdate('zonas', z.id, 'nombre', e.target.value)} className="flex-1 bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm font-black focus:border-[#2D6A6A] outline-none shadow-sm" />
-            <button onClick={() => handleArrayRemove('zonas', z.id)} className="w-12 h-12 shrink-0 bg-white rounded-xl border border-gray-200 shadow-sm flex items-center justify-center text-gray-400 hover:text-white hover:bg-red-500 transition-colors" title="Eliminar zona completa">
-              <Trash2 className="w-6 h-6" />
+        <div key={z.id} className="bg-[#F4F7F7] rounded-[24px] border border-gray-200 overflow-hidden shadow-sm">
+
+          {/* HEADER DE ZONA — igual al perfil público */}
+          <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-200/70 bg-white/60">
+            <div className="w-8 h-8 rounded-xl bg-[#2D6A6A]/10 flex items-center justify-center shrink-0">
+              <Building2 className="w-4 h-4 text-[#2D6A6A]" />
+            </div>
+            <input
+              type="text"
+              placeholder="Nombre de la zona (Ej: Villa La Angostura)"
+              value={z.nombre}
+              onChange={(e) => handleArrayUpdate('zonas', z.id, 'nombre', e.target.value)}
+              className="flex-1 bg-transparent text-sm font-black text-[#1A3D3D] uppercase tracking-wide outline-none placeholder:text-gray-400 placeholder:font-medium placeholder:normal-case placeholder:tracking-normal"
+            />
+            <button
+              onClick={() => handleArrayRemove('zonas', z.id)}
+              className="p-2 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors shrink-0"
+              title="Eliminar zona completa"
+            >
+              <Trash2 className="w-4 h-4" />
             </button>
           </div>
 
-          <div className="space-y-4 pl-3 md:pl-5 border-l-2 border-[#2D6A6A]/20">
+          {/* LISTA DE CLÍNICAS — espejo del perfil público */}
+          <div className="px-5 py-4 space-y-3">
             {z.clinicas.map((c) => (
-              <div key={c.id} className="bg-white p-5 rounded-2xl border border-gray-100 space-y-3 shadow-sm hover:shadow-md transition-shadow relative group">
-                
-                {/* NOMBRE CLÍNICA + BOTÓN BORRAR CLÍNICA */}
-                <div className="flex justify-between items-center border-b border-gray-50 pb-3 mb-1">
-                  <input type="text" placeholder="Nombre de la Clínica" value={c.nombre} onChange={(e) => updateClinica(z.id, c.id, 'nombre', e.target.value)} className="w-full text-sm font-bold outline-none focus:border-[#2D6A6A]" />
-                  
-                  <button 
+              <div key={c.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+
+                {/* FILA PRINCIPAL: punto verde + autocomplete + borrar */}
+                <div className="flex items-center gap-3 px-4 py-3.5">
+                  <div className="w-2 h-2 rounded-full bg-[#2D6A6A] shrink-0" />
+                  <input
+                    type="text"
+                    placeholder="Nombre de la clínica (buscá con Google)"
+                    value={c.nombre}
+                    onChange={(e) => updateClinica(z.id, c.id, 'nombre', e.target.value)}
+                    ref={(el) => {
+                      if (!el || !window.google || el._autocompleteInit) return;
+                      el._autocompleteInit = true;
+                      const autocomplete = new window.google.maps.places.Autocomplete(el, {
+                        types: ['establishment'],
+                        componentRestrictions: { country: 'ar' },
+                        fields: ['name', 'formatted_address', 'place_id']
+                      });
+                      autocomplete.addListener('place_changed', () => {
+                        const place = autocomplete.getPlace();
+                        if (!place.place_id) return;
+                        updateClinica(z.id, c.id, 'nombre', place.name || '');
+                        updateClinica(z.id, c.id, 'direccion', place.formatted_address || '');
+                        updateClinica(z.id, c.id, 'placeId', place.place_id || '');
+                      });
+                    }}
+                    className="flex-1 text-sm font-bold text-[#1A3D3D] outline-none placeholder:font-medium placeholder:text-gray-300"
+                  />
+                  <button
                     onClick={() => {
                       const newClinicas = z.clinicas.filter(cl => cl.id !== c.id);
                       handleArrayUpdate('zonas', z.id, 'clinicas', newClinicas);
-                    }} 
-                    className="ml-3 p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors shrink-0"
-                    title="Eliminar esta clínica"
+                    }}
+                    className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors shrink-0"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
 
-                <input type="text" placeholder="Dirección Física" value={c.direccion} onChange={(e) => updateClinica(z.id, c.id, 'direccion', e.target.value)} className="w-full text-xs outline-none text-gray-500 font-medium focus:text-[#1A3D3D]" />
-                <input type="url" placeholder="Link a Google Maps (Opcional)" value={c.linkMaps} onChange={(e) => updateClinica(z.id, c.id, 'linkMaps', e.target.value)} className="w-full text-[11px] bg-gray-50 rounded-xl p-3 outline-none border border-gray-100 focus:border-[#2D6A6A] transition-colors" />
+                {/* DIRECCIÓN Y LINK — solo si ya se completaron */}
+                {(c.direccion || c.placeId) && (
+                  <div className="border-t border-gray-50 px-4 py-3 flex items-center justify-between gap-3 bg-gray-50/50">
+                    {c.direccion && (
+                      <span className="text-xs text-gray-400 font-medium leading-snug flex-1">{c.direccion}</span>
+                    )}
+                    {c.placeId && (
+                      <a
+                        href={`https://www.google.com/maps/place/?q=place_id:${c.placeId}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center gap-1.5 text-[11px] font-bold text-[#2D6A6A] hover:text-[#1A3D3D] transition-colors shrink-0 bg-white px-3 py-1.5 rounded-lg border border-[#2D6A6A]/20 shadow-sm"
+                      >
+                        <MapPin className="w-3 h-3" /> Ver en Maps
+                      </a>
+                    )}
+                  </div>
+                )}
               </div>
             ))}
-            
-            <button onClick={() => {
-              const newClinicas = [...z.clinicas, { id: Date.now(), nombre: "", direccion: "", linkMaps: "" }];
-              handleArrayUpdate('zonas', z.id, 'clinicas', newClinicas);
-            }} className="text-xs font-bold text-[#2D6A6A] hover:text-[#1A3D3D] flex items-center gap-1.5 mt-2 bg-white px-4 py-3 rounded-xl border border-[#2D6A6A]/20 shadow-sm transition-colors">
-              <Plus className="w-3.5 h-3.5" /> Añadir Clínica a esta zona
+
+            <button
+              onClick={() => {
+                const newClinicas = [...z.clinicas, { id: Date.now(), nombre: "", direccion: "", placeId: "" }];
+                handleArrayUpdate('zonas', z.id, 'clinicas', newClinicas);
+              }}
+              className="w-full py-3 border-2 border-dashed border-[#2D6A6A]/20 rounded-xl text-[11px] font-bold text-[#2D6A6A] hover:bg-[#2D6A6A]/5 hover:border-[#2D6A6A]/40 transition-colors flex items-center justify-center gap-1.5 uppercase tracking-widest"
+            >
+              <Plus className="w-3.5 h-3.5" /> Añadir clínica en {z.nombre || 'esta zona'}
             </button>
           </div>
         </div>
       ))}
-      <button onClick={() => handleArrayAdd('zonas', { nombre: "", clinicas: [] })} className="w-full py-4 bg-[#1A3D3D] text-white rounded-xl text-[11px] font-bold uppercase tracking-widest hover:bg-[#2D6A6A] transition-all flex items-center justify-center gap-2 shadow-md">
-        <Plus className="w-4 h-4" /> Crear Nueva Zona Geográfica
+
+      <button
+        onClick={() => handleArrayAdd('zonas', { nombre: "", clinicas: [] })}
+        className="w-full py-4 bg-[#1A3D3D] text-white rounded-xl text-[11px] font-bold uppercase tracking-widest hover:bg-[#2D6A6A] transition-all flex items-center justify-center gap-2 shadow-md"
+      >
+        <Plus className="w-4 h-4" /> Crear nueva zona geográfica
       </button>
     </div>
   </Accordion>
@@ -1765,12 +1850,7 @@ const generarSlug = (texto) => {
       </div>
 
       {/* FOOTER ESMERALDA DEGRADADO */}
-      <footer className="w-full mt-auto py-6 bg-gradient-to-r from-[#1A3D3D] via-[#2D6A6A] to-[#1A3D3D] shadow-[0_-4px_20px_rgba(45,106,106,0.15)] z-10 relative">
-         <div className="max-w-[1100px] mx-auto px-6 text-center md:text-left flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-medium text-white/80">
-            <p>© {new Date().getFullYear()} El Portal Veterinario. Todos los derechos reservados.</p>
-            <p className="text-[#4DB6AC] font-bold tracking-wide">Panel de Gestión Profesional</p>
-         </div>
-      </footer>
+      <FooterSimple seccion="Panel de Gestión" />
 
     </div>
   );

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Search, Edit2, Ban, CheckCircle, X, Save, 
-  User, Building, ShieldAlert, Store, Loader2
+  Search, Edit2, Ban, X, Save, 
+  User, Building, ShieldAlert, Store, Loader2, Crown
 } from 'lucide-react';
 import { db } from '../../firebase';
 import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
@@ -57,6 +57,38 @@ export default function GestionUsuarios() {
       alert("Hubo un error al guardar.");
     } finally {
       setGuardando(false);
+    }
+  };
+
+  const handleDarDeBaja = async (uid, nombre) => {
+    if (!window.confirm(`¿Dar de baja a ${nombre}? No podrá ingresar a la plataforma.`)) return;
+    setProcesando && setProcesando(uid);
+    try {
+      await updateDoc(doc(db, 'usuarios', uid), { estado: 'baja' });
+      setUsuarios(prev => prev.map(u => u.uid === uid ? { ...u, estado: 'baja' } : u));
+    } catch (error) {
+      console.error("Error dando de baja:", error);
+      alert("Hubo un error al dar de baja.");
+    }
+  };
+
+  const handleReactivar = async (uid, nombre) => {
+    if (!window.confirm(`¿Reactivar la cuenta de ${nombre}?`)) return;
+    try {
+      await updateDoc(doc(db, 'usuarios', uid), { estado: 'activo' });
+      setUsuarios(prev => prev.map(u => u.uid === uid ? { ...u, estado: 'activo' } : u));
+    } catch (error) {
+      console.error("Error reactivando:", error);
+      alert("Hubo un error al reactivar.");
+    }
+  };
+
+  const handleToggleSocio = async (uid, nombre, esSocioActual) => {
+    try {
+      await updateDoc(doc(db, 'usuarios', uid), { socioVitalicio: !esSocioActual });
+      setUsuarios(prev => prev.map(u => u.uid === uid ? { ...u, socioVitalicio: !esSocioActual } : u));
+    } catch (error) {
+      console.error("Error actualizando socio vitalicio:", error);
     }
   };
 
@@ -141,13 +173,48 @@ export default function GestionUsuarios() {
                       <p className="text-[#666666] text-[13px] font-medium">{user.slug || '—'}</p>
                     </td>
                     <td className="px-6 py-5 text-right">
-                      <button 
-                        onClick={() => setUsuarioEditando({...user})}
-                        className="p-2 text-[#666666] hover:text-[#2D6A6A] hover:bg-[#2D6A6A]/10 rounded-xl transition-all"
-                        title="Editar usuario"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
+                      <div className="flex items-center justify-end gap-2">
+                        {/* Badge de estado baja */}
+                        {user.estado === 'baja' && (
+                          <span className="text-[11px] font-bold uppercase tracking-widest bg-red-50 text-red-500 px-2.5 py-1 rounded-lg">
+                            Baja
+                          </span>
+                        )}
+                        {/* Botón corona (socio vitalicio) */}
+                        <button
+                          onClick={() => handleToggleSocio(user.uid, user.nombre, !!user.socioVitalicio)}
+                          className={`p-2 rounded-xl transition-all ${user.socioVitalicio ? 'text-yellow-500 bg-yellow-50 hover:bg-yellow-100' : 'text-[#666666] hover:text-yellow-500 hover:bg-yellow-50'}`}
+                          title={user.socioVitalicio ? 'Quitar socio vitalicio' : 'Asignar socio vitalicio'}
+                        >
+                          <Crown className="w-4 h-4" />
+                        </button>
+                        {/* Botón editar */}
+                        <button
+                          onClick={() => setUsuarioEditando({...user})}
+                          className="p-2 text-[#666666] hover:text-[#2D6A6A] hover:bg-[#2D6A6A]/10 rounded-xl transition-all"
+                          title="Editar usuario"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        {/* Botón dar de baja / reactivar */}
+                        {user.estado === 'baja' ? (
+                          <button
+                            onClick={() => handleReactivar(user.uid, user.nombre)}
+                            className="p-2 text-green-500 hover:bg-green-50 rounded-xl transition-all"
+                            title="Reactivar usuario"
+                          >
+                            <Ban className="w-4 h-4" />
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleDarDeBaja(user.uid, user.nombre)}
+                            className="p-2 text-[#666666] hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                            title="Dar de baja"
+                          >
+                            <Ban className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 )) : (

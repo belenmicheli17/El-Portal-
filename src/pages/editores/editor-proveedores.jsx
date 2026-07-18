@@ -8,7 +8,7 @@ import {
   Globe, Truck, FileText, CreditCard, Wrench, Crop, Briefcase, User, Lock, Eye, EyeOff, Box, ArrowLeft, ArrowRight, Tag, DollarSign, List, Clock, Loader2, ArrowUpRight
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
-
+import FooterSimple from '../../components/FooterSimple';
 // ==========================================
 // IMPORTACIONES DE FIREBASE
 // ==========================================
@@ -1640,12 +1640,7 @@ const location = useLocation();
         </div>
 
         {/* FOOTER */}
-        <footer className="w-full mt-auto py-6 bg-gradient-to-r from-[#1A3D3D] via-[#2D6A6A] to-[#1A3D3D] shadow-[0_-4px_20px_rgba(45,106,106,0.15)] z-10 relative">
-           <div className="max-w-[1100px] mx-auto px-6 text-center md:text-left flex flex-col md:flex-row justify-between items-center gap-4 text-xs font-medium text-white/80">
-              <p>© {new Date().getFullYear()} El Portal Veterinario. Todos los derechos reservados.</p>
-              <p className="text-[#4DB6AC] font-bold tracking-wide">Panel de Gestión de Proveedores</p>
-           </div>
-        </footer>
+        <FooterSimple seccion="Panel de Gestión" />
 
       </div>
     </>

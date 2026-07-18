@@ -13,7 +13,7 @@ import CartillaHeroMockup from '../components/CartillaHeroMockup';
 const Cookies = ({ isFooterVisible }) => null;
 
 const strategicCardsData = [
-  {
+  { 
     id: 'profesionales',
     roleKey: 'profesional',
     icon: User,
@@ -357,7 +357,7 @@ const ZigZagSection = ({ title, subtitle, text, image, customMockup, isReversed,
 };
 
 const TypewriterTitle = () => {
-  const [charInx, setCharIndex] = useState(0);
+  const [charIndex, setCharIndex] = useState(0);
   const text1 = "Enfocate en curar,";
   const text2 = "nosotros en conectarte.";
   const totalChars = text1.length + text2.length;

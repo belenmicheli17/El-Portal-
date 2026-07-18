@@ -5,51 +5,34 @@ import {
   ArrowRight, KeyRound, CheckCircle2, Stethoscope,
   Hospital, Store, Loader2, AlertCircle
 } from 'lucide-react';
-// === IMPORTACIONES DE FIREBASE ===
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { db } from '../firebase'; // Ajustá la ruta si es necesario
+import { db } from '../firebase';
 
-// === TRADUCTOR DE ERRORES DE FIREBASE ===
 const traducirErrorFirebase = (errorCode) => {
   switch (errorCode) {
-    case 'auth/email-already-in-use':
-      return 'Este correo ya está registrado. ¿Intentaste iniciar sesión?';
-    case 'auth/invalid-email':
-      return 'El formato del correo no es válido. Revisá que no haya espacios al final.';
-    case 'auth/weak-password':
-      return 'La contraseña es muy débil. Debe tener al menos 6 caracteres.';
-    case 'auth/user-not-found':
-      return 'No encontramos ninguna cuenta con este correo.';
-    case 'auth/wrong-password':
-      return 'La contraseña es incorrecta.';
-    case 'auth/invalid-credential':
-      return 'El correo o la contraseña son incorrectos.';
-    case 'auth/too-many-requests':
-      return 'Demasiados intentos. Por seguridad, intentá de nuevo más tarde.';
-    case 'auth/network-request-failed':
-      return 'Error de conexión. Revisá tu internet y volvé a intentar.';
-    default:
-      return `Ocurrió un error inesperado (${errorCode || 'Desconocido'}). Intentá de nuevo.`;
+    case 'auth/email-already-in-use': return 'Este correo ya está registrado. ¿Intentaste iniciar sesión?';
+    case 'auth/invalid-email': return 'El formato del correo no es válido. Revisá que no haya espacios al final.';
+    case 'auth/weak-password': return 'La contraseña es muy débil. Debe tener al menos 6 caracteres.';
+    case 'auth/user-not-found': return 'No encontramos ninguna cuenta con este correo.';
+    case 'auth/wrong-password': return 'La contraseña es incorrecta.';
+    case 'auth/invalid-credential': return 'El correo o la contraseña son incorrectos.';
+    case 'auth/too-many-requests': return 'Demasiados intentos. Por seguridad, intentá de nuevo más tarde.';
+    case 'auth/network-request-failed': return 'Error de conexión. Revisá tu internet y volvé a intentar.';
+    default: return `Ocurrió un error inesperado (${errorCode || 'Desconocido'}). Intentá de nuevo.`;
   }
 };
 
-
 export default function Login() {
   const [view, setView] = useState('login');
-  const [accountType, setAccountType] = useState(null); 
+  const [accountType, setAccountType] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
-  
-  // Estados para Firebase
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  // ── Transición de entrada ──────────────────────────────────────────────────
+  const [visible, setVisible] = useState(false);
 
-  const [formData, setFormData] = useState({
-    nombre: '',
-    email: '',
-    password: ''
-  });
-
+  const [formData, setFormData] = useState({ nombre: '', email: '', password: '' });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -60,49 +43,36 @@ export default function Login() {
     return () => document.head.removeChild(link);
   }, []);
 
+  // Dispara la animación de entrada en el siguiente frame
+  useEffect(() => {
+    const t = requestAnimationFrame(() => setVisible(true));
+    return () => cancelAnimationFrame(t);
+  }, []);
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    if (errorMsg) setErrorMsg(''); // Limpia el error al escribir
+    if (errorMsg) setErrorMsg('');
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (view === 'login') {
       setIsLoading(true);
       setErrorMsg('');
-      
       try {
         const auth = getAuth();
-        // 1. Autenticar con Firebase
         const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password);
         const user = userCredential.user;
-        console.log("1. ¡Autenticación exitosa! Tu UID de Firebase es:", user.uid);
-
-        // 2. Buscar el rol del usuario en Firestore
         const userDocRef = doc(db, 'usuarios', user.uid);
         const userDoc = await getDoc(userDocRef);
-
         if (userDoc.exists()) {
           const userData = userDoc.data();
-          console.log("2. Documento encontrado en Firestore. Datos completos:", userData);
-          console.log("3. El rol detectado es:", userData.rol);
-          
-          // 3. Redirección inteligente según el rol
-          // 3. Redirección inteligente al Ecosistema
-          if (userData.rol === 'admin') {
-            navigate('/admin');
-          } else {
-            // Profesionales, clínicas y proveedores van a su panel
-            navigate('/ecosistema');
-          }
+          navigate(userData.rol === 'admin' ? '/admin' : '/ecosistema');
         } else {
-          console.log("2. ERROR: No existe ningún documento en la colección 'usuarios' con el ID:", user.uid);
           navigate('/ecosistema');
         }
-
       } catch (error) {
-        console.error("Error en el proceso de login:", error);
         setErrorMsg(traducirErrorFirebase(error.code));
       } finally {
         setIsLoading(false);
@@ -111,18 +81,11 @@ export default function Login() {
     } else if (view === 'register') {
       setIsLoading(true);
       setErrorMsg('');
-      
       try {
         const auth = getAuth();
-        // 1. Crear usuario en Firebase Auth
         const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
         const user = userCredential.user;
-
-        // 2. Crear un "slug" básico para su URL a partir del nombre (ej: "Juan Perez" -> "juan-perez")
         const slugGenerado = formData.nombre.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
-
-       // 3. Crear su puente en la base de datos Firestore (Colección "usuarios")
-        console.log("Intentando crear documento para:", user.uid, "con rol:", accountType);
         const userDocRef = doc(db, 'usuarios', user.uid);
         const necesitaValidacion = accountType === 'profesional' || accountType === 'clinica';
         await setDoc(userDocRef, {
@@ -133,11 +96,8 @@ export default function Login() {
           fechaRegistro: new Date().toISOString(),
           estado: necesitaValidacion ? 'pendiente' : 'activo'
         });
-        // 4. ¡Listo! Lo mandamos al ecosistema
         navigate('/ecosistema');
-
       } catch (error) {
-        console.error("Error en registro:", error);
         setErrorMsg(traducirErrorFirebase(error.code));
       } finally {
         setIsLoading(false);
@@ -151,9 +111,9 @@ export default function Login() {
         await sendPasswordResetEmail(auth, formData.email);
         setView('recovery_sent');
       } catch (error) {
-        seterrormsg(traducirerrorfirebase(error.code));
+        setErrorMsg(traducirErrorFirebase(error.code));
       } finally {
-        setisloading(false);
+        setIsLoading(false);
       }
     }
   };
@@ -166,21 +126,24 @@ export default function Login() {
 
   const handleBack = () => {
     if (view === 'register' && accountType) {
-        setAccountType(null); 
+      setAccountType(null);
     } else {
-        setView('login'); 
-        setAccountType(null);
-        setErrorMsg('');
+      setView('login');
+      setAccountType(null);
+      setErrorMsg('');
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#E8EFEF] flex font-['Inter'] antialiased relative">
-      
+    <div className={`min-h-screen bg-[#E8EFEF] flex font-['Inter'] antialiased relative transition-opacity duration-500 ease-out ${visible ? 'opacity-100' : 'opacity-0'}`}>
+
       {/* NAVBAR */}
       <nav className="absolute top-0 left-0 w-full z-[100] h-[72px] flex items-center px-8 md:px-10 pointer-events-none">
         <div className="max-w-[1100px] mx-auto w-full flex justify-between items-center pointer-events-auto">
-          <div onClick={() => navigate('/')} className="font-['Montserrat'] font-extrabold text-2xl tracking-tighter cursor-pointer text-[#1A3D3D] md:text-white transition-transform hover:scale-105">
+          <div
+            onClick={() => navigate('/')}
+            className="font-['Montserrat'] font-extrabold text-2xl tracking-tighter cursor-pointer text-[#1A3D3D] md:text-white transition-transform hover:scale-105"
+          >
             El Portal<span className="text-[#2D6A6A] md:text-[#4DB6AC]">.</span>
           </div>
           {(view !== 'login' || accountType) && (
@@ -210,79 +173,65 @@ export default function Login() {
         </div>
       </div>
 
-      {/* FORMULARIO DE LOGIN */}
+      {/* FORMULARIO — con transición de entrada */}
       <div className="w-full md:w-[55%] lg:w-[50%] flex justify-center items-center md:p-6 relative pt-20 md:pt-6">
-        <div className="w-full max-w-[412px] md:max-w-[440px] bg-[#F4F7F7] min-h-[calc(100vh-80px)] md:min-h-[auto] md:h-auto relative shadow-2xl flex flex-col md:rounded-[40px] overflow-hidden">
-          
+        <div
+          className={`w-full max-w-[412px] md:max-w-[440px] bg-[#F4F7F7] min-h-[calc(100vh-80px)] md:min-h-[auto] md:h-auto relative shadow-2xl flex flex-col md:rounded-[40px] overflow-hidden
+           transition-none`}>
+
           <div className="bg-[#1A3D3D] pt-8 pb-14 px-8 md:pt-10 md:pb-12 rounded-b-[40px] md:rounded-t-[40px] relative overflow-hidden shrink-0 shadow-lg">
             <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-white via-transparent to-transparent"></div>
             <div className="relative z-10 flex flex-col items-center text-center">
               <div className="bg-[#2D6A6A] p-3 md:p-2.5 rounded-2xl mb-2 shadow-inner border border-white/10">
-                {view === 'forgot_password' || view === 'recovery_sent' ? <KeyRound className="text-white w-8 h-8 md:w-6 md:h-6" /> : <ShieldCheck className="text-white w-8 h-8 md:w-6 md:h-6" />}
+                {view === 'forgot_password' || view === 'recovery_sent'
+                  ? <KeyRound className="text-white w-8 h-8 md:w-6 md:h-6" />
+                  : <ShieldCheck className="text-white w-8 h-8 md:w-6 md:h-6" />}
               </div>
               <p className="text-white/80 text-[13px] font-medium max-w-[250px] leading-tight mt-2">
-                {view === 'forgot_password' || view === 'recovery_sent' ? 'Protegemos tu acceso profesional.' : 'Bienvenido a tu espacio exclusivo.'}
+                {view === 'forgot_password' || view === 'recovery_sent'
+                  ? 'Protegemos tu acceso profesional.'
+                  : 'Bienvenido a tu espacio exclusivo.'}
               </p>
             </div>
           </div>
 
           <div className="flex-1 px-6 md:px-8 -mt-10 md:-mt-8 relative z-20 pb-8 flex flex-col">
             <div className="bg-white rounded-[32px] shadow-[0_15px_40px_rgba(0,0,0,0.08)] p-6 md:p-6 border border-gray-50 flex-1 flex flex-col">
-              
+
               <h2 className="text-[#1A3D3D] font-['Montserrat'] font-bold text-lg md:text-base text-center mb-6 md:mb-4 uppercase tracking-wider">
                 {renderHeader()}
               </h2>
 
               {view === 'register' && !accountType ? (
-                  <div className="space-y-4 md:space-y-3">
-                      <button onClick={() => setAccountType('profesional')} className="w-full text-left p-4 md:p-3.5 rounded-2xl border-2 border-gray-100 hover:border-[#2D6A6A] hover:bg-[#F4F7F7] transition-all group flex items-center gap-4">
-                          <div className="bg-blue-50 p-3 md:p-2.5 rounded-full text-blue-600 group-hover:scale-110 transition-transform"><Stethoscope size={20} /></div>
-                          <div><h3 className="font-bold text-[#1A3D3D] text-[15px] md:text-[14px]">Soy Profesional</h3><p className="text-gray-500 text-[11px] md:text-[11px] leading-tight mt-1">Veterinario/a, busco conectar y acceder a recursos.</p></div>
-                      </button>
-                      <button onClick={() => setAccountType('clinica')} className="w-full text-left p-4 md:p-3.5 rounded-2xl border-2 border-gray-100 hover:border-[#2D6A6A] hover:bg-[#F4F7F7] transition-all group flex items-center gap-4">
-                          <div className="bg-emerald-50 p-3 md:p-2.5 rounded-full text-emerald-600 group-hover:scale-110 transition-transform"><Hospital size={20} /></div>
-                          <div><h3 className="font-bold text-[#1A3D3D] text-[15px] md:text-[14px]">Soy una Clínica</h3><p className="text-gray-500 text-[11px] md:text-[11px] leading-tight mt-1">Busco publicar ofertas de empleo y derivaciones.</p></div>
-                      </button>
-                      <button onClick={() => setAccountType('proveedor')} className="w-full text-left p-4 md:p-3.5 rounded-2xl border-2 border-gray-100 hover:border-[#2D6A6A] hover:bg-[#F4F7F7] transition-all group flex items-center gap-4">
-                          <div className="bg-purple-50 p-3 md:p-2.5 rounded-full text-purple-600 group-hover:scale-110 transition-transform"><Store size={20} /></div>
-                          <div><h3 className="font-bold text-[#1A3D3D] text-[15px] md:text-[14px]">Proveedor</h3><p className="text-gray-500 text-[11px] md:text-[11px] leading-tight mt-1">Ofrezco insumos, equipamiento o servicios.</p></div>
-                      </button>
-                  </div>
+                <div className="space-y-4 md:space-y-3">
+                  <button onClick={() => setAccountType('profesional')} className="w-full text-left p-4 md:p-3.5 rounded-2xl border-2 border-gray-100 hover:border-[#2D6A6A] hover:bg-[#F4F7F7] transition-all group flex items-center gap-4">
+                    <div className="bg-blue-50 p-3 md:p-2.5 rounded-full text-blue-600 group-hover:scale-110 transition-transform"><Stethoscope size={20} /></div>
+                    <div><h3 className="font-bold text-[#1A3D3D] text-[15px] md:text-[14px]">Soy Profesional</h3><p className="text-gray-500 text-[11px] leading-tight mt-1">Veterinario/a, busco conectar y acceder a recursos.</p></div>
+                  </button>
+                  <button onClick={() => setAccountType('clinica')} className="w-full text-left p-4 md:p-3.5 rounded-2xl border-2 border-gray-100 hover:border-[#2D6A6A] hover:bg-[#F4F7F7] transition-all group flex items-center gap-4">
+                    <div className="bg-emerald-50 p-3 md:p-2.5 rounded-full text-emerald-600 group-hover:scale-110 transition-transform"><Hospital size={20} /></div>
+                    <div><h3 className="font-bold text-[#1A3D3D] text-[15px] md:text-[14px]">Soy una Clínica</h3><p className="text-gray-500 text-[11px] leading-tight mt-1">Busco publicar ofertas de empleo y derivaciones.</p></div>
+                  </button>
+                  <button onClick={() => setAccountType('proveedor')} className="w-full text-left p-4 md:p-3.5 rounded-2xl border-2 border-gray-100 hover:border-[#2D6A6A] hover:bg-[#F4F7F7] transition-all group flex items-center gap-4">
+                    <div className="bg-purple-50 p-3 md:p-2.5 rounded-full text-purple-600 group-hover:scale-110 transition-transform"><Store size={20} /></div>
+                    <div><h3 className="font-bold text-[#1A3D3D] text-[15px] md:text-[14px]">Proveedor</h3><p className="text-gray-500 text-[11px] leading-tight mt-1">Ofrezco insumos, equipamiento o servicios.</p></div>
+                  </button>
+                </div>
               ) : view === 'recovery_sent' ? (
-                <div className="flex flex-col items-center text-center space-y-4 py-6 md:py-6">
-                  <div className="w-16 h-16 md:w-16 md:h-16 bg-green-50 rounded-full flex items-center justify-center mb-2 md:mb-0">
-                    <CheckCircle2 className="w-8 h-8 md:w-8 md:h-8 text-green-500" />
+                <div className="flex flex-col items-center text-center space-y-4 py-6">
+                  <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mb-2">
+                    <CheckCircle2 className="w-8 h-8 text-green-500" />
                   </div>
-                  <h3 className="font-bold text-[#1A3D3D] text-[16px] md:text-[16px]">¡Revisa tu bandeja!</h3>
-                  <p className="text-gray-500 text-[13px] leading-relaxed max-w-[280px]">Hemos enviado un enlace de recuperación a <br/><strong className="text-[#1A3D3D]">{formData.email}</strong></p>
-                  <button onClick={() => setView('login')} className="w-full mt-6 md:mt-4 bg-[#2D6A6A] text-white font-bold rounded-xl py-4 flex items-center justify-center tracking-[0.1em] text-[12px] uppercase shadow-lg shadow-[#2D6A6A]/30 hover:bg-[#1A3D3D] transition-all">Volver al inicio</button>
+                  <h3 className="font-bold text-[#1A3D3D] text-[16px]">¡Revisa tu bandeja!</h3>
+                  <p className="text-gray-500 text-[13px] leading-relaxed max-w-[280px]">Hemos enviado un enlace de recuperación a <br /><strong className="text-[#1A3D3D]">{formData.email}</strong></p>
+                  <button onClick={() => setView('login')} className="w-full mt-6 bg-[#2D6A6A] text-white font-bold rounded-xl py-4 flex items-center justify-center tracking-[0.1em] text-[12px] uppercase shadow-lg shadow-[#2D6A6A]/30 hover:bg-[#1A3D3D] transition-all">Volver al inicio</button>
                 </div>
               ) : (
                 <>
-                  {/* GOOGLE LOGIN — pendiente de implementar
-                  {(view === 'login') && (
-                    <>
-                      <button className="w-full flex items-center justify-center gap-3 bg-white border border-gray-200 text-gray-700 font-semibold py-3.5 md:py-3 px-4 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm mb-6 md:mb-4">
-                        <svg className="w-5 h-5 md:w-4 md:h-4" viewBox="0 0 24 24">
-                          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                        </svg>
-                        <span className="text-[13px] md:text-[13px]">Continuar con Google</span>
-                      </button>
-                      <div className="flex items-center gap-3 mb-6 md:mb-4">
-                        <div className="flex-1 h-px bg-gray-100"></div><span className="text-gray-400 text-[10px] font-bold uppercase tracking-widest">O con tu mail</span><div className="flex-1 h-px bg-gray-100"></div>
-                      </div>
-                    </>
-                  )}
-                  */}
-
                   {view === 'forgot_password' && (
-                    <p className="text-center text-gray-500 text-[12px] md:text-[12px] mb-6 md:mb-4 leading-relaxed">Ingresa tu correo y te enviaremos un enlace para restablecer tu contraseña.</p>
+                    <p className="text-center text-gray-500 text-[12px] mb-6 leading-relaxed">Ingresá tu correo y te enviaremos un enlace para restablecer tu contraseña.</p>
                   )}
 
-                  {/* Mensaje de Error */}
                   {errorMsg && (
                     <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-xl flex items-center gap-2 animate-in fade-in">
                       <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
@@ -296,28 +245,42 @@ export default function Login() {
                         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-[#2D6A6A] transition-colors">
                           {accountType === 'profesional' ? <Stethoscope size={18} /> : accountType === 'clinica' ? <Hospital size={18} /> : <Store size={18} />}
                         </div>
-                        <input type="text" name="nombre" value={formData.nombre} onChange={handleChange} placeholder={accountType === 'profesional' ? 'Tu Matrícula Profesional' : accountType === 'clinica' ? 'Nombre de la Clínica' : 'Nombre de Proveedor'} className="w-full pl-11 pr-4 py-3.5 md:py-3 bg-[#F4F7F7] border border-transparent rounded-xl text-[13px] md:text-[13px] text-[#1A3D3D] placeholder-gray-400 focus:bg-white focus:border-[#2D6A6A] focus:ring-2 focus:ring-[#2D6A6A]/20 transition-all outline-none" required />
+                        <input type="text" name="nombre" value={formData.nombre} onChange={handleChange}
+                          placeholder={accountType === 'profesional' ? 'Tu Matrícula Profesional' : accountType === 'clinica' ? 'Nombre de la Clínica' : 'Nombre de Proveedor'}
+                          className="w-full pl-11 pr-4 py-3.5 md:py-3 bg-[#F4F7F7] border border-transparent rounded-xl text-[13px] text-[#1A3D3D] placeholder-gray-400 focus:bg-white focus:border-[#2D6A6A] focus:ring-2 focus:ring-[#2D6A6A]/20 transition-all outline-none" required />
                       </div>
                     )}
                     <div className="relative group">
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-[#2D6A6A] transition-colors"><Mail size={18} /></div>
-                      <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="Correo electrónico" className="w-full pl-11 pr-4 py-3.5 md:py-3 bg-[#F4F7F7] border border-transparent rounded-xl text-[13px] md:text-[13px] text-[#1A3D3D] placeholder-gray-400 focus:bg-white focus:border-[#2D6A6A] focus:ring-2 focus:ring-[#2D6A6A]/20 transition-all outline-none" required />
+                      <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="Correo electrónico"
+                        className="w-full pl-11 pr-4 py-3.5 md:py-3 bg-[#F4F7F7] border border-transparent rounded-xl text-[13px] text-[#1A3D3D] placeholder-gray-400 focus:bg-white focus:border-[#2D6A6A] focus:ring-2 focus:ring-[#2D6A6A]/20 transition-all outline-none" required />
                     </div>
                     {(view === 'login' || view === 'register') && (
                       <div className="relative group">
                         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-[#2D6A6A] transition-colors"><Lock size={18} /></div>
-                        <input type={showPassword ? 'text' : 'password'} name="password" value={formData.password} onChange={handleChange} placeholder="Contraseña" className="w-full pl-11 pr-12 py-3.5 md:py-3 bg-[#F4F7F7] border border-transparent rounded-xl text-[13px] md:text-[13px] text-[#1A3D3D] placeholder-gray-400 focus:bg-white focus:border-[#2D6A6A] focus:ring-2 focus:ring-[#2D6A6A]/20 transition-all outline-none" required />
-                        <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-[#2D6A6A] transition-colors">{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button>
+                        <input type={showPassword ? 'text' : 'password'} name="password" value={formData.password} onChange={handleChange} placeholder="Contraseña"
+                          className="w-full pl-11 pr-12 py-3.5 md:py-3 bg-[#F4F7F7] border border-transparent rounded-xl text-[13px] text-[#1A3D3D] placeholder-gray-400 focus:bg-white focus:border-[#2D6A6A] focus:ring-2 focus:ring-[#2D6A6A]/20 transition-all outline-none" required />
+                        <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-[#2D6A6A] transition-colors">
+                          {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
                       </div>
                     )}
                     {view === 'login' && (
-                      <div className="flex justify-end pt-1 md:pt-0"><button type="button" onClick={() => setView('forgot_password')} className="text-[11px] md:text-[11px] font-semibold text-[#2D6A6A] hover:text-[#1A3D3D] transition-colors">¿Olvidaste tu contraseña?</button></div>
+                      <div className="flex justify-end pt-1">
+                        <button type="button" onClick={() => setView('forgot_password')} className="text-[11px] font-semibold text-[#2D6A6A] hover:text-[#1A3D3D] transition-colors">¿Olvidaste tu contraseña?</button>
+                      </div>
                     )}
-                    <button type="submit" disabled={isLoading} className="w-full mt-2 md:mt-2 bg-[#2D6A6A] text-white font-bold rounded-xl py-4 md:py-3 flex items-center justify-center gap-2 tracking-[0.1em] text-[12px] md:text-[12px] uppercase shadow-lg shadow-[#2D6A6A]/30 hover:bg-[#1A3D3D] hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed">
+                    <button type="submit" disabled={isLoading}
+                      className="w-full mt-2 bg-[#2D6A6A] text-white font-bold rounded-xl py-4 md:py-3 flex items-center justify-center gap-2 tracking-[0.1em] text-[12px] uppercase shadow-lg shadow-[#2D6A6A]/30 hover:bg-[#1A3D3D] hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed">
                       {isLoading ? (
                         <><Loader2 size={16} className="animate-spin" /> Ingresando...</>
                       ) : (
-                        <>{view === 'login' && 'Ingresar a mi cuenta'}{view === 'register' && 'Crear cuenta ahora'}{view === 'forgot_password' && 'Enviar enlace'}<ArrowRight size={16} /></>
+                        <>
+                          {view === 'login' && 'Ingresar a mi cuenta'}
+                          {view === 'register' && 'Crear cuenta ahora'}
+                          {view === 'forgot_password' && 'Enviar enlace'}
+                          <ArrowRight size={16} />
+                        </>
                       )}
                     </button>
                   </form>
@@ -327,16 +290,18 @@ export default function Login() {
 
             {(view === 'login' || view === 'register') && (
               <div className="mt-8 md:mt-6 text-center shrink-0">
-                <p className="text-[12px] md:text-[12px] text-gray-500 font-medium">{view === 'login' ? '¿Aún no eres parte de la red?' : '¿Ya tienes una cuenta?'}</p>
-                <button onClick={() => { setView(view === 'login' ? 'register' : 'login'); setAccountType(null); setErrorMsg(''); }} className="mt-2 md:mt-1 text-[12px] md:text-[12px] font-bold uppercase tracking-widest text-[#1A3D3D] hover:text-[#2D6A6A] transition-colors">
-                  {view === 'login' ? 'Solicitar Registro' : 'Iniciar Sesión'} 
+                <p className="text-[12px] text-gray-500 font-medium">{view === 'login' ? '¿Aún no eres parte de la red?' : '¿Ya tienes una cuenta?'}</p>
+                <button
+                  onClick={() => { setView(view === 'login' ? 'register' : 'login'); setAccountType(null); setErrorMsg(''); }}
+                  className="mt-2 text-[12px] font-bold uppercase tracking-widest text-[#1A3D3D] hover:text-[#2D6A6A] transition-colors"
+                >
+                  {view === 'login' ? 'Solicitar Registro' : 'Iniciar Sesión'}
                 </button>
               </div>
             )}
-            
+
           </div>
         </div>
-
       </div>
     </div>
   );
