@@ -397,8 +397,12 @@ export default function Ecosistema() {
 
   const handlePasoTour = (paso) => {
     if (paso?.cerrarNotif) { setIsNotifOpen(false); setTimeout(() => { window.scrollBy({ top: 200, behavior: 'instant' }); }, 50); }
-    if (paso?.abrirFeedback) { setTimeout(() => { window.dispatchEvent(new CustomEvent('tour:abrirFeedback')); }, 600); }
-    if (paso?.abrirAccs) { window.dispatchEvent(new CustomEvent('tour:cerrarFeedback')); setTimeout(() => { window.dispatchEvent(new CustomEvent('tour:abrirAccs')); }, 600); }
+    if (paso?.abrirFeedback) {
+  window.dispatchEvent(new CustomEvent('tour:abrirFeedback'));
+}if (paso?.abrirAccs) {
+  window.dispatchEvent(new CustomEvent('tour:cerrarFeedback'));
+  window.dispatchEvent(new CustomEvent('tour:cerrarAccs'));
+}
   };
 
   const PASOS_TOUR = {
@@ -410,7 +414,7 @@ export default function Ecosistema() {
       { targetId: 'tour-proveedores', titulo: 'Cartilla de proveedores', desc: 'Directorio de distribuidores y laboratorios con los que podés trabajar.' },
       { targetId: 'tour-publicaciones', titulo: 'Publicaciones científicas', desc: 'Papers, novedades y actualizaciones del mundo veterinario para mantenerte al día.' },
       { targetId: 'tour-actividad', titulo: 'Tu actividad', desc: 'Acá aparecen las novedades importantes: cursos nuevos, inscripciones y actualizaciones de la red.', cerrarNotif: true },
-      { targetId: 'tour-btn-feedback', titulo: '¿Algo para mejorar?', desc: 'Durante la beta, este botón naranja te permite enviarnos comentarios directamente.', abrirFeedback: true, posicion: 'derecha' },
+      { targetId: 'tour-btn-feedback', titulo: '¿Algo para mejorar?', desc: 'Durante las fases de prueba de la plataforma, este botón naranja te permitirá enviarnos comentarios directamente sobre lo que te parezca que podríamos mejorar.', abrirFeedback: true, posicion: 'derecha' },
       { targetId: 'tour-btn-accesibilidad', titulo: 'Opciones de accesibilidad', desc: 'Este botón te permite ajustar el tamaño del texto, activar modo escala de grises, resaltar enlaces y más.', abrirAccs: true, posicion: 'derecha' },
     ],
     clinica: [
@@ -421,7 +425,7 @@ export default function Ecosistema() {
       { targetId: 'tour-proveedores', titulo: 'Cartilla de proveedores', desc: 'Directorio de distribuidores y laboratorios de confianza.' },
       { targetId: 'tour-publicaciones', titulo: 'Publicaciones científicas', desc: 'Papers, novedades y actualizaciones del mundo veterinario para mantenerte al día.' },
       { targetId: 'tour-actividad', titulo: 'Tu actividad', desc: 'Novedades del sector, nuevos profesionales disponibles y actualizaciones importantes.' },
-      { targetId: 'tour-btn-feedback', titulo: '¿Algo para mejorar?', desc: 'Durante la beta, este botón naranja te permite enviarnos comentarios directamente.', abrirFeedback: true, posicion: 'derecha' },
+      { targetId: 'tour-btn-feedback', titulo: '¿Algo para mejorar?', desc: 'Durante las fases de prueba de la plataforma, este botón naranja te permitirá enviarnos comentarios directamente sobre lo que te parezca que podríamos mejorar.', abrirFeedback: true, posicion: 'derecha' },
       { targetId: 'tour-btn-accesibilidad', titulo: 'Opciones de accesibilidad', desc: 'Ajustá el tamaño del texto, activá modo escala de grises, resaltá enlaces y más.', abrirAccs: true, posicion: 'derecha' },
     ],
     alumnx: [
@@ -429,14 +433,14 @@ export default function Ecosistema() {
       { targetId: 'tour-cursos', titulo: 'Capacitaciones', desc: 'Explorá cursos y especializaciones pensados para estudiantes y recién recibidos.' },
       { targetId: 'tour-empleos', titulo: 'Bolsa de trabajo', desc: 'Marcate como disponible para que las clínicas puedan encontrarte.' },
       { targetId: 'tour-actividad', titulo: 'Tu actividad', desc: 'Novedades y oportunidades relevantes para vos.' },
-      { targetId: 'tour-btn-feedback', titulo: '¿Algo para mejorar?', desc: 'Durante la beta, este botón naranja te permite enviarnos comentarios directamente.', abrirFeedback: true, posicion: 'derecha' },
+      { targetId: 'tour-btn-feedback', titulo: '¿Algo para mejorar?', desc: 'Durante las fases de prueba de la plataforma, este botón naranja te permitirá enviarnos comentarios directamente sobre lo que te parezca que podríamos mejorar.', abrirFeedback: true, posicion: 'derecha' },
       { targetId: 'tour-btn-accesibilidad', titulo: 'Opciones de accesibilidad', desc: 'Ajustá el tamaño del texto, activá modo escala de grises y más.', abrirAccs: true, posicion: 'derecha' },
     ],
     proveedor: [
       { targetId: 'tour-editar-perfil', titulo: 'Tu perfil de empresa', desc: 'Completá los datos de tu marca: descripción, contacto y redes para aparecer en la cartilla de proveedores.' },
       { targetId: 'tour-cursos', titulo: 'Capacitaciones', desc: 'Explorá y publicá cursos para la comunidad veterinaria.' },
       { targetId: 'tour-proveedores', titulo: 'Cartilla de proveedores', desc: 'Así es como te ven los profesionales y clínicas cuando buscan proveedores.' },
-      { targetId: 'tour-btn-feedback', titulo: '¿Algo para mejorar?', desc: 'Durante la beta, este botón naranja te permite enviarnos comentarios directamente.', abrirFeedback: true, posicion: 'derecha' },
+      { targetId: 'tour-btn-feedback', titulo: '¿Algo para mejorar?', desc: 'Durante las fases de prueba de la plataforma, este botón naranja te permitirá enviarnos comentarios directamente sobre lo que te parezca que podríamos mejorar.', abrirFeedback: true, posicion: 'derecha' },
       { targetId: 'tour-btn-accesibilidad', titulo: 'Opciones de accesibilidad', desc: 'Ajustá el tamaño del texto, activá modo escala de grises y más.', abrirAccs: true, posicion: 'derecha' },
     ],
   };
@@ -571,7 +575,7 @@ export default function Ecosistema() {
               </div>
 
               {activeRole === 'proveedor' && (
-                <DashboardCard titulo="Mi Catálogo" descripcion="Gestioná tus productos y servicios veterinarios" icon={Store} customBg="bg-white/80" onClick={() => navigate('/editor-proveedores', { state: { tab: 'productos' } })} />
+                <DashboardCard titulo="Mi catálogo" descripcion="Gestioná tus productos y servicios veterinarios" icon={Store} customBg="bg-white/80" onClick={() => navigate('/editor-proveedores', { state: { tab: 'productos' } })} />
               )}
 
               {/* Card Cursos */}
@@ -601,7 +605,7 @@ export default function Ecosistema() {
               )}
 
               <div id="tour-proveedores">
-                <DashboardCard titulo="Proveedores" descripcion="Directorio de distribuidores y laboratorios de confianza" icon={Package} onClick={() => navigate('/cartilla-proveedores')} />
+                <DashboardCard titulo="Cartilla de proveedores" descripcion="Directorio de distribuidores mayoristas, laboratorios y mas rubros afines" icon={Package} onClick={() => navigate('/cartilla-proveedores')} />
               </div>
 
               {activeRole !== 'proveedor' && (

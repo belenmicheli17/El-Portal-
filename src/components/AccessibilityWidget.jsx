@@ -136,15 +136,18 @@ export default function AccessibilityWidget() {
   useEffect(() => {
     const abrirFeedback = () => { setFeedbackOpen(true); setIsOpen(false); };
     const cerrarFeedback = () => { setFeedbackOpen(false); };
-    const abrirAccs = () => { setIsOpen(true); setFeedbackOpen(false); };
+   const abrirAccs = () => { setIsOpen(false); setFeedbackOpen(false); };
+const cerrarAccs = () => { setIsOpen(false); };
     window.addEventListener('tour:abrirFeedback', abrirFeedback);
     window.addEventListener('tour:cerrarFeedback', cerrarFeedback);
     window.addEventListener('tour:abrirAccs', abrirAccs);
-    return () => {
-      window.removeEventListener('tour:abrirFeedback', abrirFeedback);
-      window.removeEventListener('tour:cerrarFeedback', cerrarFeedback);
-      window.removeEventListener('tour:abrirAccs', abrirAccs);
-    };
+window.addEventListener('tour:cerrarAccs', cerrarAccs);
+return () => {
+  window.removeEventListener('tour:abrirFeedback', abrirFeedback);
+  window.removeEventListener('tour:cerrarFeedback', cerrarFeedback);
+  window.removeEventListener('tour:abrirAccs', abrirAccs);
+  window.removeEventListener('tour:cerrarAccs', cerrarAccs);
+};
   }, []);
 
   useEffect(() => {
@@ -313,7 +316,7 @@ export default function AccessibilityWidget() {
 
         <div className="flex flex-col items-center gap-2">
           {currentUser && (
-            <div className="relative">
+            <div className="relative" id="tour-btn-feedback">
               {feedbackOpen && (
                 <div
                   className={`absolute w-[calc(100vw-40px)] md:w-80 bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] border border-gray-100 p-5 animate-in fade-in duration-300
@@ -321,15 +324,15 @@ export default function AccessibilityWidget() {
                   `}
                 >
                   <div className="flex justify-between items-center mb-3 pb-2 border-b border-gray-100">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Comentario beta</p>
+                    <p className=" text-[10px] text-[#FF9800] font-bold text-gray-400 uppercase tracking-widest">Comentario beta</p>
                     <button onClick={() => setFeedbackOpen(false)} className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-lg hover:bg-gray-100">
                       <X className="w-4 h-4" />
                     </button>
                   </div>
                   {feedbackEnviado ? (
                     <div className="py-4 text-center">
-                      <p className="text-[#2D6A6A] font-black text-[15px] font-['Montserrat'] mb-1">¡Gracias!</p>
-                      <p className="text-[#666666] text-[13px] font-medium">Tu comentario nos ayuda a mejorar la plataforma.</p>
+                      <p className="text-[#FF9800] font-black text-[17px] font-['Montserrat'] mb-1">¡Gracias!</p>
+                      <p className="text-[#666666] text-[14px] font-medium">Tu comentario nos ayuda a mejorar la plataforma.</p>
                       <button onClick={() => { setFeedbackEnviado(false); setFeedbackOpen(false); }} className="mt-4 text-[11px] font-bold text-[#2D6A6A] hover:text-[#1A3D3D] uppercase tracking-widest transition-colors">
                         Cerrar
                       </button>
@@ -337,7 +340,7 @@ export default function AccessibilityWidget() {
                   ) : (
                     <>
                       <p className="text-[13px] font-medium text-[#666666] mb-3 leading-relaxed">
-                        ¿Algo que no queda claro o que mejorarías? Contanos, estamos en fase beta y tu opinión cuenta.
+                        ¿Algo que no queda claro o que podría mejorar? Contanos, estamos en fase beta y tu opinión es muy importante.
                       </p>
                       <textarea
                         value={feedbackTexto}
@@ -360,8 +363,7 @@ export default function AccessibilityWidget() {
                 </div>
               )}
               <button
-                id="tour-btn-feedback"
-                onClick={handleFeedbackToggle}
+                                onClick={handleFeedbackToggle}
                 className={`w-12 h-12 md:w-14 md:h-14 rounded-full shadow-xl flex items-center justify-center transition-all duration-300 ease-in-out text-white hover:scale-110 active:scale-95
                   ${feedbackOpen ? 'bg-[#e68900] rotate-90' : 'bg-[#FF9800]'}
                 `}
@@ -378,7 +380,8 @@ export default function AccessibilityWidget() {
             onPointerCancel={handlePointerUp}
             onClick={handleToggle}
             style={{ touchAction: 'none' }} 
-            className={`w-12 h-12 md:w-14 md:h-14 rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 ease-in-out text-white hover:scale-110 active:scale-95 cursor-grab active:cursor-grabbing
+            id="tour-btn-accesibilidad"
+className={`w-12 h-12 md:w-14 md:h-14 rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 ease-in-out text-white hover:scale-110 active:scale-95 cursor-grab active:cursor-grabbing
               ${isOpen ? 'bg-red-500 rotate-90' : 'bg-[#1A3D3D]'}
             `}
           >

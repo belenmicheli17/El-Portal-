@@ -16,7 +16,7 @@ const MENU_POR_ROL = {
     { label: 'Cartilla', icon: Search, path: '/Cartilla' },
     { label: 'Capacitaciones', icon: BookOpen, path: '/capacitaciones' },
     { label: 'Bolsa de trabajo', icon: Briefcase, path: '/bolsa-de-trabajo' },
-    { label: 'Proveedores', icon: Package, path: '/cartilla-proveedores' },
+    { label: 'Cartilla de proveedores', icon: Package, path: '/cartilla-proveedores' },
     { label: 'Publicaciones científicas', icon: FileText, path: '/papers' },
   ],
   clinica: [
@@ -24,7 +24,7 @@ const MENU_POR_ROL = {
     { label: 'Cartilla', icon: Search, path: '/Cartilla' },
     { label: 'Capacitaciones', icon: BookOpen, path: '/capacitaciones' },
     { label: 'Bolsa de trabajo', icon: Briefcase, path: '/bolsa-de-trabajo' },
-    { label: 'Proveedores', icon: Package, path: '/cartilla-proveedores' },
+    { label: 'Cartilla de proveedores', icon: Package, path: '/cartilla-proveedores' },
     { label: 'Publicaciones científicas', icon: FileText, path: '/papers' },
   ],
   alumnx: [
@@ -36,7 +36,7 @@ const MENU_POR_ROL = {
   proveedor: [
     { label: 'Inicio', icon: Home, path: '/ecosistema' },
     { label: 'Capacitaciones', icon: BookOpen, path: '/capacitaciones' },
-    { label: 'Proveedores', icon: Package, path: '/cartilla-proveedores' },
+    { label: 'Cartilla de proveedores', icon: Package, path: '/cartilla-proveedores' },
     { label: 'Publicaciones científicas', icon: FileText, path: '/papers' },
   ],
 };

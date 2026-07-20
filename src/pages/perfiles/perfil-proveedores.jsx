@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   ShieldCheck, ChevronLeft, ChevronRight, Phone, Mail, Globe,
   PackageSearch, Truck, CreditCard, Check, ArrowUpRight, X, MessageCircle, FileText, Wrench,
-  Facebook, Instagram, Linkedin, Building2, MapPin, ArrowUp, Filter, Clock,
+  Facebook, Instagram, Building2, MapPin, ArrowUp, Filter, Clock,
   Search, Play
 } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -429,8 +429,22 @@ export default function PerfilProveedor() {
                     </a>
                   )}
 
-                  {/* Redes Sociales (CORREGIDO: instagram, facebook, linkedin planos) */}
-                  {(proveedor.instagram || proveedor.facebook || proveedor.linkedin) && (
+                  {/* Sitio Web */}
+                  {proveedor.web && (
+                    <a href={proveedor.web} target="_blank" rel="noreferrer" className="flex items-center gap-4 bg-white border border-gray-100 rounded-2xl p-4 hover:border-[#2D6A6A]/30 transition-all group">
+                      <div className="w-12 h-12 bg-[#2D6A6A]/10 rounded-xl flex items-center justify-center text-[#2D6A6A] shrink-0 group-hover:bg-[#2D6A6A] group-hover:text-white transition-colors">
+                        <Globe className="w-5 h-5" />
+                      </div>
+                      <div className="text-left flex-1 min-w-0">
+                        <p className="text-[9px] font-bold text-gray-400 uppercase leading-none mb-1.5">Sitio Web</p>
+                        <p className="text-[#1A3D3D] font-bold text-[13px] truncate">{proveedor.web.replace(/^https?:\/\//, '')}</p>
+                      </div>
+                      <ArrowUpRight className="w-4 h-4 text-gray-300 group-hover:text-[#2D6A6A] transition-colors shrink-0" />
+                    </a>
+                  )}
+
+                  {/* Redes Sociales (sin LinkedIn) */}
+                  {(proveedor.instagram || proveedor.facebook) && (
                     <div className="flex items-center gap-4 bg-white border border-gray-100 rounded-2xl p-4">
                       <div className="w-12 h-12 bg-[#2D6A6A]/10 rounded-xl flex items-center justify-center text-[#2D6A6A] shrink-0">
                         <Globe className="w-5 h-5" />
@@ -446,11 +460,6 @@ export default function PerfilProveedor() {
                            {proveedor.facebook && (
                              <a href={proveedor.facebook} target="_blank" rel="noreferrer" className="w-8 h-8 rounded-full bg-[#F4F7F7] flex items-center justify-center text-gray-400 hover:bg-[#1877F2] hover:text-white transition-all shadow-sm active:scale-90">
                                <Facebook className="w-4 h-4" />
-                             </a>
-                           )}
-                           {proveedor.linkedin && (
-                             <a href={proveedor.linkedin} target="_blank" rel="noreferrer" className="w-8 h-8 rounded-full bg-[#F4F7F7] flex items-center justify-center text-gray-400 hover:bg-[#0A66C2] hover:text-white transition-all shadow-sm active:scale-90">
-                               <Linkedin className="w-4 h-4" />
                              </a>
                            )}
                         </div>

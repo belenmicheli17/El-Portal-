@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 // IMPORTS DE FIREBASE (Siempre arriba de todo)
 import { db } from '../firebase.js'; 
 import { collection, getDocs } from 'firebase/firestore';
-import { cargarSeeds } from '../seeds.js';
+
 
 import { 
   Search, Filter, MapPin, Phone, Mail, Globe, Star, ShieldCheck, 
@@ -30,14 +30,31 @@ export default function CartillaProveedores() {
   const [isLoading, setIsLoading] = useState(true);
 
   // EFECTO PARA TRAER DATOS DE LA BASE
+  // Leemos todos los proveedores pero solo usamos el campo productoDestacado de cada uno
   useEffect(() => {
     const fetchProveedores = async () => {
       try {
         const querySnapshot = await getDocs(collection(db, 'proveedores'));
-        const data = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
+        const data = querySnapshot.docs
+          .map(doc => {
+            const d = doc.data();
+            // Solo procesamos proveedores que tienen un producto destacado cargado
+            if (!d.productoDestacado) return null;
+            return {
+              id: doc.id,
+              // Datos del proveedor (para la firma en la tarjeta)
+              proveedorNombre: d.nombre || '',
+              proveedorLogo: d.logo || '',
+              proveedorSlug: d.slug || doc.id,
+              proveedorCategoria: d.categoria || '',
+              // Zona de cobertura del proveedor (para el filtro de provincias)
+              zonaCobertura: d.zonaCobertura || [],
+              // Datos del producto destacado
+              ...d.productoDestacado,
+            };
+          })
+          .filter(Boolean) // Eliminamos los que no tienen producto destacado
+          .slice(0, 30);   // Máximo 30 productos en la grilla
         setProveedores(data);
       } catch (error) {
         console.error("Error trayendo proveedores:", error);
@@ -49,8 +66,7 @@ export default function CartillaProveedores() {
     fetchProveedores();
   }, []);
 
-  const [selectedProvider, setSelectedProvider] = useState(null);
-  const [filtroCategoria, setFiltroCategoria] = useState(null);
+    const [filtroCategoria, setFiltroCategoria] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [favoritos, setFavoritos] = useState([]);
   const [visibleProviders, setVisibleProviders] = useState(6);
@@ -83,19 +99,36 @@ export default function CartillaProveedores() {
   };
 
   const handleProviderClick = (proveedor) => {
-    // Viaja a la ruta de tu perfil individual usando el slug (o el id si no tiene slug)
-    navigate(`/proveedor/${proveedor.slug || proveedor.id}`); 
-    window.scrollTo(0,0);
+    // Usamos el slug del proveedor (no del producto) para navegar al perfil
+    navigate(`/proveedor/${proveedor.proveedorSlug || proveedor.id}`);
+    window.scrollTo(0, 0);
   };
 
 const [soloEnvios, setSoloEnvios] = useState(false);
+const [soloFavoritos, setSoloFavoritos] = useState(false);
+const [filtroProvincia, setFiltroProvincia] = useState(null);
+
+const PROVINCIAS_ARG = [
+  'Buenos Aires', 'CABA', 'Catamarca', 'Chaco', 'Chubut', 'Córdoba',
+  'Corrientes', 'Entre Ríos', 'Formosa', 'Jujuy', 'La Pampa', 'La Rioja',
+  'Mendoza', 'Misiones', 'Neuquén', 'Río Negro', 'Salta', 'San Juan',
+  'San Luis', 'Santa Cruz', 'Santa Fe', 'Santiago del Estero',
+  'Tierra del Fuego', 'Tucumán'
+];
 
   // 2. Modificá la constante proveedoresFiltrados (cerca de la línea 80) para que quede así:
   const proveedoresFiltrados = proveedores.filter(prov => {
     const matchCategoria = !filtroCategoria || prov.categoria === filtroCategoria;
-    const matchBusqueda = !searchTerm || prov.nombre.toLowerCase().includes(searchTerm.toLowerCase());
+    // Buscamos por título del producto o nombre del proveedor
+    const matchBusqueda = !searchTerm ||
+      prov.titulo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      prov.proveedorNombre?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchEnvio = !soloEnvios || prov.envios === true;
-    return matchCategoria && matchBusqueda && matchEnvio;
+    // Filtra solo los productos que el usuario guardó como favoritos
+    const matchFavorito = !soloFavoritos || favoritos.includes(`prov-${prov.id}`);
+    // Filtra por provincia: busca dentro del array zonaCobertura del proveedor
+    const matchProvincia = !filtroProvincia || (Array.isArray(prov.zonaCobertura) && prov.zonaCobertura.includes(filtroProvincia));
+    return matchCategoria && matchBusqueda && matchEnvio && matchFavorito && matchProvincia;
   });
 
   const proveedoresMostrados = proveedoresFiltrados.slice(0, visibleProviders);
@@ -120,7 +153,38 @@ const [soloEnvios, setSoloEnvios] = useState(false);
         ))}
       </ul>
 
-{/* Botón de Envíos al interior */}
+{/* FILTRO DE PROVINCIA */}
+      <div className="mb-6 pt-6 border-t border-gray-50">
+        <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[10px] uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+          <MapPin className="w-3.5 h-3.5 text-[#2D6A6A]" /> Provincia
+        </h3>
+        <div className="relative">
+          <select
+            value={filtroProvincia || ''}
+            onChange={(e) => {
+              setFiltroProvincia(e.target.value || null);
+              setVisibleProviders(6);
+            }}
+            className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-[13px] font-medium text-[#1A3D3D] focus:outline-none focus:border-[#2D6A6A] appearance-none cursor-pointer transition-all"
+          >
+            <option value="">Todas las provincias</option>
+            {PROVINCIAS_ARG.map(prov => (
+              <option key={prov} value={prov}>{prov}</option>
+            ))}
+          </select>
+          <ChevronRight className="w-4 h-4 text-gray-400 absolute right-3 top-1/2 -translate-y-1/2 rotate-90 pointer-events-none" />
+        </div>
+        {filtroProvincia && (
+          <button
+            onClick={() => { setFiltroProvincia(null); setVisibleProviders(6); }}
+            className="mt-2 text-[11px] font-bold text-[#2D6A6A] hover:underline"
+          >
+            Limpiar filtro
+          </button>
+        )}
+      </div>
+
+      {/* ENVÍOS AL INTERIOR */}
       <div className="mb-8 pt-6 border-t border-gray-50">
         <label className="flex items-center gap-3 cursor-pointer group">
           <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${soloEnvios ? 'bg-[#2D6A6A] border-[#2D6A6A]' : 'border-gray-300 group-hover:border-[#2D6A6A]'}`}>
@@ -131,26 +195,27 @@ const [soloEnvios, setSoloEnvios] = useState(false);
           </span>
         </label>
       </div>
-
-      <div className="mt-8 bg-[#F4F7F7] p-5 rounded-[20px] border border-gray-100 text-center">
-        <Building2 className="w-8 h-8 text-[#2D6A6A] mx-auto mb-3" />
-        <h4 className="text-[#1A3D3D] font-bold text-sm mb-2">¿Sos proveedor?</h4>
-        <p className="text-xs text-gray-500 font-medium mb-4">Sumá tu empresa a la cartilla oficial y conectá con miles de clínicas.</p>
-        <button onClick={() => navigate('/editor-proveedores')} className="w-full bg-[#1A3D3D] text-white py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-[#2D6A6A] transition-all">
-  Dar de alta
-</button>
-      </div>
+     
     </div>
   );
 
   const renderGrid = () => (
     <div className="flex flex-col gap-6 md:gap-8 animate-in fade-in duration-500 w-full">
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-2">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-black font-['Montserrat'] text-[#1A3D3D] tracking-tight uppercase leading-none">
-            Cartilla de Proveedores
-          </h1>
-          <p className="text-gray-500 font-medium text-sm mt-2">Encontrá el equipamiento y los insumos que tu clínica necesita.</p>
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 w-full">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-black font-['Montserrat'] text-[#1A3D3D] tracking-tight uppercase leading-none">
+              Cartilla de Proveedores
+            </h1>
+            <p className="text-gray-500 font-medium text-sm mt-2">Productos destacados por cada proveedor. Hacé clic para ver el perfil completo.</p>
+          </div>
+          <button
+            onClick={() => setSoloFavoritos(prev => !prev)}
+            className={`flex items-center justify-center gap-2 px-6 py-2.5 md:py-3 rounded-[16px] text-[11px] font-bold uppercase tracking-widest transition-all shrink-0 ${soloFavoritos ? 'bg-red-50 border border-red-200 text-red-500 hover:bg-red-100' : 'bg-white border border-gray-100 shadow-sm text-gray-500 hover:text-red-500 hover:bg-red-50'}`}
+          >
+            <Heart className={`w-4 h-4 ${soloFavoritos ? 'fill-red-500 text-red-500' : ''}`} />
+            {soloFavoritos ? 'Productos guardados' : 'Mis Guardados'}
+          </button>
         </div>
 
       </header>
@@ -181,36 +246,85 @@ const [soloEnvios, setSoloEnvios] = useState(false);
   </div>
 ) : proveedoresMostrados.length > 0 ? (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                 {proveedoresMostrados.map(prov => (
-                  <article key={prov.id} className="bg-white rounded-[24px] p-5 border border-gray-100 shadow-sm hover:shadow-xl transition-all group relative flex flex-col h-full cursor-pointer" onClick={() => handleProviderClick(prov)}>
-                    <button onClick={(e) => toggleFavorito(e, `prov-${prov.id}`)} className="absolute top-4 right-4 p-2 bg-gray-50 rounded-full hover:bg-white transition-all z-10 border border-gray-100">
-                      <Heart className={`w-4 h-4 transition-colors ${favoritos.includes(`prov-${prov.id}`) ? 'fill-red-500 text-red-500' : 'text-gray-400 hover:text-red-500'}`} />
-                    </button>
-                    
-                    <div className="flex items-center gap-4 mb-4">
-                      <div className="w-16 h-16 rounded-full border border-gray-100 overflow-hidden shrink-0 bg-white shadow-sm flex items-center justify-center p-2">
-                         <img src={prov.logo} alt={prov.nombre} className="w-full h-auto object-contain" />
-                      </div>
-                      <div>
-                        <span className="text-[9px] font-bold text-[#2D6A6A] uppercase tracking-[0.2em]">{prov.categoria}</span>
-                        <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[16px] leading-tight group-hover:text-[#2D6A6A] transition-colors">{prov.nombre}</h3>
-                      </div>
-                    </div>
-
-                    <p className="text-gray-500 text-xs font-medium line-clamp-2 mb-4 flex-grow">
-                      {prov.bioCorta || prov.descripcionBreve}
-                    </p>
-
-                    <div className="pt-4 border-t border-gray-50 grid grid-cols-2 gap-2 mt-auto">
-                      <div className="flex items-center gap-1.5 text-[11px] text-gray-500 font-bold">
-                        <MapPin className="w-3.5 h-3.5 text-[#4DB6AC]" /> {Array.isArray(prov.zonaCobertura) ? prov.zonaCobertura[0] : prov.ubicacion}
-                      </div>
-                      {prov.envios && (
-                        <div className="flex items-center gap-1.5 text-[11px] text-gray-500 font-bold">
-                          <Truck className="w-3.5 h-3.5 text-[#4DB6AC]" /> Envíos al interior
+                  <article
+                    key={prov.id}
+                    className="bg-white rounded-[20px] border border-gray-100 shadow-sm hover:shadow-[0_15px_30px_rgba(45,106,106,0.08)] hover:border-[#2D6A6A]/30 transition-all group relative flex flex-col h-full cursor-pointer overflow-hidden"
+                    onClick={() => handleProviderClick(prov)}
+                  >
+                    {/* IMAGEN DEL PRODUCTO */}
+                    <div className="relative w-full h-36 bg-gray-50 overflow-hidden shrink-0">
+                      {prov.imagenes && prov.imagenes[0] ? (
+                        <img
+                          src={prov.imagenes[0]}
+                          alt={prov.titulo}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Package className="w-10 h-10 text-gray-200" />
                         </div>
                       )}
+
+                      {/* ETIQUETA ESPECIAL (Nuevo / Promo) */}
+                      {prov.etiqueta && (
+                        <span className={`absolute top-3 left-3 text-white text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full shadow-md ${prov.etiqueta === 'Nuevo' ? 'bg-[#E4405F]' : 'bg-amber-500'}`}>
+                          {prov.etiqueta}
+                        </span>
+                      )}
+
+                      {/* BOTÓN FAVORITO */}
+                      <button
+                        onClick={(e) => toggleFavorito(e, `prov-${prov.id}`)}
+                        className="absolute top-3 right-3 p-2 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-all z-10 shadow-md border border-gray-100"
+                      >
+                        <Heart className={`w-4 h-4 transition-colors ${favoritos.includes(`prov-${prov.id}`) ? 'fill-red-500 text-red-500' : 'text-gray-400 hover:text-red-500'}`} />
+                      </button>
+                    </div>
+
+                    {/* CONTENIDO */}
+                    <div className="p-3.5 flex flex-col flex-grow">
+                      {/* CATEGORÍA DEL PRODUCTO */}
+                      <span className="text-[10px] md:text-[11px] font-bold text-[#2D6A6A] uppercase tracking-[0.2em] mb-0.5">
+                        {prov.categoria || 'General'}
+                      </span>
+
+                      {/* TÍTULO DEL PRODUCTO */}
+                      <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[13px] md:text-[14px] leading-tight mb-1.5 group-hover:text-[#2D6A6A] transition-colors line-clamp-2">
+                        {prov.titulo}
+                      </h3>
+
+                      {/* DESCRIPCIÓN CORTA */}
+                      <p className="text-gray-500 text-[12px] md:text-[13px] font-medium line-clamp-2 mb-2 flex-grow leading-relaxed">
+                        {prov.descripcionLarga}
+                      </p>
+
+                      {/* PRECIO */}
+                      {prov.precio && (
+                        <p className="text-[#2D6A6A] font-black text-[13px] mb-2">
+                          $ {prov.precio.replace(/^\$\s*/, '')}
+                        </p>
+                      )}
+
+                      {/* FIRMA DEL PROVEEDOR */}
+                      <div className="pt-2.5 border-t border-gray-50 flex items-center justify-between mt-auto">
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-5 h-5 rounded-md border border-gray-100 overflow-hidden bg-white flex items-center justify-center p-0.5 shrink-0 shadow-sm">
+                            {prov.proveedorLogo ? (
+                              <img src={prov.proveedorLogo} alt={prov.proveedorNombre} className="w-full h-full object-contain" />
+                            ) : (
+                              <Building2 className="w-3 h-3 text-gray-300" />
+                            )}
+                          </div>
+                          <span className="text-[12px] font-bold text-gray-500 truncate max-w-[80px]">
+                            {prov.proveedorNombre}
+                          </span>
+                        </div>
+                        <span className="text-[#2D6A6A] text-[12px] md:text-[13px] font-bold flex items-center gap-0.5 group-hover:gap-1.5 transition-all">
+                          Ver más <ChevronRight className="w-3 h-3" />
+                        </span>
+                      </div>
                     </div>
                   </article>
                 ))}
@@ -226,8 +340,17 @@ const [soloEnvios, setSoloEnvios] = useState(false);
           ) : (
             <div className="bg-white rounded-[32px] border border-gray-100 p-12 text-center flex flex-col items-center justify-center w-full h-full">
               <Package className="w-10 h-10 text-gray-200 mb-4" />
-              <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-lg mb-2">Aún no hay proveedores cargados</h3>
-              <p className="text-[#333333] text-[15px] font-medium">Estamos actualizando la base de datos o probá con otro filtro.</p>
+              <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-lg mb-2">
+                {soloFavoritos ? 'No tenés productos guardados' : 'Aún no hay proveedores cargados'}
+              </h3>
+              <p className="text-[#333333] text-[15px] font-medium">
+                {soloFavoritos ? 'Explorá la cartilla y guardá los que te interesen con el corazón.' : 'Estamos actualizando la base de datos o probá con otro filtro.'}
+              </p>
+              {soloFavoritos && (
+                <button onClick={() => setSoloFavoritos(false)} className="mt-6 px-6 py-3 bg-[#1A3D3D] text-white text-[11px] font-bold uppercase tracking-widest rounded-full hover:bg-[#2D6A6A] transition-all shadow-sm">
+                  Ver todos los productos
+                </button>
+              )}
             </div>
           )}
         </section>
@@ -235,108 +358,7 @@ const [soloEnvios, setSoloEnvios] = useState(false);
     </div>
   );
 
-  const renderDetail = () => {
-    if (!selectedProvider) return null;
-    return (
-      <article className="max-w-[1200px] mx-auto animate-in fade-in duration-500">
-        <button onClick={() => setView('grid')} className="flex items-center gap-2 text-gray-400 hover:text-[#1A3D3D] font-bold text-[10px] uppercase tracking-[0.3em] mb-8 transition-colors group">
-          <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Volver a la Cartilla
-        </button>
-
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
-          {/* COLUMNA PRINCIPAL */}
-          <section className="lg:col-span-8 space-y-8">
-            <div className="bg-white p-8 md:p-10 rounded-[32px] border border-gray-100 shadow-sm flex flex-col md:flex-row items-center md:items-start gap-8">
-              <div className="w-32 h-32 md:w-40 md:h-40 bg-white rounded-full border-2 border-gray-50 shadow-md p-4 shrink-0 flex items-center justify-center">
-                <img src={selectedProvider.logo} alt={selectedProvider.nombre} className="max-w-full max-h-full object-contain" />
-              </div>
-              <div className="text-center md:text-left flex-1">
-                <span className="inline-block bg-[#2D6A6A]/10 text-[#2D6A6A] text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-widest mb-3">
-                  {selectedProvider.categoria}
-                </span>
-                <h1 className="text-3xl md:text-4xl font-black font-['Montserrat'] text-[#1A3D3D] leading-tight mb-4">
-                  {selectedProvider.nombre}
-                </h1>
-                <p className="text-gray-600 text-sm md:text-[15px] leading-relaxed font-medium">
-                  {selectedProvider.descripcionLarga}
-                </p>
-              </div>
-            </div>
-
-            {/* CAJITAS DE SERVICIO (Tus íconos) */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-white p-5 rounded-[20px] border border-gray-100 shadow-sm flex flex-col items-center text-center gap-3 hover:border-[#2D6A6A] transition-colors">
-                <ShieldCheck className="w-7 h-7 text-[#2D6A6A]" />
-                <span className="text-[11px] font-bold text-[#1A3D3D] uppercase tracking-wider">Garantía Oficial</span>
-              </div>
-              <div className="bg-white p-5 rounded-[20px] border border-gray-100 shadow-sm flex flex-col items-center text-center gap-3 hover:border-[#2D6A6A] transition-colors">
-                <Truck className="w-7 h-7 text-[#2D6A6A]" />
-                <span className="text-[11px] font-bold text-[#1A3D3D] uppercase tracking-wider">Envíos al Interior</span>
-              </div>
-              <div className="bg-white p-5 rounded-[20px] border border-gray-100 shadow-sm flex flex-col items-center text-center gap-3 hover:border-[#2D6A6A] transition-colors">
-                <Wrench className="w-7 h-7 text-[#2D6A6A]" />
-                <span className="text-[11px] font-bold text-[#1A3D3D] uppercase tracking-wider">Soporte Técnico</span>
-              </div>
-              <div className="bg-white p-5 rounded-[20px] border border-gray-100 shadow-sm flex flex-col items-center text-center gap-3 hover:border-[#2D6A6A] transition-colors">
-                <CheckCircle2 className="w-7 h-7 text-[#2D6A6A]" />
-                <span className="text-[11px] font-bold text-[#1A3D3D] uppercase tracking-wider">Stock Permanente</span>
-              </div>
-            </div>
-
-            {/* MAPITA INTERACTIVO */}
-            <div className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm">
-              <h3 className="text-xl font-black font-['Montserrat'] text-[#1A3D3D] mb-4">Ubicación y Sucursales</h3>
-              <div className="w-full h-[300px] bg-gray-100 rounded-[20px] overflow-hidden relative group">
-                {/* Contenedor preparado para inyectar un Google Map iframe o Leaflet */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 group-hover:scale-105 transition-transform duration-500">
-                  <MapPin className="w-10 h-10 text-[#2D6A6A] mb-2 drop-shadow-md" />
-                  <span className="font-bold text-sm tracking-wide">MAPA INTERACTIVO</span>
-                  <span className="text-xs font-medium mt-1">Acá se renderizará el mapa con la ubicación real</span>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* SIDEBAR DE CONTACTO */}
-          <aside className="lg:col-span-4">
-            <div className="sticky top-28 bg-white p-8 rounded-[32px] shadow-[0_20px_50px_rgba(0,0,0,0.06)] border border-gray-100 space-y-6">
-              <h4 className="font-['Montserrat'] font-black text-[#1A3D3D] text-lg mb-2">Contacto Directo</h4>
-              <p className="text-xs text-gray-500 font-medium mb-6">Mencioná que los contactaste por El Portal para acceder a beneficios exclusivos.</p>
-
-              <div className="space-y-4">
-                <a href={`tel:${selectedProvider.telefono}`} className="w-full py-4 bg-[#2D6A6A] text-white rounded-[16px] font-black text-[11px] uppercase tracking-widest hover:bg-[#1A3D3D] transition-all flex items-center justify-center gap-3 shadow-md">
-                  <Phone className="w-4 h-4" /> Llamar ahora
-                </a>
-                <a href={`mailto:${selectedProvider.email}`} className="w-full py-4 bg-gray-50 text-[#1A3D3D] border border-gray-200 rounded-[16px] font-black text-[11px] uppercase tracking-widest hover:bg-gray-100 transition-all flex items-center justify-center gap-3">
-                  <Mail className="w-4 h-4" /> Enviar Correo
-                </a>
-                <a href={selectedProvider.web} target="_blank" rel="noopener noreferrer" className="w-full py-4 bg-gray-50 text-[#1A3D3D] border border-gray-200 rounded-[16px] font-black text-[11px] uppercase tracking-widest hover:bg-gray-100 transition-all flex items-center justify-center gap-3">
-                  <Globe className="w-4 h-4" /> Sitio Web
-                </a>
-              </div>
-
-              <div className="pt-6 mt-6 border-t border-gray-100 space-y-4">
-                <div className="flex items-start gap-3">
-                  <Clock className="w-5 h-5 text-[#2D6A6A] shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Horario de atención</p>
-                    <p className="text-sm font-semibold text-[#1A3D3D]">Lunes a Viernes de 9 a 18hs</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <MapPin className="w-5 h-5 text-[#2D6A6A] shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Sede Central</p>
-                    <p className="text-sm font-semibold text-[#1A3D3D]">{selectedProvider.direccionExacta || selectedProvider.ubicacion}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </aside>
-        </div>
-      </article>
-    );
-  };
+  
 
   return (
     <div className="bg-[#F4F7F7] min-h-screen font-['Inter'] antialiased relative">

@@ -6,8 +6,10 @@ import { useNavigate } from 'react-router-dom';
 // ==========================================
 // IMPORTACIONES DE FIREBASE (NUEVO)
 // ==========================================
-import { db } from '../../firebase'; // <-- Asegurate de que la ruta coincida con tu archivo de conexión
-import { doc, setDoc } from 'firebase/firestore'; 
+import { db } from '../../firebase';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { useAuth } from '../../context/AuthContext';
+import { Crown } from 'lucide-react';
 
 import { 
   Camera, Info, AlertCircle, Save, X, Plus, Trash2, 
@@ -657,6 +659,20 @@ setSaveStatus('saved');
     return () => document.head.removeChild(link);
   }, []);
 
+  // Leemos socioVitalicio desde la colección usuarios
+  useEffect(() => {
+    const fetchSocio = async () => {
+      if (!currentUser?.uid) return;
+      try {
+        const userSnap = await getDoc(doc(db, 'usuarios', currentUser.uid));
+        if (userSnap.exists()) {
+          setSocioVitalicio(userSnap.data().socioVitalicio || false);
+        }
+      } catch (e) { console.error(e); }
+    };
+    fetchSocio();
+  }, [currentUser]);
+
   return (
     <div className="bg-[#F4F7F7] min-h-screen font-['Inter'] antialiased text-left text-[#1A3D3D] selection:bg-[#4DB6AC] selection:text-white relative w-full overflow-x-hidden flex flex-col">
       
@@ -1022,7 +1038,19 @@ setSaveStatus('saved');
                      <h4 className="flex items-center gap-2 text-sm font-bold text-[#1A3D3D] uppercase tracking-widest leading-none mb-4">
                        <CreditCard className="w-5 h-5 text-[#2D6A6A]" /> Estado de la suscripción
                      </h4>
-                     
+
+                     {/* SOCIO VITALICIO */}
+                     {socioVitalicio ? (
+                       <div className="bg-gradient-to-br from-yellow-50 to-amber-50 border border-yellow-200 rounded-2xl p-6 flex items-center gap-5">
+                         <div className="w-14 h-14 bg-yellow-100 rounded-2xl flex items-center justify-center shrink-0">
+                           <Crown className="w-7 h-7 text-yellow-500" />
+                         </div>
+                         <div>
+                           <p className="font-black text-[#1A3D3D] text-lg font-['Montserrat'] leading-tight">Socio vitalicio</p>
+                           <p className="text-yellow-700 text-sm font-medium mt-1">Tu cuenta incluye todos los beneficios de la plataforma sin costo mensual.</p>
+                         </div>
+                       </div>
+                     ) : (
                      <div className={`border p-5 md:p-6 rounded-2xl flex flex-col gap-5 transition-colors 
                        ${isPro && !isSubscriptionActive ? 'bg-red-50/50 border-red-200' : 'bg-gray-50 border-gray-200'}`}
                      >
@@ -1066,6 +1094,7 @@ setSaveStatus('saved');
                          </button>
                        </div>*/}
                      </div>
+                     )}
                   </div>
 
                   {/* DATOS DE ACCESO */}

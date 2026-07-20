@@ -52,7 +52,17 @@ export default function TourGuia({ pasos, userId, claveStorage, onFin, onPaso, n
     const el = document.getElementById(paso?.targetId);
     if (!el) return;
 
-    const rect = el.getBoundingClientRect();
+    // Si hay un panel flotante abierto (feedback), ampliamos el rect para incluirlo
+    let rect = el.getBoundingClientRect();
+    const panelFlotante = el.querySelector('.absolute');
+    if (panelFlotante) {
+      const panelRect = panelFlotante.getBoundingClientRect();
+      const top = Math.min(rect.top, panelRect.top);
+      const bottom = Math.max(rect.bottom, panelRect.bottom);
+      const left = Math.min(rect.left, panelRect.left);
+      const right = Math.max(rect.right, panelRect.right);
+      rect = { top: top - 8, bottom, left, right, width: right - left, height: bottom - top + 8 };
+    }
     const navbarActual = navbarHeightRef.current;
 
     setTargetRect({
@@ -115,7 +125,17 @@ export default function TourGuia({ pasos, userId, claveStorage, onFin, onPaso, n
     const el = document.getElementById(paso?.targetId);
     if (!el) return;
 
-    const rect = el.getBoundingClientRect();
+    // Mismo cálculo ampliado para incluir panel flotante si está abierto
+    let rect = el.getBoundingClientRect();
+    const panelFlotante = el.querySelector('.absolute');
+    if (panelFlotante) {
+      const panelRect = panelFlotante.getBoundingClientRect();
+      const top = Math.min(rect.top, panelRect.top);
+      const bottom = Math.max(rect.bottom, panelRect.bottom);
+      const left = Math.min(rect.left, panelRect.left);
+      const right = Math.max(rect.right, panelRect.right);
+      rect = { top: top - 80, bottom, left, right, width: right - left, height: bottom - top + 8 };
+    }
     const navbarActual = navbarHeightRef.current;
     const margen = 12;
     const tooltipH = tooltipRef.current?.offsetHeight || 180;
@@ -173,9 +193,9 @@ export default function TourGuia({ pasos, userId, claveStorage, onFin, onPaso, n
       if (cancelado) return;
       const el = document.getElementById(paso.targetId);
 
-      if (el) {
-      
-  timeoutAjuste = setTimeout(ajustarScrollYPosicionar, 150);
+    if (el) {
+  const esperaPanel = paso.abrirFeedback ? 500 : 150;
+  timeoutAjuste = setTimeout(ajustarScrollYPosicionar, esperaPanel);
       } else if (intentos < maxIntentos) {
         intentos += 1;
         timeoutBusqueda = setTimeout(intentarEncontrar, 300);
@@ -293,7 +313,7 @@ const rectSeguro = targetRect ? (() => {
        {rectSeguro && (
         <>
          <div
-            className="fixed inset-0 z-[500]"
+            className="fixed inset-0 z-[10001]"
             style={{
               background: colorTinte,
               clipPath: construirFormaConAgujero(rectSeguro, pad, 28),
@@ -302,7 +322,7 @@ const rectSeguro = targetRect ? (() => {
           />
 
           <div
-            className="fixed z-[501] pointer-events-none rounded-[28px]"
+            className="fixed z-[10002] pointer-events-none rounded-[28px]"
             style={{
               top: rectSeguro.top - pad,
               left: rectSeguro.left - pad,
@@ -318,7 +338,7 @@ const rectSeguro = targetRect ? (() => {
       {/* Tooltip */}
       <div
         ref={tooltipRef}
-        className="fixed z-[502] bg-white rounded-[24px] shadow-2xl border border-gray-100 p-5 transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]"
+        className="fixed z-[10003] bg-white rounded-[24px] shadow-2xl border border-gray-100 p-5 transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]"
         style={{
           top: tooltipPos.top,
           left: tooltipPos.left,

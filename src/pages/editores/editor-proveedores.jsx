@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  Camera, Info, AlertCircle, Save, X, Plus, Trash2, 
+  Camera, Info, AlertCircle, Save, X, Plus, Trash2, Crown,
   MapPin, ShieldCheck, Check, Video,
   Smartphone, Home, Mail, Award, ChevronDown, ChevronRight,
   ExternalLink, Heart, Undo2, Redo2, FileCheck, 
-  Building2, AlertTriangle, Building, PackageSearch, ImagePlus,
+  Building2, AlertTriangle, Building, PackageSearch, ImagePlus, Phone,
   Globe, Truck, FileText, CreditCard, Wrench, Crop, Briefcase, User, Lock, Eye, EyeOff, Box, ArrowLeft, ArrowRight, Tag, DollarSign, List, Clock, Loader2, ArrowUpRight
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -60,7 +60,7 @@ const GARANTIA_MAPPING = {
 };
 
 const MODALIDAD_MAPPING = {
-  'Venta Online 24/7': 'ventaOnline',
+  'Venta Online': 'ventaOnline',
   'Showroom con cita previa': 'showroom',
   'Local a la calle': 'local',
   'Atención a domicilio': 'domicilio'
@@ -392,7 +392,7 @@ const initialData = {
   web: '',
   instagram: '',
   facebook: '',
-  linkedin: '',
+  
   linkCatalogo: '', 
   marcasRepresentadas: '',
   categorias: { alimentos: false, farmacia: false, equipamiento: false, descartables: false, instrumental: false, software: false },
@@ -452,6 +452,9 @@ export default function EditorEmpresa() {
         
         if (docSnap.exists()) {
           const cloudData = docSnap.data();
+          // Leemos socioVitalicio desde la colección usuarios
+          const userSnap = await getDoc(doc(db, 'usuarios', userId));
+          const esSocio = userSnap.exists() ? (userSnap.data().socioVitalicio || false) : false;
           
           // Reconstruir objetos de checkboxes a partir de arrays almacenados en la nube
           const categoriasObj = { alimentos: false, farmacia: false, equipamiento: false, descartables: false, instrumental: false, software: false };
@@ -489,6 +492,7 @@ export default function EditorEmpresa() {
           }));
 
           _setFormData({
+            socioVitalicio: esSocio,
             cuentaEmail: currentUser?.email || cloudData.cuentaEmail || '',
             cuentaPassword: cloudData.cuentaPassword || '',
             cuentaTelefono: cloudData.cuentaTelefono || '',
@@ -511,7 +515,7 @@ export default function EditorEmpresa() {
             web: cloudData.web || '',
             instagram: cloudData.instagram || '',
             facebook: cloudData.facebook || '',
-            linkedin: cloudData.linkedin || '',
+           
             linkCatalogo: cloudData.linkCatalogo || '',
             marcasRepresentadas: cloudData.marcasRepresentadas || '',
             zonaCobertura: cloudData.zonaCobertura || [],
@@ -547,8 +551,9 @@ const location = useLocation();
     if (!formData.cuit.trim()) faltanCampos.push('CUIT');
     if (!formData.categoria) faltanCampos.push('Categoría Principal');
     if (formData.descripcion.trim().length < 20) faltanCampos.push('Descripción (mínimo 20 caracteres)');
-    if (formData.zonaCobertura.length === 0) faltanCampos.push('Zona de Cobertura');
+    if (!formData.zonaCobertura || formData.zonaCobertura.length === 0) faltanCampos.push('Zona de Cobertura (seleccioná al menos una provincia)');
     if (!formData.emailVentas.trim()) faltanCampos.push('Email Comercial');
+    if (!formData.cuentaTelefono.trim()) faltanCampos.push('Teléfono Comercial');
 
     if (faltanCampos.length > 0) {
       setCamposFaltantes(faltanCampos);
@@ -597,7 +602,7 @@ const location = useLocation();
       if (formData.garantia.asesoramiento) garantiaArray.push('Asesoramiento técnico continuo');
 
       const modalidadArray = [];
-      if (formData.modalidad.ventaOnline) modalidadArray.push('Venta Online 24/7');
+      if (formData.modalidad.ventaOnline) modalidadArray.push('Venta Online');
       if (formData.modalidad.showroom) modalidadArray.push('Showroom con cita previa');
       if (formData.modalidad.local) modalidadArray.push('Local a la calle');
       if (formData.modalidad.domicilio) modalidadArray.push('Atención a domicilio');
@@ -608,6 +613,13 @@ const location = useLocation();
         ...p,
         caracteristicas: Array.isArray(p.caracteristicas) ? p.caracteristicas.map(c => c.texto) : []
       }));
+
+       const productoDestacado = prodsDestacadosFirestore.length > 0
+        ? {
+            ...prodsDestacadosFirestore[0],
+            zonaCobertura: formData.zonaCobertura || [],
+          }
+        : null;
 
       // ESTRUCTURA UNIFICADA Y PLANA (Igual que el blueprint de Veterinarios)
       const dataToSave = {
@@ -633,7 +645,7 @@ const location = useLocation();
         web: formData.web,
         instagram: formData.instagram,
         facebook: formData.facebook,
-        linkedin: formData.linkedin,
+      
         linkCatalogo: formData.linkCatalogo,
         marcasRepresentadas: formData.marcasRepresentadas,
         zonaCobertura: formData.zonaCobertura,
@@ -643,6 +655,7 @@ const location = useLocation();
         garantia: garantiaArray,
         modalidadTexto: modalidadTexto,
         productosDestacados: prodsDestacadosFirestore,
+        productoDestacado: productoDestacado,
         slug: slugGenerado,
         verificado: true
       };
@@ -1060,6 +1073,19 @@ const location = useLocation();
                        <h4 className="flex items-center gap-2 text-sm font-bold text-[#1A3D3D] uppercase tracking-widest leading-none mb-5">
                          <CreditCard className="w-5 h-5 text-[#2D6A6A]" /> Estado de la mensualidad
                        </h4>
+
+                       {/* SOCIO VITALICIO */}
+                       {formData.socioVitalicio ? (
+                         <div className="bg-gradient-to-br from-yellow-50 to-amber-50 border border-yellow-200 rounded-2xl p-6 flex items-center gap-5">
+                           <div className="w-14 h-14 bg-yellow-100 rounded-2xl flex items-center justify-center shrink-0">
+                             <Crown className="w-7 h-7 text-yellow-500" />
+                           </div>
+                           <div>
+                             <p className="font-black text-[#1A3D3D] text-lg font-['Montserrat'] leading-tight">Socio vitalicio</p>
+                             <p className="text-yellow-700 text-sm font-medium mt-1">Tu cuenta incluye todos los beneficios de la plataforma sin costo mensual.</p>
+                           </div>
+                         </div>
+                       ) : (
                        <div className={`border p-5 rounded-2xl flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 transition-colors ${isSubscriptionActive ? 'bg-gray-50 border-gray-200' : 'bg-red-50/50 border-red-200'}`}>
                          <div>
                             <p className={`font-bold text-lg ${isSubscriptionActive ? 'text-[#1A3D3D]' : 'text-red-800'}`}>Plan Proveedor PRO</p>
@@ -1072,6 +1098,7 @@ const location = useLocation();
                            {isSubscriptionActive ? 'Gestionar pagos' : 'Regularizar pago'}
                          </button>
                        </div>
+                       )}
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 items-start">
@@ -1216,36 +1243,6 @@ const location = useLocation();
                         </div>
                       </Accordion>
 
-                      {/* RUBROS */}
-                      <Accordion title="Catálogo y Rubros" icon={PackageSearch} isOpen={openSection === 'catalogo-links'} onToggle={() => setOpenSection(openSection === 'catalogo-links' ? null : 'catalogo-links')} haserror={false}>
-                        <InputGroup type="url" label="Link a Catálogo o Drive de Precios" id="linkCatalogo" value={formData.linkCatalogo} onChange={handleChange} canTest />
-                        <InputGroup label="Marcas que representan (Separadas por coma)" id="marcasRepresentadas" value={formData.marcasRepresentadas} onChange={handleChange} placeholder="Ej: Zoetis, Mindray..." />
-
-                        <div className="pt-4 border-t border-gray-100">
-                          <label className="flex items-center text-xs font-bold text-gray-500 uppercase tracking-widest leading-none mb-4 ml-1">Rubros Principales que comercializan</label>
-                          <div className="flex flex-wrap gap-2.5">
-                            {[
-                              { id: 'alimentos', label: 'Alimentos y Dietas' },
-                              { id: 'farmacia', label: 'Fármacos e Insumos' },
-                              { id: 'equipamiento', label: 'Equipamiento Médico' },
-                              { id: 'descartables', label: 'Descartables Hospitalarios' },
-                              { id: 'instrumental', label: 'Instrumental Quirúrgico' },
-                              { id: 'software', label: 'Software y Tecnología' }
-                            ].map((item) => {
-                              const isChecked = formData.categorias[item.id];
-                              return (
-                                <button
-                                  key={item.id} type="button" onClick={() => handleNestedChange('categorias', item.id)}
-                                  className={`px-4 py-2.5 rounded-full text-[13px] font-bold border transition-all flex items-center gap-2 shadow-sm ${isChecked ? 'bg-[#1A3D3D] text-white border-[#1A3D3D]' : 'bg-white text-gray-600 border-gray-200 hover:border-[#4DB6AC]'}`}
-                                >
-                                  {isChecked && <Check className="w-3.5 h-3.5" />} {item.label}
-                                </button>
-                              )
-                            })}
-                          </div>
-                        </div>
-                      </Accordion>
-
                       {/* CONDICIONES COMERCIALES */}
                       <Accordion title="Condiciones Comerciales" icon={ShieldCheck} isOpen={openSection === 'condiciones'} onToggle={() => setOpenSection(openSection === 'condiciones' ? null : 'condiciones')}>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
@@ -1321,39 +1318,126 @@ const location = useLocation();
 
                       {/* CONTACTO Y UBICACIÓN */}
                       <Accordion title="Ubicación, Contacto y Redes" icon={MapPin} isOpen={openSection === 'contacto'} onToggle={() => setOpenSection(openSection === 'contacto' ? null : 'contacto')} hasError={camposFaltantes.some(f => ['Zona de Cobertura', 'Email Comercial'].includes(f))}>
-                        <div className="mb-8 w-full bg-gray-50/50 border border-gray-200 rounded-3xl p-6">
-                            <div className="flex justify-between items-end mb-5">
-                              <label className="flex items-center text-xs font-bold text-gray-500 uppercase tracking-widest leading-none">Zona principal de Cobertura <span className="text-red-400 ml-1">*</span></label>
-                              <button type="button" onClick={toggleTodasProvincias} className="text-[11px] font-bold text-[#4DB6AC] hover:underline bg-[#4DB6AC]/10 px-3 py-1.5 rounded-full transition-colors">
-                                 {formData.zonaCobertura.length === PROVINCIAS_ARG.length ? 'Desmarcar todas' : 'Marcar todo el país'}
+                        <div className="mb-8 w-full">
+                          <label className="flex items-center text-xs font-bold text-gray-500 uppercase tracking-widest leading-none mb-3">
+                            Provincias donde operan <span className="text-red-400 ml-1">*</span>
+                          </label>
+                          <p className="text-[13px] text-gray-400 font-medium mb-3">Seleccioná las provincias donde estan presentes.</p>
+
+                          {/* CHIPS DE PROVINCIAS SELECCIONADAS */}
+                          {formData.zonaCobertura.length > 0 && (
+                            <div className="flex flex-wrap gap-2 mb-3">
+                              {formData.zonaCobertura.map(prov => (
+                                <span key={prov} className="flex items-center gap-1.5 bg-[#1A3D3D] text-white text-[12px] font-bold px-3 py-1.5 rounded-full">
+                                  {prov}
+                                  <button
+                                    type="button"
+                                    onClick={() => toggleProvincia(prov)}
+                                    className="hover:text-red-300 transition-colors"
+                                  >
+                                    <X className="w-3 h-3" />
+                                  </button>
+                                </span>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* SELECTOR DESPLEGABLE */}
+                          <div className="flex gap-2 items-center">
+                            <div className="relative flex-1">
+                              <select
+                                onChange={(e) => {
+                                  if (e.target.value && !formData.zonaCobertura.includes(e.target.value)) {
+                                    toggleProvincia(e.target.value);
+                                  }
+                                  e.target.value = '';
+                                }}
+                                defaultValue=""
+                                className="w-full bg-gray-50/50 border border-gray-200 focus:border-[#2D6A6A] rounded-2xl px-5 py-3.5 text-base font-medium focus:outline-none transition-all text-[#1A3D3D] appearance-none"
+                              >
+                                <option value="" disabled>Agregar provincia...</option>
+                                {PROVINCIAS_ARG.filter(p => !formData.zonaCobertura.includes(p)).map(prov => (
+                                  <option key={prov} value={prov}>{prov}</option>
+                                ))}
+                              </select>
+                              <ChevronDown className="w-5 h-5 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                            </div>
+                            {formData.zonaCobertura.length < PROVINCIAS_ARG.length && (
+                              <button
+                                type="button"
+                                onClick={toggleTodasProvincias}
+                                className="shrink-0 text-[12px] md:text-[13px] font-bold text-[#4DB6AC] hover:underline bg-[#4DB6AC]/10 px-3 py-3.5 rounded-2xl transition-colors whitespace-nowrap border border-[#4DB6AC]/20"
+                              >
+                                Todo el país
                               </button>
-                            </div>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-4 gap-x-2">
-                              {PROVINCIAS_ARG.map(prov => {
-                                const isChecked = formData.zonaCobertura.includes(prov);
-                                return (
-                                  <div key={prov} className="flex items-center gap-2 cursor-pointer group w-full" onClick={() => toggleProvincia(prov)}>
-                                    <div className={`w-4 h-4 rounded-[4px] border flex items-center justify-center transition-colors shrink-0 ${isChecked ? 'bg-[#4DB6AC] border-[#4DB6AC]' : 'bg-white border-gray-300 group-hover:border-[#4DB6AC]'}`}>
-                                      {isChecked && <Check className="w-3 h-3 text-white stroke-[3]" />}
-                                    </div>
-                                    <span className={`text-[12px] font-bold truncate ${isChecked ? 'text-[#1A3D3D]' : 'text-gray-500'}`}>{prov}</span>
-                                  </div>
-                                )
-                              })}
-                            </div>
+                            )}
+                            {formData.zonaCobertura.length === PROVINCIAS_ARG.length && (
+                              <button
+                                type="button"
+                                onClick={toggleTodasProvincias}
+                                className="shrink-0 text-[12px] md:text-[13px] font-bold text-red-400 hover:underline bg-red-50 px-3 py-3.5 rounded-2xl transition-colors whitespace-nowrap border border-red-100"
+                              >
+                                Limpiar todo
+                              </button>
+                            )}
+                          </div>
                         </div>
 
                         <div className="pt-2 border-t border-gray-100">
                            <h4 className="flex items-center gap-2 text-xs font-bold text-[#1A3D3D] uppercase tracking-widest leading-none mb-5 mt-6"><Building2 className="w-4 h-4 text-[#2D6A6A]" /> Sede Central y Atención</h4>
-                           <InputGroup label="Dirección Física (Opcional)" id="direccion" value={formData.direccion} onChange={handleChange} />
-                           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 items-end">
-                             <InputGroup label="Link a Google Maps" id="mapaUrl" type="url" value={formData.mapaUrl} onChange={handleChange} canTest />
-                             <InputGroup label="Horarios de Atención" id="horariosAtencion" value={formData.horariosAtencion} onChange={handleChange} placeholder="Ej: Lunes a Viernes de 9 a 18 hs" />
+                           {/* DIRECCIÓN CON AUTOCOMPLETE DE GOOGLE MAPS */}
+                           <div className="mb-6 w-full">
+                             <label className="flex items-center text-xs font-bold text-gray-500 uppercase tracking-widest leading-none mb-2 ml-1">
+                               Dirección Física <span className="text-gray-400 font-normal normal-case tracking-normal ml-1">(opcional)</span>
+                             </label>
+                             <div className="relative">
+                               <MapPin className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#2D6A6A] pointer-events-none" />
+                               <input
+                                 id="direccion"
+                                 type="text"
+                                 value={formData.direccion}
+                                 onChange={(e) => setFormData(prev => ({ ...prev, direccion: e.target.value }))}
+                                 placeholder="Buscá la dirección de tu sede..."
+                                 className="w-full bg-gray-50/50 border border-gray-200 focus:border-[#2D6A6A] rounded-2xl pl-11 pr-5 py-3.5 text-base font-medium focus:outline-none transition-all text-[#1A3D3D]"
+                                 ref={(el) => {
+                                   if (!el || !window.google || el._autocompleteInit) return;
+                                   el._autocompleteInit = true;
+                                   const autocomplete = new window.google.maps.places.Autocomplete(el, {
+                                     types: ['address'],
+                                     componentRestrictions: { country: 'ar' },
+                                     fields: ['formatted_address', 'place_id', 'url']
+                                   });
+                                   autocomplete.addListener('place_changed', () => {
+                                     const place = autocomplete.getPlace();
+                                     if (!place.place_id) return;
+                                     // Guardamos la dirección formateada y el link directo a Google Maps
+                                     setFormData(prev => ({
+                                       ...prev,
+                                       direccion: place.formatted_address || '',
+                                       mapaUrl: place.url || `https://www.google.com/maps/place/?q=place_id:${place.place_id}`
+                                     }));
+                                   });
+                                 }}
+                               />
+                             </div>
+                             {/* Preview del link generado automáticamente */}
+                             {formData.mapaUrl && (
+                               <a
+                                 href={formData.mapaUrl}
+                                 target="_blank"
+                                 rel="noreferrer"
+                                 className="inline-flex items-center gap-1.5 mt-2 text-[12px] md:text-[13px] font-bold text-[#2D6A6A] hover:text-[#1A3D3D] transition-colors bg-[#2D6A6A]/5 px-3 py-1.5 rounded-lg border border-[#2D6A6A]/20"
+                               >
+                                 <MapPin className="w-3 h-3" /> Ver en Google Maps
+                               </a>
+                             )}
                            </div>
+
+                           <InputGroup label="Horarios de Atención" id="horariosAtencion" value={formData.horariosAtencion} onChange={handleChange} placeholder="Ej: Lunes a Viernes de 9 a 18 hs" />
                            
                            <div className="mt-2 mb-6 flex flex-col gap-4">
                             <label className="flex items-center text-xs font-bold text-gray-500 uppercase tracking-widest leading-none ml-1">Modalidad de Atención</label>
-                            <ToggleSwitch label="Venta Online 24/7" checked={formData.modalidad.ventaOnline} onChange={() => handleNestedChange('modalidad', 'ventaOnline')} />
+                            <ToggleSwitch label="Venta Online" checked={formData.modalidad.ventaOnline} onChange={() => handleNestedChange('modalidad', 'ventaOnline')} />
                             <ToggleSwitch label="Showroom con cita previa" checked={formData.modalidad.showroom} onChange={() => handleNestedChange('modalidad', 'showroom')} />
                             <ToggleSwitch label="Local a la calle" checked={formData.modalidad.local} onChange={() => handleNestedChange('modalidad', 'local')} />
                             <ToggleSwitch label="Atención a domicilio" checked={formData.modalidad.domicilio} onChange={() => handleNestedChange('modalidad', 'domicilio')} />
@@ -1371,15 +1455,23 @@ const location = useLocation();
                                </div>
                              )}
                            </div>
-                           <InputGroup label="Sitio Web Corporativo" id="web" type="url" value={formData.web} onChange={handleChange} canTest />
+                           <InputGroup label="Sitio Web Corporativo" id="web" type="url" value={formData.web} onChange={handleChange} canTest tooltip="Se muestra en tu perfil público como botón de acceso directo." />
+                        </div>
+
+                        {/* TELÉFONO COMERCIAL */}
+                        <div className="pt-2 border-t border-gray-100">
+                           <h4 className="flex items-center gap-2 text-xs font-bold text-[#1A3D3D] uppercase tracking-widest leading-none mb-5 mt-6">
+                             <Phone className="w-4 h-4 text-[#2D6A6A]" /> Teléfono Comercial
+                           </h4>
+                           <InputGroup label="Teléfono (con código de área, sin 0 ni 15)" id="cuentaTelefono" type="tel" value={formData.cuentaTelefono} onChange={handleChange} required placeholder="Ej: 1162477744" />
                         </div>
 
                         <div className="pt-2 border-t border-gray-100">
-                           <h4 className="flex items-center gap-2 text-xs font-bold text-[#1A3D3D] uppercase tracking-widest leading-none mb-5 mt-6"><Globe className="w-4 h-4 text-[#2D6A6A]" /> Redes Sociales</h4>
-                           <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 items-end">
+                           <h4 className="flex items-center gap-2 text-xs font-bold text-[#1A3D3D] uppercase tracking-widest leading-none mb-2 mt-6"><Globe className="w-4 h-4 text-[#2D6A6A]" /> Redes Sociales</h4>
+                           <p className="text-[12px] md:text-[13px] text-gray-400 font-medium mb-5">Las redes que no completes no aparecerán en tu perfil público.</p>
+                           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 items-end">
                               <InputGroup label="Instagram" id="instagram" type="url" value={formData.instagram} onChange={handleChange} canTest placeholder="https://instagram.com/..." />
                               <InputGroup label="Facebook" id="facebook" type="url" value={formData.facebook} onChange={handleChange} canTest placeholder="https://facebook.com/..." />
-                              <InputGroup label="LinkedIn" id="linkedin" type="url" value={formData.linkedin} onChange={handleChange} canTest placeholder="https://linkedin.com/..." />
                            </div>
                         </div>
                         </div>
@@ -1391,18 +1483,66 @@ const location = useLocation();
 
               {/* TAB 3: CATÁLOGO */}
               {activeTab === 'catalogo' && (
-                <div className="w-full bg-white rounded-[32px] shadow-sm border border-gray-100 p-6 md:p-10 relative custom-scrollbar min-h-[500px]">
-                  <div className="flex justify-between items-center mb-8">
-                     <div>
-                       <h3 className="text-2xl font-black text-[#1A3D3D] font-['Montserrat']">Catálogo de Equipos</h3>
-                       <p className="text-sm text-gray-500 mt-1">Gestioná los productos y promos de tu vidriera.</p>
-                     </div>
-                     {!productoEnEdicion && (
-                       <button onClick={iniciarNuevoProducto} className="hidden sm:flex bg-[#1A3D3D] text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-[#2D6A6A] transition-all items-center gap-2 shadow-md hover:-translate-y-0.5">
-                         <Plus className="w-4 h-4" /> Añadir Producto
-                       </button>
-                     )}
+                <div className="w-full bg-white rounded-[32px] shadow-sm border border-gray-100 relative custom-scrollbar min-h-[500px]">
+                 <div className="pt-6 px-6 md:px-10 pb-4">
+                    <h3 className="text-xl font-black text-[#1A3D3D] font-['Montserrat'] mb-1">Catálogo</h3>
+                    <p className="text-xs text-gray-500">Configurá tu información comercial y los productos que querés mostrar.</p>
                   </div>
+
+                  <div className="border-t border-gray-100">
+
+                    {/* ACORDEÓN 1: INFORMACIÓN COMERCIAL */}
+                    <Accordion
+                      title="Información Comercial"
+                      icon={PackageSearch}
+                      isOpen={openSection === 'info-comercial'}
+                      onToggle={() => setOpenSection(openSection === 'info-comercial' ? null : 'info-comercial')}
+                    >
+                      <InputGroup type="url" label="Link a Catálogo o Drive de Precios" id="linkCatalogo" value={formData.linkCatalogo} onChange={handleChange} canTest />
+                      <InputGroup label="Marcas que representan (Separadas por coma)" id="marcasRepresentadas" value={formData.marcasRepresentadas} onChange={handleChange} placeholder="Ej: Zoetis, Mindray..." />
+
+                      <div className="pt-2">
+                        <label className="flex items-center text-xs font-bold text-gray-500 uppercase tracking-widest leading-none mb-4 ml-1">
+                          Rubros principales que comercializan
+                        </label>
+                        <div className="flex flex-wrap gap-2.5">
+                          {[
+                            { id: 'alimentos', label: 'Alimentos y Dietas' },
+                            { id: 'farmacia', label: 'Fármacos e Insumos' },
+                            { id: 'equipamiento', label: 'Equipamiento Médico' },
+                            { id: 'descartables', label: 'Descartables Hospitalarios' },
+                            { id: 'instrumental', label: 'Instrumental Quirúrgico' },
+                            { id: 'software', label: 'Software y Tecnología' }
+                          ].map((item) => {
+                            const isChecked = formData.categorias[item.id];
+                            return (
+                              <button
+                                key={item.id} type="button" onClick={() => handleNestedChange('categorias', item.id)}
+                                className={`px-4 py-2.5 rounded-full text-[13px] font-bold border transition-all flex items-center gap-2 shadow-sm ${isChecked ? 'bg-[#1A3D3D] text-white border-[#1A3D3D]' : 'bg-white text-gray-600 border-gray-200 hover:border-[#4DB6AC]'}`}
+                              >
+                                {isChecked && <Check className="w-3.5 h-3.5" />} {item.label}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </Accordion>
+
+                    {/* ACORDEÓN 2: PRODUCTOS Y VIDRIERA */}
+                    <Accordion
+                      title="Productos y Vidriera"
+                      icon={Box}
+                      isOpen={openSection === 'productos-vidriera'}
+                      onToggle={() => setOpenSection(openSection === 'productos-vidriera' ? null : 'productos-vidriera')}
+                    >
+                      <div className="flex justify-between items-center mb-6">
+                        <p className="text-sm text-gray-500 font-medium">El primer producto de la lista es el que aparece destacado en la Cartilla.</p>
+                        {!productoEnEdicion && (
+                          <button onClick={iniciarNuevoProducto} className="hidden sm:flex bg-[#1A3D3D] text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-[#2D6A6A] transition-all items-center gap-2 shadow-md hover:-translate-y-0.5">
+                            <Plus className="w-4 h-4" /> Añadir Producto
+                          </button>
+                        )}
+                      </div>
 
                   {productoEnEdicion ? (
                     <div className="w-full">
@@ -1540,11 +1680,19 @@ const location = useLocation();
                         </div>
                       ) : (
                         <div className="flex flex-col gap-4 relative" ref={scrollContainerRef}>
-                          <div className="bg-[#4DB6AC]/10 border border-[#4DB6AC]/20 rounded-2xl p-4 mb-2 flex items-start gap-3">
-                            <Info className="w-5 h-5 text-[#4DB6AC] shrink-0 mt-0.5" />
-                            <p className="text-[13px] text-gray-600 font-medium leading-relaxed">
-                              <strong className="text-[#1A3D3D]">Tip para tu perfil:</strong> Podés reorganizar los productos arrastrándolos desde los puntitos de la izquierda.
-                            </p>
+                          <div className="flex flex-col gap-3 mb-2">
+                            <div className="bg-[#4DB6AC]/10 border border-[#4DB6AC]/20 rounded-2xl p-4 flex items-start gap-3">
+                              <Info className="w-5 h-5 text-[#4DB6AC] shrink-0 mt-0.5" />
+                              <p className="text-[13px] text-gray-600 font-medium leading-relaxed">
+                                <strong className="text-[#1A3D3D]">Tip para tu perfil:</strong> Podés reorganizar los productos arrastrándolos desde los puntitos de la izquierda.
+                              </p>
+                            </div>
+                            <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-4 flex items-start gap-3">
+                              <Crown className="w-5 h-5 text-yellow-500 shrink-0 mt-0.5" />
+                              <p className="text-[13px] text-gray-600 font-medium leading-relaxed">
+                                <strong className="text-[#1A3D3D]">Producto destacado en la Cartilla:</strong> El primer producto de tu lista es el que aparece en la entrada de la Cartilla de Proveedores. Usá el orden para elegir cuál mostrar.
+              </p>
+                            </div>
                           </div>
 
                           {formData.productosDestacados.map((prod, idx) => {
@@ -1601,6 +1749,17 @@ const location = useLocation();
                                     ) : (
                                         <span className="text-gray-400 font-medium text-xs pointer-events-none">Precio a consultar</span>
                                     )}
+                                    {/* PROVINCIAS: solo se muestran si es el primer producto (el destacado) */}
+                                    {formData.zonaCobertura?.length > 0 && formData.productosDestacados[0]?.id === prod.id && (
+                                      <div className="flex items-center gap-1.5 mt-1.5 pointer-events-none">
+                                        <MapPin className="w-3 h-3 text-[#4DB6AC] shrink-0" />
+                                        <span className="text-[12px] md:text-[13px] text-gray-400 font-medium truncate">
+                                          {formData.zonaCobertura.length === 24
+                                            ? 'Todo el país'
+                                            : formData.zonaCobertura.slice(0, 2).join(', ') + (formData.zonaCobertura.length > 2 ? ` +${formData.zonaCobertura.length - 2}` : '')}
+                                        </span>
+                                      </div>
+                                    )}
                                   </div>
                                   
                                   <div className="pt-3 md:pt-0 border-t md:border-t-0 border-gray-100 flex items-center justify-end gap-2 shrink-0 w-full md:w-auto">
@@ -1618,9 +1777,11 @@ const location = useLocation();
                       )}
                     </div>
                   )}
+                </Accordion>
+                  </div>
                 </div>
               )}
-              
+
               <div className="flex justify-center pb-6 mt-4">
                 <button 
                   type="button" 
