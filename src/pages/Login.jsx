@@ -165,7 +165,7 @@ export default function Login() {
             para la Veterinaria Argentina.
           </h2>
           <p className="text-white/70 text-[15px] lg:text-[16px] leading-relaxed max-w-[400px] mb-12">
-            Únete a la primera cartilla diseñada exclusivamente para potenciar tu presencia, facilitar derivaciones y acceder a oportunidades laborales.
+            Unite a la primera cartilla diseñada exclusivamente para potenciar tu presencia, facilitar derivaciones y acceder a oportunidades laborales.
           </p>
         </div>
         <div className="relative z-10 mt-10">

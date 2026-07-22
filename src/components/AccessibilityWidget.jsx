@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   X, PersonStanding, ZoomIn, ZoomOut, Palette, Type, RotateCcw, 
   ExternalLink, ZapOff, MinusSquare, MessageCircle, Send, Loader2
@@ -32,7 +33,8 @@ export default function AccessibilityWidget() {
     };
   });
 
-  const [position, setPosition] = useState(null); 
+  const [position, setPosition] = useState(null);
+const location = useLocation();
   const dragState = useRef({
     isDragging: false,
     hasDragged: false,
@@ -256,6 +258,8 @@ return () => {
   const isTopHalf = position ? position.y < window.innerHeight / 2 : false;
   // Si está de la mitad izquierda, se ancla a la izquierda. Si no, a la derecha.
   const isLeftHalf = position ? position.x < window.innerWidth / 2 : true;
+
+  if (location.pathname === '/sala-de-espera') return null;
 
   return (
     <>

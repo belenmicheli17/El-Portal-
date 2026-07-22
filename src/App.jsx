@@ -93,7 +93,7 @@ export default function App() {
         `}} />
 
         <ScrollToTop />
-        <AccessibilityWidget />
+        <AccessibilityWidget /> 
 
         <Routes>
 
@@ -101,7 +101,7 @@ export default function App() {
           {/* RUTAS PÚBLICAS — con Navbar y Footer completo    */}
           {/* ================================================ */}
           <Route element={<MainLayout />}>
-            <Route path="/" element={<Inicio />} />
+            <Route path="/" element={<SalaDeEspera />} />
             <Route path="/landing" element={<LandingPage />} />
             <Route path="/Cartilla" element={<Cartilla />} />
 
@@ -152,7 +152,11 @@ export default function App() {
             <Route path="configuracion" element={<Configuracion />} />
           </Route>
 
-          <Route path="/sala-de-espera" element={<SalaDeEspera />} />
+          <Route path="/sala-de-espera" element={
+            <div style={{ backgroundColor: '#FFFFFF', minHeight: '100vh' }}>
+              <SalaDeEspera />
+            </div>
+          } />
           <Route path="*" element={<Navigate to="/" replace />} />
 
         </Routes>
