@@ -26,6 +26,7 @@ import Login from './pages/Login';
 import Capacitaciones from './pages/Capacitaciones';
 import CartillaProveedores from './pages/CartillaProveedores';
 import Ecosistema from './pages/Ecosistema';
+import SalaDeEspera from './pages/SalaDeEspera';
 
 // Panel Admin
 import RutaProtegidaAdmin from './components/admin/RutaProtegidaAdmin';
@@ -151,6 +152,7 @@ export default function App() {
             <Route path="configuracion" element={<Configuracion />} />
           </Route>
 
+          <Route path="/sala-de-espera" element={<SalaDeEspera />} />
           <Route path="*" element={<Navigate to="/" replace />} />
 
         </Routes>
