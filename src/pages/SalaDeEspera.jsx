@@ -80,7 +80,7 @@ const CardPublica = ({ icono: Icono, titulo, descripcion, highlight }) => (
 
 // ── Cajita zona exclusiva ──────────────────────────────────────────────────
 const CardExclusiva = ({ icono: Icono, titulo, descripcion, highlight }) => (
-  <div className={`bg-white border rounded-[24px] isolate p-4 sm:p-6 min-h-0 sm:min-h-[160px] transition-all duration-700 hover:shadow-[0_8px_24px_rgba(45,106,106,0.12)] hover:border-[#2D6A6A]/30 hover:-translate-y-0.5 ${
+  <div className={`bg-white border rounded-[24px] isolate p-4 sm:p-6 h-full transition-all duration-700 hover:shadow-[0_8px_24px_rgba(45,106,106,0.12)] hover:border-[#2D6A6A]/30 hover:-translate-y-0.5 ${
     highlight
       ? 'shadow-[0_8px_24px_rgba(45,106,106,0.12)] border-[#2D6A6A]/30 -translate-y-0.5'
       : 'shadow-[0_2px_8px_rgba(0,0,0,0.06)] border-gray-200'
@@ -273,8 +273,7 @@ const [linkCopiado, setLinkCopiado] = useState(false);
         <div className="w-full bg-[#1A3D3D]/90 backdrop-blur-sm border-b border-[#4DB6AC]/20 px-6 py-2.5 flex items-center justify-center gap-3 relative z-10">
           <span className="w-2 h-2 rounded-full bg-[#4DB6AC] animate-pulse shrink-0"></span>
           <p className="text-white/90 text-[13px] font-medium text-center">
-            Esta página es exclusiva para <span className="text-[#4DB6AC] font-bold">usuarios invitados de prueba</span>. 
-            Lo que veas puede cambiar antes del lanzamiento oficial.
+            Esta página es exclusiva para <span className="text-[#4DB6AC] font-bold">usuarios invitados de prueba</span>.
           </p>
         </div>
       )}
@@ -355,24 +354,24 @@ const [linkCopiado, setLinkCopiado] = useState(false);
         <div className="max-w-5xl mx-auto px-6">
           <div className="mb-8 text-center">
             <h2 className="font-['Montserrat'] font-semibold text-[#2D6A6A] text-[19px] mt-2 mb-2 uppercase tracking-[0.08em]">
-              Exclusivo para profesionales registrados
+              Exclusivo para veterinarios registrados
             </h2>
             <p className="text-[#444444] mt-1 text-[17px] font-normal leading-relaxed">
               Herramientas diseñadas para veterinarios, clínicas y proveedores del sector.
             </p>
           </div>
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 pl-0 sm:pl-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pl-0 sm:pl-4">
 
             {/* — Fila 1: primeras 3 cards — se animan juntas al entrar en pantalla */}
-            <div ref={fila1Ref} className="col-span-2 lg:col-span-3 grid grid-cols-2 lg:grid-cols-3 gap-4">
+            <div ref={fila1Ref} className="col-span-1 sm:col-span-2 lg:col-span-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {[
-                { icono: Users, titulo: 'Cartilla de colegas', descripcion: 'Conectate con otros profesionales para consultas, derivaciones y trabajo en red.', delay: 'delay-[0ms]' },
-                { icono: BookOpen, titulo: 'Capacitaciones', descripcion: 'Cursos y formaciones especializadas en medicina veterinaria de alta complejidad.', delay: 'delay-[100ms]' },
-                { icono: Briefcase, titulo: 'Bolsa de trabajo', descripcion: 'Ofertas laborales para profesionales y clínicas que buscan incorporar talento.', delay: 'delay-[200ms]' },
+                { icono: Users, titulo: 'Cartilla de colegas', descripcion: 'Conectate con otros profesionales para consultas, derivaciones y trabajos en equipo. Tené los contactos siempre a mano. ', delay: 'delay-[0ms]' },
+                { icono: BookOpen, titulo: 'Capacitaciones', descripcion: 'Acá vas a poder encontrar todas las formaciones especializadas en medicina veterinaria, la publicacion de los cursos son gratuitas.', delay: 'delay-[100ms]' },
+                { icono: Briefcase, titulo: 'Bolsa de trabajo', descripcion: 'Las clínicas podrán publicar ofertas de empleo y los profesionales podrán marcarse como disponibles si buscan nuevas oportunidades laborales.', delay: 'delay-[200ms]' },
               ].map(({ icono, titulo, descripcion, delay }) => (
                 <div
                   key={titulo}
-                  className={`transition-all duration-700 ease-out ${delay} ${
+                  className={`transition-all duration-700 ease-out h-full ${delay} ${
                     fila1Visible
                       ? 'opacity-100 translate-y-0'
                       : 'opacity-0 translate-y-8'
@@ -384,14 +383,14 @@ const [linkCopiado, setLinkCopiado] = useState(false);
             </div>
 
             {/* — Fila 2: últimas 2 cards — se animan al llegar a pantalla */}
-            <div ref={fila2Ref} className="col-span-2 lg:col-span-3 grid grid-cols-2 lg:grid-cols-3 gap-4">
+            <div ref={fila2Ref} className="col-span-1 sm:col-span-2 lg:col-span-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {[
-                { icono: FlaskConical, titulo: 'Publicaciones científicas', descripcion: 'Espacio editorial y científico para compartir y acceder a conocimiento del sector.', delay: 'delay-[0ms]' },
-                { icono: Package, titulo: 'Cartilla de proveedores', descripcion: 'Insumos, equipamiento y tecnología veterinaria de proveedores verificados.', delay: 'delay-[100ms]' },
+                { icono: FlaskConical, titulo: 'Publicaciones científicas', descripcion: 'En este espacio podrás encontrar investigaciones de todo tipo. Desde tu perfil puedes compartir papers propios para que tus colegas puedan acceder a tus estudios.', delay: 'delay-[0ms]' },
+                { icono: Package, titulo: 'Cartilla de proveedores', descripcion: '"Dedicado a mayoristas: insumos, equipamiento tecnológico y más. También para quienes ofrezcan servicios exclusivos para veterinarios.', delay: 'delay-[100ms]' },
               ].map(({ icono, titulo, descripcion, delay }) => (
                 <div
                   key={titulo}
-                  className={`transition-all duration-700 ease-out ${delay} ${
+                  className={`transition-all duration-700 ease-out h-full ${delay} ${
                     fila2Visible
                       ? 'opacity-100 translate-y-0'
                       : 'opacity-0 translate-y-8'
