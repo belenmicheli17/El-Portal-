@@ -95,6 +95,57 @@ const CardExclusiva = ({ icono: Icono, titulo, descripcion, highlight }) => (
   </div>
 );
 
+// ── Sección "Quiénes somos" con burbuja de cita ───────────────────────────
+function QuienesSomos() {
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setVisible(true); },
+      { threshold: 0.15 }
+    );
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div className="flex flex-col items-center text-center gap-5 max-w-xl mx-auto">
+      <p className="text-[#2D6A6A] text-[13px] font-bold uppercase tracking-[0.2em]">Quiénes somos</p>
+
+      {/* Burbuja de cita */}
+      <div
+        ref={ref}
+        className={`relative bg-white border border-gray-100 rounded-[28px] px-8 py-7 shadow-[0_4px_24px_rgba(26,61,61,0.07)] transition-all duration-700 ease-out ${
+          visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+        }`}
+      >
+        {/* Comilla decorativa */}
+        <span className="absolute -top-4 left-7 text-[56px] leading-none text-[#4DB6AC]/30 font-['Montserrat'] font-black select-none">
+          "
+        </span>
+
+        {/* Texto en cursiva */}
+        <p className="text-[#555555] text-[16px] md:text-[17px] leading-loose font-['Inter',sans-serif] italic relative z-10">
+          El Portal nació de una necesidad real: conectar el mundo veterinario argentino en un solo lugar, disponible en cualquier momento para todos los públicos. Lo construí con la convicción de que la salud animal merece una red profesional accesible y a la altura.
+        </p>
+
+        {/* Firma */}
+        <div className="mt-5 flex items-center justify-center gap-2">
+          <div className="h-px w-8 bg-[#4DB6AC]/40" />
+          <p className="text-[#1A3D3D] text-[14px] font-bold tracking-wide font-['Montserrat']">
+            Belén M. Arenas
+          </p>
+          <div className="h-px w-8 bg-[#4DB6AC]/40" />
+        </div>
+
+        {/* Colita de burbuja de diálogo — apunta hacia abajo */}
+        <div className="absolute -bottom-[10px] left-1/2 -translate-x-1/2 w-5 h-5 bg-white border-r border-b border-gray-100 rotate-45 shadow-[2px_2px_4px_rgba(0,0,0,0.03)]" />
+      </div>
+    </div>
+  );
+}
+
 // ── Componente principal ───────────────────────────────────────────────────
 export default function SalaDeEspera() {
   const [searchParams] = useSearchParams();
@@ -245,9 +296,9 @@ const [linkCopiado, setLinkCopiado] = useState(false);
     <div className="min-h-screen font-['Inter',sans-serif] overflow-x-hidden" style={{ backgroundColor: '#F9F5F0', position: 'relative', zIndex: 0 }}>
 
       {/* Burbujas decorativas de fondo — cubren toda la página */}
-      <div className="absolute inset-0 pointer-events-none z-0">
+      <div className="absolute inset-0 pointer-events-none" style={{ zIndex: -1 }}>
         {/* Burbuja naranja — esquina superior derecha, zona pública */}
-        <div className="absolute top-[-10%] right-[-7%] w-[50vw] h-[50vw] bg-[#FF9800]/15 rounded-full blur-[80px]"></div>
+        <div className="absolute top-[15%] right-[27%] w-[60vw] h-[60vw] bg-[#FF9800]/15 rounded-full blur-[80px]"></div>
         {/* Burbuja esmeralda — zona media, cerca del título profesional */}
         <div className="absolute top-[35%] left-[-10%] w-[50vw] h-[50vw] bg-[#4DB6AC]/30 rounded-full blur-[130px]"></div>
       </div>
@@ -279,7 +330,7 @@ const [linkCopiado, setLinkCopiado] = useState(false);
       )}
 
       {/* ── HERO: subtítulo ───────────────────────────────────────────────── */}
-      <section className="pt-9 pb-4">
+      <section className="pt-16 pb-20 md:pt-24 md:pb-32">
         <div className="max-w-5xl mx-auto px-6">
           <h1 className="text-[#1A3D3D] font-['Montserrat'] font-extrabold text-4xl md:text-5xl max-w-2xl leading-[1.15] tracking-tight">
             Tu presencia digital en el mundo veterinario.
@@ -322,7 +373,7 @@ const [linkCopiado, setLinkCopiado] = useState(false);
 
 
       {/* ── ZONA PÚBLICA ──────────────────────────────────────────────────── */}
-      <section className="pb-2 md:pb-4">
+      <section className="pt-16 pb-16 md:pt-24 md:pb-28 relative z-10">
         <div className="max-w-5xl mx-auto px-6">
           <div className="mb-6 text-center">
             <h2 className="font-['Montserrat'] font-semibold text-[#2D6A6A] text-[19px] mt-2 mb-2 uppercase tracking-[0.08em]">
@@ -350,7 +401,7 @@ const [linkCopiado, setLinkCopiado] = useState(false);
       </section>
 
       {/* ── ZONA EXCLUSIVA ────────────────────────────────────────────────── */}
-      <section className="pt-4 pb-16 md:pt-6 md:pb-20">
+      <section className="pt-16 pb-20 md:pt-28 md:pb-28 relative z-10">
         <div className="max-w-5xl mx-auto px-6">
           <div className="mb-8 text-center">
             <h2 className="font-['Montserrat'] font-semibold text-[#2D6A6A] text-[19px] mt-2 mb-2 uppercase tracking-[0.08em]">
@@ -386,7 +437,7 @@ const [linkCopiado, setLinkCopiado] = useState(false);
             <div ref={fila2Ref} className="col-span-1 sm:col-span-2 lg:col-span-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {[
                 { icono: FlaskConical, titulo: 'Publicaciones científicas', descripcion: 'En este espacio podrás encontrar investigaciones de todo tipo. Desde tu perfil puedes compartir papers propios para que tus colegas puedan acceder a tus estudios.', delay: 'delay-[0ms]' },
-                { icono: Package, titulo: 'Cartilla de proveedores', descripcion: '"Dedicado a mayoristas: insumos, equipamiento tecnológico y más. También para quienes ofrezcan servicios exclusivos para veterinarios.', delay: 'delay-[100ms]' },
+                { icono: Package, titulo: 'Cartilla de proveedores', descripcion: 'Dedicado a mayoristas: insumos, equipamiento tecnológico y más. También para quienes ofrezcan servicios exclusivos para veterinarios.', delay: 'delay-[100ms]' },
               ].map(({ icono, titulo, descripcion, delay }) => (
                 <div
                   key={titulo}
@@ -411,9 +462,8 @@ const [linkCopiado, setLinkCopiado] = useState(false);
         className="py-12 md:py-16 relative overflow-hidden"
         style={{ backgroundColor: '#F9F5F0' }}
       >
-        {/* Burbujas decorativas — misma vibra que el resto de la página */}
-        <div className="absolute bottom-[-80px] right-[-80px] w-[320px] h-[320px] bg-[#4DB6AC]/15 rounded-full blur-[80px] pointer-events-none" />
-        <div className="absolute top-[-60px] left-[-60px] w-[260px] h-[260px] bg-[#2D6A6A]/10 rounded-full blur-[100px] pointer-events-none" />
+        {/* Recuadro contenedor naranja — sin burbujas, color más presente */}
+        <div className="absolute inset-x-12 md:inset-x-28 inset-y-6 rounded-[40px] bg-[#FF9800]/60 shadow-[0_8px_32px_rgba(26,61,61,0.08)] pointer-events-none" />
 
         <div className="relative z-10 max-w-5xl mx-auto px-6">
           {esBeta ? (
@@ -665,14 +715,7 @@ const [linkCopiado, setLinkCopiado] = useState(false);
 {/* ── QUIÉNES SOMOS ─────────────────────────────────────────────────── */}
       <section className="py-10 md:py-14 border-t border-gray-100">
         <div className="max-w-5xl mx-auto px-6">
-          <div className="flex flex-col items-center text-center gap-5 max-w-xl mx-auto">
-            <p className="text-[#2D6A6A] text-[11px] font-bold uppercase tracking-[0.2em]">Quiénes somos</p>
-            <p className="text-[#555555] text-[16px] md:text-[18px] leading-loose font-['Inter',sans-serif] font-normal">
-              Hola, soy Belén. El Portal nació de una necesidad real: conectar el mundo veterinario argentino en un solo lugar, disponible en cualquier momento para todos los públicos. Lo construí con la convicción de que la salud animal merece una red profesional accesible y a la altura.
-            </p>
-            <div className="flex items-center gap-3 mt-1">
-            </div>
-          </div>
+          <QuienesSomos />
         </div>
       </section>
 
@@ -687,7 +730,7 @@ const [linkCopiado, setLinkCopiado] = useState(false);
         />
         <div className="max-w-5xl mx-auto px-6 flex flex-col items-center gap-2 text-center">
          <p className="text-white/70 text-[13px]">
-            Creado por <span className="text-white font-semibold tracking-wide">Belén M. Arenas</span> · Hecho con <span className="text-red-400">♥</span> en Argentina
+            Hecho con <span className="text-red-400">♥</span> en Argentina
           </p>
           <p className="text-white/30 text-[12px]">
             © {new Date().getFullYear()} Portal Veterinario · Todos los derechos reservados
