@@ -101,7 +101,6 @@ export default function App() {
           {/* RUTAS PÚBLICAS — con Navbar y Footer completo    */}
           {/* ================================================ */}
           <Route element={<MainLayout />}>
-            <Route path="/" element={<SalaDeEspera />} />
             <Route path="/landing" element={<LandingPage />} />
             <Route path="/Cartilla" element={<Cartilla />} />
 
@@ -152,11 +151,8 @@ export default function App() {
             <Route path="configuracion" element={<Configuracion />} />
           </Route>
 
-          <Route path="/sala-de-espera" element={
-            <div style={{ backgroundColor: '#FFFFFF', minHeight: '100vh' }}>
-              <SalaDeEspera />
-            </div>
-          } />
+          <Route path="/sala-de-espera" element={<SalaDeEspera />} />
+          <Route path="/" element={<SalaDeEspera />} />
           <Route path="*" element={<Navigate to="/" replace />} />
 
         </Routes>

@@ -136,10 +136,12 @@ export default function Navbar() {
 
           {/* Logo */}
           <div
-            className="text-[#1A3D3D] font-['Montserrat'] font-extrabold text-2xl tracking-tighter cursor-pointer transition-transform hover:scale-105"
+            className="font-['Montserrat'] font-extrabold tracking-tighter cursor-pointer transition-transform hover:scale-105"
+            style={{ lineHeight: 0.75 }}
             onClick={() => navigate(currentUser ? '/ecosistema' : '/')}
           >
-            El Portal<span className="text-[#2D6A6A]">.</span>
+            <div className="text-[#1A3D3D] text-xl md:text-2xl" style={{ lineHeight: '1' }}>Portal</div>
+            <div className="text-[#1A3D3D] text-xl md:text-2xl" style={{ lineHeight: '0.9' }}>Veterinario<span className="text-[#2D6A6A]">.</span></div>
           </div>
 
           {/* Derecha */}
