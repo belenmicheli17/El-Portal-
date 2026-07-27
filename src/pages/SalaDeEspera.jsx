@@ -88,8 +88,8 @@ const CardExclusiva = ({ icono: Icono, titulo, descripcion, highlight }) => (
     <div className="flex flex-col gap-2 sm:gap-3">
       <Icono size={20} className="text-[#2D6A6A]" strokeWidth={2.5} />
       <div>
-        <h3 className="font-['Montserrat'] font-bold text-[#1A3D3D] text-[14px] sm:text-[17px] mb-1 sm:mb-2">{titulo}</h3>
-        <p className="text-[#333333] text-[13px] sm:text-[16px] font-medium leading-relaxed">{descripcion}</p>
+        <h3 className="font-['Montserrat'] font-bold text-[#1A3D3D] text-[15px] sm:text-[17px] mb-1 sm:mb-2">{titulo}</h3>
+        <p className="text-[#333333] text-[14px] sm:text-[16px] font-medium leading-relaxed">{descripcion}</p>
       </div>
     </div>
   </div>
@@ -290,7 +290,7 @@ const [linkCopiado, setLinkCopiado] = useState(false);
           </p>
         <div className="mt-4 flex items-center gap-2 flex-wrap">
             {!esBeta && (
-              <p className="text-[#999999] text-[14px] font-normal">
+              <p className="text-[#999999] text-[15px] font-normal">
                 Estamos en etapa final de desarrollo.
               </p>
             )}
@@ -329,7 +329,7 @@ const [linkCopiado, setLinkCopiado] = useState(false);
             <h2 className="font-['Montserrat'] font-semibold text-[#2D6A6A] text-[19px] mt-2 mb-2 uppercase tracking-[0.08em]">
               Para el sector <span className="text-[#FF9800]">público</span>
             </h2>
-            <p className="text-[#444444] text-[16px] font-normal mb-8 leading-relaxed">
+            <p className="text-[#444444] text-[17px] font-normal mb-8 leading-relaxed">
               Cualquier persona puede encontrar al profesional ideal para su mascota.
             </p>
           </div>
@@ -357,7 +357,7 @@ const [linkCopiado, setLinkCopiado] = useState(false);
             <h2 className="font-['Montserrat'] font-semibold text-[#2D6A6A] text-[19px] mt-2 mb-2 uppercase tracking-[0.08em]">
               Exclusivo para profesionales registrados
             </h2>
-            <p className="text-[#444444] mt-1 text-[16px] font-normal leading-relaxed">
+            <p className="text-[#444444] mt-1 text-[17px] font-normal leading-relaxed">
               Herramientas diseñadas para veterinarios, clínicas y proveedores del sector.
             </p>
           </div>
@@ -668,7 +668,7 @@ const [linkCopiado, setLinkCopiado] = useState(false);
         <div className="max-w-5xl mx-auto px-6">
           <div className="flex flex-col items-center text-center gap-5 max-w-xl mx-auto">
             <p className="text-[#2D6A6A] text-[11px] font-bold uppercase tracking-[0.2em]">Quiénes somos</p>
-            <p className="text-[#555555] text-[17px] md:text-[18px] leading-loose font-['Inter',sans-serif] font-normal">
+            <p className="text-[#555555] text-[16px] md:text-[18px] leading-loose font-['Inter',sans-serif] font-normal">
               Hola, soy Belén. El Portal nació de una necesidad real: conectar el mundo veterinario argentino en un solo lugar, disponible en cualquier momento para todos los públicos. Lo construí con la convicción de que la salud animal merece una red profesional accesible y a la altura.
             </p>
             <div className="flex items-center gap-3 mt-1">
@@ -687,10 +687,10 @@ const [linkCopiado, setLinkCopiado] = useState(false);
           tabIndex={-1}
         />
         <div className="max-w-5xl mx-auto px-6 flex flex-col items-center gap-2 text-center">
-         <p className="text-white/70 text-xs">
+         <p className="text-white/70 text-[13px]">
             Creado por <span className="text-white font-semibold tracking-wide">Belén M. Arenas</span> · Hecho con <span className="text-red-400">♥</span> en Argentina
           </p>
-          <p className="text-white/30 text-xs">
+          <p className="text-white/30 text-[12px]">
             © {new Date().getFullYear()} Portal Veterinario · Todos los derechos reservados
           </p>
         </div>
