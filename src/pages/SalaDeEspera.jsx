@@ -17,7 +17,8 @@ import {
   ArrowRight,
   Stethoscope,
   PawPrint,
-  Users
+  Users,
+  Mail
 } from "lucide-react";
 
 // Código de acceso beta — cambialo cuando quieras
@@ -145,6 +146,7 @@ function QuienesSomos() {
     </div>
   );
 }
+
 
 // ── Componente principal ───────────────────────────────────────────────────
 export default function SalaDeEspera() {
@@ -329,45 +331,51 @@ const [linkCopiado, setLinkCopiado] = useState(false);
         </div>
       )}
 
-      {/* ── HERO: subtítulo ───────────────────────────────────────────────── */}
-      <section className="pt-16 pb-20 md:pt-24 md:pb-32">
-        <div className="max-w-5xl mx-auto px-6">
-          <h1 className="text-[#1A3D3D] font-['Montserrat'] font-extrabold text-4xl md:text-5xl max-w-2xl leading-[1.15] tracking-tight">
-            Tu presencia digital en el mundo veterinario.
-          </h1>
-          <p className="mt-4 text-[#555555] text-[17px] md:text-[19px] font-medium leading-relaxed max-w-lg">
-            Creá tu perfil, aparecé en búsquedas y conectate con colegas, clínicas y proveedores de todo el país.
-          </p>
-        <div className="mt-4 flex items-center gap-2 flex-wrap">
-            {!esBeta && (
-              <p className="text-[#999999] text-[15px] font-normal">
-                Estamos en etapa final de desarrollo.
-              </p>
-            )}
-            {!esBeta && (
-              <>
-                <span className="text-[#2D6A6A] text-[20px] select-none">·</span>
-                <button
-                  onClick={() => {
-                    const el = document.getElementById("cta-email");
-                    if (!el) return;
-                    // Scroll manual para mayor compatibilidad entre navegadores
-                    const top = el.getBoundingClientRect().top + window.scrollY - 20;
-                    window.scrollTo({ top, behavior: "smooth" });
-                    // Destello cuando termina el scroll
-                    setTimeout(() => {
-                      setDestelloCTA(true);
-                      setTimeout(() => setDestelloCTA(false), 2000);
-                    }, 900);
-                  }}
-                  className="inline-flex items-center gap-1.5 text-[#2D6A6A] text-[17px] font-bold hover:text-[#1A3D3D] transition-colors duration-200 group"
-                >
-                  Avisarme el lanzamiento
-                  <ArrowRight size={17} className="group-hover:translate-x-1 transition-transform duration-200" />
-                </button>
-              </>
-            )}
+      {/* ── HERO ──────────────────────────────────────────────────────────── */}
+     <section className="pt-10 pb-10 md:pt-15 md:pb-48 relative z-10 overflow-hidden">
+  {/* Burbuja naranja */}
+<div className="bubble-orange absolute top-[-60px] right-[-80px] w-[420px] h-[420px] bg-[#FF9800]/40 rounded-full blur-[90px] pointer-events-none z-[-1]" />
+
+{/* Burbuja esmeralda */}
+<div className="bubble-teal absolute bottom-[-40px] left-[-60px] w-[350px] h-[350px] bg-[#4DB6AC]/40 rounded-full blur-[100px] pointer-events-none z-[-1]" />
+  <div className="max-w-5xl mx-auto px-6 relative">
+    <div className="max-w-2xl">
+            <h1 className="font-['Montserrat'] font-extrabold text-[#1A3D3D] text-[38px] md:text-[56px] leading-tight mb-4">
+                Tu presencia digital en el mundo veterinario.
+            </h1>
+            <p className="mt-4 text-[#555555] text-[17px] md:text-[19px] font-medium leading-relaxed max-w-lg">
+              Creá tu perfil, aparecé en búsquedas y conectate con colegas, clínicas y proveedores de todo el país.
+            </p>
+            <div className="mt-4 flex items-center gap-2 flex-wrap">
+              {!esBeta && (
+                <p className="text-[#999999] text-[15px] font-normal">
+                  Estamos en etapa final de desarrollo.
+                </p>
+              )}
+              {!esBeta && (
+                <>
+                  <span className="text-[#2D6A6A] text-[20px] select-none">·</span>
+                  <button
+                    onClick={() => {
+                      const el = document.getElementById("cta-email");
+                      if (!el) return;
+                      const top = el.getBoundingClientRect().top + window.scrollY - 20;
+                      window.scrollTo({ top, behavior: "smooth" });
+                      setTimeout(() => {
+                        setDestelloCTA(true);
+                        setTimeout(() => setDestelloCTA(false), 2000);
+                      }, 900);
+                    }}
+                    className="inline-flex items-center gap-1.5 text-[#2D6A6A] text-[17px] font-bold hover:text-[#1A3D3D] transition-colors duration-200 group"
+                  >
+                    Avisarme el lanzamiento
+                    <ArrowRight size={17} className="group-hover:translate-x-1 transition-transform duration-200" />
+                  </button>
+                </>
+              )}
+            </div>
           </div>
+
         </div>
       </section>
 
@@ -463,26 +471,26 @@ const [linkCopiado, setLinkCopiado] = useState(false);
         style={{ backgroundColor: '#F9F5F0' }}
       >
         {/* Recuadro contenedor naranja — sin burbujas, color más presente */}
-        <div className="absolute inset-x-12 md:inset-x-28 inset-y-6 rounded-[40px] bg-[#FF9800]/60 shadow-[0_8px_32px_rgba(26,61,61,0.08)] pointer-events-none" />
+        <div className="absolute inset-x-5 md:inset-x-28 inset-y-6 rounded-[40px] bg-[#FF9800]/60 shadow-[0_8px_32px_rgba(26,61,61,0.08)] pointer-events-none" />
 
-        <div className="relative z-10 max-w-5xl mx-auto px-6">
+        <div className="relative z-10 max-w-5xl mx-auto px-6 md:px-6 flex justify-center md:block">
           {esBeta ? (
 
             /* ── Vista beta ── */
-            <div className="flex flex-col-reverse md:flex-row items-start gap-10 md:gap-16">
+            <div className="flex flex-col md:flex-row items-start gap-10 md:gap-16 md:w-full w-[90%] mx-auto">
 
               {/* — Columna izquierda: textos — */}
-              <div className="flex flex-col items-start gap-6 flex-1">
-                <span className="hidden md:inline-flex items-center gap-2 bg-[#1A3D3D] border border-[#4DB6AC]/30 text-[#4DB6AC] text-[11px] font-bold uppercase tracking-[0.2em] px-4 py-2 rounded-full">
+             <div className="flex flex-col items-start gap-6 flex-1 max-w-[260px] md:max-w-none">
+              <span className="hidden md:inline-flex items-center gap-2 bg-[#1A3D3D] border border-[#4DB6AC]/30 text-[#4DB6AC] text-[11px] font-bold uppercase tracking-[0.2em] px-4 py-2 rounded-full">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#4DB6AC] animate-pulse" />
                   Acceso anticipado
                 </span>
-                <h2 className="font-['Montserrat'] font-bold text-[#1A3D3D] text-3xl md:text-4xl max-w-lg leading-snug">
-                  Ya podés registrarte y ser el primero en explorar la plataforma.
-                </h2>
-                <div className="flex flex-col gap-2 max-w-sm">
-                  <p className="text-[#1A3D3D] font-bold text-[16px]">Los que llegan primero, construyen la plataforma.</p>
-                  <p className="text-[#666666] text-[16px] leading-relaxed">
+                <h2 className="font-['Montserrat'] font-bold text-[#1A3D3D] text-3xl md:text-4xl max-w-[260px] md:max-w-lg leading-snug">
+  Ya podés registrarte y ser el primero en explorar la plataforma.
+</h2>
+                <div className="flex flex-col gap-2 max-w-[260px] md:max-w-sm">
+                  <p className="text-[#1A3D3D] font-bold text-[17px] md:text-[16px]">Los que llegan primero, construyen la plataforma.</p>
+                  <p className="text-[#666666] text-[18px] md:text-[16px] leading-relaxed">
                     Como beta tester vas a ser parte del grupo que le da forma a lo que viene. Tu perfil estará listo y activo desde el día del lanzamiento — solo necesitamos tu compromiso de completarlo y probarlo con nosotros.
                   </p>
                 </div>
@@ -500,7 +508,7 @@ const [linkCopiado, setLinkCopiado] = useState(false);
                   <div className="bg-white rounded-[28px] shadow-[0_8px_32px_rgba(26,61,61,0.08)] border border-gray-100 overflow-hidden">
                     {/* Cabecera */}
                     <div className="px-6 py-5 border-b border-gray-100">
-                      <p className="text-[#2D6A6A] text-[11px] font-bold uppercase tracking-[0.2em] mb-1">Registrate gratis</p>
+                      <p className="text-[#2D6A6A] text-[11px] font-bold uppercase tracking-[0.2em] mb-1">Registrate</p>
                       <h3 className="text-[#1A3D3D] font-['Montserrat'] font-bold text-[18px] leading-tight">
                         {pasoDrawer === 'rol' ? '¿Con qué perfil ingresás?' : pasoDrawer === 'datos' ? 'Completá tus datos' : '¡Bienvenido/a!'}
                       </h3>
@@ -671,7 +679,7 @@ const [linkCopiado, setLinkCopiado] = useState(false);
               {/* — Tarjeta formulario — */}
               <div className="w-full md:w-[360px] shrink-0">
                 <div className="bg-white rounded-[28px] shadow-[0_8px_32px_rgba(26,61,61,0.08)] border border-gray-100 p-6">
-                  <p className="text-[#2D6A6A] text-[12px] font-bold uppercase tracking-[0.2em] mb-1">Anotarme gratis</p>
+                  <Mail size={20} className="text-[#2D6A6A] shrink-0" />
                   <h3 className="text-[#1A3D3D] font-['Montserrat'] font-bold text-[18px] mb-5 leading-tight">Avisarme el lanzamiento</h3>
 
                   {enviado ? (
