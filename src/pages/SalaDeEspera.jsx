@@ -295,7 +295,7 @@ const [linkCopiado, setLinkCopiado] = useState(false);
   };
 
   return (
-    <div className="min-h-screen font-['Inter',sans-serif] overflow-x-hidden" style={{ backgroundColor: '#F9F5F0', position: 'relative', zIndex: 0 }}>
+    <div className="min-h-screen font-['Inter',sans-serif] overflow-x-hidden" style={{ backgroundColor: '#F9F5F0' }}>
 
       {/* Burbujas decorativas de fondo — cubren toda la página */}
       <div className="absolute inset-0 pointer-events-none" style={{ zIndex: -1 }}>
@@ -306,16 +306,27 @@ const [linkCopiado, setLinkCopiado] = useState(false);
       </div>
 
       {/* ── NAVBAR SIMPLE ─────────────────────────────────────────────────── */}
-      <nav className="w-full px-6 md:px-10 h-[90px] flex items-center border-b border-gray-100 shadow-sm" style={{ backgroundColor: '#FFFFFF', backdropFilter: 'none', WebkitBackdropFilter: 'none', isolation: 'isolate', position: 'relative', zIndex: 1 }}>
+      <nav className="w-full px-6 md:px-10 h-[60px] md:h-[90px] flex items-center border-b border-gray-100 shadow-sm" style={{ backgroundColor: '#FFFFFF', backdropFilter: 'none', WebkitBackdropFilter: 'none', isolation: 'isolate', position: 'relative', zIndex: 1 }}>
         <div className="max-w-5xl mx-auto w-full">
           <div
-            className="font-['Montserrat'] font-extrabold tracking-tighter cursor-pointer w-fit"
-            style={{ lineHeight: 0.75 }}
+            className="cursor-pointer w-fit flex items-center gap-3"
             onClick={() => navigate("/sala-de-espera")}
           >
-            <div className="text-[#1A3D3D] text-xl md:text-3xl" style={{ lineHeight: '1' }}>Portal</div>
-            <div className="text-[#1A3D3D] text-xl md:text-3xl" style={{ lineHeight: '0.9' }}>
-              Veterinario<span className="text-[#2D6A6A]">.</span>
+            {/* Isotipo — solo visible en móvil */}
+            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-9 h-9 md:hidden">
+              <path d="M 18 85 V 45 A 32 32 0 0 1 82 45 V 85" stroke="#1A3D3D" strokeWidth="12" strokeLinecap="round" fill="none"/>
+              <path d="M 38 85 V 55 A 12 12 0 0 1 62 55 V 85" stroke="#2D6A6A" strokeWidth="12" strokeLinecap="round" fill="none"/>
+            </svg>
+
+            {/* Logo tipográfico — solo visible en desktop */}
+            <div
+              className="hidden md:block font-['Montserrat'] font-extrabold tracking-tighter"
+              style={{ lineHeight: 0.75 }}
+            >
+              <div className="text-[#1A3D3D] text-3xl" style={{ lineHeight: '1' }}>Portal</div>
+              <div className="text-[#1A3D3D] text-3xl" style={{ lineHeight: '0.9' }}>
+                Veterinario<span className="text-[#2D6A6A]">.</span>
+              </div>
             </div>
           </div>
         </div>
@@ -323,7 +334,7 @@ const [linkCopiado, setLinkCopiado] = useState(false);
 
       {/* ── BANNER BETA (solo para usuarios invitados) ────────────────────── */}
       {esBeta && (
-        <div className="w-full bg-[#1A3D3D]/90 backdrop-blur-sm border-b border-[#4DB6AC]/20 px-6 py-2.5 flex items-center justify-center gap-3 relative z-10">
+        <div className="w-full bg-[#1A3D3D]/90 backdrop-blur-sm border-b border-[#4DB6AC]/20 px-6 py-2.5 flex items-center justify-center gap-3 sticky top-0 z-50">
           <span className="w-2 h-2 rounded-full bg-[#4DB6AC] animate-pulse shrink-0"></span>
           <p className="text-white/90 text-[13px] font-medium text-center">
             Esta página es exclusiva para <span className="text-[#4DB6AC] font-bold">usuarios invitados de prueba</span>.
@@ -332,12 +343,12 @@ const [linkCopiado, setLinkCopiado] = useState(false);
       )}
 
       {/* ── HERO ──────────────────────────────────────────────────────────── */}
-     <section className="pt-10 pb-10 md:pt-15 md:pb-48 relative z-10 overflow-hidden">
+     <section className="pt-10 pb-20 md:pt-15 md:pb-48 relative z-10 overflow-hidden">
   {/* Burbuja naranja */}
-<div className="bubble-orange absolute top-[-60px] right-[-80px] w-[420px] h-[420px] bg-[#FF9800]/40 rounded-full blur-[90px] pointer-events-none z-[-1]" />
+<div className="bubble-orange absolute top-[-80px] right-[-120px] md:top-[-60px] md:right-[-80px] w-[420px] h-[420px] bg-[#FF9800]/40 rounded-full blur-[90px] pointer-events-none z-[-1]" />
 
 {/* Burbuja esmeralda */}
-<div className="bubble-teal absolute bottom-[-40px] left-[-60px] w-[350px] h-[350px] bg-[#4DB6AC]/40 rounded-full blur-[100px] pointer-events-none z-[-1]" />
+<div className="bubble-teal absolute bottom-[-80px] left-[-120px] md:bottom-[-40px] md:left-[-60px] w-[350px] h-[350px] bg-[#4DB6AC]/40 rounded-full blur-[100px] pointer-events-none z-[-1]" />
   <div className="max-w-5xl mx-auto px-6 relative">
     <div className="max-w-2xl">
             <h1 className="font-['Montserrat'] font-extrabold text-[#1A3D3D] text-[38px] md:text-[56px] leading-tight mb-4">
@@ -488,8 +499,8 @@ const [linkCopiado, setLinkCopiado] = useState(false);
                 <h2 className="font-['Montserrat'] font-bold text-[#1A3D3D] text-3xl md:text-4xl max-w-[260px] md:max-w-lg leading-snug">
   Ya podés registrarte y ser el primero en explorar la plataforma.
 </h2>
-                <div className="flex flex-col gap-2 max-w-[260px] md:max-w-sm">
-                  <p className="text-[#1A3D3D] font-bold text-[17px] md:text-[16px]">Los que llegan primero, construyen la plataforma.</p>
+                <div className="flex flex-col gap-1 max-w-[260px] md:max-w-sm">
+                  <p className="text-[#1A3D3D] font-bold text-[1px] md:text-[16px]">Los que llegan primero, construyen la plataforma.</p>
                   <p className="text-[#666666] text-[18px] md:text-[16px] leading-relaxed">
                     Como beta tester vas a ser parte del grupo que le da forma a lo que viene. Tu perfil estará listo y activo desde el día del lanzamiento — solo necesitamos tu compromiso de completarlo y probarlo con nosotros.
                   </p>
@@ -529,7 +540,7 @@ const [linkCopiado, setLinkCopiado] = useState(false);
                           {[
                             { valor: 'profesional', label: 'Soy Profesional', sub: 'Veterinario/a que busca conectar y crecer.', Icono: Stethoscope, color: 'blue' },
                             { valor: 'clinica', label: 'Soy una Clínica', sub: 'Institución que busca talento y visibilidad.', Icono: Hospital, color: 'emerald' },
-                            { valor: 'proveedor', label: 'Proveedor o empresa', sub: 'Ofrezco insumos, equipamiento o servicios.', Icono: Store, color: 'purple' },
+                            { valor: 'proveedor', label: 'Proveedor o empresa', sub: 'Ofrezco insumos mayoristas, equipamiento o servicios para los usuarios mencionados anteriormente.', Icono: Store, color: 'purple' },
                           ].map(({ valor, label, sub, Icono, color }) => (
                             <button
                               key={valor}
@@ -660,7 +671,7 @@ const [linkCopiado, setLinkCopiado] = useState(false);
           ) : (
 
             /* ── Vista pública ── */
-            <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12 w-full">
+            <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12 w-full pl-4 md:pl-0">
 
               {/* — Columna izquierda: textos — */}
               <div className="flex flex-col items-start gap-5 flex-1 min-w-0">
@@ -677,7 +688,7 @@ const [linkCopiado, setLinkCopiado] = useState(false);
               </div>
 
               {/* — Tarjeta formulario — */}
-              <div className="w-full md:w-[360px] shrink-0">
+              <div className="w-[90%] md:w-[360px] shrink-0 mx-auto md:mx-0">
                 <div className="bg-white rounded-[28px] shadow-[0_8px_32px_rgba(26,61,61,0.08)] border border-gray-100 p-6">
                   <Mail size={20} className="text-[#2D6A6A] shrink-0" />
                   <h3 className="text-[#1A3D3D] font-['Montserrat'] font-bold text-[18px] mb-5 leading-tight">Avisarme el lanzamiento</h3>
@@ -721,7 +732,7 @@ const [linkCopiado, setLinkCopiado] = useState(false);
       </section>
 
 {/* ── QUIÉNES SOMOS ─────────────────────────────────────────────────── */}
-      <section className="py-10 md:py-14 border-t border-gray-100">
+      <section className="py-6 md:py-14 border-t border-gray-100">
         <div className="max-w-5xl mx-auto px-6">
           <QuienesSomos />
         </div>
@@ -742,6 +753,9 @@ const [linkCopiado, setLinkCopiado] = useState(false);
           </p>
           <p className="text-white/30 text-[12px]">
             © {new Date().getFullYear()} Portal Veterinario · Todos los derechos reservados
+          </p>
+          <p className="text-white/70 text-[13px]">
+            Contactanos · portalveterinario.ar@gmail.com
           </p>
         </div>
       </footer>
