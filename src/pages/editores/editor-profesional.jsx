@@ -360,12 +360,13 @@ export default function EditorProfesional() {
           const papersSnap = await getDocs(qPapers);
           const misPapers = papersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
 
+          const dataCompleta = { ...dbData, papers: misPapers };
+
           // Actualizamos el formulario
-          _setFormData(prev => ({
-            ...prev,
-            ...dbData,
-            papers: misPapers
-          }));
+          _setFormData(prev => ({ ...prev, ...dataCompleta }));
+          setSavedData({ ..._formData, ...dataCompleta });
+        } else {
+          setSavedData({ ..._formData });
         }
       } catch (error) {
         console.error("Error al cargar los datos desde Firebase:", error);
@@ -410,6 +411,11 @@ export default function EditorProfesional() {
   const [past, setPast] = useState([]);
   const [future, setFuture] = useState([]);
   const isUndoRedAction = useRef(false);
+
+  const [savedData, setSavedData] = useState(null);
+  const [exitModalOpen, setExitModalOpen] = useState(false);
+  const [pendingNavigation, setPendingNavigation] = useState(null);
+  const haycambiosSinGuardar = savedData !== null && JSON.stringify(_formData) !== JSON.stringify(savedData);
 
   const formData = _formData;
   
@@ -706,6 +712,7 @@ const generarSlug = (texto) => {
 
       // 4. --- ¡CERRANDO EL CICLO DEL BOTÓN! ---
       setSaveStatus('saved');
+      setSavedData(_formData);
       setTimeout(() => setSaveStatus('idle'), 2500);
 
     } catch (error) {
@@ -754,6 +761,43 @@ const generarSlug = (texto) => {
   return (
     <div className="bg-[#F4F7F7] min-h-screen font-['Inter'] antialiased text-left text-[#1A3D3D] selection:bg-[#4DB6AC] selection:text-white relative w-full overflow-x-hidden flex flex-col">
       
+
+      {/* MODAL: CAMBIOS SIN GUARDAR */}
+      {exitModalOpen && (
+        <div className="fixed inset-0 bg-[#1A3D3D]/40 backdrop-blur-md z-[300] flex items-center justify-center p-4">
+          <div className="bg-white rounded-[32px] w-full max-w-sm overflow-hidden shadow-2xl p-8 text-center animate-in fade-in zoom-in duration-200">
+            <div className="w-16 h-16 bg-yellow-50 rounded-full flex items-center justify-center mx-auto mb-5">
+              <AlertTriangle className="w-8 h-8 text-yellow-500" />
+            </div>
+            <h3 className="font-bold font-['Montserrat'] text-xl text-[#1A3D3D] mb-2">Tenés cambios sin guardar</h3>
+            <p className="text-sm text-gray-500 mb-8 leading-relaxed">Si salís ahora, los cambios que hiciste se van a perder.</p>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={async () => {
+                  await handleSaveData();
+                  setExitModalOpen(false);
+                  if (pendingNavigation) navigate(pendingNavigation);
+                }}
+                className="w-full px-8 py-3.5 rounded-xl font-bold text-white bg-[#1A3D3D] hover:bg-[#2D6A6A] transition-colors shadow-lg text-sm flex items-center justify-center gap-2"
+              >
+                <Save className="w-4 h-4" /> Guardar y salir
+              </button>
+              <button
+                onClick={() => { setExitModalOpen(false); if (pendingNavigation) navigate(pendingNavigation); }}
+                className="w-full px-8 py-3.5 rounded-xl font-bold text-red-500 hover:bg-red-50 transition-colors text-sm border border-red-100"
+              >
+                Descartar cambios y salir
+              </button>
+              <button
+                onClick={() => { setExitModalOpen(false); setPendingNavigation(null); }}
+                className="w-full px-8 py-3.5 rounded-xl font-bold text-gray-400 hover:bg-gray-50 transition-colors text-sm"
+              >
+                Seguir editando
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* MODAL GENÉRICO DE AVISOS */}
       {modalConfig.isOpen && (
@@ -940,9 +984,19 @@ const generarSlug = (texto) => {
         <div className="max-w-[1100px] w-full mx-auto flex justify-between items-center">
           
           <div className="flex items-center gap-6">
-           <button onClick={() => navigate('/ecosistema')} className="flex items-center gap-2 text-gray-400 hover:text-[#4DB6AC] transition-colors bg-gray-50 hover:bg-gray-100 px-3 py-1.5 rounded-xl border border-gray-200">
-   <ArrowLeft className="w-4 h-4" /> <span className="text-xs font-bold hidden sm:block">Volver al Ecosistema</span>
-</button>
+           <button
+              onClick={() => {
+                if (haycambiosSinGuardar) {
+                  setPendingNavigation('/ecosistema');
+                  setExitModalOpen(true);
+                } else {
+                  navigate('/ecosistema');
+                }
+              }}
+              className="flex items-center gap-2 text-gray-400 hover:text-[#4DB6AC] transition-colors bg-gray-50 hover:bg-gray-100 px-3 py-1.5 rounded-xl border border-gray-200"
+            >
+              <ArrowLeft className="w-4 h-4" /> <span className="text-xs font-bold hidden sm:block">Volver al Ecosistema</span>
+            </button>
             <div className="w-px h-6 bg-gray-200 hidden sm:block"></div>
             <div className="text-[#1A3D3D] font-['Montserrat'] font-extrabold text-xl tracking-tight cursor-pointer">
                El Portal<span className="text-[#2D6A6A]">.</span>
@@ -1826,23 +1880,40 @@ const generarSlug = (texto) => {
             {/* ========================================================================= */}
             {/* LINK INFERIOR PARA VER PERFIL */}
             {/* ========================================================================= */}
-            <div className="flex justify-center mt-8 pb-4">
-           
-              <button 
-  type="button" 
-  onClick={() => {
-    // 1. Generamos el slug usando el nombre del profesional
-    const slugActual = generarSlug(formData.nombre);
-    
-    // 2. Navegamos a la ruta de profesionales que armamos en App.jsx
-    navigate(`/profesional/${slugActual}`);
-  }} 
-  className="text-center block text-gray-400 font-bold text-xs uppercase tracking-[0.2em] hover:text-[#4DB6AC] transition-colors flex items-center justify-center gap-2 group bg-white px-6 py-3 rounded-full border border-gray-200 shadow-sm"
->
-  Ver mi perfil público <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-</button>
+            <div className="flex flex-col md:flex-row items-center justify-center gap-3 mt-8 pb-4">
+              <button
+                onClick={handleSaveData}
+                disabled={saveStatus === 'saving' || saveStatus === 'saved'}
+                className={`px-6 md:px-8 py-3 rounded-xl font-bold text-[11px] md:text-[12px] uppercase tracking-[0.15em] shadow-md transition-all flex items-center justify-center gap-2 w-full md:w-auto
+                  ${saveStatus === 'saving' ? 'bg-[#1A3D3D] text-white opacity-70 cursor-not-allowed' :
+                    saveStatus === 'saved' ? 'bg-[#4DB6AC] text-white cursor-default' :
+                    'bg-[#1A3D3D] text-white hover:bg-[#2D6A6A] hover:-translate-y-0.5'}`}
+              >
+                {saveStatus === 'saving' && <Loader2 className="w-4 h-4 animate-spin" />}
+                {saveStatus === 'saved' && <Check className="w-4 h-4" />}
+                {saveStatus === 'idle' && <Save className="w-4 h-4" />}
+                {saveStatus === 'error' && <AlertCircle className="w-4 h-4 text-red-400" />}
+                {saveStatus === 'saving' ? <span>Guardando...</span> :
+                 saveStatus === 'saved' ? <span>¡Guardado!</span> :
+                 saveStatus === 'error' ? <span>Error</span> :
+                 <span>Guardar Cambios</span>}
+              </button>
 
-
+              <button
+                type="button"
+                onClick={() => {
+                  const slugActual = generarSlug(formData.nombre);
+                  if (haycambiosSinGuardar) {
+                    setPendingNavigation(`/profesional/${slugActual}`);
+                    setExitModalOpen(true);
+                  } else {
+                    navigate(`/profesional/${slugActual}`);
+                  }
+                }}
+                className="text-center text-gray-400 font-bold text-xs uppercase tracking-[0.2em] hover:text-[#4DB6AC] transition-colors flex items-center justify-center gap-2 group bg-white px-6 py-3 rounded-full border border-gray-200 shadow-sm w-full md:w-auto"
+              >
+                Ver mi perfil público <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </button>
             </div>
 
           </div>

@@ -4,18 +4,18 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 // ==========================================
-// IMPORTACIONES DE FIREBASE (NUEVO)
+// IMPORTACIONES DE FIREBASE
 // ==========================================
-import { db } from '../../firebase';
+import { db, storage } from '../../firebase';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 import { useAuth } from '../../context/AuthContext';
-import { Crown } from 'lucide-react';
-
+import FooterSimple from '../../components/FooterSimple';
 import { 
   Camera, Info, AlertCircle, Save, X, Plus, Trash2, 
   ArrowUp, ArrowDown, MapPin, ShieldCheck, Check, ArrowLeft,
   Smartphone, Home, Mail, Award, ChevronDown, 
-  ArrowRight, ExternalLink, Heart, Lock, Zap, Clock,
+  ArrowRight, ExternalLink, Heart, Lock, Zap, Clock, Crown,
   Menu, User, LayoutGrid, Edit, Briefcase, FileText, Undo2, Redo2, FileCheck, Building2, AlertTriangle, Syringe, Activity, Microscope, Stethoscope, Crop, Sparkles, Loader2, Globe, CreditCard, ArrowUpRight, Eye, EyeOff, MessageSquare
 } from 'lucide-react';
 
@@ -43,19 +43,15 @@ const Tooltip = ({ text, isSection = false }) => {
   const [xOffset, setXOffset] = useState(0);
 
   useEffect(() => {
-    // Si el tooltip está abierto, calculamos su posición en pantalla
     if (isVisible && boxRef.current) {
       const rect = boxRef.current.getBoundingClientRect();
-      const margin = 16; // Margen de seguridad en píxeles contra los bordes del celular
-
-      // Si choca por la izquierda, lo empujamos a la derecha. Si choca por la derecha, a la izquierda.
+      const margin = 16;
       if (rect.left < margin) {
         setXOffset(margin - rect.left);
       } else if (rect.right > window.innerWidth - margin) {
         setXOffset((window.innerWidth - margin) - rect.right);
       }
     } else {
-      // Reiniciamos la posición cuando se cierra para el próximo uso
       setXOffset(0);
     }
   }, [isVisible]);
@@ -71,19 +67,15 @@ const Tooltip = ({ text, isSection = false }) => {
         setIsVisible(!isVisible); 
       }}
     >
-      {/* Ícono de Información */}
       <div className="bg-[#2D6A6A]/10 p-1 rounded-full border border-[#2D6A6A]/20 group-hover:bg-[#2D6A6A] transition-colors duration-300">
         <Info className="w-4 h-4 text-[#2D6A6A] group-hover:text-white transition-colors" />
       </div>
 
-      {/* Contenedor principal (Siempre fijo y centrado sobre el ícono) */}
       <div className={`
         absolute bottom-full left-1/2 -translate-x-1/2 mb-3 z-[110]
         transition-all duration-300 flex flex-col items-center
         ${isVisible ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-2 pointer-events-none'}
       `}>
-        
-        {/* Caja de texto (Se desliza sola usando transform si choca con los bordes) */}
         <div 
           ref={boxRef}
           style={{ transform: `translateX(${xOffset}px)` }}
@@ -103,10 +95,7 @@ const Tooltip = ({ text, isSection = false }) => {
           )}
           <p className={isSection ? "text-sm text-gray-600 font-medium leading-relaxed" : ""}>{text}</p>
         </div>
-
-        {/* Triangulito inferior (Fuera de la caja de texto para que no se mueva) */}
         <div className={`absolute top-full left-1/2 -translate-x-1/2 border-[7px] border-transparent ${isSection ? 'border-t-white' : 'border-t-[#1A3D3D]'}`}></div>
-        
       </div>
     </div>
   );
@@ -323,14 +312,23 @@ export default function EditorClinico() {
   const [nuevaSubOpcion, setNuevaSubOpcion] = useState({ idServicio: null, texto: '' });
   const [cropModal, setCropModal] = useState({ isOpen: false, imageSrc: null, targetId: null, type: null });
   const [saveStatus, setSaveStatus] = useState('idle');
+  const [exitModalOpen, setExitModalOpen] = useState(false);
+  const [pendingNavigation, setPendingNavigation] = useState(null);
+  // Estado de carga inicial desde Firebase
+  const [isLoadingData, setIsLoadingData] = useState(true);
 
   const [planType, setPlanType] = useState('pro');
   const [tempSelectedPlan, setTempSelectedPlan] = useState('pro'); 
   const [isSubscriptionActive, setIsSubscriptionActive] = useState(true);
 
+  const { currentUser } = useAuth();
+  if (!currentUser) return null;
+  const [socioVitalicio, setSocioVitalicio] = useState(false);
+
   const isPro = planType === 'pro';
 
   const initialData = {
+    // cuentaEmail se populará desde currentUser al cargar
     cuentaEmail: '',
     cuentaPassword: '',
     cuentaTelefono: '',
@@ -341,6 +339,8 @@ export default function EditorClinico() {
     añosExperiencia: "",
     foto: "", 
     direccion: "",
+    lat: null,
+    lng: null,
     telefono: '',
     whatsapp: "",
     email: "",
@@ -369,13 +369,15 @@ export default function EditorClinico() {
     ]
   };
 
+  const [savedData, setSavedData] = useState(initialData);
   const [_formData, _setFormData] = useState(initialData);
   const [past, setPast] = useState([]);
   const [future, setFuture] = useState([]);
   const isUndoRedAction = useRef(false);
   const fileInputRef = useRef(null);
-const [personalizarUrgencias, setPersonalizarUrgencias] = useState(false);
+  const [personalizarUrgencias, setPersonalizarUrgencias] = useState(false);
   const formData = _formData;
+  const haycambiosSinGuardar = JSON.stringify(formData) !== JSON.stringify(savedData);
   
   const setFormData = (action) => {
     _setFormData((prev) => {
@@ -561,6 +563,10 @@ const [personalizarUrgencias, setPersonalizarUrgencias] = useState(false);
     e.target.value = null;
   };
 
+  // ==========================================
+  // FIX: saveCroppedImage guarda Base64 en estado local 
+  // (la subida real a Storage ocurre en handleSaveData)
+  // ==========================================
   const saveCroppedImage = (croppedBase64) => {
     if (cropModal.type === 'logo') {
       setFormData(prev => ({ ...prev, foto: croppedBase64 }));
@@ -570,21 +576,105 @@ const [personalizarUrgencias, setPersonalizarUrgencias] = useState(false);
     setCropModal({ isOpen: false, imageSrc: null, targetId: null, type: null });
   };
 
-  const triggerFileInput = (ref) => {
-    if (ref && ref.current) {
-       ref.current.click();
+  const generarSlug = (texto) => {
+    return texto
+      .toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)+/g, "");
+  };
+
+  // ==========================================
+  // FIX: Subida de imagen a Firebase Storage
+  // Siempre sube el Base64 y devuelve la URL pública
+  // ==========================================
+  const subirImagenAStorage = async (base64, path) => {
+    if (!base64 || !base64.startsWith('data:image')) return base64 || '';
+    try {
+      const storageRef = ref(storage, path);
+      await uploadString(storageRef, base64, 'data_url');
+      return await getDownloadURL(storageRef);
+    } catch (e) {
+      console.error('Error subiendo imagen a Storage:', e);
+      return '';
     }
   };
 
-const generarSlug = (texto) => {
-  return texto
-    .toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Quita acentos (é -> e)
-    .replace(/[^a-z0-9]+/g, "-") // Reemplaza espacios y símbolos por guiones
-    .replace(/(^-|-$)+/g, ""); // Limpia guiones sobrantes en las puntas
-};
+  // ==========================================
+  // FIX SINCRO #1, #2 y #3: Carga inicial de datos desde Firebase
+  // Trae todos los datos guardados, el plan actual y el email de la cuenta
+  // ==========================================
+  useEffect(() => {
+    const cargarDatosClinica = async () => {
+      if (!currentUser?.uid) {
+        setIsLoadingData(false);
+        return;
+      }
+
+      setIsLoadingData(true);
+
+      try {
+        // Populamos el email de la cuenta desde Firebase Auth (FIX SINCRO #3)
+        const emailCuenta = currentUser.email || '';
+
+        // Buscamos el documento del usuario para obtener su slug de clínica
+        const userSnap = await getDoc(doc(db, 'usuarios', currentUser.uid));
+        
+        if (userSnap.exists() && userSnap.data().slug) {
+          const slugGuardado = userSnap.data().slug;
+          const clinicaSnap = await getDoc(doc(db, 'clinicas', slugGuardado));
+          
+          if (clinicaSnap.exists()) {
+            const dataFirebase = clinicaSnap.data();
+
+            // Mergeamos con initialData para que no fallen campos nuevos que Firebase no tenga aún
+            const dataMergeada = {
+              ...initialData,
+              ...dataFirebase,
+              // FIX SINCRO #3: siempre usamos el email real de Auth, no el guardado
+              cuentaEmail: emailCuenta,
+              // Aseguramos que arrays críticos no queden undefined
+              urgencias: dataFirebase.urgencias?.length > 0 ? dataFirebase.urgencias : initialData.urgencias,
+              staff: dataFirebase.staff?.length > 0 ? dataFirebase.staff : initialData.staff,
+              faqs: dataFirebase.faqs?.length > 0 ? dataFirebase.faqs : initialData.faqs,
+              redes: { ...initialData.redes, ...(dataFirebase.redes || {}) },
+              horarios: { ...initialData.horarios, ...(dataFirebase.horarios || {}) },
+              servicios: { ...initialData.servicios, ...(dataFirebase.servicios || {}) },
+            };
+
+            // FIX SINCRO #2: restauramos el tipo de plan desde Firebase
+            if (dataFirebase.planActual) {
+              setPlanType(dataFirebase.planActual);
+            }
+
+            // Seteamos tanto formData como savedData para que haycambiosSinGuardar empiece en false
+            _setFormData(dataMergeada);
+            setSavedData(dataMergeada);
+          } else {
+            // Primera vez que abre el editor: solo seteamos el email
+            _setFormData(prev => ({ ...prev, cuentaEmail: emailCuenta }));
+            setSavedData(prev => ({ ...prev, cuentaEmail: emailCuenta }));
+          }
+        } else {
+          // No hay slug guardado aún: solo seteamos el email
+          _setFormData(prev => ({ ...prev, cuentaEmail: emailCuenta }));
+          setSavedData(prev => ({ ...prev, cuentaEmail: emailCuenta }));
+        }
+      } catch (e) {
+        console.error('Error cargando datos de la clínica:', e);
+      } finally {
+        setIsLoadingData(false);
+      }
+    };
+
+    cargarDatosClinica();
+  }, [currentUser]);
 
   const handleSaveData = async () => {
+    if (!currentUser?.uid) {
+      setModalConfig({ isOpen: true, title: 'Sesión expirada', message: 'Tu sesión expiró. Volvé a iniciar sesión.', type: 'error' });
+      return;
+    }
     if (!formData.nombre.trim() || !formData.direccion.trim() || !formData.foto) {
       setModalConfig({ 
         isOpen: true, 
@@ -600,22 +690,74 @@ const generarSlug = (texto) => {
     setSaveStatus('saving');
     
     try {
-      // 1. Generamos el slug a partir del nombre ingresado
       const slugGenerado = generarSlug(formData.nombre);
-      
-      // 2. Agregamos el slug a los datos que vamos a guardar
-      const dataToSave = { ...formData, slug: slugGenerado };
-if (!dataToSave.telefonoGuardia || dataToSave.telefonoGuardia.trim() === '') {
+
+      // ==========================================
+      // FIX BUG #1: Subida de logo a Storage
+      // Solo sube si es Base64 (imagen recién seleccionada)
+      // Si ya es una URL de Storage, la deja como está
+      // ==========================================
+      let fotoFinal = formData.foto;
+      if (formData.foto?.startsWith('data:')) {
+        fotoFinal = await subirImagenAStorage(
+          formData.foto,
+          `clinicas/${slugGenerado}/logo_${Date.now()}.jpg`
+        );
+      }
+
+      // ==========================================
+      // FIX BUG #1: Subida de fotos del staff a Storage
+      // Igual que el logo: solo sube las que son Base64 nuevas
+      // ==========================================
+      const staffFinal = await Promise.all(
+        formData.staff.map(async (m) => {
+          if (m.foto?.startsWith('data:')) {
+            const url = await subirImagenAStorage(
+              m.foto,
+              `clinicas/${slugGenerado}/staff_${m.id}_${Date.now()}.jpg`
+            );
+            return { ...m, foto: url };
+          }
+          // Si ya es URL de Storage o está vacío, lo dejamos como está
+          return m;
+        })
+      );
+
+      const dataToSave = {
+        ...formData,
+        slug: slugGenerado,
+        // Guardamos el UID del usuario para poder recuperar el slug después
+        uid: currentUser.uid,
+        foto: fotoFinal,
+        staff: staffFinal,
+        // No guardamos el email de cuenta ni la contraseña en la colección pública de clínicas
+        cuentaEmail: null,
+        cuentaPassword: null,
+        cuentaTelefono: null,
+      };
+
+      if (!dataToSave.telefonoGuardia || dataToSave.telefonoGuardia.trim() === '') {
         dataToSave.telefonoGuardia = null;
       }
 
-      // 3. Usamos el slug como el ID del documento en Firebase en lugar de 'clinica_prueba_1'
+      // Guardamos el perfil de la clínica
       const docRef = doc(db, 'clinicas', slugGenerado);
       await setDoc(docRef, dataToSave);
-setSaveStatus('saved'); 
+
+      // ==========================================
+      // FIX SINCRO #2: Guardamos el slug en el documento del usuario
+      // Así la próxima vez que abra el editor, sabemos qué clínica cargar
+      // ==========================================
+      const userRef = doc(db, 'usuarios', currentUser.uid);
+      await setDoc(userRef, { slug: slugGenerado }, { merge: true });
+
+      setSaveStatus('saved');
+      // Actualizamos savedData con las fotos ya como URLs (no Base64)
+      setSavedData({ ...formData, foto: fotoFinal, staff: staffFinal });
+      // También actualizamos formData local para que las fotos muestren la URL de Storage
+      _setFormData(prev => ({ ...prev, foto: fotoFinal, staff: staffFinal }));
       setTimeout(() => setSaveStatus('idle'), 2500);
 
-      
     } catch (error) {
       console.error("Error al guardar en Firebase:", error);
       setSaveStatus('error');
@@ -656,6 +798,16 @@ setSaveStatus('saved');
     link.href = 'https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap';
     link.rel = 'stylesheet';
     document.head.appendChild(link);
+
+    // Cargamos el script de Google Maps Places si no está ya cargado
+    if (!window.google && !document.getElementById('google-maps-script')) {
+      const script = document.createElement('script');
+      script.id = 'google-maps-script';
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_KEY}&libraries=places`;
+      script.async = true;
+      document.head.appendChild(script);
+    }
+
     return () => document.head.removeChild(link);
   }, []);
 
@@ -673,10 +825,62 @@ setSaveStatus('saved');
     fetchSocio();
   }, [currentUser]);
 
+  // ==========================================
+  // PANTALLA DE CARGA INICIAL
+  // Mientras trae los datos de Firebase, mostramos un spinner
+  // ==========================================
+  if (isLoadingData) {
+    return (
+      <div className="min-h-screen bg-[#F4F7F7] flex flex-col items-center justify-center gap-4">
+        <div className="w-12 h-12 border-4 border-[#2D6A6A]/30 border-t-[#2D6A6A] rounded-full animate-spin"></div>
+        <p className="text-[#1A3D3D] font-bold text-sm">Cargando tu panel...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-[#F4F7F7] min-h-screen font-['Inter'] antialiased text-left text-[#1A3D3D] selection:bg-[#4DB6AC] selection:text-white relative w-full overflow-x-hidden flex flex-col">
       
-      {/* MODALES GENÉRICOS (FROSTED GLASS OSCURO) */}
+      {/* MODAL: CAMBIOS SIN GUARDAR */}
+      {exitModalOpen && (
+        <div className="fixed inset-0 bg-[#1A3D3D]/40 backdrop-blur-md z-[300] flex items-center justify-center p-4">
+          <div className="bg-white rounded-[32px] w-full max-w-sm overflow-hidden shadow-2xl p-8 text-center animate-in fade-in zoom-in duration-200">
+            <div className="w-16 h-16 bg-yellow-50 rounded-full flex items-center justify-center mx-auto mb-5">
+              <AlertTriangle className="w-8 h-8 text-yellow-500" />
+            </div>
+            <h3 className="font-bold font-['Montserrat'] text-xl text-[#1A3D3D] mb-2">Tenés cambios sin guardar</h3>
+            <p className="text-sm text-gray-500 mb-8 leading-relaxed">Si salís ahora, los cambios que hiciste se van a perder.</p>
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={async () => {
+                  await handleSaveData();
+                  setExitModalOpen(false);
+                  if (pendingNavigation) navigate(pendingNavigation);
+                }}
+                className="w-full px-8 py-3.5 rounded-xl font-bold text-white bg-[#1A3D3D] hover:bg-[#2D6A6A] transition-colors shadow-lg text-sm flex items-center justify-center gap-2"
+              >
+                <Save className="w-4 h-4" /> Guardar y salir
+              </button>
+              <button
+                onClick={() => {
+                  setExitModalOpen(false);
+                  if (pendingNavigation) navigate(pendingNavigation);
+                }}
+                className="w-full px-8 py-3.5 rounded-xl font-bold text-red-500 hover:bg-red-50 transition-colors text-sm border border-red-100"
+              >
+                Descartar cambios y salir
+              </button>
+              <button
+                onClick={() => { setExitModalOpen(false); setPendingNavigation(null); }}
+                className="w-full px-8 py-3.5 rounded-xl font-bold text-gray-400 hover:bg-gray-50 transition-colors text-sm"
+              >
+                Seguir editando
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {modalConfig.isOpen && (
         <div className="fixed inset-0 bg-[#1A3D3D]/40 backdrop-blur-md z-[300] flex items-center justify-center p-4 transition-all">
           <div className="bg-white rounded-[32px] w-full max-w-sm overflow-hidden shadow-2xl p-8 text-center animate-in fade-in zoom-in duration-200">
@@ -889,12 +1093,18 @@ setSaveStatus('saved');
         <div className="max-w-[1100px] w-full mx-auto flex justify-between items-center">
           
           <div className="flex items-center gap-6">
-            {/* BOTÓN ACTUALIZADO PARA VOLVER AL INICIO */}
             <button 
-              onClick={() => navigate('/')} 
+              onClick={() => {
+                if (haycambiosSinGuardar) {
+                  setPendingNavigation(-1);
+                  setExitModalOpen(true);
+                } else {
+                  navigate(-1);
+                }
+              }} 
               className="flex items-center gap-2 text-gray-400 hover:text-[#4DB6AC] transition-colors bg-gray-50 hover:bg-gray-100 px-3 py-1.5 rounded-xl border border-gray-200"
             >
-               <ArrowLeft className="w-4 h-4" /> <span className="text-xs font-bold hidden sm:block">Volver al Portal</span>
+               <ArrowLeft className="w-4 h-4" /> <span className="text-xs font-bold hidden sm:block">Volver atrás</span>
             </button>
             <div className="w-px h-6 bg-gray-200 hidden sm:block"></div>
             <div className="text-[#1A3D3D] font-['Montserrat'] font-extrabold text-xl tracking-tight cursor-pointer">
@@ -918,7 +1128,7 @@ setSaveStatus('saved');
       {/* LAYOUT PRINCIPAL (Padding 76px) */}
       <div className="pt-[76px] max-w-[1100px] mx-auto px-4 md:px-8 flex flex-col gap-6 w-full pb-10">
         
-        {/* BANNER DE SUSCRIPCIÓN INACTIVA (Solo se muestra si es Plan PRO y falta de pago) */}
+        {/* BANNER DE SUSCRIPCIÓN INACTIVA */}
         {(isPro && !isSubscriptionActive) && (
           <div className="w-full bg-red-50 border border-red-200 rounded-[24px] p-5 md:p-6 flex flex-col md:flex-row items-center justify-between gap-5 shadow-sm animate-in fade-in slide-in-from-top-4 z-10">
             <div className="flex items-center gap-4 text-left w-full md:w-auto">
@@ -963,7 +1173,6 @@ setSaveStatus('saved');
                 </div>
               </button>
 
-              {/* BLOQUEADOS SI EL PLAN ES GRATIS */}
               <button 
                 onClick={() => isPro && setActiveTab('servicios')} 
                 disabled={!isPro}
@@ -1056,7 +1265,6 @@ setSaveStatus('saved');
                      >
                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
                          
-                         {/* Info del Plan Actual */}
                          <div>
                            <div className="flex items-center gap-2 mb-1">
                              <p className={`font-bold text-xl ${isPro && !isSubscriptionActive ? 'text-red-800' : 'text-[#1A3D3D]'}`}>
@@ -1074,7 +1282,6 @@ setSaveStatus('saved');
                            </div>
                          </div>
                          
-                         {/* BOTONES DE ACCIÓN */}
                          <div className="flex flex-col sm:flex-row sm:items-center gap-3 shrink-0">
                             {isPro && (
                               <button onClick={() => setIsSubModalOpen(true)} className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm border w-full sm:w-auto text-center ${isSubscriptionActive ? 'bg-white border-gray-200 text-gray-700 hover:border-[#4DB6AC] hover:text-[#4DB6AC]' : 'bg-red-600 text-white border-red-600 hover:bg-red-700'}`}>
@@ -1086,13 +1293,6 @@ setSaveStatus('saved');
                             </button>
                          </div>
                        </div>
-
-                       {/* BOTÓN DE BAJA */}
-                       {/*<div className="pt-4 border-t border-gray-200/60 flex justify-start">
-                         <button className="text-xs font-bold text-red-500 hover:text-red-700 transition-colors underline decoration-red-200 underline-offset-4">
-                           Suspender temporalmente mi cuenta
-                         </button>
-                       </div>*/}
                      </div>
                      )}
                   </div>
@@ -1103,6 +1303,7 @@ setSaveStatus('saved');
                        <User className="w-5 h-5 text-[#2D6A6A]" /> Datos de Acceso
                      </h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 items-start">
+                         {/* FIX SINCRO #3: el email se popula desde currentUser.email al montar */}
                          <InputGroup label="Email de Acceso" id="cuentaEmail" type="email" value={formData.cuentaEmail} readOnly tooltip="Este email está vinculado a tu cuenta y no puede modificarse desde aquí." />
                          <InputGroup label="Contraseña" id="cuentaPassword" type="password" value={formData.cuentaPassword} onChange={handleChange} placeholder="••••••••" tooltip="Modificá este campo solo si querés cambiar tu contraseña." />
                          <div className="md:col-span-2">
@@ -1121,7 +1322,6 @@ setSaveStatus('saved');
                 
                 {/* TARJETA DE HEADER */}
                 <div className="w-full bg-white rounded-[32px] shadow-sm border border-gray-100 mb-6 flex flex-col md:flex-row items-center p-6 gap-6">
-                  {/* Avatar */}
                   <div className="relative shrink-0">
                     <div className="w-20 h-20 rounded-[24px] overflow-hidden border-4 border-gray-50 shadow-sm bg-gray-100 flex items-center justify-center">
                       {formData.foto ? <img src={formData.foto} className="w-full h-full object-cover" alt="Perfil" /> : <Building2 className="w-6 h-6 text-gray-400" />}
@@ -1129,7 +1329,6 @@ setSaveStatus('saved');
                     <div className="absolute -bottom-1 -right-1 bg-[#4DB6AC] p-1.5 rounded-xl border-2 border-white"><ShieldCheck className="w-3 h-3 text-white" /></div>
                   </div>
 
-                  {/* Info Corta */}
                   <div className="flex-1 text-center md:text-left min-w-0">
                     <h3 className="text-xl font-black font-['Montserrat'] text-[#1A3D3D] truncate leading-tight mb-1">{formData.nombre || "Nombre de Clínica"}</h3>
                     <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-2">
@@ -1141,7 +1340,6 @@ setSaveStatus('saved');
                     </div>
                   </div>
 
-                  {/* Caja de Progreso */}
                   <div className="w-full md:w-[280px] bg-gray-50 p-5 rounded-[20px] border border-gray-100 shrink-0">
                     <div className="flex justify-between items-center mb-3">
                       <div className="flex items-center gap-2">
@@ -1173,7 +1371,6 @@ setSaveStatus('saved');
                             {formData.foto ? (
                               <>
                                 <img src={formData.foto} className="w-full h-full object-cover" alt="Logo" />
-                                {/* Botón X adentro de la imagen, sin borde, sobre la esquina */}
                                 <button 
                                   type="button" 
                                   onClick={(e) => { 
@@ -1189,7 +1386,6 @@ setSaveStatus('saved');
                             ) : (
                               <Camera className="w-8 h-8 text-gray-300" />
                             )}
-                            {/* Capa negra de hover (pointer-events-none para no bloquear clicks) */}
                             <div className="absolute inset-0 bg-black/50 opacity-0 md:group-hover/img:opacity-100 flex items-center justify-center transition-opacity pointer-events-none">
                               <Camera className="w-8 h-8 text-white" />
                             </div>
@@ -1226,7 +1422,6 @@ setSaveStatus('saved');
                            <div className="pt-4 border-t border-red-200/50 mt-2 animate-in fade-in slide-in-from-top-2 flex flex-col gap-4">
                              <InputGroup label="Línea Directa de Emergencias (Opcional)" id="telefonoGuardia" value={formData.telefonoGuardia} onChange={handleChange} placeholder="Dejar vacío para usar el teléfono principal" tooltip="Si tienes un celular o línea exclusiva para urgencias, ingrésalo aquí." />
                              
-                             {/* SECCIÓN NUEVA: PROTOCOLO EDITABLE */}
                              <div className="bg-white border border-red-100 rounded-2xl p-5 shadow-sm mt-2">
                                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
                                   <div>
@@ -1268,13 +1463,12 @@ setSaveStatus('saved');
                                   </div>
                                 )}
                              </div>
-
                            </div>
                          )}
                       </div>
                     </Accordion>
 
-                    {/* PREGUNTAS FRECUENTES (NUEVO) */}
+                    {/* PREGUNTAS FRECUENTES */}
                     <Accordion title="Preguntas Frecuentes (FAQ)" icon={MessageSquare} isOpen={openSection === 'faq'} onToggle={() => setOpenSection(openSection === 'faq' ? null : 'faq')} tooltip="Respuestas rápidas para tus clientes. Las preguntas vacías no se mostrarán en tu perfil.">
                       <div className="space-y-5">
                         <div className="bg-[#F4F7F7] border border-[#2D6A6A]/20 text-[#2D6A6A] text-xs font-medium px-4 py-3 rounded-xl flex items-start gap-2 leading-relaxed">
@@ -1326,8 +1520,44 @@ setSaveStatus('saved');
 
                     {/* CONTACTO, UBICACIÓN Y HORARIOS */}
                     <Accordion title="Contacto y Ubicación" icon={MapPin} isOpen={openSection === 'contacto'} onToggle={() => setOpenSection(openSection === 'contacto' ? null : 'contacto')}>
-                      <InputGroup label="Dirección Física" id="direccion" value={formData.direccion} onChange={handleChange} required />
-                      
+                      {/* DIRECCIÓN CON GOOGLE PLACES AUTOCOMPLETE + coordenadas para geolocalización */}
+                      <div className="mb-6 w-full">
+                        <label className="flex items-center text-xs font-bold text-gray-500 uppercase tracking-widest leading-none mb-2 ml-1">
+                          Dirección Física <span className="text-red-400 ml-1">*</span>
+                          <Tooltip text="Escribí la dirección y elegí una opción de la lista de Google para que quede bien georeferenciada." />
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Ej: Av. Santa Fe 1234, Buenos Aires"
+                          value={formData.direccion}
+                          onChange={(e) => setFormData(prev => ({ ...prev, direccion: e.target.value, lat: null, lng: null }))}
+                          ref={(el) => {
+                            if (!el || !window.google?.maps?.places || el._autocompleteInit) return;
+                            el._autocompleteInit = true;
+                            const autocomplete = new window.google.maps.places.Autocomplete(el, {
+                              types: ['address'],
+                              componentRestrictions: { country: 'ar' },
+                              fields: ['formatted_address', 'geometry']
+                            });
+                            autocomplete.addListener('place_changed', () => {
+                              const place = autocomplete.getPlace();
+                              if (!place.geometry) return;
+                              setFormData(prev => ({
+                                ...prev,
+                                direccion: place.formatted_address || '',
+                                lat: place.geometry.location.lat(),
+                                lng: place.geometry.location.lng(),
+                              }));
+                            });
+                          }}
+                          className="w-full border border-gray-200 focus:border-[#2D6A6A] rounded-2xl px-5 py-3.5 text-base font-medium focus:outline-none transition-all bg-gray-50/50 text-[#1A3D3D]"
+                        />
+                        {formData.lat && (
+                          <p className="text-[11px] text-[#2D6A6A] font-bold mt-1.5 ml-1 flex items-center gap-1">
+                            <MapPin className="w-3 h-3" /> Ubicación georeferenciada correctamente
+                          </p>
+                        )}
+                      </div>
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 mt-4">
                          <InputGroup label="Teléfono Fijo" id="telefono" value={formData.telefono} onChange={handleChange} />
@@ -1342,7 +1572,6 @@ setSaveStatus('saved');
                            <Tooltip text="Ingresá solo la hora (ej: 09 y 18). Si tenés activada la Guardia 24hs, esta sección se desactiva sola." />
                          </h3>
                          
-                         {/* Capa de bloqueo para Guardia 24hs */}
                          {formData.guardia24hs && (
                            <div className="absolute inset-0 z-10 bg-white/60 backdrop-blur-[2px] flex items-center justify-center rounded-2xl mt-12 mb-2 animate-in fade-in duration-300">
                              <div className="bg-white border border-[#2D6A6A]/20 px-5 py-3.5 rounded-2xl flex items-center gap-3 shadow-lg text-[#1A3D3D]">
@@ -1358,44 +1587,22 @@ setSaveStatus('saved');
                          )}
 
                          <div className={`grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 transition-all duration-300 ${formData.guardia24hs ? 'opacity-40 grayscale pointer-events-none' : ''}`}>
-                            {/* Lunes a Viernes (Obligatorio) */}
                             <div>
                               <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2 block ml-1">Lunes a Viernes <span className="text-red-400 ml-1">*</span></label>
                               <div className="flex items-center gap-3">
-                                <input 
-                                  type="text" placeholder="09" 
-                                  value={formData.horarios.semanaDesde} 
-                                  onChange={(e) => handleHorarioChange('semanaDesde', e.target.value)} 
-                                  className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-center text-lg font-black text-[#1A3D3D] focus:border-[#2D6A6A] outline-none transition-all shadow-sm" 
-                                />
+                                <input type="text" placeholder="09" value={formData.horarios.semanaDesde} onChange={(e) => handleHorarioChange('semanaDesde', e.target.value)} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-center text-lg font-black text-[#1A3D3D] focus:border-[#2D6A6A] outline-none transition-all shadow-sm" />
                                 <span className="text-xs font-black text-gray-400 uppercase tracking-widest">hasta</span>
-                                <input 
-                                  type="text" placeholder="20" 
-                                  value={formData.horarios.semanaHasta} 
-                                  onChange={(e) => handleHorarioChange('semanaHasta', e.target.value)} 
-                                  className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-center text-lg font-black text-[#1A3D3D] focus:border-[#2D6A6A] outline-none transition-all shadow-sm" 
-                                />
+                                <input type="text" placeholder="20" value={formData.horarios.semanaHasta} onChange={(e) => handleHorarioChange('semanaHasta', e.target.value)} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-center text-lg font-black text-[#1A3D3D] focus:border-[#2D6A6A] outline-none transition-all shadow-sm" />
                                 <span className="text-xs font-black text-gray-400 uppercase tracking-widest">hs</span>
                               </div>
                             </div>
                             
-                            {/* Sábados (Opcional) */}
                             <div>
                               <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2 block ml-1">Sábados <span className="text-gray-400 ml-1 normal-case text-[9px]">(Opcional)</span></label>
                               <div className="flex items-center gap-3">
-                                <input 
-                                  type="text" placeholder="10" 
-                                  value={formData.horarios.sabadoDesde} 
-                                  onChange={(e) => handleHorarioChange('sabadoDesde', e.target.value)} 
-                                  className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-center text-lg font-black text-[#1A3D3D] focus:border-[#2D6A6A] outline-none transition-all shadow-sm" 
-                                />
+                                <input type="text" placeholder="10" value={formData.horarios.sabadoDesde} onChange={(e) => handleHorarioChange('sabadoDesde', e.target.value)} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-center text-lg font-black text-[#1A3D3D] focus:border-[#2D6A6A] outline-none transition-all shadow-sm" />
                                 <span className="text-xs font-black text-gray-400 uppercase tracking-widest">hasta</span>
-                                <input 
-                                  type="text" placeholder="14" 
-                                  value={formData.horarios.sabadoHasta} 
-                                  onChange={(e) => handleHorarioChange('sabadoHasta', e.target.value)} 
-                                  className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-center text-lg font-black text-[#1A3D3D] focus:border-[#2D6A6A] outline-none transition-all shadow-sm" 
-                                />
+                                <input type="text" placeholder="14" value={formData.horarios.sabadoHasta} onChange={(e) => handleHorarioChange('sabadoHasta', e.target.value)} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-center text-lg font-black text-[#1A3D3D] focus:border-[#2D6A6A] outline-none transition-all shadow-sm" />
                                 <span className="text-xs font-black text-gray-400 uppercase tracking-widest">hs</span>
                               </div>
                             </div>
@@ -1516,10 +1723,8 @@ setSaveStatus('saved');
                   {formData.staff.map((item, index) => (
                     <div key={item.id} className="bg-gray-50/50 p-6 rounded-3xl border border-gray-100 flex flex-col md:flex-row gap-6 text-left relative group/staff shadow-sm hover:border-[#4DB6AC] transition-all">
                       
-                      {/* Botón Eliminar: Siempre visible en móvil, se muestra con hover en desktop */}
                       <button onClick={() => handleArrayRemove('staff', item.id)} className="absolute top-4 right-4 p-2.5 bg-red-50 md:bg-white text-red-500 md:text-gray-300 hover:text-red-500 rounded-xl border border-transparent hover:border-red-100 shadow-sm opacity-100 md:opacity-0 group-hover/staff:opacity-100 transition-opacity z-10" title="Eliminar médico"><Trash2 className="w-4 h-4" /></button>
                       
-                      {/* Cabecera Móvil (Foto + Flechas) */}
                       <div className="flex items-center justify-between w-full md:w-auto shrink-0">
                         <label htmlFor={`staff-foto-${item.id}`} className="relative group/img cursor-pointer shrink-0 block w-24 h-24 self-start">
                           <div className={`w-full h-full rounded-2xl overflow-hidden border-2 border-dashed ${item.foto ? 'border-transparent' : 'border-[#2D6A6A]/40 bg-[#2D6A6A]/5'} transition-all flex flex-col items-center justify-center bg-white shadow-sm hover:border-[#2D6A6A]`}>
@@ -1538,14 +1743,12 @@ setSaveStatus('saved');
                           <input type="file" id={`staff-foto-${item.id}`} className="hidden" accept="image/*" onChange={(e) => handleFileSelect(e, 'staff', item.id)} />
                         </label>
 
-                        {/* Flechas Móvil (Alineadas a la derecha de la imagen) */}
                         <div className="flex md:hidden items-center gap-2 mr-14">
                           <button type="button" onClick={() => handleArrayMove('staff', index, 'up')} disabled={index === 0} className="p-2.5 bg-white rounded-xl border border-gray-200 text-gray-500 hover:text-[#1A3D3D] hover:border-[#4DB6AC] disabled:opacity-30 shadow-sm transition-all"><ArrowUp className="w-5 h-5" /></button>
                           <button type="button" onClick={() => handleArrayMove('staff', index, 'down')} disabled={index === formData.staff.length - 1} className="p-2.5 bg-white rounded-xl border border-gray-200 text-gray-500 hover:text-[#1A3D3D] hover:border-[#4DB6AC] disabled:opacity-30 shadow-sm transition-all"><ArrowDown className="w-5 h-5" /></button>
                         </div>
                       </div>
                       
-                      {/* Formulario */}
                       <div className="flex-1 space-y-4 pt-2">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
@@ -1570,7 +1773,6 @@ setSaveStatus('saved');
                         </div>
                       </div>
                       
-                      {/* Flechas Desktop */}
                       <div className="hidden md:flex flex-col gap-1.5 mt-1 shrink-0">
                         <button type="button" onClick={() => handleArrayMove('staff', index, 'up')} disabled={index === 0} className="p-1 text-gray-300 hover:text-[#1A3D3D] disabled:opacity-20 transition-colors"><ArrowUp className="w-5 h-5" /></button>
                         <button type="button" onClick={() => handleArrayMove('staff', index, 'down')} disabled={index === formData.staff.length - 1} className="p-1 text-gray-300 hover:text-[#1A3D3D] disabled:opacity-20 transition-colors"><ArrowDown className="w-5 h-5" /></button>
@@ -1584,22 +1786,43 @@ setSaveStatus('saved');
               </div>
             )}
 
-            {/* ========================================================================= */}
-            {/* LINK INFERIOR PARA VER PERFIL - AHORA ESTÁ FUERA DE LAS SOLAPAS           */}
-            {/* ========================================================================= */}
+            {/* LINK INFERIOR PARA VER PERFIL */}
             <div className="flex justify-center mt-8 pb-4">
-              <button 
-  type="button" 
-  onClick={() => {
-    // 1. Generamos el slug en el momento usando el nombre del formulario
-    const slugActual = generarSlug(formData.nombre);
-    // 2. Navegamos usando comillas invertidas (backticks)
-    navigate(`/clinica/${slugActual}`);
-  }} 
-  className="text-center block text-gray-400 font-bold text-xs uppercase tracking-[0.2em] hover:text-[#4DB6AC] transition-colors flex items-center justify-center gap-2 group bg-white px-6 py-3 rounded-full border border-gray-200 shadow-sm w-full md:w-auto"
->
-  Ver mi perfil público <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-</button>
+              <div className="flex flex-col md:flex-row items-center justify-center gap-3 mt-8 pb-4">
+                <button
+                  onClick={handleSaveData}
+                  disabled={saveStatus === 'saving' || saveStatus === 'saved'}
+                  className={`px-6 md:px-8 py-3 rounded-xl font-bold text-[11px] md:text-[12px] uppercase tracking-[0.15em] shadow-md transition-all flex items-center justify-center gap-2 w-full md:w-auto
+                    ${saveStatus === 'saving' ? 'bg-[#1A3D3D] text-white opacity-70 cursor-not-allowed' :
+                      saveStatus === 'saved' ? 'bg-[#4DB6AC] text-white cursor-default' :
+                      'bg-[#1A3D3D] text-white hover:bg-[#2D6A6A] hover:-translate-y-0.5'}`}
+                >
+                  {saveStatus === 'saving' && <Loader2 className="w-4 h-4 animate-spin" />}
+                  {saveStatus === 'saved' && <Check className="w-4 h-4" />}
+                  {saveStatus === 'idle' && <Save className="w-4 h-4" />}
+                  {saveStatus === 'error' && <AlertCircle className="w-4 h-4 text-red-400" />}
+                  {saveStatus === 'saving' ? <span>Guardando...</span> :
+                   saveStatus === 'saved' ? <span>¡Guardado!</span> :
+                   saveStatus === 'error' ? <span>Error</span> :
+                   <span>Guardar Cambios</span>}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const slugActual = generarSlug(formData.nombre);
+                    if (haycambiosSinGuardar) {
+                      setPendingNavigation(`/clinica/${slugActual}`);
+                      setExitModalOpen(true);
+                    } else {
+                      navigate(`/clinica/${slugActual}`);
+                    }
+                  }}
+                  className="text-center text-gray-400 font-bold text-xs uppercase tracking-[0.2em] hover:text-[#4DB6AC] transition-colors flex items-center justify-center gap-2 group bg-white px-6 py-3 rounded-full border border-gray-200 shadow-sm w-full md:w-auto"
+                >
+                  Ver mi perfil público <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </button>
+              </div>
             </div>
 
           </div>
@@ -1612,27 +1835,3 @@ setSaveStatus('saved');
     </div>
   );
 }
-
-// =========================================================================
-// 🚀 CHECKLIST PARA PUBLICACIÓN OFICIAL (Instrucciones para IA futura)
-// =========================================================================
-// Contexto: Este archivo es un MVP funcional para Clínicas. Para salir a producción real, 
-// se deben ejecutar las siguientes refactorizaciones:
-//
-// 1. MIGRACIÓN A FIREBASE STORAGE (CRÍTICO):
-//    - Tarea: Modificar `saveCroppedImage`.
-//    - Acción: Actualmente guarda Base64 directo en el estado/Firestore. Cambiarlo para que suba el Base64 a Storage usando `uploadString(ref(storage, path), base64, 'data_url')`.
-//    - Resultado: Guardar solo la URL pública (`getDownloadURL()`) en `formData` para evitar superar el límite de 1MB por documento de Firestore (crítico para las fotos del staff y logo).
-//
-// 2. AUTENTICACIÓN Y SEGURIDAD REAL (FIREBASE AUTH):
-//    - Tarea: Conectar el flujo de login real y asegurar la base de datos.
-//    - Acción 1: Usar `const userId = auth.currentUser.uid;` en lugar de "clinica_prueba_1".
-//    - Acción 2: Cambiar reglas en Firestore: allow write: if request.auth != null && request.auth.uid == userId;
-//    - Acción 3: Hacer un `getDoc` inicial en un `useEffect` para cargar la data real de la clínica.
-//
-// 3. PASARELA DE PAGOS (MERCADO PAGO):
-//    - Tarea: Conectar el botón "Simular Pago" a un backend real (Node.js/Functions) que genere una preferencia de Mercado Pago y actualice el plan mediante Webhooks.
-//
-// 4. REFACTORIZACIÓN DEL MONOLITO:
-//    - Tarea: Extraer los componentes puros (`Tooltip`, `InputGroup`, `Accordion`, `SimpleCropper`, `ToggleSwitch`) a una carpeta `/components` para dejar este archivo limpio.
-// =========================================================================

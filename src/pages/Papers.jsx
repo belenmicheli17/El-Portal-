@@ -131,7 +131,7 @@ const [currentPage, setCurrentPage] = useState(1);
             </button>
           </div>
           <p className="text-gray-500 text-[12px] font-medium leading-tight md:leading-relaxed mb-3 md:mb-4">
-            ¿Sos profesional? Compartí tus investigaciones subiéndolas desde tu perfil.
+            Compartí tus investigaciones subiéndolas desde el editor a tu perfil.
           </p>
           <div className="flex flex-col gap-2">
             <button 

@@ -389,7 +389,7 @@ export default function Ecosistema() {
         const snap = await getDoc(doc(db, 'usuarios', currentUser.uid));
         const contador = snap.data()?.tourVisto?.ecosistemaContador || 0;
         setTourContador(contador);
-        if (contador < 29) setTimeout(() => setMostrarTour(true), 800);
+        if (contador < 2) setTimeout(() => setMostrarTour(true), 800);
       } catch (e) { console.error('Error leyendo contador del tour:', e); }
     };
     fetchContador();
@@ -568,7 +568,7 @@ export default function Ecosistema() {
               <div id="tour-editar-perfil">
                 <DashboardCard
                   titulo="Editar Perfil"
-                  descripcion="Actualizá tus datos profesionales y de contacto"
+                  descripcion="Actualizá tus datos profesionales para que el público conozca tus servicios y formación"
                   icon={User}
                   onClick={() => navigate(activeRole === 'clinica' ? '/editor-clinica' : activeRole === 'proveedor' ? '/editor-proveedores' : '/editor-profesional')}
                 />
@@ -579,14 +579,14 @@ export default function Ecosistema() {
               )}
 
               {/* Card Cursos */}
-              <div id="tour-cursos" className="bg-white/80 backdrop-blur-xl border border-white/60 rounded-[24px] md:rounded-[32px] shadow-[0_8px_32px_rgba(0,0,0,0.04)] flex flex-col overflow-hidden min-h-[180px] md:min-h-[210px]">
-                <button onClick={() => navigate('/capacitaciones')} className="flex-1 flex flex-col justify-center items-center text-center p-5 hover:bg-white/90 transition-all group">
+              <div id="tour-cursos" className="bg-white/80 backdrop-blur-xl border border-white/60 rounded-[24px] md:rounded-[32px] shadow-[0_8px_32px_rgba(0,0,0,0.04)] flex flex-col overflow-hidden min-h-[180px] md:min-h-[210px] group hover:bg-white/90 hover:shadow-[0_20px_40px_rgba(26,61,61,0.12)] transition-all duration-300">
+                <button onClick={() => navigate('/capacitaciones')} className="flex-1 flex flex-col justify-center items-center text-center p-5 transition-all">
                   <BookOpen strokeWidth={1.5} className="w-8 h-8 md:w-10 md:h-10 text-[#2D6A6A] mb-2 group-hover:scale-110 group-hover:text-[#1A3D3D] transition-all duration-300" />
                   <h2 className="text-[17px] md:text-[19px] font-black text-[#1A3D3D] font-['Montserrat'] mb-1 leading-tight">Cursos</h2>
-                  <p className="text-[#333333]/70 font-medium text-[13px] px-2 leading-normal">Especializaciones y capacitaciones</p>
+                  <p className="text-[#333333]/70 font-medium text-[16px] px-2 leading-normal">Encontra todas las especializaciones y capacitaciones. Publicar es gratis. </p>
                 </button>
                 <div className="border-t border-gray-100 px-4 py-3">
-                  <button onClick={() => navigate('/capacitaciones', { state: { vista: 'miscursos' } })} className="w-full text-[11px] font-bold text-[#2D6A6A] uppercase tracking-widest hover:text-[#1A3D3D] transition-colors flex items-center justify-center gap-1.5 py-1">
+                  <button onClick={() => navigate('/capacitaciones', { state: { vista: 'miscursos' } })} className="w-full text-[11px] font-bold text-[#2D6A6A] uppercase tracking-widest hover:bg-[#2D6A6A]/10 hover:text-[#1A3D3D] rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 py-2">
                     <BookOpen className="w-3 h-3" /> Ver mis cursos publicados
                   </button>
                 </div>
@@ -594,13 +594,13 @@ export default function Ecosistema() {
 
               {activeRole !== 'proveedor' && (
                 <div id="tour-empleos">
-                  <DashboardCard titulo="Empleos" descripcion="Bolsa de trabajo y búsqueda de talentos activos" icon={Briefcase} onClick={() => navigate('/bolsa-de-trabajo')} />
+                  <DashboardCard titulo="Bolsa de trabajo" descripcion="Acá podrás encontrar ofertas de clinicas que buscan personal y marcarte como disponible para nuevas oportunidades." icon={Briefcase} onClick={() => navigate('/bolsa-de-trabajo')} />
                 </div>
               )}
 
               {activeRole !== 'proveedor' && (
                 <div id="tour-colegas">
-                  <DashboardCard titulo="Colegas" descripcion="Red de contactos para derivaciones e interconsultas" icon={Users} onClick={() => navigate('/cartilla')} />
+                  <DashboardCard titulo="Cartilla de colegas" descripcion="Tené los contactos siempre a mano de tus colegas para derivaciones o trabajos en equipo" icon={Users} onClick={() => navigate('/cartilla')} />
                 </div>
               )}
 
@@ -620,7 +620,7 @@ export default function Ecosistema() {
       </div>
 
       {/* FOOTER — fuera del div de contenido pero dentro del raíz flex-col */}
-      <FooterSimple seccion="Mi Ecosistema" />
+      <FooterSimple seccion="Ecosistema" />
 
       {/* TOUR */}
       {mostrarTour && PASOS_TOUR[activeRole] && (

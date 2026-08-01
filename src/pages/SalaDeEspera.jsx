@@ -195,6 +195,7 @@ const [linkCopiado, setLinkCopiado] = useState(false);
         fechaRegistro: new Date().toISOString(),
         estado: 'activo',
         esBeta: true,
+        socioVitalicio: true,
       });
       setPasoDrawer('exito');
     } catch (err) {
@@ -343,52 +344,74 @@ const [linkCopiado, setLinkCopiado] = useState(false);
       )}
 
       {/* ── HERO ──────────────────────────────────────────────────────────── */}
-     <section className="pt-10 pb-20 md:pt-15 md:pb-48 relative z-10 overflow-hidden">
+    <section className={`pt-10 md:pt-15 md:pb-48 relative z-10 overflow-hidden ${esBeta ? 'pb-32' : 'pb-10'}`}>
   {/* Burbuja naranja */}
-<div className="bubble-orange absolute top-[-80px] right-[-120px] md:top-[-60px] md:right-[-80px] w-[420px] h-[420px] bg-[#FF9800]/40 rounded-full blur-[90px] pointer-events-none z-[-1]" />
+  <div className="bubble-orange absolute top-[-80px] right-[-120px] md:top-[-60px] md:right-[-80px] w-[420px] h-[420px] bg-[#FF9800]/40 rounded-full blur-[90px] pointer-events-none z-[-1]" />
 
-{/* Burbuja esmeralda */}
-<div className="bubble-teal absolute bottom-[-80px] left-[-120px] md:bottom-[-40px] md:left-[-60px] w-[350px] h-[350px] bg-[#4DB6AC]/40 rounded-full blur-[100px] pointer-events-none z-[-1]" />
+  {/* Burbuja esmeralda */}
+  <div className="bubble-teal absolute bottom-[-80px] left-[-120px] md:bottom-[-40px] md:left-[-60px] w-[350px] h-[350px] bg-[#4DB6AC]/45 rounded-full blur-[100px] pointer-events-none z-[-1]" />
+
   <div className="max-w-5xl mx-auto px-6 relative">
     <div className="max-w-2xl">
-            <h1 className="font-['Montserrat'] font-extrabold text-[#1A3D3D] text-[38px] md:text-[56px] leading-tight mb-4">
-                Tu presencia digital en el mundo veterinario.
-            </h1>
-            <p className="mt-4 text-[#555555] text-[17px] md:text-[19px] font-medium leading-relaxed max-w-lg">
-              Creá tu perfil, aparecé en búsquedas y conectate con colegas, clínicas y proveedores de todo el país.
-            </p>
-            <div className="mt-4 flex items-center gap-2 flex-wrap">
-              {!esBeta && (
-                <p className="text-[#999999] text-[15px] font-normal">
-                  Estamos en etapa final de desarrollo.
-                </p>
-              )}
-              {!esBeta && (
-                <>
-                  <span className="text-[#2D6A6A] text-[20px] select-none">·</span>
-                  <button
-                    onClick={() => {
-                      const el = document.getElementById("cta-email");
-                      if (!el) return;
-                      const top = el.getBoundingClientRect().top + window.scrollY - 20;
-                      window.scrollTo({ top, behavior: "smooth" });
-                      setTimeout(() => {
-                        setDestelloCTA(true);
-                        setTimeout(() => setDestelloCTA(false), 2000);
-                      }, 900);
-                    }}
-                    className="inline-flex items-center gap-1.5 text-[#2D6A6A] text-[17px] font-bold hover:text-[#1A3D3D] transition-colors duration-200 group"
-                  >
-                    Avisarme el lanzamiento
-                    <ArrowRight size={17} className="group-hover:translate-x-1 transition-transform duration-200" />
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
+      <h1 className="font-['Montserrat'] font-extrabold text-[#1A3D3D] text-[38px] md:text-[56px] leading-tight mb-4">
+        Tu presencia digital en el mundo veterinario.
+      </h1>
+      <p className="mt-4 text-[#555555] text-[17px] md:text-[19px] font-medium leading-relaxed max-w-lg">
+        Creá tu perfil, aparecé en búsquedas y conectate con colegas, clínicas y proveedores de todo el país.
+      </p>
+      <div className="mt-4 flex items-center gap-2 flex-wrap">
+        {!esBeta && (
+          <p className="text-[#999999] text-[17px] font-normal">
+            Estamos en etapa final de desarrollo.
+          </p>
+        )}
+        {!esBeta && (
+          <>
+            <span className="text-[#2D6A6A] text-[20px] select-none">·</span>
+            <button
+              onClick={() => {
+                const el = document.getElementById("cta-email");
+                if (!el) return;
+                const top = el.getBoundingClientRect().top + window.scrollY - 20;
+                window.scrollTo({ top, behavior: "smooth" });
+                setTimeout(() => {
+                  setDestelloCTA(true);
+                  setTimeout(() => setDestelloCTA(false), 2000);
+                }, 900);
+              }}
+              className="inline-flex items-center gap-1.5 text-[#2D6A6A] text-[17px] font-bold hover:text-[#1A3D3D] transition-colors duration-200 group"
+            >
+              Avisarme el lanzamiento
+              <ArrowRight size={17} className="group-hover:translate-x-1 transition-transform duration-200" />
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  </div>
 
-        </div>
-      </section>
+  {/* — Texto scroll hacia abajo — solo para beta — */}
+  {esBeta && (
+    <div
+      className="absolute bottom-8 md:bottom-22 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 text-[#2D6A6A] opacity-60 hover:opacity-100 transition-opacity duration-300 cursor-pointer whitespace-nowrap"
+      onClick={() => {
+      const sections = document.querySelectorAll('section');
+      const el = sections[1];
+      if (!el) return;
+      const top = el.getBoundingClientRect().top + window.scrollY - 20;
+      window.scrollTo({ top, behavior: 'smooth' });
+    }}
+    >
+      <span className="text-[13px] font-bold uppercase tracking-[0.15em] font-['Montserrat']">
+        Conocé más de lo que está llegando
+      </span>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M6 9l6 6 6-6" />
+      </svg>
+    </div>
+  )}
+
+</section>
 
 
       {/* ── ZONA PÚBLICA ──────────────────────────────────────────────────── */}
@@ -488,7 +511,7 @@ const [linkCopiado, setLinkCopiado] = useState(false);
           {esBeta ? (
 
             /* ── Vista beta ── */
-            <div className="flex flex-col md:flex-row items-start gap-10 md:gap-16 md:w-full w-[90%] mx-auto">
+            <div className="flex flex-col lg:flex-row items-start gap-10 lg:gap-16 lg:w-full w-[90%] sm:w-[70%] mx-auto">
 
               {/* — Columna izquierda: textos — */}
              <div className="flex flex-col items-start gap-6 flex-1 max-w-[260px] md:max-w-none">
@@ -671,7 +694,7 @@ const [linkCopiado, setLinkCopiado] = useState(false);
           ) : (
 
             /* ── Vista pública ── */
-            <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12 w-full pl-4 md:pl-0">
+            <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12 w-full pl-4 lg:pl-0">
 
               {/* — Columna izquierda: textos — */}
               <div className="flex flex-col items-start gap-5 flex-1 min-w-0">
@@ -754,9 +777,9 @@ const [linkCopiado, setLinkCopiado] = useState(false);
           <p className="text-white/30 text-[12px]">
             © {new Date().getFullYear()} Portal Veterinario · Todos los derechos reservados
           </p>
-          <p className="text-white/70 text-[13px]">
-            Contactanos · portalveterinario.ar@gmail.com
-          </p>
+          <a href="mailto:portalveterinario.ar@gmail.com" className="text-white/70 text-[13px] hover:text-white transition-colors duration-200">
+            Contactanos · <span className="underline underline-offset-2">portalveterinario.ar@gmail.com</span>
+          </a>
         </div>
       </footer>
 

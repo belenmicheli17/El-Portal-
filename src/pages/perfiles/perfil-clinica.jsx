@@ -21,6 +21,15 @@ const INFO_SERVICIOS = {
   'rehabilitacion': { icono: Heart, titulo: 'Fisiatría y Terapias' },
 };
 
+// Urgencias de fallback completas para cuando la clínica activa la guardia
+// pero aún no personalizó sus pasos
+const URGENCIAS_FALLBACK = [
+  { id: 1, paso: "01", titulo: "Mantené la calma", desc: "Asegurá a tu mascota y evitá movimientos bruscos." },
+  { id: 2, paso: "02", titulo: "Llamá o escribí", desc: "Avisanos que estás en camino para preparar la sala." },
+  { id: 3, paso: "03", titulo: "Transporte seguro", desc: "Usá una transportadora o manta rígida si hay fracturas." },
+  { id: 4, paso: "04", titulo: "Traé historial", desc: "Si toma medicación o tiene estudios previos, traelos con vos." }
+];
+
 export default function PerfilClinica() {
   const navigate = useNavigate();
   const [openFaq, setOpenFaq] = useState(null);
@@ -30,27 +39,26 @@ export default function PerfilClinica() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const { slug } = useParams(); // 1. Obtenemos el slug de la URL
+  const { slug } = useParams();
 
   useEffect(() => {
     const fetchClinicaInfo = async () => {
       try {
-        // 2. Si no hay slug, no buscamos (o redirigimos)
         if (!slug) return; 
 
-        // 3. Buscamos en la colección 'clinicas' usando el slug como ID
         const docRef = doc(db, 'clinicas', slug);
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
           const firebaseData = docSnap.data();
           
+          // FIX BUG #3: Fallback completo de urgencias con los 4 pasos
+          // Si la clínica tiene urgencias guardadas las usa; si no, usa el array de fallback completo
           const mergedData = {
             ...firebaseData,
-            urgencias: firebaseData.urgencias || [
-              { paso: "01", titulo: "Mantené la calma", desc: "..." },
-              // ... resto de tu array de urgencias
-            ]
+            urgencias: (firebaseData.urgencias && firebaseData.urgencias.length > 0)
+              ? firebaseData.urgencias
+              : URGENCIAS_FALLBACK,
           };
           setData(mergedData);
         } else {
@@ -65,7 +73,7 @@ export default function PerfilClinica() {
     };
 
     fetchClinicaInfo();
-  }, [slug]); // 4. Cada vez que el slug cambie, se recarga el perfil
+  }, [slug]);
   
   useEffect(() => {
     const link = document.createElement('link');
@@ -125,19 +133,21 @@ export default function PerfilClinica() {
 
   // --- LÓGICA DINÁMICA ---
   
-  // 1. Leemos el plan de Firebase (si no existe, por defecto es gratis)
+  // Leemos el plan de Firebase (si no existe, por defecto es gratis)
   const planActual = data.planActual || 'gratis';
 
-  // 2. Generamos el link de urgencias
+  // Link de urgencias: usa el teléfono de guardia si existe, sino el de WhatsApp general
   const linkUrgencia = data.telefonoGuardia 
     ? `https://wa.me/${data.telefonoGuardia}` 
     : `https://wa.me/${data.whatsapp}`;
 
-  // 3. Generamos la URL del mapa automáticamente basada en la dirección física
+  // URL del mapa generada automáticamente desde la dirección física
   const mapaAutomatico = data.direccion 
     ? `https://maps.google.com/maps?q=${encodeURIComponent(data.direccion)}&t=&z=15&ie=UTF8&iwloc=&output=embed` 
     : null;
 
+  // FIX SINCRO #4: Las FAQs se muestran independientemente de si hay servicios configurados
+  // Solo filtramos las que tienen respuesta completa
   const faqsActivas = data.faqs ? data.faqs.filter(faq => faq.respuesta && faq.respuesta.trim() !== '') : [];
 
   return (
@@ -145,15 +155,16 @@ export default function PerfilClinica() {
 
       {/* HERO */}
       <main className="relative w-full bg-white overflow-hidden pt-[18px] md:pt-[45px]">
-       {/* BOTÓN VOLVER AL Cartilla */}
-<div className="w-full flex justify-start pl-15">
-  <button 
-    onClick={() => navigate('/Cartilla')} 
-    className="flex items-center gap-2 text-gray-400 hover:text-[#1A3D3D] font-bold text-xs md:text-[10px] uppercase tracking-[0.3em] mb-8 transition-colors group"
-  >
-    <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Volver a la Cartilla
-  </button>
-</div>
+        {/* FIX DETALLE #1: "Volver atrás" con navigate(-1) en lugar de link hardcodeado a Cartilla */}
+        <div className="w-full flex justify-start pl-6">
+          <button 
+            onClick={() => navigate(-1)} 
+            className="flex items-center gap-2 text-gray-400 hover:text-[#1A3D3D] font-bold text-xs md:text-[10px] uppercase tracking-[0.3em] mb-8 transition-colors group"
+          >
+            <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Volver atrás
+          </button>
+        </div>
+
         <div className="max-w-[1100px] mx-auto px-6 md:px-10 relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center pt-4 pb-6 md:pb-12">
           <div className="lg:col-span-7 flex flex-col items-start text-left">
             {data.guardia24hs && (
@@ -167,12 +178,14 @@ export default function PerfilClinica() {
             )}
 
             <h1 className="text-[40px] sm:text-[48px] lg:text-[64px] font-black text-[#1A3D3D] leading-[1.05] mb-4 tracking-tighter font-['Montserrat']">
-              {data.nombre.replace('Clínica Veterinaria ', '')} <br className="hidden lg:block"/>
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#1A3D3D] to-[#2D6A6A]">
-                {data.nombre.includes('Clínica Veterinaria') ? 'Clínica Veterinaria' : ''}
+                {data.nombre}
               </span>
             </h1>
             
+            {data.subtitulo && (
+              <p className="text-[11px] font-bold text-[#2D6A6A] uppercase tracking-[0.2em] mb-3">{data.subtitulo}</p>
+            )}
             <p className="text-[15px] lg:text-[16px] text-gray-500 font-medium leading-relaxed mb-6 max-w-[500px]">
               {data.descripcion}
             </p>
@@ -251,12 +264,17 @@ export default function PerfilClinica() {
       {/* NUESTRA HISTORIA */}
       <section id="nosotros" className="py-8 md:py-12 bg-[#F4F7F7] reveal-on-scroll">
         <div className="max-w-[1100px] mx-auto px-6 md:px-10 flex flex-col md:flex-row items-center gap-10">
-          <div className="w-full md:w-[45%] lg:w-[40%] h-[300px] md:h-[400px] rounded-[32px] overflow-hidden shadow-xl border border-gray-200 shrink-0">
-            <img 
-              src={data.foto || "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=800&q=80"} 
-              alt="Instalaciones de la clínica" 
-              className="w-full h-full object-cover"
-            />
+          <div className="w-full md:w-[45%] lg:w-[40%] h-[300px] md:h-[400px] rounded-[32px] overflow-hidden shadow-xl border border-gray-200 shrink-0 bg-[#1A3D3D] flex items-center justify-center relative">
+            <div className="absolute inset-0 bg-gradient-to-br from-[#1A3D3D] to-[#2D6A6A] opacity-90" />
+            {data.foto ? (
+              <img
+                src={data.foto}
+                alt={data.nombre}
+                className="relative z-10 w-48 h-48 object-contain drop-shadow-2xl"
+              />
+            ) : (
+              <Building2 className="relative z-10 w-24 h-24 text-white/30" />
+            )}
           </div>
 
           <div className="flex-1 text-left pt-2">
@@ -291,7 +309,7 @@ export default function PerfilClinica() {
         </div>
       </section>
 
-      {/* SECCIÓN PRO: ESPECIALIDADES & FAQS */}
+      {/* SECCIÓN PRO: ESPECIALIDADES */}
       {planActual === 'pro' && data.servicios && (
         <section id="servicios" className="py-8 md:py-12 bg-white reveal-on-scroll relative">
           <div className="max-w-[1100px] mx-auto px-6 md:px-10">
@@ -302,8 +320,8 @@ export default function PerfilClinica() {
               </div>
             </div>
 
-            {/* Renderizado dinámico de tarjetas */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-12">
+            {/* Renderizado dinámico de tarjetas de servicios */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {Object.entries(data.servicios)
                 .filter(([_, serv]) => serv.activo)
                 .map(([key, serv]) => {
@@ -337,32 +355,37 @@ export default function PerfilClinica() {
                   );
               })}
             </div>
+          </div>
+        </section>
+      )}
 
-            {/* FAQS DINÁMICAS */}
-            {faqsActivas.length > 0 && (
-              <div className="max-w-4xl mx-auto bg-[#F9FBFA] rounded-[32px] p-6 md:p-10 border border-gray-200 shadow-sm mt-10">
-                <h3 className="text-center font-black text-[#1A3D3D] font-['Montserrat'] text-2xl mb-8 tracking-tight">Preguntas Frecuentes</h3>
-                <div className="space-y-3">
-                  {faqsActivas.map((faq) => (
-                    <div key={faq.id} className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm text-left transition-all">
-                      <button onClick={() => setOpenFaq(openFaq === faq.id ? null : faq.id)} className="w-full flex items-center justify-between px-6 py-5 hover:bg-gray-50 transition-colors">
-                        <span className="font-bold text-[#1A3D3D] text-[14px]">{faq.pregunta}</span>
-                        <div className={`w-8 h-8 shrink-0 rounded-full bg-[#F4F7F7] flex items-center justify-center transition-transform ${openFaq === faq.id ? 'rotate-180 bg-[#1A3D3D] text-white' : 'text-[#2D6A6A]'}`}>
-                          <ChevronDown className="w-4 h-4" />
-                        </div>
-                      </button>
-                      {openFaq === faq.id && (
-                        <div className="px-6 pb-6">
-                          <p className="text-gray-500 text-sm font-medium leading-relaxed border-t border-gray-50 pt-4">
-                            {faq.respuesta}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
+      {/* FIX SINCRO #4: SECCIÓN DE FAQs — independiente del bloque de servicios */}
+      {/* Se muestra si el plan es PRO y hay al menos una FAQ con respuesta completa */}
+      {planActual === 'pro' && faqsActivas.length > 0 && (
+        <section className="py-8 md:py-12 bg-white reveal-on-scroll">
+          <div className="max-w-[1100px] mx-auto px-6 md:px-10">
+            <div className="max-w-4xl mx-auto bg-[#F9FBFA] rounded-[32px] p-6 md:p-10 border border-gray-200 shadow-sm">
+              <h3 className="text-center font-black text-[#1A3D3D] font-['Montserrat'] text-2xl mb-8 tracking-tight">Preguntas Frecuentes</h3>
+              <div className="space-y-3">
+                {faqsActivas.map((faq) => (
+                  <div key={faq.id} className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm text-left transition-all">
+                    <button onClick={() => setOpenFaq(openFaq === faq.id ? null : faq.id)} className="w-full flex items-center justify-between px-6 py-5 hover:bg-gray-50 transition-colors">
+                      <span className="font-bold text-[#1A3D3D] text-[14px]">{faq.pregunta}</span>
+                      <div className={`w-8 h-8 shrink-0 rounded-full bg-[#F4F7F7] flex items-center justify-center transition-transform ${openFaq === faq.id ? 'rotate-180 bg-[#1A3D3D] text-white' : 'text-[#2D6A6A]'}`}>
+                        <ChevronDown className="w-4 h-4" />
+                      </div>
+                    </button>
+                    {openFaq === faq.id && (
+                      <div className="px-6 pb-6">
+                        <p className="text-gray-500 text-sm font-medium leading-relaxed border-t border-gray-50 pt-4">
+                          {faq.respuesta}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
-            )}
+            </div>
           </div>
         </section>
       )}
@@ -382,6 +405,7 @@ export default function PerfilClinica() {
                 <p className="text-red-900/60 font-medium text-[15px] text-center">Instrucciones vitales para actuar mientras venís en camino a nuestra guardia.</p>
               </div>
 
+              {/* FIX BUG #3: data.urgencias siempre tiene los 4 pasos completos gracias al fallback */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5 text-left">
                 {data.urgencias.map((u, i) => (
                   <div key={i} className="bg-white border border-red-100 p-6 rounded-[32px] shadow-sm hover:border-red-200 transition-all group">
@@ -403,7 +427,7 @@ export default function PerfilClinica() {
       )}
 
       {/* SECCIÓN PRO: STAFF MÉDICO */}
-      {(planActual === 'pro' && data.staff && data.staff.length > 0) && (
+      {(planActual === 'pro' && data.staff && data.staff.filter(m => m.nombre?.trim()).length > 0) && (
         <section id="staff" className="py-8 md:py-12 bg-white reveal-on-scroll">
           <div className="max-w-[1100px] mx-auto px-6 md:px-10 text-center">
             <div className="mb-10">
@@ -412,10 +436,11 @@ export default function PerfilClinica() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-left">
-              {data.staff.map((m, idx) => (
-                <div key={m.id} className={`bg-[#F4F7F7] border border-gray-100 rounded-[32px] p-6 shadow-sm hover:shadow-xl transition-all h-full relative flex flex-col items-center group ${idx % 2 !== 0 ? 'lg:mt-8' : ''}`}>
+              {data.staff.filter(m => m.nombre && m.nombre.trim()).map((m, idx) => (
+                <div key={m.id || idx} className={`bg-[#F4F7F7] border border-gray-100 rounded-[32px] p-6 shadow-sm hover:shadow-xl transition-all h-full relative flex flex-col items-center group ${idx % 2 !== 0 ? 'lg:mt-8' : ''}`}>
                   <div className="w-24 h-24 rounded-[24px] bg-gray-200 overflow-hidden mb-5 border border-white shadow-md group-hover:scale-105 transition-transform">
                     {m.foto ? (
+                      // FIX BUG #1: foto ya viene como URL de Firebase Storage (no Base64)
                       <img src={m.foto} alt={m.nombre} className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full bg-[#2D6A6A]/10 flex items-center justify-center text-[#2D6A6A]"><Users className="w-8 h-8" /></div>

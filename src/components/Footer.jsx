@@ -26,7 +26,7 @@ export default function Footer() {
               El Portal<span className="text-white/40">.</span>
             </button>
             <p className="text-white/50 text-sm md:text-[13px] leading-relaxed font-medium text-left">
-              La red profesional exclusiva para medicina veterinaria de alta complejidad. Conectando talento con vocación.
+              La red profesional exclusiva para medicina veterinaria. Conectando talento con vocación.
             </p>
           </div>
 

@@ -130,9 +130,11 @@ export default function App() {
           <Route element={<PrivateLayout />}>
   <Route path="/ecosistema" element={<Ecosistema />} />
 </Route>
-          <Route path="/editor-profesional" element={<Editor />} />
-          <Route path="/editor-clinica" element={<EditorClinica />} />
-          <Route path="/editor-proveedores" element={<EditorProveedor />} />
+<Route element={<Outlet />}>
+  <Route path="/editor-profesional" element={<Editor />} />
+  <Route path="/editor-clinica" element={<EditorClinica />} />
+  <Route path="/editor-proveedores" element={<EditorProveedor />} />
+</Route>
 
           {/* ================================================ */}
           {/* PANEL ADMIN                                      */}

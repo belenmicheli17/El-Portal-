@@ -264,9 +264,10 @@ export default function TourGuia({ pasos, userId, claveStorage, onFin, onPaso, n
   const guardarEnFirestore = async () => {
     if (!userId) return;
     try {
-      await updateDoc(doc(db, 'usuarios', userId), {
-        [`tourVisto.${claveStorage}`]: true
-      });
+      const { setDoc } = await import('firebase/firestore');
+      await setDoc(doc(db, 'usuarios', userId), {
+        tourVisto: { [claveStorage]: true }
+      }, { merge: true });
     } catch (e) {
       console.error('Error guardando tour:', e);
     }

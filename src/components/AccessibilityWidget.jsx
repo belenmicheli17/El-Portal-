@@ -313,7 +313,7 @@ return () => {
                 <OptionRow icon={<MinusSquare className="w-4 h-4" />} label="Guía de lectura" active={settings.readingGuide} onClick={() => toggleSetting('readingGuide')} />
               </div>
               <OptionRow icon={<ZapOff className="w-4 h-4" />} label="Detener animaciones" active={settings.stopAnimations} onClick={() => toggleSetting('stopAnimations')} />
-              <OptionRow icon={<Palette className="w-4 h-4" />} label="Escala de grises" active={settings.grayscale} onClick={() => toggleSetting('grayscale')} />
+            
             </div>
           </div>
         )}

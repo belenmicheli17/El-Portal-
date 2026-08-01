@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Search, Edit2, Ban, X, Save, 
+  Search, Edit2, Ban, X, Save, Trash2,
   User, Building, ShieldAlert, Store, Loader2, Crown
 } from 'lucide-react';
 import { db } from '../../firebase';
-import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 
 export default function GestionUsuarios() {
   const [usuarios, setUsuarios] = useState([]);
@@ -60,15 +60,25 @@ export default function GestionUsuarios() {
     }
   };
 
-  const handleDarDeBaja = async (uid, nombre) => {
-    if (!window.confirm(`¿Dar de baja a ${nombre}? No podrá ingresar a la plataforma.`)) return;
-    setProcesando && setProcesando(uid);
+  const handleSuspender = async (uid, nombre) => {
+    if (!window.confirm(`¿Suspender temporalmente a ${nombre}? Podrás reactivarla después.`)) return;
     try {
-      await updateDoc(doc(db, 'usuarios', uid), { estado: 'baja' });
-      setUsuarios(prev => prev.map(u => u.uid === uid ? { ...u, estado: 'baja' } : u));
+      await updateDoc(doc(db, 'usuarios', uid), { estado: 'suspendido' });
+      setUsuarios(prev => prev.map(u => u.uid === uid ? { ...u, estado: 'suspendido' } : u));
     } catch (error) {
-      console.error("Error dando de baja:", error);
-      alert("Hubo un error al dar de baja.");
+      console.error("Error suspendiendo:", error);
+      alert("Hubo un error al suspender.");
+    }
+  };
+
+  const handleEliminar = async (uid, nombre) => {
+    if (!window.confirm(`⚠️ ¿Eliminar definitivamente a ${nombre}? Esta acción NO se puede deshacer.`)) return;
+    try {
+      await deleteDoc(doc(db, 'usuarios', uid));
+      setUsuarios(prev => prev.filter(u => u.uid !== uid));
+    } catch (error) {
+      console.error("Error eliminando:", error);
+      alert("Hubo un error al eliminar.");
     }
   };
 
@@ -174,7 +184,12 @@ export default function GestionUsuarios() {
                     </td>
                     <td className="px-6 py-5 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        {/* Badge de estado baja */}
+                        {/* Badge de estado */}
+                        {user.estado === 'suspendido' && (
+                          <span className="text-[11px] font-bold uppercase tracking-widest bg-orange-50 text-orange-500 px-2.5 py-1 rounded-lg">
+                            Suspendido
+                          </span>
+                        )}
                         {user.estado === 'baja' && (
                           <span className="text-[11px] font-bold uppercase tracking-widest bg-red-50 text-red-500 px-2.5 py-1 rounded-lg">
                             Baja
@@ -196,24 +211,32 @@ export default function GestionUsuarios() {
                         >
                           <Edit2 className="w-4 h-4" />
                         </button>
-                        {/* Botón dar de baja / reactivar */}
-                        {user.estado === 'baja' ? (
+                        {/* Botón suspender / reactivar */}
+                        {user.estado === 'suspendido' ? (
                           <button
                             onClick={() => handleReactivar(user.uid, user.nombre)}
                             className="p-2 text-green-500 hover:bg-green-50 rounded-xl transition-all"
-                            title="Reactivar usuario"
+                            title="Reactivar cuenta"
                           >
                             <Ban className="w-4 h-4" />
                           </button>
                         ) : (
                           <button
-                            onClick={() => handleDarDeBaja(user.uid, user.nombre)}
-                            className="p-2 text-[#666666] hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
-                            title="Dar de baja"
+                            onClick={() => handleSuspender(user.uid, user.nombre)}
+                            className="p-2 text-[#666666] hover:text-orange-500 hover:bg-orange-50 rounded-xl transition-all"
+                            title="Suspender temporalmente"
                           >
                             <Ban className="w-4 h-4" />
                           </button>
                         )}
+                        {/* Botón eliminar definitivo */}
+                        <button
+                          onClick={() => handleEliminar(user.uid, user.nombre)}
+                          className="p-2 text-[#666666] hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                          title="Eliminar usuario definitivamente"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
                     </td>
                   </tr>

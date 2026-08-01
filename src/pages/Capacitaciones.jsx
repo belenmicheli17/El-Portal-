@@ -837,9 +837,9 @@ El equipo de El Portal Veterinario`
             />
           </div>
 
-          <article id="tour-publicar-curso" ref={bannerRef} onMouseMove={handleMouseMove} className="bg-[#1A3D3D] px-5 py-4 md:px-8 md:py-5 rounded-[20px] md:rounded-[24px] text-left relative overflow-hidden group shadow-md flex flex-row items-center justify-between gap-3 md:gap-6 border border-white/5">
+          <article ref={bannerRef} onMouseMove={handleMouseMove} className="bg-[#1A3D3D] px-5 py-4 md:px-8 md:py-5 rounded-[20px] md:rounded-[24px] text-left relative overflow-hidden group shadow-md flex flex-row items-center justify-between gap-3 md:gap-6 border border-white/5">
             <div className="absolute pointer-events-none transition-transform duration-300 ease-out bg-white opacity-5 rounded-full blur-3xl" style={{ width: '300px', height: '300px', left: mousePos.x - 150, top: mousePos.y - 150 }} />
-            <div className="relative z-10 flex flex-col items-start gap-1">
+            <div id="tour-publicar-curso" className="relative z-10 flex flex-col items-start gap-1">
               <h2 className="text-white font-['Montserrat'] font-black text-[13px] md:text-lg uppercase leading-none tracking-tight">¿Representás a una institución?</h2>
               <p className="text-white/50 text-[10px] md:text-xs font-medium italic hidden sm:block mt-0.5">Publicá tu programa académico gratis y llegá a más profesionales.</p>
             </div>
