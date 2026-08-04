@@ -357,7 +357,8 @@ const [linkCopiado, setLinkCopiado] = useState(false);
         Tu presencia digital en el mundo veterinario.
       </h1>
       <p className="mt-4 text-[#555555] text-[23px] md:text-[19px] font-medium leading-relaxed max-w-lg">
-        Creá tu perfil, aparecé en búsquedas y conectate con colegas, clínicas y proveedores de todo el país.
+          <span className="text-[#555555] font-bold">La primer plataforma exclusiva para veterinarios. </span>  <br />
+Creá tu perfil, aparecé en búsquedas y conectate con colegas, clínicas y proveedores de todo el país. 
       </p>
       <div className="mt-6 flex items-center gap-2 flex-wrap">
         {!esBeta && (
@@ -393,7 +394,7 @@ const [linkCopiado, setLinkCopiado] = useState(false);
   {/* — Texto scroll hacia abajo — solo para beta — */}
   {esBeta && (
     <div
-      className="absolute bottom-8 md:bottom-22 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 text-[#2D6A6A] opacity-60 hover:opacity-100 transition-opacity duration-300 cursor-pointer whitespace-nowrap"
+      className="absolute bottom-30 md:bottom-22 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 text-[#2D6A6A] opacity-60 hover:opacity-100 transition-opacity duration-300 cursor-pointer whitespace-nowrap"
       onClick={() => {
       const sections = document.querySelectorAll('section');
       const el = sections[1];
