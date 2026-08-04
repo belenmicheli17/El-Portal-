@@ -8,7 +8,7 @@ import {
   ChevronRight, ChevronLeft, GraduationCap, Briefcase, Stethoscope, 
   Syringe, Send, Phone, Building2, Home, ChevronDown, 
   Instagram, Linkedin, Facebook, Mail, User, X,
-  Activity, Microscope, Heart, Brain, Turtle, 
+  Activity, Microscope, Heart, Brain, Turtle,
   Clock, Eye, FileText, Sparkles, Globe, BookOpen, FileDown, Download
 } from 'lucide-react';
 
@@ -36,6 +36,9 @@ function PerfilPublico() {
   // NUEVOS ESTADOS PARA LOS MODALES
   const [selectedCaso, setSelectedCaso] = useState(null);
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
+const [fotoIdx, setFotoIdx] = useState(0);
+const [casoIdx, setCasoIdx] = useState(0);
+const [verTodosCasos, setVerTodosCasos] = useState(false);
 
   const { slug } = useParams(); // 1. Capturamos el slug de la URL
 
@@ -58,10 +61,11 @@ function PerfilPublico() {
          const papersDelProfesional = papersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
          
          // 3. Juntamos la info del perfil con sus papers recuperados y lo mandamos a la pantalla
-         setData({
-           ...datosProfesional,
-           papers: papersDelProfesional
-         }); 
+        
+setData({
+  ...datosProfesional,
+  papers: papersDelProfesional
+});
          
          setLoading(false);
       } else {
@@ -116,6 +120,7 @@ function PerfilPublico() {
   useEffect(() => {
     if (selectedCaso || isPhotoModalOpen) {
       document.body.classList.add('modal-open');
+      setFotoIdx(0);
     } else {
       document.body.classList.remove('modal-open');
     }
@@ -187,33 +192,140 @@ function PerfilPublico() {
       {/* MODAL: CASO CLÍNICO COMPLETO               */}
       {/* ========================================== */}
       {selectedCaso && (
-        <div className="fixed inset-0 z-[9999] bg-[#1A3D3D]/40 flex items-center justify-center p-4 sm:p-6 backdrop-blur-md transition-all duration-300" onClick={() => setSelectedCaso(null)}>
-          <div className="bg-white rounded-[32px] w-full max-w-3xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col animate-in slide-in-from-bottom-8 duration-300" onClick={(e) => e.stopPropagation()}>
-            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 shrink-0">
-              <div>
-                <span className="bg-[#2D6A6A]/10 text-[#2D6A6A] text-[11px] font-bold px-3 py-1.5 rounded-full uppercase tracking-widest">{selectedCaso.patologia}</span>
-                <h3 className="text-[24px] font-black font-['Montserrat'] text-[#1A3D3D] mt-3 leading-none">{selectedCaso.nombre}</h3>
+        <div className="fixed inset-0 z-[9999] bg-[#1A3D3D]/60 flex items-center justify-center p-4 sm:p-8 backdrop-blur-md transition-all duration-300" onClick={() => setSelectedCaso(null)}>
+
+          {/* FLECHAS CASO — solo escritorio, por fuera */}
+          {data.casos.length > 1 && (
+            <button
+              onClick={(e) => { e.stopPropagation(); const prev = (casoIdx - 1 + data.casos.length) % data.casos.length; setCasoIdx(prev); setSelectedCaso(data.casos[prev]); setFotoIdx(0); }}
+              className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 z-[10000] flex-col items-center gap-2 group"
+            >
+              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/30 hover:bg-white/40 transition-all hover:scale-110 shadow-lg">
+                <ChevronLeft className="w-6 h-6 text-white" />
               </div>
-              <button onClick={() => setSelectedCaso(null)} className="p-2.5 bg-white rounded-full hover:bg-gray-100 transition-colors border border-gray-200 text-gray-500">
-                <X className="w-6 h-6" />
-              </button>
-            </div>
+              <span className="text-white/70 text-[10px] font-bold uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">Anterior</span>
+            </button>
+          )}
+          {data.casos.length > 1 && (
+            <button
+              onClick={(e) => { e.stopPropagation(); const next = (casoIdx + 1) % data.casos.length; setCasoIdx(next); setSelectedCaso(data.casos[next]); setFotoIdx(0); }}
+              className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 z-[10000] flex-col items-center gap-2 group"
+            >
+              <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/30 hover:bg-white/40 transition-all hover:scale-110 shadow-lg">
+                <ChevronRight className="w-6 h-6 text-white" />
+              </div>
+              <span className="text-white/70 text-[10px] font-bold uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">Siguiente</span>
+            </button>
+          )}
+
+          {/* ======= VERSIÓN MÓVIL DEL MODAL ======= */}
+          <div className="md:hidden w-full max-h-[90vh] rounded-[32px] overflow-hidden bg-white flex flex-col animate-in slide-in-from-bottom-8 duration-300 mx-3" onClick={(e) => e.stopPropagation()}>
             
-            <div className="overflow-y-auto p-6 md:p-10 text-left flex-1">
-              {selectedCaso.fotos && selectedCaso.fotos.length > 0 && (
-                <div className="flex gap-4 overflow-x-auto pb-6 snap-x snap-mandatory">
-                  {selectedCaso.fotos.map((fotoUrl, idx) => (
-                    <div key={idx} className="w-[280px] h-[280px] md:w-[400px] md:h-[400px] shrink-0 snap-center rounded-3xl overflow-hidden bg-gray-100 border border-gray-100 shadow-sm">
-                      <img src={fotoUrl} alt={`Caso foto ${idx + 1}`} className="w-full h-full object-cover" />
-                    </div>
-                  ))}
+            {/* FOTO — mitad superior */}
+            <div className="relative h-[45%] shrink-0 bg-black">
+              {selectedCaso.fotos && selectedCaso.fotos.length > 0 ? (
+                <>
+                  <img
+                    src={selectedCaso.fotos[fotoIdx] || selectedCaso.fotos[0]}
+                    alt="Caso"
+                    className="w-full h-full object-cover"
+                  />
+                  {selectedCaso.fotos.length > 1 && (
+                    <>
+                      <button onClick={(e) => { e.stopPropagation(); setFotoIdx((fotoIdx - 1 + selectedCaso.fotos.length) % selectedCaso.fotos.length); }} className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center shadow-md">
+                        <ChevronLeft className="w-4 h-4 text-[#1A3D3D]" />
+                      </button>
+                      <button onClick={(e) => { e.stopPropagation(); setFotoIdx((fotoIdx + 1) % selectedCaso.fotos.length); }} className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center shadow-md">
+                        <ChevronRight className="w-4 h-4 text-[#1A3D3D]" />
+                      </button>
+                      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+                        {selectedCaso.fotos.map((_, i) => (
+                          <div key={i} className={`rounded-full transition-all ${i === fotoIdx ? 'w-4 h-1.5 bg-white' : 'w-1.5 h-1.5 bg-white/50'}`} />
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </>
+              ) : (
+                <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                  <span className="text-gray-400 text-[14px]">Sin imagen</span>
                 </div>
               )}
-              <div className="mt-4">
-                <h4 className="text-[14px] font-bold text-gray-400 uppercase tracking-widest mb-3">Relato del caso</h4>
-                <p className="text-[16px] md:text-[17px] text-gray-600 leading-relaxed font-medium whitespace-pre-wrap">{selectedCaso.desc}</p>
+              {/* Botón cerrar */}
+              <button onClick={() => setSelectedCaso(null)} className="absolute top-4 right-4 w-9 h-9 bg-white/90 rounded-full flex items-center justify-center shadow-md">
+                <X className="w-4 h-4 text-[#1A3D3D]" />
+              </button>
+            </div>
+
+            {/* TEXTO — mitad inferior scrolleable */}
+            <div className="flex-1 overflow-y-auto p-6 bg-[#F4F7F7]">
+              <span className="bg-[#2D6A6A]/10 text-[#2D6A6A] text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-widest">{selectedCaso.patologia}</span>
+              <h3 className="text-[22px] font-black font-['Montserrat'] text-[#1A3D3D] mt-3 mb-2 leading-tight uppercase">{selectedCaso.nombre}</h3>
+              <div className="w-10 h-[2px] bg-[#2D6A6A] rounded-full mb-4"></div>
+              <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Relato del caso</h4>
+              <p className="text-[15px] text-gray-600 leading-relaxed font-medium whitespace-pre-wrap">{selectedCaso.desc}</p>
+              {data.casos.length > 1 && (
+                <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
+                  <button onClick={(e) => { e.stopPropagation(); const prev = (casoIdx - 1 + data.casos.length) % data.casos.length; setCasoIdx(prev); setSelectedCaso(data.casos[prev]); setFotoIdx(0); }} className="flex items-center gap-1.5 text-[11px] font-bold text-gray-400 uppercase tracking-widest hover:text-[#2D6A6A] transition-colors">
+                    <ChevronLeft className="w-4 h-4" /> Anterior
+                  </button>
+                  <span className="text-[11px] font-bold text-gray-400">{casoIdx + 1} / {data.casos.length}</span>
+                  <button onClick={(e) => { e.stopPropagation(); const next = (casoIdx + 1) % data.casos.length; setCasoIdx(next); setSelectedCaso(data.casos[next]); setFotoIdx(0); }} className="flex items-center gap-1.5 text-[11px] font-bold text-gray-400 uppercase tracking-widest hover:text-[#2D6A6A] transition-colors">
+                    Siguiente <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* ======= VERSIÓN ESCRITORIO DEL MODAL ======= */}
+          <div className="hidden md:flex bg-white rounded-[40px] w-full max-w-5xl h-[85vh] overflow-hidden shadow-2xl flex-row animate-in slide-in-from-bottom-8 duration-300" onClick={(e) => e.stopPropagation()}>
+            
+            {/* COLUMNA IZQUIERDA: FOTO */}
+            {selectedCaso.fotos && selectedCaso.fotos.length > 0 && (
+              <div className="w-1/2 relative overflow-hidden shrink-0 bg-black">
+                <img src={selectedCaso.fotos[fotoIdx] || selectedCaso.fotos[0]} alt={`Caso foto ${fotoIdx + 1}`} className="w-full h-full object-cover transition-opacity duration-300" />
+                {selectedCaso.fotos.length > 1 && (
+                  <>
+                    <button onClick={(e) => { e.stopPropagation(); setFotoIdx((fotoIdx - 1 + selectedCaso.fotos.length) % selectedCaso.fotos.length); }} className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-all hover:scale-110">
+                      <ChevronLeft className="w-5 h-5 text-[#1A3D3D]" />
+                    </button>
+                    <button onClick={(e) => { e.stopPropagation(); setFotoIdx((fotoIdx + 1) % selectedCaso.fotos.length); }} className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-all hover:scale-110">
+                      <ChevronRight className="w-5 h-5 text-[#1A3D3D]" />
+                    </button>
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                      {selectedCaso.fotos.map((_, i) => (
+                        <button key={i} onClick={(e) => { e.stopPropagation(); setFotoIdx(i); }} className={`rounded-full transition-all ${i === fotoIdx ? 'w-4 h-2 bg-white' : 'w-2 h-2 bg-white/50'}`} />
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* COLUMNA DERECHA: TEXTO */}
+            <div className={`${selectedCaso.fotos && selectedCaso.fotos.length > 0 ? 'w-1/2' : 'w-full'} bg-[#F4F7F7] flex flex-col h-full relative`}>
+              <button onClick={() => setSelectedCaso(null)} className="absolute top-5 right-5 z-10 p-2.5 bg-white rounded-full hover:bg-gray-100 transition-colors border border-gray-200 text-gray-500 shadow-sm">
+                <X className="w-5 h-5" />
+              </button>
+              {data.casos.length > 1 && (
+                <div className="absolute bottom-6 right-6 z-10">
+                  <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">{casoIdx + 1} / {data.casos.length}</span>
+                </div>
+              )}
+              <div className="overflow-y-auto p-8 md:p-10 flex flex-col gap-6 h-full">
+                <div className="pr-10">
+                  <span className="bg-[#2D6A6A]/10 text-[#2D6A6A] text-[11px] font-bold px-3 py-1.5 rounded-full uppercase tracking-widest">{selectedCaso.patologia}</span>
+                  <h3 className="text-[28px] font-black font-['Montserrat'] text-[#1A3D3D] mt-4 leading-tight uppercase">{selectedCaso.nombre}</h3>
+                </div>
+                <div className="w-12 h-[2px] bg-[#2D6A6A] rounded-full"></div>
+                <div>
+                  <h4 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3">Relato del caso</h4>
+                  <p className="text-[16px] text-gray-600 leading-relaxed font-medium whitespace-pre-wrap">{selectedCaso.desc}</p>
+                </div>
               </div>
             </div>
+
           </div>
         </div>
       )}
@@ -247,7 +359,8 @@ function PerfilPublico() {
               <h1 className="text-[24px] font-extrabold font-['Montserrat'] text-white tracking-tight uppercase leading-tight mb-2">{data.nombre}</h1>
               <h2 className="text-[14px] font-black text-[#F4F7F7] uppercase tracking-[0.1em] opacity-80">{data.especialidad}</h2>
               <div className="mt-2 text-white/30 font-bold text-[11px] uppercase tracking-[0.3em]">MP: {data.matricula}</div>
-            </div>
+
+                        </div>
           </div>
         </section>
 
@@ -270,44 +383,78 @@ function PerfilPublico() {
           {activeTab === 'perfil' && (
             <div className="space-y-5">
               <div className="bg-white p-6 rounded-[28px] shadow-sm border border-gray-50 text-center">
-                <p className="text-gray-600 text-[16px] leading-relaxed font-medium italic">"{data.bio}"</p>
-                <div className="grid grid-cols-2 gap-3 mt-6 pt-6 border-t border-gray-50">
-                  <div className="flex flex-col items-center gap-1.5">
-                    <MapPin size={24} className="text-[#2D6A6A] mb-1" />
-                    <p className="font-bold text-[#1A3D3D] text-[11px] uppercase tracking-wide">{data.provincia}</p>
-                  </div>
-                  {data.atiendeDomicilio && (
-                    <div className="flex flex-col items-center gap-1.5">
-                      <Home size={24} className="text-blue-600 mb-1" />
-                      <p className="font-bold text-[#1A3D3D] text-[11px] uppercase tracking-wide">A Domicilio</p>
-                    </div>
-                  )}
-                </div>
+                <p className="text-gray-600 text-[16px] leading-relaxed font-medium italic">&ldquo;{data.bio}&rdquo;</p>
+                <div className="flex flex-wrap justify-center gap-4 mt-3 pt-3 border-t border-gray-50">
+  <div className="flex flex-col items-center gap-1.5 min-w-[80px]">
+    <MapPin size={24} className="text-[#2D6A6A] mb-1" />
+    <p className="font-bold text-[#1A3D3D] text-[11px] uppercase tracking-wide">{data.provincia}</p>
+  </div>
+  <div className="flex flex-col items-center gap-1.5 min-w-[80px]">
+    <div className="w-8 h-8 rounded-2xl bg-yellow-50 flex items-center justify-center text-yellow-600 border border-yellow-100">
+      <Award className="w-4 h-4" />
+    </div>
+    <p className="font-bold text-[#1A3D3D] text-[11px] uppercase tracking-wide text-center">Destacada</p>
+  </div>
+  {data.atiendeDomicilio && (
+    <div className="flex flex-col items-center gap-1.5 min-w-[80px]">
+      <div className="w-8 h-8 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 border border-blue-100">
+        <Home className="w-4 h-4" />
+      </div>
+      <p className="font-bold text-[#1A3D3D] text-[11px] uppercase tracking-wide text-center">Domicilio</p>
+    </div>
+  )}
+</div>
               </div>
               
               {isPro && data.zonas && data.zonas.length > 0 && (
                 <div className="space-y-4">
                   <div>
-                    <h3 className="font-extrabold text-[16px] text-[#1A3D3D] font-['Montserrat'] uppercase tracking-widest pl-2 mt-2 text-left">Zonas de Atención</h3>
+                    <h3 className="font-extrabold text-[16px] text-[#1A3D3D] font-['Montserrat'] uppercase tracking-widest mt-10 text-left flex items-center gap-2">
+                      <Building2 size={18} className="text-[#2D6A6A]" /> Zonas de Atención
+                    </h3>
                     <p className="text-[#4DB6AC] font-bold text-[11px] pl-2 mb-3 uppercase tracking-widest text-left">Actualmente en {data.provincia}</p>
                   </div>
                   {data.zonas.map((zona) => (
                     <div key={zona.id} className="bg-white p-5 rounded-[24px] border border-gray-100 shadow-sm text-left">
-                      <h4 className="font-bold text-[15px] text-[#1A3D3D] font-['Montserrat'] uppercase tracking-widest mb-4 flex items-center gap-2">
-                        <Building2 size={18} className="text-[#2D6A6A]" /> {zona.nombre}
+                      <h4 className="font-bold text-[14px] text-[#1A3D3D] font-['Montserrat'] uppercase tracking-wider mb-5 text-center max-w-[180px] mx-auto leading-snug">
+                        {zona.nombre}
                       </h4>
-                      <ul className="space-y-4 text-gray-500 font-medium">
+                      <ul className="space-y-0 px-2">
                         {zona.clinicas.map((c) => {
-                          const searchString = `${c.calle || ''}, ${c.barrio || ''}, ${data.provincia || ''}`;
-                          const mapsUrl = `https://www.google.com/maps/search/?api=1&query=$${encodeURIComponent(searchString)}`;
+                          const mapsUrl = c.placeId
+                            ? `https://www.google.com/maps/place/?q=place_id:${c.placeId}`
+                            : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${c.direccion || ''}, ${data.provincia || ''}`)}`;
+                          const waUrl = c.telefono
+                            ? `https://wa.me/${c.telefono.replace(/[\s\-+()]/g, '')}`
+                            : null;
 
                           return (
-                            <li key={c.id} className="flex flex-col gap-1.5 leading-tight mb-2 border-b border-gray-50 pb-3 last:border-0 last:pb-0">
-                              <div className="flex gap-2 items-center text-[#1A3D3D] font-bold">
-                                <div className="w-1.5 h-1.5 bg-[#2D6A6A] rounded-full shrink-0" />
-                                <a href={mapsUrl} target="_blank" rel="noreferrer" className="text-[16px] hover:text-[#4DB6AC] transition-colors">{c.nombre}</a>
+                            <li key={c.id} className="flex items-start gap-3 py-4 border-b border-gray-100 last:border-0">
+                              <div className="w-1.5 h-1.5 bg-[#2D6A6A] rounded-full shrink-0 mt-2"></div>
+                              <div className="flex flex-col gap-1.5 flex-1">
+                                
+                                {/* NOMBRE + BARRIO */}
+                                <p className="font-bold text-[#1A3D3D] text-[16px] leading-tight">
+                                  {c.nombrePropio || c.nombre}
+                                  {c.barrio && <span className="font-bold text-[#1A3D3D] ml-1">({c.barrio})</span>}
+                                </p>
+
+                                {/* DIRECCIÓN */}
+                                {c.direccion && (
+                                  <a href={mapsUrl} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} className="flex items-center gap-1.5 text-[13px] text-gray-600 active:text-[#4DB6AC] transition-colors">
+                                    <MapPin className="w-3 h-3 text-[#2D6A6A] shrink-0" />
+                                    {c.direccion}
+                                  </a>
+                                )}
+
+                                {/* TELÉFONO → WHATSAPP */}
+                                {c.telefono && (
+                                  <a href={waUrl} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-[13px] text-gray-600 hover:text-[#25D366] transition-colors font-medium">
+                                    <Phone className="w-3 h-3 shrink-0 text-[#25D366]" />
+                                    {c.telefono}
+                                  </a>
+                                )}
                               </div>
-                              <span className="text-[15px] ml-3.5 opacity-80">{c.direccion || `${c.calle || ''} ${c.barrio ? `- ${c.barrio}` : ''}`}</span>
                             </li>
                           )
                         })}
@@ -347,7 +494,7 @@ function PerfilPublico() {
                     <div className="relative">
                       <div className="absolute left-[13px] top-2 bottom-2 w-[1.5px] bg-gray-100"></div>
                       <div className="space-y-8 relative">
-                        {(mostrarTodosLogros ? data.trayectoria : data.trayectoria.slice(0, 3)).map((logro) => (
+                        {(mostrarTodosLogros ? data.trayectoria : data.trayectoria.slice(0, 3)).filter(logro => logro.titulo || logro.desc).map((logro) => (
                           <div key={logro.id} className="flex gap-4 items-start">
                             <div className="w-7 h-7 rounded-full bg-white border-[3px] border-[#F4F7F7] flex items-center justify-center relative z-10 shadow-sm shrink-0">
                               <div className="w-2 h-2 rounded-full bg-[#1A3D3D]"></div>
@@ -419,25 +566,35 @@ function PerfilPublico() {
 
           {activeTab === 'casos' && isPro && data.casos && (
             <div className="space-y-4">
-              {data.casos.map((c) => (
-                <div key={c.id} onClick={() => setSelectedCaso(c)} className="bg-white rounded-3xl overflow-hidden border border-gray-50 text-left shadow-sm cursor-pointer hover:shadow-md transition-shadow">
-                  <div className="relative h-48 bg-gray-100 flex items-center justify-center">
+              {(verTodosCasos ? data.casos : data.casos.slice(0, 3)).map((c, index) => (
+                <div key={c.id} onClick={() => { setSelectedCaso(c); setCasoIdx(index); }} className="bg-white rounded-3xl overflow-hidden border border-gray-50 text-left shadow-sm cursor-pointer hover:shadow-md transition-shadow">
+                  {/* FOTO */}
+                  <div className="h-52 bg-gray-100 flex items-center justify-center overflow-hidden">
                     {c.fotos && c.fotos[0] ? (
                        <img src={c.fotos[0]} className="w-full h-full object-cover" alt="Caso Clínico" />
                     ) : (
                        <span className="text-gray-400 text-[14px]">Sin imagen</span>
                     )}
-                    <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-md text-[#2D6A6A] text-[10px] font-bold uppercase tracking-[0.2em] px-3 py-1.5 rounded-full shadow-sm">
-                      {c.patologia}
-                    </div>
                   </div>
+                  {/* TEXTO */}
                   <div className="p-5">
-                    <h4 className="text-[#1A3D3D] font-bold font-['Montserrat'] text-[17px] uppercase mb-1.5">{c.nombre}</h4>
-                    <p className="text-gray-500 text-[16px] leading-relaxed mb-4 line-clamp-2">{c.desc}</p>
+                    <span className="bg-[#2D6A6A]/10 text-[#2D6A6A] text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full">{c.patologia}</span>
+                    <h4 className="text-[#1A3D3D] font-bold font-['Montserrat'] text-[17px] uppercase mt-3 mb-1.5">{c.nombre}</h4>
+                    <p className="text-gray-500 text-[15px] leading-relaxed mb-4 line-clamp-2">{c.desc}</p>
                     <span className="text-[#4DB6AC] font-bold text-[11px] uppercase tracking-widest flex items-center gap-1">Ver caso completo <ChevronRight className="w-3 h-3" /></span>
                   </div>
                 </div>
               ))}
+
+              {data.casos.length > 3 && (
+                <button
+                  onClick={() => setVerTodosCasos(!verTodosCasos)}
+                  className="w-full py-4 bg-white border border-gray-100 rounded-2xl text-[#2D6A6A] text-[11px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 shadow-sm hover:border-[#2D6A6A]/30 transition-colors"
+                >
+                  {verTodosCasos ? 'Ver menos' : `Ver todos los casos (+${data.casos.length - 3})`}
+                  <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${verTodosCasos ? 'rotate-180' : ''}`} />
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -517,11 +674,11 @@ function PerfilPublico() {
             {/* SECCIÓN 2: BIOGRAFÍA */}
             <div className="relative z-20 -mt-16 md:-mt-20 bg-white px-10 pb-10 pt-12 md:px-16 md:pb-16 md:pt-16 text-center shadow-[0_-20px_60px_rgba(0,0,0,0.15)]">
               <div className="mb-14">
-                <h2 className="text-[24px] md:text-[30px] font-extrabold text-[#1A3D3D] font-['Montserrat'] mb-6 uppercase tracking-tight">Sobre mí</h2>
+                <h2 className="text-[24px] md:text-[30px] font-extrabold text-[#1A3D3D] font-['Montserrat'] mb-4 uppercase tracking-tight">Sobre mí</h2>
                 <p className="text-gray-600 text-[17px] md:text-[18px] leading-relaxed font-medium italic max-w-2xl mx-auto">"{data.bio}"</p>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-10 border-t border-gray-50">
+              <div className="flex flex-wrap justify-center gap-8 pt-1 border-t border-gray-50">
                 <div className="flex flex-col items-center gap-3">
                   <div className="w-12 h-12 rounded-2xl bg-[#F4F7F7] flex items-center justify-center text-[#2D6A6A] shadow-inner"><MapPin className="w-5 h-5" /></div>
                   <div>
@@ -580,7 +737,7 @@ function PerfilPublico() {
                     <div className="relative">
                       <div className="absolute left-[20px] md:left-[23px] top-6 bottom-6 w-[1.5px] bg-gray-100"></div>
                       <div className="space-y-12 relative">
-                        {(mostrarTodosLogros ? data.trayectoria : data.trayectoria.slice(0, 3)).map((logro) => (
+                        {(mostrarTodosLogros ? data.trayectoria : data.trayectoria.slice(0, 3)).filter(logro => logro.titulo || logro.desc).map((logro) => (
                           <div key={logro.id} className="flex gap-10 items-start group">
                             <div className="w-10 h-10 rounded-full bg-white border-[4px] border-[#F4F7F7] flex items-center justify-center relative z-10 mt-1 shadow-sm flex-shrink-0 transition-colors">
                               <div className="w-3 h-3 rounded-full bg-[#1A3D3D] group-hover:bg-[#2D6A6A] transition-colors"></div>
@@ -612,18 +769,18 @@ function PerfilPublico() {
                       <div className="w-14 h-1 bg-[#2D6A6A] rounded-full mt-4"></div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                      {data.casos.map((caso) => (
-                        <div key={caso.id} onClick={() => setSelectedCaso(caso)} className="bg-white rounded-[40px] overflow-hidden border border-gray-100 shadow-sm hover:shadow-2xl hover:-translate-y-3 transition-all group cursor-pointer">
-                          <div className="h-64 relative overflow-hidden bg-gray-100 flex items-center justify-center">
+                     {data.casos.map((caso, index) => (
+                        <div key={caso.id} onClick={() => { setSelectedCaso(caso); setCasoIdx(index); }} className="bg-white rounded-[40px] overflow-hidden border border-gray-100 shadow-sm hover:shadow-2xl hover:-translate-y-3 transition-all group cursor-pointer">
+                          <div className="h-48 relative overflow-hidden bg-gray-100 flex items-center justify-center">
                             {caso.fotos && caso.fotos[0] ? <img src={caso.fotos[0]} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={caso.nombre} /> : <span className="text-gray-400 text-[14px]">Sin imagen</span>}
                             <div className="absolute top-4 left-4">
                               <span className="bg-white/95 backdrop-blur-md text-[#2D6A6A] text-[11px] font-bold px-3 py-1.5 rounded-full shadow-sm uppercase tracking-widest">{caso.patologia}</span>
                             </div>
                           </div>
-                          <div className="p-8">
-                            <h3 className="text-[20px] font-black font-['Montserrat'] text-[#1A3D3D] mb-3">{caso.nombre}</h3>
-                            <p className="text-gray-600 text-[17px] leading-relaxed mb-6 font-medium line-clamp-3">{caso.desc}</p>
-                            <span className="text-[#4DB6AC] font-bold text-[12px] uppercase tracking-widest flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">Leer caso completo <ChevronRight className="w-4 h-4" /></span>
+                          <div className="p-5">
+                            <h3 className="text-[20px] font-black font-['Montserrat'] text-[#1A3D3D] mb-2 uppercase">{caso.nombre}</h3>
+                            <p className="text-gray-600 text-[17px] leading-relaxed mb-4 font-medium line-clamp-3">{caso.desc}</p>
+                            <span className="text-[#4DB6AC] font-bold text-[12px] uppercase tracking-widest flex items-center gap-1 transition-all group-hover:text-[13px] group-hover:gap-2">Leer caso completo <ChevronRight className="w-4 h-4" /></span>
                           </div>
                         </div>
                       ))}
@@ -697,27 +854,42 @@ function PerfilPublico() {
                             <h3 className="font-bold text-[18px] text-[#1A3D3D] uppercase tracking-wide">{zona.nombre}</h3>
                           </div>
                           
-                          <ul className="space-y-6">
+                          <ul className="space-y-5">
                             {zona.clinicas && zona.clinicas.map((clinica) => {
-                              const fallbackSearch = encodeURIComponent(`${clinica.nombre}, ${clinica.direccion || ''}, ${data.provincia || ''}`);
-                              const mapsUrl = clinica.linkMaps ? clinica.linkMaps : `https://www.google.com/maps/search/?api=1&query=$$${fallbackSearch}`;
+                              const mapsUrl = clinica.placeId
+                                ? `https://www.google.com/maps/place/?q=place_id:${clinica.placeId}`
+                                : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${clinica.direccion || ''}, ${data.provincia || ''}`)}`;
 
                               return (
-                                <li key={clinica.id} className="flex flex-col gap-1.5 text-[17px] text-gray-600 font-medium">
-                                  <div className="flex items-start gap-3">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-[#2D6A6A] shrink-0 mt-2.5"></div>
-                                    <div className="flex flex-col">
-                                      <a href={mapsUrl} target="_blank" rel="noreferrer" className="font-bold text-[#1A3D3D] hover:text-[#4DB6AC] transition-colors group flex items-center gap-2">
-                                        {clinica.nombre}
-                                        <MapPin className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity -ml-1" />
-                                      </a>
-                                      
-                                      {clinica.direccion && (
-                                        <span className="text-[17px] opacity-80 mt-0.5">
-                                          {clinica.direccion}
-                                        </span>
+                                <li key={clinica.id} className="flex items-start gap-3 pb-5 border-b border-gray-200/60 last:border-0 last:pb-0">
+                                  
+                                  {/* PUNTO VERDE */}
+                                  <div className="w-1.5 h-1.5 rounded-full bg-[#2D6A6A] shrink-0 mt-2.5"></div>
+
+                                  <div className="flex flex-col gap-1.5 flex-1">
+                                    {/* NOMBRE PROPIO + BARRIO */}
+                                    <p className="font-bold text-[#1A3D3D] text-[17px]">
+                                      {clinica.nombrePropio || clinica.nombre}
+                                      {clinica.barrio && (
+                                        <span className="font-bold text-[#1A3D3D] ml-1.5">({clinica.barrio})</span>
                                       )}
-                                    </div>
+                                    </p>
+
+                                    {/* DIRECCIÓN CLICKEABLE */}
+                                    {clinica.direccion && (
+                                      <a href={mapsUrl} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-[15px] text-gray-600 hover:text-[#4DB6AC] transition-colors">
+                                        <MapPin className="w-3.5 h-3.5 text-[#2D6A6A] shrink-0" />
+                                        {clinica.direccion}
+                                      </a>
+                                    )}
+
+                                    {/* TELÉFONO → WHATSAPP */}
+                                    {clinica.telefono && (
+                                      <a href={`https://wa.me/${clinica.telefono.replace(/[\s\-+()]/g, '')}`} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-[14px] text-gray-600 hover:text-[#25D366] transition-colors font-medium">
+                                        <Phone className="w-3.5 h-3.5 shrink-0 text-[#25D366]" />
+                                        {clinica.telefono}
+                                      </a>
+                                    )}
                                   </div>
                                 </li>
                               )

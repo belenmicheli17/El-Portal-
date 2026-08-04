@@ -68,9 +68,11 @@ export default function Navbar() {
           const data = snap.data();
           setBanner({ mostrar: data.mostrarBanner || false, texto: data.textoBanner || '' });
         }
-      } catch (e) {
-        console.error('Error cargando banner:', e);
-      }
+      } catch (error) {
+  if (error?.code !== 'permission-denied') {
+    console.error("Error cargando banner:", error);
+  }
+}
     };
     fetchBanner();
   }, []);

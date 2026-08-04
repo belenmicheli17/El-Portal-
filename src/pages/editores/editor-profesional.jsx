@@ -10,7 +10,7 @@ import { useAuth } from '../../context/AuthContext';
 import { 
   Camera, Info, AlertCircle, Save, X, Plus, Trash2, Crown,
   ArrowUp, ArrowDown, MapPin, ShieldCheck, Check, ArrowLeft,
-  Smartphone, Home, Mail, Award, ChevronDown, 
+  Smartphone, Home, Mail, Award, ChevronDown, Phone,
   ArrowRight, ExternalLink, Lock, Zap, Clock, Heart, Brain, Turtle, CircleUserRound,
   Menu, User, LayoutGrid, Edit, Briefcase, FileText, Undo2, Redo2, FileCheck, Building2, AlertTriangle, Syringe, Activity, Microscope, Stethoscope, Crop, Sparkles, Loader2, Globe, CreditCard, ArrowUpRight, Eye, EyeOff, MessageSquare, Image as ImageIcon, BookOpen, UploadCloud, FileDown 
 } from 'lucide-react';
@@ -364,6 +364,7 @@ export default function EditorProfesional() {
 
           // Actualizamos el formulario
           _setFormData(prev => ({ ...prev, ...dataCompleta }));
+console.log("🔍 TRAYECTORIA CRUDA:", JSON.stringify(dataCompleta.trayectoria, null, 2));
           setSavedData({ ..._formData, ...dataCompleta });
         } else {
           setSavedData({ ..._formData });
@@ -544,7 +545,7 @@ const handleFileSelect = (e, target, caseId = null) => {
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
         
-        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.95);
         setCropModal({ isOpen: true, imageSrc: compressedBase64, targetId: target, caseId, type: target });
       };
       img.src = event.target.result;
@@ -670,11 +671,12 @@ const generarSlug = (texto) => {
 };
 
   const handleSaveData = async () => {
-    if (!formData.nombre.trim() || !formData.especialidad.trim() || !formData.foto) {
+    const trayectoriaIncompleta = formData.trayectoria.some(t => !t.titulo.trim());
+if (!formData.nombre.trim() || !formData.especialidad.trim() || !formData.foto || trayectoriaIncompleta) {
       setModalConfig({ 
         isOpen: true, 
         title: 'Faltan datos requeridos', 
-        message: 'Asegúrate de haber ingresado tu Foto, Nombre y Especialidad antes de publicar.', 
+        message: 'Asegúrate de haber ingresado tu Foto, Nombre, Especialidad, y el Título de cada logro en Trayectoria.', 
         type: 'error' 
       });
       setActiveTab('perfil');
@@ -1414,30 +1416,22 @@ const generarSlug = (texto) => {
               <div key={c.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
 
                 {/* FILA PRINCIPAL: punto verde + autocomplete + borrar */}
-                <div className="flex items-center gap-3 px-4 py-3.5">
+                {/* FILA 1: NOMBRE PROPIO + BARRIO */}
+                <div className="flex items-center gap-3 px-4 py-3.5 border-b border-gray-50">
                   <div className="w-2 h-2 rounded-full bg-[#2D6A6A] shrink-0" />
                   <input
                     type="text"
-                    placeholder="Nombre de la clínica (buscá con Google)"
-                    value={c.nombre}
-                    onChange={(e) => updateClinica(z.id, c.id, 'nombre', e.target.value)}
-                    ref={(el) => {
-                      if (!el || !window.google || el._autocompleteInit) return;
-                      el._autocompleteInit = true;
-                      const autocomplete = new window.google.maps.places.Autocomplete(el, {
-                        types: ['establishment'],
-                        componentRestrictions: { country: 'ar' },
-                        fields: ['name', 'formatted_address', 'place_id']
-                      });
-                      autocomplete.addListener('place_changed', () => {
-                        const place = autocomplete.getPlace();
-                        if (!place.place_id) return;
-                        updateClinica(z.id, c.id, 'nombre', place.name || '');
-                        updateClinica(z.id, c.id, 'direccion', place.formatted_address || '');
-                        updateClinica(z.id, c.id, 'placeId', place.place_id || '');
-                      });
-                    }}
+                    placeholder="Nombre con el que la conocés (Ej: Clínica del Parque)"
+                    value={c.nombrePropio || ''}
+                    onChange={(e) => updateClinica(z.id, c.id, 'nombrePropio', e.target.value)}
                     className="flex-1 text-sm font-bold text-[#1A3D3D] outline-none placeholder:font-medium placeholder:text-gray-300"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Barrio (opcional)"
+                    value={c.barrio || ''}
+                    onChange={(e) => updateClinica(z.id, c.id, 'barrio', e.target.value)}
+                    className="w-32 text-sm text-gray-400 outline-none placeholder:text-gray-300 border-l border-gray-100 pl-3"
                   />
                   <button
                     onClick={() => {
@@ -1450,24 +1444,48 @@ const generarSlug = (texto) => {
                   </button>
                 </div>
 
-                {/* DIRECCIÓN Y LINK — solo si ya se completaron */}
-                {(c.direccion || c.placeId) && (
-                  <div className="border-t border-gray-50 px-4 py-3 flex items-center justify-between gap-3 bg-gray-50/50">
-                    {c.direccion && (
-                      <span className="text-xs text-gray-400 font-medium leading-snug flex-1">{c.direccion}</span>
-                    )}
-                    {c.placeId && (
-                      <a
-                        href={`https://www.google.com/maps/place/?q=place_id:${c.placeId}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex items-center gap-1.5 text-[11px] font-bold text-[#2D6A6A] hover:text-[#1A3D3D] transition-colors shrink-0 bg-white px-3 py-1.5 rounded-lg border border-[#2D6A6A]/20 shadow-sm"
-                      >
-                        <MapPin className="w-3 h-3" /> Ver en Maps
-                      </a>
-                    )}
-                  </div>
-                )}
+                {/* FILA 2: DIRECCIÓN CON GOOGLE */}
+                <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-50">
+                  <MapPin className="w-3.5 h-3.5 text-gray-300 shrink-0" />
+                  <input
+                    type="text"
+                    placeholder="Dirección (buscá con Google)"
+                    value={c.direccion || ''}
+                    onChange={(e) => updateClinica(z.id, c.id, 'direccion', e.target.value)}
+                    ref={(el) => {
+                      if (!el || !window.google || el._autocompleteInit) return;
+                      el._autocompleteInit = true;
+                      const autocomplete = new window.google.maps.places.Autocomplete(el, {
+                        componentRestrictions: { country: 'ar' },
+                        fields: ['name', 'formatted_address', 'place_id']
+                      });
+                      autocomplete.addListener('place_changed', () => {
+                        const place = autocomplete.getPlace();
+                        if (!place.place_id) return;
+                        updateClinica(z.id, c.id, 'direccion', place.formatted_address || '');
+                        updateClinica(z.id, c.id, 'placeId', place.place_id || '');
+                      });
+                    }}
+                    className="flex-1 text-sm text-gray-500 outline-none placeholder:text-gray-300"
+                  />
+                  {c.placeId && (
+                    <a href={`https://www.google.com/maps/place/?q=place_id:${c.placeId}`} target="_blank" rel="noreferrer" className="shrink-0 text-[10px] font-bold text-[#2D6A6A] bg-white px-2.5 py-1.5 rounded-lg border border-[#2D6A6A]/20 hover:text-[#1A3D3D] transition-colors">
+                      Ver
+                    </a>
+                  )}
+                </div>
+
+                {/* FILA 3: TELÉFONO OPCIONAL */}
+                <div className="flex items-center gap-3 px-4 py-3">
+                  <Phone className="w-3.5 h-3.5 text-gray-300 shrink-0" />
+                  <input
+                    type="text"
+                    placeholder="Teléfono o WhatsApp (opcional)"
+                    value={c.telefono || ''}
+                    onChange={(e) => updateClinica(z.id, c.id, 'telefono', e.target.value)}
+                    className="flex-1 text-sm text-gray-500 outline-none placeholder:text-gray-300"
+                  />
+                </div>
               </div>
             ))}
 
@@ -1665,7 +1683,12 @@ const generarSlug = (texto) => {
                           </div>
                           <div>
                             <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 block ml-1">Relato del caso</label>
-                            <textarea placeholder="Cuenta la historia clínica, tratamiento aplicado y la evolución..." value={item.desc} onChange={(e) => handleArrayUpdate('casos', item.id, 'desc', e.target.value)} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm h-24 resize-none focus:border-[#2D6A6A] outline-none text-[#1A3D3D]" />
+                            <div>
+  <textarea placeholder="Cuenta la historia clínica, tratamiento aplicado y la evolución..." value={item.desc} maxLength={600} onChange={(e) => handleArrayUpdate('casos', item.id, 'desc', e.target.value)} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm h-24 resize-none focus:border-[#2D6A6A] outline-none text-[#1A3D3D]" />
+  <p className={`text-right text-[10px] font-bold mt-1 mr-1 ${(item.desc?.length || 0) >= 550 ? 'text-red-400' : 'text-gray-400'}`}>
+    {item.desc?.length || 0} / 600
+  </p>
+</div>
                           </div>
                         </div>
                       </div>
