@@ -56,8 +56,8 @@ const CardPublica = ({ icono: Icono, titulo, descripcion, highlight }) => (
       <div className="flex flex-col gap-3 p-5 sm:p-8 flex-1">
         <Icono size={24} className="text-[#FF9800]" strokeWidth={2.5} />
         <div>
-          <h3 className="font-['Montserrat'] font-bold text-[#FF9800] text-[17px] mb-2">{titulo}</h3>
-          <p className="text-[#333333] text-[16px] font-medium leading-relaxed">{descripcion}</p>
+          <h3 className="font-['Montserrat'] font-bold text-[#FF9800] text-[19px] md:text-[18px] mb-2">{titulo}</h3>
+          <p className="text-[#333333] text-[17px] md:text-[16px] font-medium leading-relaxed">{descripcion}</p>
         </div>
       </div>
 
@@ -89,8 +89,8 @@ const CardExclusiva = ({ icono: Icono, titulo, descripcion, highlight }) => (
     <div className="flex flex-col gap-2 sm:gap-3">
       <Icono size={20} className="text-[#2D6A6A]" strokeWidth={2.5} />
       <div>
-        <h3 className="font-['Montserrat'] font-bold text-[#1A3D3D] text-[15px] sm:text-[17px] mb-1 sm:mb-2">{titulo}</h3>
-        <p className="text-[#333333] text-[14px] sm:text-[16px] font-medium leading-relaxed">{descripcion}</p>
+       <h3 className="font-['Montserrat'] font-bold text-[#1A3D3D] text-[19px] md:text-[17px] mb-1 sm:mb-2">{titulo}</h3>
+<p className="text-[#333333] text-[17px] md:text-[16px] font-medium leading-relaxed">{descripcion}</p>
       </div>
     </div>
   </div>
@@ -296,7 +296,7 @@ const [linkCopiado, setLinkCopiado] = useState(false);
   };
 
   return (
-    <div className="min-h-screen font-['Inter',sans-serif] overflow-x-hidden" style={{ backgroundColor: '#F9F5F0' }}>
+    <div className="min-h-screen font-['Inter',sans-serif] overflow-x-hidden snap-y snap-mandatory md:snap-none" style={{ backgroundColor: '#F9F5F0' }}>
 
       {/* Burbujas decorativas de fondo — cubren toda la página */}
       <div className="absolute inset-0 pointer-events-none" style={{ zIndex: -1 }}>
@@ -344,7 +344,7 @@ const [linkCopiado, setLinkCopiado] = useState(false);
       )}
 
       {/* ── HERO ──────────────────────────────────────────────────────────── */}
-    <section className={`pt-10 md:pt-15 md:pb-48 relative z-10 overflow-hidden ${esBeta ? 'pb-59' : 'pb-90'}`}>
+    <section className={`snap-start pt-10 md:pt-15 md:pb-48 relative z-10 overflow-hidden ${esBeta ? 'pb-59' : 'pb-55'}`}>
   {/* Burbuja naranja */}
   <div className="bubble-orange absolute top-[-80px] right-[-120px] md:top-[-60px] md:right-[-80px] w-[420px] h-[420px] bg-[#FF9800]/40 rounded-full blur-[90px] pointer-events-none z-[-1]" />
 
@@ -415,13 +415,13 @@ const [linkCopiado, setLinkCopiado] = useState(false);
 
 
       {/* ── ZONA PÚBLICA ──────────────────────────────────────────────────── */}
-      <section className="pt-16 pb-16 md:pt-24 md:pb-28 relative z-10">
+      <section className="snap-start min-h-screen md:min-h-0 flex flex-col justify-center md:block pt-25 pb-16 md:pt-24 md:pb-28 relative z-10">
         <div className="max-w-5xl mx-auto px-6">
           <div className="mb-6 text-center">
-            <h2 className="font-['Montserrat'] font-semibold text-[#2D6A6A] text-[19px] mt-2 mb-2 uppercase tracking-[0.08em]">
+            <h2 className="font-['Montserrat'] font-semibold text-[#2D6A6A] text-[23px] md:text-[19px] mt-2 mb-2 uppercase tracking-[0.08em]">
               Para el sector <span className="text-[#FF9800]">público</span>
             </h2>
-            <p className="text-[#444444] text-[17px] font-normal mb-8 leading-relaxed">
+            <p className="text-[#444444] text-[19px] md:text-[17px] font-normal mb-8 leading-relaxed">
               Cualquier persona puede encontrar al profesional ideal para su mascota.
             </p>
           </div>
@@ -443,13 +443,13 @@ const [linkCopiado, setLinkCopiado] = useState(false);
       </section>
 
       {/* ── ZONA EXCLUSIVA ────────────────────────────────────────────────── */}
-      <section className="pt-16 pb-20 md:pt-28 md:pb-28 relative z-10">
+      <section className="snap-start pt-16 pb-20 md:pt-28 md:pb-28 relative z-10">
         <div className="max-w-5xl mx-auto px-6">
           <div className="mb-8 text-center">
-            <h2 className="font-['Montserrat'] font-semibold text-[#2D6A6A] text-[19px] mt-2 mb-2 uppercase tracking-[0.08em]">
+            <h2 className="font-['Montserrat'] font-semibold text-[#2D6A6A] text-[23px] md:text-[19px] mt-2 mb-2 uppercase tracking-[0.08em]">
               Exclusivo para veterinarios registrados
             </h2>
-            <p className="text-[#444444] mt-1 text-[17px] font-normal leading-relaxed">
+            <p className="text-[#444444] mt-1 text-[19px] md:text-[17px] font-normal leading-relaxed">
               Herramientas diseñadas para veterinarios, clínicas y proveedores del sector.
             </p>
           </div>
