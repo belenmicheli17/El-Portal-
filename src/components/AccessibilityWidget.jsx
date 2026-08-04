@@ -319,8 +319,8 @@ return () => {
         )}
 
         <div className="flex flex-col items-center gap-2">
-          {currentUser && (
-            <div className="relative" id="tour-btn-feedback">
+         {currentUser?.esBeta && (
+  <div className="relative" id="tour-btn-feedback">
               {feedbackOpen && (
                 <div
                   className={`absolute w-[calc(100vw-40px)] md:w-80 bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] border border-gray-100 p-5 animate-in fade-in duration-300

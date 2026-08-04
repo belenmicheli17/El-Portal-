@@ -458,8 +458,8 @@ const [linkCopiado, setLinkCopiado] = useState(false);
             {/* — Fila 1: primeras 3 cards — se animan juntas al entrar en pantalla */}
             <div ref={fila1Ref} className="col-span-1 sm:col-span-2 lg:col-span-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {[
-                { icono: Users, titulo: 'Cartilla de colegas', descripcion: 'Conectate con otros profesionales para consultas, derivaciones y trabajos en equipo. Tené los contactos siempre a mano. ', delay: 'delay-[0ms]' },
-                { icono: BookOpen, titulo: 'Capacitaciones', descripcion: 'Acá vas a poder encontrar todas las formaciones especializadas en medicina veterinaria, la publicacion de los cursos son gratuitas.', delay: 'delay-[100ms]' },
+               { icono: Package, titulo: 'Cartilla de proveedores', descripcion: 'Dedicado a mayoristas: insumos, equipamiento tecnológico y más. También para quienes ofrezcan servicios exclusivos para veterinarios.', delay: 'delay-[100ms]' },
+                { icono: BookOpen, titulo: 'Capacitaciones', descripcion: 'Acá vas a poder encontrar todas las formaciones especializadas en medicina veterinaria, la publicacion de los cursos es gratuita.', delay: 'delay-[100ms]' },
                 { icono: Briefcase, titulo: 'Bolsa de trabajo', descripcion: 'Las clínicas podrán publicar ofertas de empleo y los profesionales podrán marcarse como disponibles si buscan nuevas oportunidades laborales.', delay: 'delay-[200ms]' },
               ].map(({ icono, titulo, descripcion, delay }) => (
                 <div
@@ -479,7 +479,7 @@ const [linkCopiado, setLinkCopiado] = useState(false);
             <div ref={fila2Ref} className="col-span-1 sm:col-span-2 lg:col-span-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {[
                 { icono: FlaskConical, titulo: 'Publicaciones científicas', descripcion: 'En este espacio podrás encontrar investigaciones de todo tipo. Desde tu perfil puedes compartir papers propios para que tus colegas puedan acceder a tus estudios.', delay: 'delay-[0ms]' },
-                { icono: Package, titulo: 'Cartilla de proveedores', descripcion: 'Dedicado a mayoristas: insumos, equipamiento tecnológico y más. También para quienes ofrezcan servicios exclusivos para veterinarios.', delay: 'delay-[100ms]' },
+               { icono: Users, titulo: 'Cartilla de colegas', descripcion: 'Tené los contactos siempre a mano y mantenete conectado con otros profesionales para consultas, derivaciones y trabajos en equipo.', delay: 'delay-[0ms]' },
               ].map(({ icono, titulo, descripcion, delay }) => (
                 <div
                   key={titulo}
