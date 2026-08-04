@@ -357,7 +357,7 @@ const [linkCopiado, setLinkCopiado] = useState(false);
         Tu presencia digital en el mundo veterinario.
       </h1>
       <p className="mt-4 text-[#555555] text-[23px] md:text-[19px] font-medium leading-relaxed max-w-lg">
-          <span className="text-[#555555] font-bold">La primer plataforma exclusiva para veterinarios. </span>  <br />
+          <span className="text-[#555555] font-bold">El primer Portal exclusivo para Veterinarios. </span>  <br />
 Creá tu perfil, aparecé en búsquedas y conectate con colegas, clínicas y proveedores de todo el país. 
       </p>
       <div className="mt-6 flex items-center gap-2 flex-wrap">
