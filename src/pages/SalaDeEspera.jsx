@@ -344,7 +344,7 @@ const [linkCopiado, setLinkCopiado] = useState(false);
       )}
 
       {/* ── HERO ──────────────────────────────────────────────────────────── */}
-    <section className={`pt-10 md:pt-15 md:pb-48 relative z-10 overflow-hidden ${esBeta ? 'pb-32' : 'pb-10'}`}>
+    <section className={`pt-10 md:pt-15 md:pb-48 relative z-10 overflow-hidden ${esBeta ? 'pb-59' : 'pb-90'}`}>
   {/* Burbuja naranja */}
   <div className="bubble-orange absolute top-[-80px] right-[-120px] md:top-[-60px] md:right-[-80px] w-[420px] h-[420px] bg-[#FF9800]/40 rounded-full blur-[90px] pointer-events-none z-[-1]" />
 
@@ -353,15 +353,15 @@ const [linkCopiado, setLinkCopiado] = useState(false);
 
   <div className="max-w-5xl mx-auto px-6 relative">
     <div className="max-w-2xl">
-      <h1 className="font-['Montserrat'] font-extrabold text-[#1A3D3D] text-[38px] md:text-[56px] leading-tight mb-4">
+      <h1 className="font-['Montserrat'] font-extrabold text-[#1A3D3D] text-[50px] md:text-[56px] leading-tight mb-4">
         Tu presencia digital en el mundo veterinario.
       </h1>
-      <p className="mt-4 text-[#555555] text-[17px] md:text-[19px] font-medium leading-relaxed max-w-lg">
+      <p className="mt-4 text-[#555555] text-[23px] md:text-[19px] font-medium leading-relaxed max-w-lg">
         Creá tu perfil, aparecé en búsquedas y conectate con colegas, clínicas y proveedores de todo el país.
       </p>
-      <div className="mt-4 flex items-center gap-2 flex-wrap">
+      <div className="mt-6 flex items-center gap-2 flex-wrap">
         {!esBeta && (
-          <p className="text-[#999999] text-[17px] font-normal">
+          <p className="text-[#999999] text-[22px] md:text-[17px] font-normal">
             Estamos en etapa final de desarrollo.
           </p>
         )}
@@ -379,7 +379,7 @@ const [linkCopiado, setLinkCopiado] = useState(false);
                   setTimeout(() => setDestelloCTA(false), 2000);
                 }, 900);
               }}
-              className="inline-flex items-center gap-1.5 text-[#2D6A6A] text-[17px] font-bold hover:text-[#1A3D3D] transition-colors duration-200 group"
+              className="inline-flex items-center gap-1.5 text-[#2D6A6A] text-[21px] md:text-[17px] font-bold hover:text-[#1A3D3D] transition-colors duration-200 group"
             >
               Avisarme el lanzamiento
               <ArrowRight size={17} className="group-hover:translate-x-1 transition-transform duration-200" />
@@ -402,7 +402,7 @@ const [linkCopiado, setLinkCopiado] = useState(false);
       window.scrollTo({ top, behavior: 'smooth' });
     }}
     >
-      <span className="text-[13px] font-bold uppercase tracking-[0.15em] font-['Montserrat']">
+      <span className="text-[14px] md:text-[14px] font-bold uppercase tracking-[0.15em] font-['Montserrat']">
         Conocé más de lo que está llegando
       </span>
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
