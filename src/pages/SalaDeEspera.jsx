@@ -451,7 +451,7 @@ Creá tu perfil, aparecé en búsquedas y conectate con colegas, clínicas y pro
               Exclusivo para veterinarios registrados
             </h2>
             <p className="text-[#444444] mt-1 text-[19px] md:text-[17px] font-normal leading-relaxed">
-              Herramientas diseñadas para veterinarios, clínicas y proveedores del sector.
+              Herramientas diseñadas para profesionales, clínicas y proveedores del sector.
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pl-0 sm:pl-4">
@@ -480,7 +480,7 @@ Creá tu perfil, aparecé en búsquedas y conectate con colegas, clínicas y pro
             <div ref={fila2Ref} className="col-span-1 sm:col-span-2 lg:col-span-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {[
                 { icono: FlaskConical, titulo: 'Publicaciones científicas', descripcion: 'En este espacio podrás encontrar investigaciones de todo tipo. Desde tu perfil puedes compartir papers propios para que tus colegas puedan acceder a tus estudios.', delay: 'delay-[0ms]' },
-               { icono: Users, titulo: 'Cartilla de colegas', descripcion: 'Tené los contactos siempre a mano y mantenete conectado con otros profesionales para consultas, derivaciones y trabajos en equipo.', delay: 'delay-[0ms]' },
+               { icono: Users, titulo: 'Cartilla de colegas', descripcion: 'Tené los contactos siempre a mano y mantenete conectado con otros profesionales para invitaciones, derivaciones y trabajos en equipo.', delay: 'delay-[0ms]' },
               ].map(({ icono, titulo, descripcion, delay }) => (
                 <div
                   key={titulo}
@@ -741,7 +741,7 @@ Creá tu perfil, aparecé en búsquedas y conectate con colegas, clínicas y pro
                         disabled={enviando}
                         className="w-full bg-[#2D6A6A] text-white font-bold px-6 py-3.5 rounded-xl hover:bg-[#1A3D3D] transition-all duration-300 hover:-translate-y-1 hover:shadow-xl disabled:opacity-50 text-[12px] uppercase tracking-widest"
                       >
-                        {enviando ? "Enviando..." : "Anotarme para el lanzamiento"}
+                        {enviando ? "Enviando..." : "Anotarme"}
                       </button>
                       {error && <p className="text-red-500 text-[13px] text-center">{error}</p>}
                       <p className="text-[#999999] text-[13px] text-center">Sin spam. Solo te escribimos cuando estemos listos.</p>

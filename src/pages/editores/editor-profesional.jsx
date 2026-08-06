@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { db, storage } from '../../firebase'; // <-- Sumamos storage
 import { doc, setDoc, getDoc, collection, query, where, getDocs, writeBatch, deleteDoc } from 'firebase/firestore';
-import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage'; // <-- Sumamos funciones de Storage
+import { ref, uploadBytesResumable, getDownloadURL, deleteObject, uploadString } from 'firebase/storage'; // <-- Sumamos funciones de Storage
 import FooterSimple from '../../components/FooterSimple';
 import { useAuth } from '../../context/AuthContext';
 import { 
@@ -407,7 +407,8 @@ console.log("🔍 TRAYECTORIA CRUDA:", JSON.stringify(dataCompleta.trayectoria, 
   servicios: [],
   casos: [],
   zonas: [],
-  papers: [] 
+papers: [],
+  galeria: []
 });
   const [past, setPast] = useState([]);
   const [future, setFuture] = useState([]);
@@ -689,7 +690,24 @@ if (!formData.nombre.trim() || !formData.especialidad.trim() || !formData.foto |
     // ¡ACÁ ABRIMOS EL BLOQUE TRY!
     try {
       // 1. Separamos los papers del resto de la información
-      const { papers, ...perfilDataToSave } = formData;
+      const { papers, galeria: galeriaLocal, ...perfilDataToSave } = formData;
+
+      // Subimos a Storage las fotos que todavía son Base64 (no tienen storagePath)
+      const galeriaSubida = await Promise.all(
+        galeriaLocal.map(async (item) => {
+          if (item.storagePath) return item; // ya está en Storage, no la volvemos a subir
+          try {
+            const fileRef = ref(storage, `profesionales/${currentUser.uid}/galeria/${item.id}.jpg`);
+            await uploadString(fileRef, item.url, 'data_url');
+            const url = await getDownloadURL(fileRef);
+            return { ...item, url, storagePath: fileRef.fullPath };
+          } catch (err) {
+            console.error('Error subiendo foto de galería:', err);
+            return item; // si falla, dejamos el Base64 temporalmente
+          }
+        })
+      );
+      perfilDataToSave.galeria = galeriaSubida;
       perfilDataToSave.slug = currentUser.slug;
 
       // 2. Guardamos el perfil "limpio" (Esto borrará los papers viejos del documento del profesional automáticamente)
@@ -1512,7 +1530,144 @@ if (!formData.nombre.trim() || !formData.especialidad.trim() || !formData.foto |
   </Accordion>
 )}
 
-                    {/* CONTACTO (Redes sociales en 3 columnas) */}
+                    {/* GALERÍA PROFESIONAL */}
+                    <Accordion
+                      title="Galería"
+                      icon={ImageIcon}
+                      isOpen={openSection === 'galeria'}
+                      onToggle={() => setOpenSection(openSection === 'galeria' ? null : 'galeria')}
+                      tooltip="Subí fotos de congresos, participaciones, equipamiento o cualquier momento de tu carrera. Se mostrarán en tu perfil público."
+                    >
+                      {/* LÍMITE SEGÚN PLAN */}
+                      {(() => {
+                        const limite = isPro ? 15 : 4;
+                        const cantActual = formData.galeria.length;
+                        const llegóAlLimite = cantActual >= limite;
+
+                        return (
+                          <div className="space-y-5">
+
+                            {/* AVISO DE PLAN */}
+                            {!isPro && (
+                              <div className="flex items-start gap-3 bg-yellow-50 border border-yellow-100 rounded-2xl px-4 py-3.5">
+                                <Lock className="w-4 h-4 text-yellow-500 shrink-0 mt-0.5" />
+                                <p className="text-xs font-medium text-yellow-800 leading-relaxed">
+                                  Con el plan Básico podés subir hasta <span className="font-black">4 fotos</span>. Actualizá a PRO para llegar a 15.
+                                </p>
+                              </div>
+                            )}
+
+                            {/* GRILLA DE FOTOS */}
+                            {formData.galeria.length > 0 && (
+                              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                {formData.galeria.map((item, index) => (
+                                  <div key={item.id} className="group relative bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
+
+                                    {/* FOTO */}
+                                    <div className="aspect-square overflow-hidden bg-gray-100">
+                                      <img
+                                        src={item.url}
+                                        alt={item.epigrafe || `Foto ${index + 1}`}
+                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                      />
+                                    </div>
+
+                                    {/* BOTÓN ELIMINAR */}
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setFormData(prev => ({
+                                          ...prev,
+                                          galeria: prev.galeria.filter(g => g.id !== item.id)
+                                        }));
+                                      }}
+                                      className="absolute top-2 right-2 p-1.5 bg-white/90 text-red-500 rounded-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity shadow-md hover:bg-red-50 z-10"
+                                    >
+                                      <X className="w-3.5 h-3.5" strokeWidth={3} />
+                                    </button>
+
+                                    {/* EPÍGRAFE */}
+                                    <div className="p-2.5">
+                                      <input
+                                        type="text"
+                                        placeholder="Descripción opcional..."
+                                        value={item.epigrafe || ''}
+                                        maxLength={80}
+                                        onChange={(e) => {
+                                          setFormData(prev => ({
+                                            ...prev,
+                                            galeria: prev.galeria.map(g =>
+                                              g.id === item.id ? { ...g, epigrafe: e.target.value } : g
+                                            )
+                                          }));
+                                        }}
+                                        className="w-full text-[11px] font-medium text-gray-500 bg-transparent outline-none placeholder:text-gray-300 border-b border-gray-100 pb-1 focus:border-[#2D6A6A] transition-colors"
+                                      />
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+
+                            {/* BOTÓN AGREGAR FOTO */}
+                            {!llegóAlLimite ? (
+                              <>
+                                <label
+                                  htmlFor="galeria-upload"
+                                  className="w-full py-4 border-2 border-dashed border-[#2D6A6A]/30 bg-white rounded-xl text-[#2D6A6A] text-xs font-bold hover:bg-[#2D6A6A]/5 hover:border-[#2D6A6A] transition-colors uppercase tracking-widest flex items-center justify-center gap-2 cursor-pointer"
+                                >
+                                  <Plus className="w-4 h-4" />
+                                  Agregar foto ({cantActual}/{limite})
+                                </label>
+                                <input
+                                  type="file"
+                                  id="galeria-upload"
+                                  className="hidden"
+                                  accept="image/*"
+                                  onChange={(e) => {
+                                    const file = e.target.files[0];
+                                    if (!file) return;
+                                    const reader = new FileReader();
+                                    reader.onload = (event) => {
+                                      const img = new Image();
+                                      img.onload = () => {
+                                        const canvas = document.createElement('canvas');
+                                        const MAX = 1400;
+                                        let w = img.width, h = img.height;
+                                        if (w > MAX) { h = h * MAX / w; w = MAX; }
+                                        if (h > MAX) { w = w * MAX / h; h = MAX; }
+                                        canvas.width = w;
+                                        canvas.height = h;
+                                        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                                        const base64 = canvas.toDataURL('image/jpeg', 0.88);
+                                        setFormData(prev => ({
+                                          ...prev,
+                                          galeria: [
+                                            ...prev.galeria,
+                                            { id: Date.now(), url: base64, epigrafe: '', storagePath: '' }
+                                          ]
+                                        }));
+                                      };
+                                      img.src = event.target.result;
+                                    };
+                                    reader.readAsDataURL(file);
+                                    e.target.value = null;
+                                  }}
+                                />
+                              </>
+                            ) : (
+                              <div className="w-full py-4 border-2 border-dashed border-gray-200 bg-gray-50 rounded-xl text-gray-400 text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 cursor-not-allowed">
+                                <Lock className="w-4 h-4" />
+                                Límite alcanzado ({limite}/{limite})
+                              </div>
+                            )}
+
+                          </div>
+                        );
+                      })()}
+                    </Accordion>
+
+                    {/* CONTACTO (Redes sociales en 3 Columnas) */}
                     <Accordion title="Contacto y Canales" icon={Smartphone} isOpen={openSection === 'contacto'} onToggle={() => setOpenSection(openSection === 'contacto' ? null : 'contacto')}>
                       <InputGroup label="Email Público" id="emailContacto" type="email" value={formData.emailContacto} onChange={handleChange} required tooltip="Este es el email que verán las personas en tu perfil públic, sirve para que te contacten directamente." />
                       <div className="flex items-center gap-2 mb-4 mt-6 border-t border-gray-100 pt-6 text-left">

@@ -4,11 +4,11 @@ import { db } from '../../firebase'; // Ajustá esta ruta hacia tu archivo fireb
 import { doc, collection, query, where, getDocs, getDoc } from 'firebase/firestore';
 
 import { 
-  ShieldCheck, MessageCircle, Star, Award, MapPin, 
+  ShieldCheck, MessageCircle, Star, Award, MapPin, Images, GalleryHorizontal, 
   ChevronRight, ChevronLeft, GraduationCap, Briefcase, Stethoscope, 
   Syringe, Send, Phone, Building2, Home, ChevronDown, 
   Instagram, Linkedin, Facebook, Mail, User, X,
-  Activity, Microscope, Heart, Brain, Turtle,
+  Activity, Microscope, Heart, Brain, Turtle, Camera,
   Clock, Eye, FileText, Sparkles, Globe, BookOpen, FileDown, Download, Check
 } from 'lucide-react';
 
@@ -112,6 +112,7 @@ function PerfilPublico() {
 const [fotoIdx, setFotoIdx] = useState(0);
 const [casoIdx, setCasoIdx] = useState(0);
 const [verTodosCasos, setVerTodosCasos] = useState(false);
+  const [galeriaModal, setGaleriaModal] = useState({ isOpen: false, idx: 0 });
 
   const { slug } = useParams(); // 1. Capturamos el slug de la URL
 
@@ -250,8 +251,75 @@ setData({
   return (
     <div className="font-['Inter'] antialiased min-h-screen flex justify-center bg-gray-200 md:bg-[#F4F7F7] overflow-x-hidden w-full relative">
       {/* ========================================== */}
-      {/* MODAL: FOTO DE PERFIL AMPLIADA             */}
+      {/* MODAL: LIGHTBOX GALERÍA                    */}
       {/* ========================================== */}
+      {galeriaModal.isOpen && data.galeria && data.galeria.length > 0 && (
+        <div
+          className="fixed inset-0 z-[9999] bg-[#1A3D3D]/80 backdrop-blur-md flex items-center justify-center p-4"
+          onClick={() => setGaleriaModal({ isOpen: false, idx: 0 })}
+        >
+          {/* FLECHA IZQUIERDA */}
+          {data.galeria.length > 1 && (
+            <button
+              onClick={(e) => { e.stopPropagation(); setGaleriaModal(prev => ({ ...prev, idx: (prev.idx - 1 + data.galeria.length) % data.galeria.length })); }}
+              className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/30 hover:bg-white/40 transition-all z-10"
+            >
+              <ChevronLeft className="w-6 h-6 text-white" />
+            </button>
+          )}
+
+          {/* FLECHA DERECHA */}
+          {data.galeria.length > 1 && (
+            <button
+              onClick={(e) => { e.stopPropagation(); setGaleriaModal(prev => ({ ...prev, idx: (prev.idx + 1) % data.galeria.length })); }}
+              className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/30 hover:bg-white/40 transition-all z-10"
+            >
+              <ChevronRight className="w-6 h-6 text-white" />
+            </button>
+          )}
+
+          {/* BOTÓN CERRAR */}
+          <button
+            onClick={() => setGaleriaModal({ isOpen: false, idx: 0 })}
+            className="absolute top-5 right-5 w-10 h-10 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/40 transition-all z-10"
+          >
+            <X className="w-5 h-5 text-white" />
+          </button>
+
+          {/* FOTO PRINCIPAL */}
+          <div className="flex flex-col items-center gap-4 max-w-4xl w-full" onClick={(e) => e.stopPropagation()}>
+            <img
+              src={data.galeria[galeriaModal.idx].url}
+              alt={data.galeria[galeriaModal.idx].epigrafe || `Foto ${galeriaModal.idx + 1}`}
+              className="max-h-[75vh] max-w-full rounded-[24px] object-contain shadow-2xl animate-in zoom-in duration-200"
+            />
+            {/* EPÍGRAFE */}
+            {data.galeria[galeriaModal.idx].epigrafe && (
+              <p className="text-white/80 text-sm font-medium text-center max-w-lg">
+                {data.galeria[galeriaModal.idx].epigrafe}
+              </p>
+            )}
+            {/* CONTADOR */}
+            <p className="text-white/40 text-xs font-bold uppercase tracking-widest">
+              {galeriaModal.idx + 1} / {data.galeria.length}
+            </p>
+            {/* MINIATURAS */}
+            {data.galeria.length > 1 && (
+              <div className="flex gap-2 flex-wrap justify-center">
+                {data.galeria.map((foto, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setGaleriaModal(prev => ({ ...prev, idx: i }))}
+                    className={`w-12 h-12 rounded-xl overflow-hidden border-2 transition-all ${i === galeriaModal.idx ? 'border-[#4DB6AC] scale-110' : 'border-white/20 opacity-60 hover:opacity-100'}`}
+                  >
+                    <img src={foto.url} alt="" className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
       {isPhotoModalOpen && data.foto && (
         <div className="fixed inset-0 z-[9999] bg-[#1A3D3D]/40 flex items-center justify-center p-4 backdrop-blur-md transition-all duration-300" onClick={() => setIsPhotoModalOpen(false)}>
           <button className="absolute top-6 right-6 text-white/50 hover:text-white transition-colors p-2">
@@ -637,37 +705,81 @@ setData({
             </div>
           )}
 
-          {activeTab === 'casos' && isPro && data.casos && (
+          {activeTab === 'casos' && isPro && data.casos && data.casos.length > 0 && (
             <div className="space-y-4">
-              {(verTodosCasos ? data.casos : data.casos.slice(0, 3)).map((c, index) => (
-                <div key={c.id} onClick={() => { setSelectedCaso(c); setCasoIdx(index); }} className="bg-white rounded-3xl overflow-hidden border border-gray-50 text-left shadow-sm cursor-pointer hover:shadow-md transition-shadow">
-                  {/* FOTO */}
+
+              {/* PRIMER CASO SIEMPRE VISIBLE */}
+              {data.casos[0] && (
+                <div
+                  onClick={() => { setSelectedCaso(data.casos[0]); setCasoIdx(0); }}
+                  className="bg-white rounded-3xl overflow-hidden border border-gray-50 text-left shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+                >
                   <div className="h-52 bg-gray-100 flex items-center justify-center overflow-hidden">
-                    {c.fotos && c.fotos[0] ? (
-                       <img src={c.fotos[0]} className="w-full h-full object-cover" alt="Caso Clínico" />
+                    {data.casos[0].fotos && data.casos[0].fotos[0] ? (
+                      <img src={data.casos[0].fotos[0]} className="w-full h-full object-cover" alt="Caso Clínico" />
                     ) : (
-                       <span className="text-gray-400 text-[14px]">Sin imagen</span>
+                      <span className="text-gray-400 text-[14px]">Sin imagen</span>
                     )}
                   </div>
-                  {/* TEXTO */}
                   <div className="p-5">
-                    <span className="bg-[#2D6A6A]/10 text-[#2D6A6A] text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full">{c.patologia}</span>
-                    <h4 className="text-[#1A3D3D] font-bold font-['Montserrat'] text-[17px] uppercase mt-3 mb-1.5">{c.nombre}</h4>
-                    <p className="text-gray-500 text-[15px] leading-relaxed mb-4 line-clamp-2">{c.desc}</p>
+                    <span className="bg-[#2D6A6A]/10 text-[#2D6A6A] text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full">{data.casos[0].patologia}</span>
+                    <h4 className="text-[#1A3D3D] font-bold font-['Montserrat'] text-[17px] uppercase mt-3 mb-1.5">{data.casos[0].nombre}</h4>
+                    <p className="text-gray-500 text-[15px] leading-relaxed mb-4 line-clamp-2">{data.casos[0].desc}</p>
                     <span className="text-[#4DB6AC] font-bold text-[11px] uppercase tracking-widest flex items-center gap-1">Ver caso completo <ChevronRight className="w-3 h-3" /></span>
                   </div>
                 </div>
-              ))}
+              )}
 
-              {data.casos.length > 3 && (
+              {/* BOTÓN VER TODOS LOS CASOS */}
+              {data.casos.length > 1 && (
                 <button
-                  onClick={() => setVerTodosCasos(!verTodosCasos)}
-                  className="w-full py-4 bg-white border border-gray-100 rounded-2xl text-[#2D6A6A] text-[11px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 shadow-sm hover:border-[#2D6A6A]/30 transition-colors"
+                  onClick={() => { setSelectedCaso(data.casos[0]); setCasoIdx(0); }}
+                  className="w-full py-3 text-[#2D6A6A] text-[11px] font-bold uppercase tracking-widest flex items-center justify-center gap-1.5 group"
                 >
-                  {verTodosCasos ? 'Ver menos' : `Ver todos los casos (+${data.casos.length - 3})`}
-                  <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${verTodosCasos ? 'rotate-180' : ''}`} />
+                  Ver todos los casos ({data.casos.length}) <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                 </button>
               )}
+
+              {/* GALERÍA MÓVIL */}
+              {data.galeria && data.galeria.length > 0 && (
+                <div className="mt-6 pt-6 border-t border-gray-100">
+                  <h3 className="font-extrabold text-[16px] text-[#1A3D3D] font-['Montserrat'] uppercase tracking-widest mb-4 pl-1 flex items-center gap-2">
+                    <Camera className="w-5 h-5 text-[#2D6A6A]" /> Galería
+                  </h3>
+
+                  {/* GRILLA DE MINIATURAS */}
+                  <div className="grid grid-cols-3 gap-2">
+                    {data.galeria.slice(0, 6).map((foto, i) => (
+                      <div
+                        key={i}
+                        onClick={() => setGaleriaModal({ isOpen: true, idx: i })}
+                        className="relative aspect-square rounded-[16px] overflow-hidden cursor-pointer group"
+                      >
+                        <img
+                          src={foto.url}
+                          alt={foto.epigrafe || `Foto ${i + 1}`}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                        {/* OVERLAY con contador en la última si hay más */}
+                        {i === 5 && data.galeria.length > 6 && (
+                          <div className="absolute inset-0 bg-[#1A3D3D]/60 flex items-center justify-center rounded-[16px]">
+                            <span className="text-white font-black text-[20px] font-['Montserrat']">+{data.galeria.length - 6}</span>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* BOTÓN VER GALERÍA COMPLETA */}
+                  <button
+                    onClick={() => setGaleriaModal({ isOpen: true, idx: 0 })}
+                    className="w-full mt-4 py-3 text-[#2D6A6A] text-[11px] font-bold uppercase tracking-widest flex items-center justify-center gap-1.5 group"
+                  >
+                    Ver galería completa <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                  </button>
+                </div>
+              )}
+
             </div>
           )}
         </div>
@@ -973,29 +1085,121 @@ setData({
               </>
             )}
 
-            {/* SECCIÓN CONTACTO */}
-            <div id="contacto" className={`p-10 md:p-16 flex flex-col lg:flex-row gap-16 items-center bg-white transition-all duration-700 ease-out ${
+            {/* SECCIÓN CONTACTO + GALERÍA */}
+            <div id="contacto" className={`px-10 pt-8 pb-10 md:px-16 md:pt-10 md:pb-16 bg-white transition-all duration-700 ease-out ${
               highlightContacto ? 'scale-[1.03] shadow-[0_0_80px_rgba(45,106,106,0.3)] ring-4 ring-[#4DB6AC]/50 ring-offset-4 ring-offset-[#F4F7F7]/50 rounded-[40px] relative z-50 border border-[#4DB6AC]' : 'scale-100 border-transparent rounded-b-[44px] relative z-10 border-gray-100'
             }`}>
-              <div className="w-full lg:w-5/12 text-left">
-                <div className="text-[#2D6A6A] mb-8"><MessageCircle className="w-12 h-12" /></div>
-                
-                <h2 className="text-[24px] md:text-[30px] font-extrabold font-['Montserrat'] text-[#1A3D3D] mb-6 uppercase tracking-tight leading-none">Enviar Propuesta</h2>
-                <p className="text-gray-600 leading-relaxed mb-10 text-[17px] font-medium">Para invitaciones a capacitaciones, derivación de casos o colaboraciones académicas.</p>
-                
-              </div>
-              <div className="w-full lg:w-7/12">
-                <div className="space-y-6 text-left">
-  
-  {/* EMAIL GRANDE Y COPIABLE */}
-  <ContactoEmail
-    email={data.emailContacto}
-    nombre={data.nombre}
-    whatsappActivo={data.whatsappActivo}
-    whatsappNum={data.whatsappNum}
-  />
+              <div className={`flex flex-col ${data.galeria && data.galeria.length > 0 ? 'lg:flex-row gap-12 items-start' : 'lg:flex-row gap-16 items-center'}`} style={{alignItems: data.galeria && data.galeria.length > 0 ? 'stretch' : 'center'}}>
 
-</div>
+                {/* COLUMNA IZQUIERDA: CONTACTO */}
+                <div className="flex-1 text-left min-w-0">
+                  <div className="text-[#2D6A6A] mb-8"><MessageCircle className="w-12 h-12" strokeWidth={1.8} /></div>
+                  <h2 className="text-[24px] md:text-[30px] font-extrabold font-['Montserrat'] text-[#1A3D3D] mb-6 uppercase tracking-tight leading-none">Enviar Propuesta</h2>
+                  <div className="mb-8"></div>
+                  <ContactoEmail
+                    email={data.emailContacto}
+                    nombre={data.nombre}
+                    whatsappActivo={data.whatsappActivo}
+                    whatsappNum={data.whatsappNum}
+                  />
+                </div>
+
+                {/* COLUMNA DERECHA: GALERÍA (solo si tiene fotos) */}
+                {data.galeria && data.galeria.length > 0 && (
+                  <div className="w-full lg:w-[45%] flex flex-col">
+                    
+                    {/* HEADER */}
+                    <div className="text-[#2D6A6A] mb-8"><Images className="w-12 h-12" strokeWidth={1.7} /></div>
+                    <h3 className="text-[24px] md:text-[30px] font-extrabold font-['Montserrat'] text-[#1A3D3D] mb-6 uppercase tracking-tight leading-none">Galería</h3>
+
+                    {/* LAYOUT: FOTO GRANDE ARRIBA + MINIATURAS ABAJO */}
+                    <div className="flex flex-col gap-3 mt-2">
+
+                      {/* FOTO PRINCIPAL */}
+                      <div
+                        className="rounded-[24px] overflow-hidden cursor-pointer group relative aspect-[16/10]"
+                        onClick={() => setGaleriaModal({ isOpen: true, idx: 0 })}
+                      >
+                        <img
+                          src={data.galeria[0].url}
+                          alt={data.galeria[0].epigrafe || 'Galería'}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                        <div className="absolute inset-0 bg-[#1A3D3D]/0 group-hover:bg-[#1A3D3D]/20 transition-all duration-300 rounded-[24px]" />
+                      </div>
+
+                      {/* MINIATURAS */}
+                      {data.galeria.length > 1 && (
+                        <div className="grid grid-cols-3 gap-3">
+
+                          {/* MINIATURA 1 */}
+                          {data.galeria[1] && (
+                            <div
+                              className="rounded-[16px] overflow-hidden cursor-pointer group relative aspect-square"
+                              onClick={() => setGaleriaModal({ isOpen: true, idx: 1 })}
+                            >
+                              <img
+                                src={data.galeria[1].url}
+                                alt={data.galeria[1].epigrafe || ''}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                              />
+                              <div className="absolute inset-0 bg-[#1A3D3D]/0 group-hover:bg-[#1A3D3D]/20 transition-all duration-300 rounded-[16px]" />
+                            </div>
+                          )}
+
+                          {/* MINIATURA 2 */}
+                          {data.galeria[2] && (
+                            <div
+                              className="rounded-[16px] overflow-hidden cursor-pointer group relative aspect-square"
+                              onClick={() => setGaleriaModal({ isOpen: true, idx: 2 })}
+                            >
+                              <img
+                                src={data.galeria[2].url}
+                                alt={data.galeria[2].epigrafe || ''}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                              />
+                              <div className="absolute inset-0 bg-[#1A3D3D]/0 group-hover:bg-[#1A3D3D]/20 transition-all duration-300 rounded-[16px]" />
+                            </div>
+                          )}
+
+                          {/* MINIATURA 3 — con contador si hay más */}
+                          {data.galeria[3] && (
+                            <div
+                              className="rounded-[16px] overflow-hidden cursor-pointer group relative aspect-square"
+                              onClick={() => setGaleriaModal({ isOpen: true, idx: 3 })}
+                            >
+                              <img
+                                src={data.galeria[3].url}
+                                alt={data.galeria[3].epigrafe || ''}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                              />
+                              {data.galeria.length > 4 && (
+                                <div className="absolute inset-0 bg-[#1A3D3D]/60 flex items-center justify-center rounded-[16px]">
+                                  <span className="text-white font-black text-[22px] font-['Montserrat']">+{data.galeria.length - 4}</span>
+                                </div>
+                              )}
+                              {data.galeria.length <= 4 && (
+                                <div className="absolute inset-0 bg-[#1A3D3D]/0 group-hover:bg-[#1A3D3D]/20 transition-all duration-300 rounded-[16px]" />
+                              )}
+                            </div>
+                          )}
+
+                        </div>
+                      )}
+
+                    </div>
+
+                    {/* BOTÓN VER GALERÍA COMPLETA */}
+                    <button
+                      onClick={() => setGaleriaModal({ isOpen: true, idx: 0 })}
+                      className="w-full mt-3 text-[11px] font-black text-[#2D6A6A] uppercase tracking-widest hover:text-[#1A3D3D] transition-colors flex items-center justify-center gap-1.5 group py-2"
+                    >
+                      Ver galería completa <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                    </button>
+
+                  </div>
+                )}
+
               </div>
             </div>
           </div>
