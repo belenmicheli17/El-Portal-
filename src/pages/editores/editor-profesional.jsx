@@ -1514,7 +1514,7 @@ if (!formData.nombre.trim() || !formData.especialidad.trim() || !formData.foto |
 
                     {/* CONTACTO (Redes sociales en 3 columnas) */}
                     <Accordion title="Contacto y Canales" icon={Smartphone} isOpen={openSection === 'contacto'} onToggle={() => setOpenSection(openSection === 'contacto' ? null : 'contacto')}>
-                      <InputGroup label="Email Público" id="emailContacto" type="email" value={formData.emailContacto} onChange={handleChange} required tooltip="Este es el email que verán tus clientes en tu perfil público. Puede ser distinto al email de tu cuenta (el que usás para iniciar sesión)." />
+                      <InputGroup label="Email Público" id="emailContacto" type="email" value={formData.emailContacto} onChange={handleChange} required tooltip="Este es el email que verán las personas en tu perfil públic, sirve para que te contacten directamente." />
                       <div className="flex items-center gap-2 mb-4 mt-6 border-t border-gray-100 pt-6 text-left">
                         <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Redes Sociales (Opcional)</h3>
                         <Tooltip text="Copia el link (URL) de tu perfil y pégalo aquí. Si dejas el campo vacío, el ícono correspondiente no aparecerá en tu perfil público." />
@@ -1529,13 +1529,50 @@ if (!formData.nombre.trim() || !formData.especialidad.trim() || !formData.foto |
                       
                      
                       <div className="mt-6">
-                        <ToggleSwitch label="Botón de WhatsApp directo" checked={formData.whatsappActivo} onChange={(v) => setFormData(p => ({...p, whatsappActivo: v}))} tooltip="Aparecerá un botón verde en tu perfil para chats rápidos, estará visible para profesionales y tutores." />
-                        {formData.whatsappActivo && (
-                          <div className="mt-4 animate-in slide-in-from-top-2 duration-300">
-                            <InputGroup label="Número de WhatsApp (con código de país)" id="whatsappNum" value={formData.whatsappNum} onChange={handleChange} placeholder="Ej: 54911..." required={formData.whatsappActivo} />
-                          </div>
-                        )}
-                      </div>
+  <ToggleSwitch label="Botón de WhatsApp" checked={formData.whatsappActivo} onChange={(v) => setFormData(p => ({...p, whatsappActivo: v}))} tooltip="Aparecerá un botón verde en tu perfil para chats." />
+  {formData.whatsappActivo && (
+    <div className="mt-4 space-y-4 animate-in slide-in-from-top-2 duration-300">
+      <InputGroup label="Número de WhatsApp (con código de país)" id="whatsappNum" value={formData.whatsappNum} onChange={handleChange} placeholder="Ej: 54911..." required={formData.whatsappActivo} />
+      
+      {/* VISIBILIDAD DEL WHATSAPP */}
+      <div className="bg-gray-50 border border-gray-100 rounded-2xl p-4">
+        <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3">¿Quién puede ver tu WhatsApp?</p>
+        <div className="flex flex-col gap-2">
+          <label className="flex items-center gap-3 cursor-pointer group">
+            <input
+              type="radio"
+              name="whatsappVisibilidad"
+              value="todos"
+              checked={formData.whatsappVisibilidad === 'todos' || !formData.whatsappVisibilidad}
+              onChange={() => setFormData(p => ({...p, whatsappVisibilidad: 'todos'}))}
+              className="accent-[#2D6A6A] w-4 h-4"
+            />
+            <div>
+              <p className="text-sm font-bold text-[#1A3D3D] group-hover:text-[#2D6A6A] transition-colors">Todo público</p>
+              <p className="text-xs text-gray-400 font-medium">Cualquier visitante puede contactarte por WhatsApp, incluso usuarios sin cuenta.</p>
+            
+            </div>
+          </label>
+          <div className="w-full h-px bg-gray-200 my-1"></div>
+          <label className="flex items-center gap-3 cursor-pointer group">
+            <input
+              type="radio"
+              name="whatsappVisibilidad"
+              value="registrados"
+              checked={formData.whatsappVisibilidad === 'registrados'}
+              onChange={() => setFormData(p => ({...p, whatsappVisibilidad: 'registrados'}))}
+              className="accent-[#2D6A6A] w-4 h-4"
+            />
+            <div>
+              <p className="text-xm font-bold text-[#1A3D3D] group-hover:text-[#2D6A6A] transition-colors">Solo usuarios registrados</p>
+              <p className="text-xs text-gray-400 font-medium">El botón de WhatsApp solo aparece si el visitante tiene cuenta en la plataforma (solo visible para profesionales y proveedores).</p>
+            </div>
+          </label>
+        </div>
+      </div>
+    </div>
+  )}
+</div>
                     </Accordion>
                   </div>
                 </div>

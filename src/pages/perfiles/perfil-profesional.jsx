@@ -9,7 +9,7 @@ import {
   Syringe, Send, Phone, Building2, Home, ChevronDown, 
   Instagram, Linkedin, Facebook, Mail, User, X,
   Activity, Microscope, Heart, Brain, Turtle,
-  Clock, Eye, FileText, Sparkles, Globe, BookOpen, FileDown, Download
+  Clock, Eye, FileText, Sparkles, Globe, BookOpen, FileDown, Download, Check
 } from 'lucide-react';
 
 const IconoHueso = ({ className }) => (
@@ -23,6 +23,79 @@ const IconoPildora = ({ className }) => (
 const IconoBisturi = ({ className }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M14 22 18.5 7.5L22 11l-6 11Z"/><path d="M12 5 8 9"/><path d="m11 8 4 4"/><path d="m5 12 7 7"/></svg>
 );
+
+const ContactoEmail = ({ email, nombre, whatsappActivo, whatsappNum }) => {
+  const [copiado, setCopiado] = useState(false);
+
+  const handleCopiar = () => {
+    navigator.clipboard.writeText(email).then(() => {
+      setCopiado(true);
+      setTimeout(() => setCopiado(false), 2500);
+    });
+  };
+
+  return (
+    <div className="bg-gray-50 border border-gray-100 rounded-[28px] p-6 flex flex-col gap-4">
+
+      {/* AVISO + EMAIL */}
+      <div className="flex items-start gap-3">
+        <Mail className="w-4 h-4 text-[#2D6A6A] shrink-0 mt-0.5" />
+        <p className="text-[14px] text-[#1A3D3D] font-medium leading-relaxed">
+          Para contactar a <span className="font-bold">{nombre}</span> por correo electrónico, podés copiar su dirección y escribirle desde el correo que uses habitualmente.
+        </p>
+      </div>
+
+      {/* EMAIL */}
+      <div className="bg-white border border-gray-100 rounded-2xl px-5 py-4">
+        <p className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.3em] mb-1">Dirección de correo</p>
+        <p className="text-[17px] font-bold text-[#1A3D3D] break-all leading-snug">{email}</p>
+      </div>
+
+      {/* BOTÓN COPIAR EMAIL */}
+      <button
+        onClick={handleCopiar}
+        className={`w-full py-4 rounded-2xl font-bold text-[12px] uppercase tracking-[0.2em] flex items-center justify-center gap-2.5 transition-all duration-300 shadow-sm
+          ${copiado
+            ? 'bg-[#4DB6AC] text-white shadow-md'
+            : 'bg-white border border-gray-200 text-[#1A3D3D] hover:border-[#2D6A6A] hover:text-[#2D6A6A] hover:-translate-y-0.5 hover:shadow-md'
+          }`}
+      >
+        {copiado
+          ? <><Check className="w-4 h-4" /> ¡Copiado!</>
+          : <><Mail className="w-4 h-4" /> Copiar dirección</>
+        }
+      </button>
+
+      {/* DIVISOR + WHATSAPP */}
+      {whatsappActivo && whatsappNum && (
+        <>
+          <div className="flex items-center gap-3">
+            <div className="flex-1 h-[1px] bg-gray-200"></div>
+            <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">o también</span>
+            <div className="flex-1 h-[1px] bg-gray-200"></div>
+          </div>
+
+          <div className="flex items-start gap-3">
+            <Phone className="w-4 h-4 text-[#25D366] shrink-0 mt-0.5" />
+            <p className="text-[14px] text-[#1A3D3D] font-medium leading-relaxed">
+              También podés hablarle directamente a su número.
+            </p>
+          </div>
+
+          <a
+            href={`https://wa.me/${whatsappNum}`}
+            target="_blank"
+            rel="noreferrer"
+            className="w-full py-4 rounded-2xl font-bold text-[12px] uppercase tracking-[0.2em] flex items-center justify-center gap-2.5 bg-[#25D366] text-white hover:bg-[#20b858] hover:-translate-y-0.5 hover:shadow-lg transition-all duration-300 shadow-md"
+          >
+            <Phone className="w-4 h-4" /> Chatear por WhatsApp
+          </a>
+        </>
+      )}
+
+    </div>
+  );
+};
 
 function PerfilPublico() {
   const navigate = useNavigate();
@@ -434,10 +507,10 @@ setData({
                               <div className="flex flex-col gap-1.5 flex-1">
                                 
                                 {/* NOMBRE + BARRIO */}
-                                <p className="font-bold text-[#1A3D3D] text-[16px] leading-tight">
+                                <a href={mapsUrl} target="_blank" rel="noreferrer" className="font-bold text-[#1A3D3D] text-[16px] leading-tight active:text-[#4DB6AC] transition-colors">
                                   {c.nombrePropio || c.nombre}
-                                  {c.barrio && <span className="font-bold text-[#1A3D3D] ml-1">({c.barrio})</span>}
-                                </p>
+                                  {c.barrio && <span className="ml-1">({c.barrio})</span>}
+                                </a>
 
                                 {/* DIRECCIÓN */}
                                 {c.direccion && (
@@ -500,8 +573,8 @@ setData({
                               <div className="w-2 h-2 rounded-full bg-[#1A3D3D]"></div>
                             </div>
                             <div className="pt-1 pb-1">
-                              <h4 className="font-bold text-[#1A3D3D] text-[15px] mb-1 font-['Montserrat'] uppercase tracking-tight leading-tight">{logro.titulo}</h4>
-                              <p className="text-gray-500 text-[16px] leading-snug">{logro.desc}</p>
+                              <h4 className="font-bold text-[#1A3D3D] text-[15px] mb-1 font-['Montserrat'] uppercase tracking-tight leading-tight">{logro.titulo} {logro.desc && <span className="font-medium normal-case tracking-normal opacity-70">— {logro.desc}</span>}</h4>
+                              {logro.extra && <p className="text-gray-500 text-[13px] font-medium italic mt-1">{logro.extra}</p>}
                             </div>
                           </div>
                         ))}
@@ -601,21 +674,18 @@ setData({
 
         {/* BOTONES DE CONTACTO MÓVIL */}
         <div className="px-4 py-6 bg-[#F4F7F7] shrink-0 border-t border-gray-100 z-50">
-          <div className="flex gap-2">
-            <a href={`mailto:${data.emailContacto}`} target="_blank" rel="noreferrer" className="flex flex-col items-center justify-center bg-white border border-gray-200 text-[#1A3D3D] rounded-xl w-14 h-14 shrink-0 shadow-sm hover:bg-gray-50 transition-colors">
-              <Mail size={20} />
-              <span className="text-[9px] font-black uppercase mt-1 tracking-wider">Mail</span>
-            </a>
-            {data.whatsappActivo ? (
-              <a href={`https://wa.me/${data.whatsappNum}`} target="_blank" rel="noreferrer" className="flex-1 bg-[#25D366] text-white font-bold rounded-xl flex items-center justify-center gap-2.5 tracking-[0.15em] text-[13px] uppercase shadow-lg shadow-[#25D366]/20 hover:bg-[#20b858] transition-colors">
-                <Phone size={18} /> WhatsApp
-              </a>
-            ) : (
-              <a href={`mailto:${data.emailContacto}`} target="_blank" rel="noreferrer" className="flex-1 bg-[#1A3D3D] text-white font-bold rounded-xl flex items-center justify-center gap-2.5 tracking-[0.15em] text-[13px] uppercase shadow-lg hover:bg-[#2D6A6A] transition-colors">
-                <MessageCircle size={18} /> Enviar Mensaje
-              </a>
-            )}
-          </div>
+         <div className="grid grid-cols-2 gap-2">
+  <a href={`mailto:${data.emailContacto}`} target="_blank" rel="noreferrer" className="bg-[#1A3D3D] text-white font-bold rounded-xl flex flex-col items-center justify-center gap-1 py-3 px-2 shadow-lg hover:bg-[#2D6A6A] transition-colors text-center">
+    <Mail size={18} />
+    <span className="text-[9px] font-black uppercase tracking-wider leading-tight">Contactar por Email</span>
+  </a>
+ {data.whatsappActivo && (data.whatsappVisibilidad === 'todos' || !data.whatsappVisibilidad || currentUser) && (
+    <a href={`https://wa.me/${data.whatsappNum}`} target="_blank" rel="noreferrer" className="bg-[#25D366] text-white font-bold rounded-xl flex flex-col items-center justify-center gap-1 py-3 px-2 shadow-lg shadow-[#25D366]/20 hover:bg-[#20b858] transition-colors text-center">
+      <Phone size={18} />
+      <span className="text-[9px] font-black uppercase tracking-wider leading-tight">Chatear por WhatsApp</span>
+    </a>
+  )}
+</div>
         </div>
       </div>
 
@@ -743,8 +813,8 @@ setData({
                               <div className="w-3 h-3 rounded-full bg-[#1A3D3D] group-hover:bg-[#2D6A6A] transition-colors"></div>
                             </div>
                             <div className="flex-1">
-                              <h4 className="font-bold text-[#1A3D3D] text-[17px] mb-2 font-['Montserrat'] uppercase tracking-tight">{logro.titulo}</h4>
-                              <p className="text-gray-600 text-[17px] font-medium">{logro.desc}</p>
+                              <h4 className="font-bold text-[#1A3D3D] text-[17px] mb-1 font-['Montserrat'] uppercase tracking-tight">{logro.titulo} {logro.desc && <span className="font-medium normal-case tracking-normal opacity-70">— {logro.desc}</span>}</h4>
+                              {logro.extra && <p className="text-gray-500 text-[15px] font-medium italic mt-1">{logro.extra}</p>}
                             </div>
                           </div>
                         ))}
@@ -868,12 +938,12 @@ setData({
 
                                   <div className="flex flex-col gap-1.5 flex-1">
                                     {/* NOMBRE PROPIO + BARRIO */}
-                                    <p className="font-bold text-[#1A3D3D] text-[17px]">
+                                    <a href={mapsUrl} target="_blank" rel="noreferrer" className="font-bold text-[#1A3D3D] text-[17px] hover:text-[#4DB6AC] transition-colors">
                                       {clinica.nombrePropio || clinica.nombre}
                                       {clinica.barrio && (
-                                        <span className="font-bold text-[#1A3D3D] ml-1.5">({clinica.barrio})</span>
+                                        <span className="font-bold text-[#1A3D3D] ml-1.5" >({clinica.barrio})</span>
                                       )}
-                                    </p>
+                                    </a>
 
                                     {/* DIRECCIÓN CLICKEABLE */}
                                     {clinica.direccion && (
@@ -912,35 +982,20 @@ setData({
                 
                 <h2 className="text-[24px] md:text-[30px] font-extrabold font-['Montserrat'] text-[#1A3D3D] mb-6 uppercase tracking-tight leading-none">Enviar Propuesta</h2>
                 <p className="text-gray-600 leading-relaxed mb-10 text-[17px] font-medium">Para invitaciones a capacitaciones, derivación de casos o colaboraciones académicas.</p>
-                {data.whatsappActivo && (
-                  <div className="p-8 bg-[#F4F7F7] rounded-[40px] border border-gray-50">
-                    <p className="text-[12px] font-bold text-[#1A3D3D] uppercase tracking-[0.3em] mb-5 leading-none text-left">Chatea directamente</p>
-                    <a href={`https://wa.me/${data.whatsappNum}`} target="_blank" rel="noreferrer" className="w-full bg-[#25D366] text-white font-bold py-4 rounded-[20px] shadow-lg hover:bg-[#20bd5a] hover:-translate-y-1 flex items-center justify-center gap-3 tracking-[0.25em] text-[12px]">
-                      <Phone className="w-5 h-5" /> WhatsApp
-                    </a>
-                  </div>
-                )}
+                
               </div>
               <div className="w-full lg:w-7/12">
-                <form className="space-y-8 text-left" onSubmit={(e) => { e.preventDefault(); handleSendMail(); }}>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-                    <div>
-                      <label className="block text-[12px] font-bold text-gray-400 uppercase tracking-[0.3em] mb-3 leading-none ml-1">Nombre completo</label>
-                      <input type="text" className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-5 text-[17px] font-medium focus:outline-none focus:border-[#2D6A6A] transition-all" placeholder="Ej: Dr. Alejandro Martínez" />
-                    </div>
-                    <div>
-                      <label className="block text-[12px] font-bold text-gray-400 uppercase tracking-[0.3em] mb-3 leading-none ml-1">Tu mail</label>
-                      <input type="email" className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-5 text-[17px] font-medium focus:outline-none focus:border-[#2D6A6A] transition-all" placeholder="ejemplo@correo.com" />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-[12px] font-bold text-gray-400 uppercase tracking-[0.3em] mb-3 leading-none ml-1">Escribí tu mensaje acá</label>
-                    <textarea rows="5" className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-6 py-5 text-[17px] font-medium focus:outline-none focus:border-[#2D6A6A] transition-all resize-none" placeholder="Escribe aquí los detalles..."></textarea>
-                  </div>
-                  <button type="submit" className="w-full bg-[#1A3D3D] text-white font-bold py-5 rounded-2xl shadow-xl hover:bg-[#2D6A6A] transition-all flex items-center justify-center gap-4 text-[13px] uppercase tracking-[0.3em]">
-                    <Send className="w-5 h-5" /> Enviar al mail
-                  </button>
-                </form>
+                <div className="space-y-6 text-left">
+  
+  {/* EMAIL GRANDE Y COPIABLE */}
+  <ContactoEmail
+    email={data.emailContacto}
+    nombre={data.nombre}
+    whatsappActivo={data.whatsappActivo}
+    whatsappNum={data.whatsappNum}
+  />
+
+</div>
               </div>
             </div>
           </div>
