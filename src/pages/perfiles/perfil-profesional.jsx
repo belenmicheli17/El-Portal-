@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../../firebase'; // Ajustá esta ruta hacia tu archivo firebase.js
 import { doc, collection, query, where, getDocs, getDoc } from 'firebase/firestore';
+import { useAuth } from '../../context/AuthContext';
 
 import { 
   ShieldCheck, MessageCircle, Star, Award, MapPin, Images, GalleryHorizontal, 
@@ -24,7 +25,7 @@ const IconoBisturi = ({ className }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M14 22 18.5 7.5L22 11l-6 11Z"/><path d="M12 5 8 9"/><path d="m11 8 4 4"/><path d="m5 12 7 7"/></svg>
 );
 
-const ContactoEmail = ({ email, nombre, whatsappActivo, whatsappNum }) => {
+const ContactoEmail = ({ email, nombre, whatsappActivo, whatsappNum, mostrarWhatsapp }) => {
   const [copiado, setCopiado] = useState(false);
 
   const handleCopiar = () => {
@@ -67,7 +68,7 @@ const ContactoEmail = ({ email, nombre, whatsappActivo, whatsappNum }) => {
       </button>
 
       {/* DIVISOR + WHATSAPP */}
-      {whatsappActivo && whatsappNum && (
+      {mostrarWhatsapp && whatsappNum && (
         <>
           <div className="flex items-center gap-3">
             <div className="flex-1 h-[1px] bg-gray-200"></div>
@@ -99,6 +100,8 @@ const ContactoEmail = ({ email, nombre, whatsappActivo, whatsappNum }) => {
 
 function PerfilPublico() {
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
+  console.log('currentUser en perfil:', currentUser);
   
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -499,8 +502,7 @@ setData({
             <div className="flex-1">
               <h1 className="text-[24px] font-extrabold font-['Montserrat'] text-white tracking-tight uppercase leading-tight mb-2">{data.nombre}</h1>
               <h2 className="text-[14px] font-black text-[#F4F7F7] uppercase tracking-[0.1em] opacity-80">{data.especialidad}</h2>
-              <div className="mt-2 text-white/30 font-bold text-[11px] uppercase tracking-[0.3em]">MP: {data.matricula}</div>
-
+             <div className="mt-2 text-white/30 font-bold text-[11px] uppercase tracking-[0.3em]">{data.tipoMatricula || 'MP'}: {data.matricula}</div>
                         </div>
           </div>
         </section>
@@ -786,18 +788,23 @@ setData({
 
         {/* BOTONES DE CONTACTO MÓVIL */}
         <div className="px-4 py-6 bg-[#F4F7F7] shrink-0 border-t border-gray-100 z-50">
-         <div className="grid grid-cols-2 gap-2">
-  <a href={`mailto:${data.emailContacto}`} target="_blank" rel="noreferrer" className="bg-[#1A3D3D] text-white font-bold rounded-xl flex flex-col items-center justify-center gap-1 py-3 px-2 shadow-lg hover:bg-[#2D6A6A] transition-colors text-center">
-    <Mail size={18} />
-    <span className="text-[9px] font-black uppercase tracking-wider leading-tight">Contactar por Email</span>
-  </a>
- {data.whatsappActivo && (data.whatsappVisibilidad === 'todos' || !data.whatsappVisibilidad || currentUser) && (
-    <a href={`https://wa.me/${data.whatsappNum}`} target="_blank" rel="noreferrer" className="bg-[#25D366] text-white font-bold rounded-xl flex flex-col items-center justify-center gap-1 py-3 px-2 shadow-lg shadow-[#25D366]/20 hover:bg-[#20b858] transition-colors text-center">
-      <Phone size={18} />
-      <span className="text-[9px] font-black uppercase tracking-wider leading-tight">Chatear por WhatsApp</span>
-    </a>
-  )}
-</div>
+         {(() => {
+          const mostrarWp = data.whatsappActivo && data.whatsappNum && (data.whatsappVisibilidad === 'todos' || !data.whatsappVisibilidad || currentUser);
+          return (
+            <div className={`grid gap-2 ${mostrarWp ? 'grid-cols-2' : 'grid-cols-1'}`}>
+              <a href={`mailto:${data.emailContacto}`} target="_blank" rel="noreferrer" className="bg-[#1A3D3D] text-white font-bold rounded-xl flex flex-col items-center justify-center gap-1 py-3 px-2 shadow-lg hover:bg-[#2D6A6A] transition-colors text-center">
+                <Mail size={18} />
+                <span className="text-[9px] font-black uppercase tracking-wider leading-tight">Contactar por Email</span>
+              </a>
+              {mostrarWp && (
+                <a href={`https://wa.me/${data.whatsappNum}`} target="_blank" rel="noreferrer" className="bg-[#25D366] text-white font-bold rounded-xl flex flex-col items-center justify-center gap-1 py-3 px-2 shadow-lg shadow-[#25D366]/20 hover:bg-[#20b858] transition-colors text-center">
+                  <Phone size={18} />
+                  <span className="text-[9px] font-black uppercase tracking-wider leading-tight">Chatear por WhatsApp</span>
+                </a>
+              )}
+            </div>
+          );
+        })()}
         </div>
       </div>
 
@@ -841,7 +848,7 @@ setData({
               <div className="z-10 w-full flex flex-col items-center">
                 <h1 className="text-[24px] md:text-[30px] font-extrabold font-['Montserrat'] text-white tracking-tight mb-2 uppercase leading-tight">{data.nombre}</h1>
                 <h2 className="text-[16px] md:text-[20px] font-black text-[#F4F7F7] mb-4 uppercase tracking-widest opacity-90">{data.especialidad}</h2>
-                <p className="text-white/30 font-semibold text-[12px] uppercase tracking-[0.5em] mb-10">Matrícula Profesional: {data.matricula}</p>
+                <p className="text-white/30 font-semibold text-[12px] uppercase tracking-[0.5em] mb-10">{data.tipoMatricula || 'MP'}: {data.matricula}</p>
               </div>
               
               {isPro && data.zonas && data.zonas.length > 0 && (
@@ -1101,6 +1108,7 @@ setData({
                     nombre={data.nombre}
                     whatsappActivo={data.whatsappActivo}
                     whatsappNum={data.whatsappNum}
+                    mostrarWhatsapp={data.whatsappActivo && (data.whatsappVisibilidad === 'todos' || !data.whatsappVisibilidad || currentUser)}
                   />
                 </div>
 

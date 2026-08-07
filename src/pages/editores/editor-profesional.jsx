@@ -4,6 +4,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { db, storage } from '../../firebase'; // <-- Sumamos storage
 import { doc, setDoc, getDoc, collection, query, where, getDocs, writeBatch, deleteDoc } from 'firebase/firestore';
+import { sendPasswordResetEmail } from 'firebase/auth';
+import { auth } from '../../firebase';
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject, uploadString } from 'firebase/storage'; // <-- Sumamos funciones de Storage
 import FooterSimple from '../../components/FooterSimple';
 import { useAuth } from '../../context/AuthContext';
@@ -331,6 +333,7 @@ export default function EditorProfesional() {
   const [openSection, setOpenSection] = useState(null);
   const [cropModal, setCropModal] = useState({ isOpen: false, imageSrc: null, targetId: null, type: null, caseId: null });
   const [saveStatus, setSaveStatus] = useState('idle');
+const [tooltipHintVisto, setTooltipHintVisto] = useState(true); 
 
   const [planType, setPlanType] = useState('pro');
   const [tempSelectedPlan, setTempSelectedPlan] = useState('pro'); 
@@ -342,6 +345,14 @@ export default function EditorProfesional() {
     const fetchUserData = async () => {
       try {
         if (!currentUser?.uid) return;
+
+        // Revisamos el hint SIEMPRE, independientemente de si hay perfil cargado
+        const userDocSnapHint = await getDoc(doc(db, 'usuarios', currentUser.uid));
+        if (userDocSnapHint.exists()) {
+          setTooltipHintVisto(userDocSnapHint.data().tooltipHintVisto ?? false);
+        } else {
+          setTooltipHintVisto(false);
+        }
         
         // Buscamos en la base de datos usando el UID real del profesional logueado
         const docRef = doc(db, 'profesionales', currentUser.uid);
@@ -349,10 +360,15 @@ export default function EditorProfesional() {
         
         if (docSnap.exists()) {
           const dbData = docSnap.data();
+          // Cargamos el email desde Firebase Auth directamente
+          dbData.cuentaEmail = auth.currentUser?.email || '';
           // Leemos socioVitalicio del documento del usuario en la colección usuarios
           const userDocSnap = await getDoc(doc(db, 'usuarios', currentUser.uid));
           if (userDocSnap.exists()) {
             dbData.socioVitalicio = userDocSnap.data().socioVitalicio || false;
+            setTooltipHintVisto(userDocSnap.data().tooltipHintVisto ?? false);
+          } else {
+            setTooltipHintVisto(false);
           }
           
           // Buscamos los papers en la colección global
@@ -390,6 +406,7 @@ console.log("🔍 TRAYECTORIA CRUDA:", JSON.stringify(dataCompleta.trayectoria, 
   nombre: '',
   especialidad: '',
   matricula: '',
+  tipoMatricula: 'MP',
   provincia: 'Buenos Aires',
   bio: '',
   foto: '',
@@ -1071,7 +1088,7 @@ if (!formData.nombre.trim() || !formData.especialidad.trim() || !formData.foto |
             <nav className="flex flex-col gap-1.5 pb-2 md:pb-0 bg-white md:bg-transparent p-2 md:p-0 rounded-2xl md:rounded-none border md:border-none border-gray-100 shadow-sm md:shadow-none">
               
               <button onClick={() => setActiveTab('cuenta')} className={`flex items-center justify-between px-4 py-3.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap outline-none ${activeTab === 'cuenta' ? 'bg-[#2D6A6A]/10 text-[#1A3D3D]' : 'text-gray-500 hover:bg-white hover:text-[#4DB6AC]'}`}>
-                <div className="flex items-center gap-3"><User className={`w-5 h-5 ${activeTab === 'cuenta' ? 'text-[#2D6A6A]' : 'text-gray-400'}`} /> Sobre mi cuenta</div>
+                <div className="flex items-center gap-3"><User className={`w-5 h-5 ${activeTab === 'cuenta' ? 'text-[#2D6A6A]' : 'text-gray-400'}`} /> Sobre mi plan</div>
               </button>
               
               <button onClick={() => setActiveTab('perfil')} className={`flex items-center justify-between px-4 py-3.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap outline-none ${activeTab === 'perfil' ? 'bg-[#2D6A6A]/10 text-[#1A3D3D]' : 'text-gray-500 hover:bg-white hover:text-[#4DB6AC]'}`}>
@@ -1106,6 +1123,20 @@ if (!formData.nombre.trim() || !formData.especialidad.trim() || !formData.foto |
               </button>
 
             </nav>
+
+            {/* CAJA VER PERFIL DE EJEMPLO */}
+            <div className="mt-4 bg-[#1A3D3D]/5 border border-[#1A3D3D]/10 rounded-2xl p-4 hidden md:block">
+              <p className="text-xs font-bold text-[#1A3D3D] leading-snug mb-3">¿Querés ver cómo quedaría tu perfil público?</p>
+              <a
+                href="/profesional/mercedes-arenas"
+                target="_blank"
+                rel="noreferrer"
+                className="w-full py-2.5 px-4 bg-white border border-gray-200 rounded-xl text-[11px] font-black text-[#2D6A6A] uppercase tracking-widest hover:border-[#4DB6AC] hover:text-[#4DB6AC] transition-all flex items-center justify-center gap-1.5 group shadow-sm"
+              >
+                Ver perfil de ejemplo <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+              </a>
+            </div>
+
           </div>
 
           {/* COLUMNA DERECHA: ÁREA PRINCIPAL */}
@@ -1139,15 +1170,15 @@ if (!formData.nombre.trim() || !formData.especialidad.trim() || !formData.foto |
             </div>
 
             {activeTab === 'cuenta' && (
-              <div className="w-full bg-white rounded-[32px] shadow-sm border border-gray-100 p-6 md:p-10 animate-in fade-in duration-300 min-h-[500px]">
+              <div className="w-full bg-white rounded-[32px] shadow-sm border border-gray-100 p-6 md:p-10 animate-in fade-in duration-300">
                 
-                <h3 className="text-2xl font-black text-[#1A3D3D] mb-2 font-['Montserrat']">Sobre mi cuenta</h3>
-                <p className="text-sm text-gray-500 mb-6">Información privada para el acceso a la plataforma y facturación.</p>
+                <h3 className="text-2xl font-black text-[#1A3D3D] mb-2 font-['Montserrat']">Sobre mi plan</h3>
+                <p className="text-sm text-gray-500 mb-6">Información privada para la facturación.</p>
 
                 <div className="max-w-2xl">
                   
                   {/* ESTADO DE MENSUALIDAD DINÁMICO */}
-                  <div className="mb-8 pb-8 border-b border-gray-100">
+                  <div>
                      <h4 className="flex items-center gap-2 text-sm font-bold text-[#1A3D3D] uppercase tracking-widest leading-none mb-4">
                        <CreditCard className="w-5 h-5 text-[#2D6A6A]" /> Estado de la suscripción
                      </h4>
@@ -1208,20 +1239,7 @@ if (!formData.nombre.trim() || !formData.especialidad.trim() || !formData.foto |
                   )}
                   </div>
 
-                  {/* DATOS DE ACCESO */}
-                  <div>
-                      <h4 className="flex items-center gap-2 text-sm font-bold text-[#1A3D3D] uppercase tracking-widest leading-none mb-5">
-                       <User className="w-5 h-5 text-[#2D6A6A]" /> Datos de Acceso
-                     </h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 items-start">
-                         <InputGroup label="Email de Acceso" id="cuentaEmail" type="email" value={formData.cuentaEmail} readOnly tooltip="Este email está vinculado a tu cuenta y no puede modificarse desde aquí." />
-                         <InputGroup label="Contraseña" id="cuentaPassword" type="password" value={formData.cuentaPassword} onChange={handleChange} placeholder="••••••••" tooltip="Modificá este campo solo si querés cambiar tu contraseña." />
-                         <div className="md:col-span-2">
-                           <InputGroup label="Teléfono de Recuperación" id="cuentaTelefono" type="tel" value={formData.cuentaTelefono} readOnly tooltip="Número validado para la recuperación de la cuenta." />
-                         </div>
-                      </div>
-                  </div>
-
+                
                 </div>
               </div>
             )}
@@ -1279,7 +1297,35 @@ if (!formData.nombre.trim() || !formData.especialidad.trim() || !formData.foto |
                     
                     {/* IDENTIDAD PROFESIONAL */}
                     <Accordion title="Identidad Profesional" icon={User} isOpen={openSection === 'identidad'} onToggle={() => setOpenSection(openSection === 'identidad' ? null : 'identidad')}>
-                      <div className="flex flex-col sm:flex-row gap-8 mb-8 mt-2 md:mt-0">
+                      {!tooltipHintVisto && (
+  <div className="flex flex-col gap-3 bg-[#2D6A6A]/8 border border-[#2D6A6A]/20 rounded-2xl px-4 py-4 mb-6 animate-in fade-in slide-in-from-top-2 duration-300">
+  <div className="flex items-start gap-3">
+    <div className="w-8 h-8 bg-[#2D6A6A]/15 rounded-xl flex items-center justify-center shrink-0 mt-0.5">
+      <Info className="w-4 h-4 text-[#2D6A6A]" />
+    </div>
+    <div className="flex-1 min-w-0">
+      <p className="text-sm font-bold text-[#1A3D3D] mb-0.5">¿Ves los íconos <span className="inline-flex items-center justify-center w-4 h-4 bg-[#2D6A6A]/15 rounded-full text-[#2D6A6A] text-[10px] font-black">i</span> junto a cada campo?</p>
+      <p className="text-sm text-gray-500 font-medium leading-relaxed">Tocálos para ver consejos y explicaciones sobre cada dato. Te ayudan a completar tu perfil de la mejor manera.</p>
+    </div>
+  </div>
+  <button
+    type="button"
+    onClick={async () => {
+      setTooltipHintVisto(true);
+      try {
+        await setDoc(doc(db, 'usuarios', currentUser.uid), { tooltipHintVisto: true }, { merge: true });
+      } catch (e) {
+        console.error("Error guardando hint:", e);
+      }
+    }}
+    className="w-full text-[11px] font-black text-[#2D6A6A] uppercase tracking-widest hover:text-[#1A3D3D] transition-colors bg-white border border-[#2D6A6A]/20 px-3 py-2.5 rounded-xl shadow-sm"
+  >
+    Entendido
+  </button>
+</div>
+)}
+
+<div className="flex flex-col sm:flex-row gap-8 mb-8 mt-2 md:mt-0">
                         
                         {/* CONTENEDOR FOTO PRINCIPAL */}
                         {/* Agregamos w-32 h-32 al div padre para contener todo el bloque */}
@@ -1316,7 +1362,7 @@ if (!formData.nombre.trim() || !formData.especialidad.trim() || !formData.foto |
                         <div className="flex-1 text-left flex flex-col justify-center">
                           <h3 className="text-sm font-bold text-[#1A3D3D] mb-2 uppercase tracking-wide flex items-center">
                             Fotografía de Perfil <span className="text-red-400 ml-1">*</span>
-                            <Tooltip text="Usa una foto vertical o cuadrada. Una buena iluminación transmite más confianza a los tutores y colegas." />
+                            <Tooltip text="Usa una foto vertical o cuadrada. Tener ambo y una buena iluminación transmite más confianza a los tutores y colegas." />
                           </h3>
                           <p className="text-xs text-gray-500 mb-4 leading-relaxed">Sube una imagen profesional. Formatos PNG o JPG. Máx 2MB.</p>
                           
@@ -1344,9 +1390,34 @@ if (!formData.nombre.trim() || !formData.especialidad.trim() || !formData.foto |
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
-                        <InputGroup label="Nombre Completo" id="nombre" value={formData.nombre} onChange={handleChange} required tooltip="Ej: Dra. Clara Valdez" />
+                        <InputGroup label="Nombre Completo" id="nombre" value={formData.nombre} onChange={handleChange} required  />
                         <InputGroup label="Especialidad Principal" id="especialidad" value={formData.especialidad} onChange={handleChange} required tooltip="Tu título principal. Es lo primero que verán los usuarios bajo tu nombre." />
-                        <InputGroup label="Matrícula" id="matricula" value={formData.matricula} onChange={handleChange} required tooltip="Ingresa únicamente los números de tu matrícula profesional." />
+                        <div className="mb-6 w-full">
+                          <label className="flex items-center text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">
+                            Matrícula <span className="text-red-400 ml-1">*</span>
+                            <Tooltip text="Ingresá únicamente los números de tu matrícula profesional." />
+                          </label>
+                          <div className="flex gap-0 rounded-2xl overflow-hidden border border-gray-200 bg-gray-50/50 focus-within:border-[#2D6A6A] transition-colors">
+                            <select
+                              id="tipoMatricula"
+                              value={formData.tipoMatricula || 'MP'}
+                              onChange={handleChange}
+                              className="bg-transparent border-none border-r border-gray-200 px-4 py-3.5 text-base font-black focus:outline-none text-[#1A3D3D] shrink-0 w-[85px] cursor-pointer"
+                            >
+                              <option value="MP">MP</option>
+                              <option value="MN">MN</option>
+                            </select>
+                            <div className="w-px bg-gray-200 shrink-0"></div>
+                            <input
+                              id="matricula"
+                              type="text"
+                              value={formData.matricula}
+                              onChange={handleChange}
+                              placeholder="Ej: 12345"
+                              className="flex-1 bg-transparent border-none px-5 py-3.5 text-base font-medium focus:outline-none text-[#1A3D3D]"
+                            />
+                          </div>
+                        </div>
                         <div className="mb-6 text-left">
                           <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 block ml-1">Provincia Base</label>
                           <select id="provincia" value={formData.provincia} onChange={handleChange} className="w-full bg-gray-50/50 border border-gray-200 rounded-2xl px-5 py-3.5 text-base font-medium focus:outline-none focus:border-[#2D6A6A] text-[#1A3D3D] shadow-sm transition-colors">
@@ -1667,29 +1738,18 @@ if (!formData.nombre.trim() || !formData.especialidad.trim() || !formData.foto |
                       })()}
                     </Accordion>
 
+
+
                     {/* CONTACTO (Redes sociales en 3 Columnas) */}
                     <Accordion title="Contacto y Canales" icon={Smartphone} isOpen={openSection === 'contacto'} onToggle={() => setOpenSection(openSection === 'contacto' ? null : 'contacto')}>
                       <InputGroup label="Email Público" id="emailContacto" type="email" value={formData.emailContacto} onChange={handleChange} required tooltip="Este es el email que verán las personas en tu perfil públic, sirve para que te contacten directamente." />
-                      <div className="flex items-center gap-2 mb-4 mt-6 border-t border-gray-100 pt-6 text-left">
-                        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Redes Sociales (Opcional)</h3>
-                        <Tooltip text="Copia el link (URL) de tu perfil y pégalo aquí. Si dejas el campo vacío, el ícono correspondiente no aparecerá en tu perfil público." />
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <InputGroup label="Instagram" id="instagram" value={formData.instagram} onChange={handleChange} placeholder="Link de perfil" canTest />
-                        <InputGroup label="LinkedIn" id="linkedin" value={formData.linkedin} onChange={handleChange} placeholder="Link de perfil" canTest />
-                        <InputGroup label="Facebook" id="facebook" value={formData.facebook} onChange={handleChange} placeholder="Link de perfil" canTest />
-                      </div>
-                      
-                      <div className="w-full h-px bg-gray-100 my-6"></div>
-                      
-                     
                       <div className="mt-6">
   <ToggleSwitch label="Botón de WhatsApp" checked={formData.whatsappActivo} onChange={(v) => setFormData(p => ({...p, whatsappActivo: v}))} tooltip="Aparecerá un botón verde en tu perfil para chats." />
   {formData.whatsappActivo && (
     <div className="mt-4 space-y-4 animate-in slide-in-from-top-2 duration-300">
-      <InputGroup label="Número de WhatsApp (con código de país)" id="whatsappNum" value={formData.whatsappNum} onChange={handleChange} placeholder="Ej: 54911..." required={formData.whatsappActivo} />
+      <InputGroup label="Tu número de WhatsApp (con código de país)" id="whatsappNum" value={formData.whatsappNum} onChange={handleChange} placeholder="Ej: 54911..." required={formData.whatsappActivo} />
       
-      {/* VISIBILIDAD DEL WHATSAPP */}
+{/* VISIBILIDAD DEL WHATSAPP */}
       <div className="bg-gray-50 border border-gray-100 rounded-2xl p-4">
         <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3">¿Quién puede ver tu WhatsApp?</p>
         <div className="flex flex-col gap-2">
@@ -1725,9 +1785,22 @@ if (!formData.nombre.trim() || !formData.especialidad.trim() || !formData.foto |
           </label>
         </div>
       </div>
+      
     </div>
   )}
 </div>
+
+                      <div className="w-full h-px bg-gray-100 my-6"></div>
+
+                      <div className="flex items-center gap-2 mb-4 text-left">
+                        <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Redes Sociales (Opcional)</h3>
+                        <Tooltip text="Copia el link (URL) de tu perfil y pégalo aquí. Si dejas el campo vacío, el ícono correspondiente no aparecerá en tu perfil público." />
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <InputGroup label="Instagram" id="instagram" value={formData.instagram} onChange={handleChange} placeholder="Link de perfil" canTest />
+                        <InputGroup label="LinkedIn" id="linkedin" value={formData.linkedin} onChange={handleChange} placeholder="Link de perfil" canTest />
+                        <InputGroup label="Facebook" id="facebook" value={formData.facebook} onChange={handleChange} placeholder="Link de perfil" canTest />
+                      </div>
                     </Accordion>
                   </div>
                 </div>
@@ -2095,6 +2168,19 @@ if (!formData.nombre.trim() || !formData.especialidad.trim() || !formData.foto |
             {/* ========================================================================= */}
             {/* LINK INFERIOR PARA VER PERFIL */}
             {/* ========================================================================= */}
+            {/* CAJA VER PERFIL DE EJEMPLO — solo móvil */}
+            <div className="md:hidden mt-6 bg-[#1A3D3D]/5 border border-[#1A3D3D]/10 rounded-2xl p-4">
+              <p className="text-xs font-bold text-[#1A3D3D] leading-snug mb-3">¿Querés ver cómo quedaría tu perfil público?</p>
+              
+                href="/profesional/mercedes-arenas"
+                target="_blank"
+                rel="noreferrer"
+                className="w-full py-2.5 px-4 bg-white border border-gray-200 rounded-xl text-[11px] font-black text-[#2D6A6A] uppercase tracking-widest hover:border-[#4DB6AC] hover:text-[#4DB6AC] transition-all flex items-center justify-center gap-1.5 group shadow-sm"
+              <a>
+                Ver perfil de ejemplo 
+                          </a>
+            </div>
+
             <div className="flex flex-col md:flex-row items-center justify-center gap-3 mt-8 pb-4">
               <button
                 onClick={handleSaveData}
