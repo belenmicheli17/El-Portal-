@@ -326,19 +326,28 @@ const BarraFiltros = ({
                     </h3>
 
                     <div className={`overflow-hidden transition-all duration-300 ease-in-out lg:max-h-none lg:opacity-100 ${openSection === 'especialidad' ? 'max-h-[800px] opacity-100 pb-4 lg:pb-0' : 'max-h-0 opacity-0'}`}>
-                      <div className="flex flex-wrap gap-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                        {especialidadesData.map(e => {
-                          const isActive = filtros.especialidades.includes(e.nombre_mostrar);
-                          return (
-                            <span 
-                              key={e.id} 
-                              onClick={() => toggleFiltro('especialidades', e.nombre_mostrar)}
-                              className={`px-3 py-1.5 text-[12px] font-medium rounded-xl cursor-pointer transition-colors ${isActive ? 'bg-[#2D6A6A] text-white shadow-sm' : 'bg-[#F4F7F7] text-[#666666] hover:bg-gray-200'}`}
-                            >
-                              {e.nombre_mostrar}
-                            </span>
-                          )
-                        })}
+                      <div className="flex flex-col gap-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                        {especialidadesData.map(grupo => (
+                          <div key={grupo.id}>
+                            <p className="text-[10px] font-black text-[#1A3D3D] uppercase tracking-[0.15em] mb-2 opacity-50">
+                              {grupo.grupo}
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              {grupo.opciones.map(opcion => {
+                                const isActive = filtros.especialidades.includes(opcion);
+                                return (
+                                  <span
+                                    key={opcion}
+                                    onClick={() => toggleFiltro('especialidades', opcion)}
+                                    className={`px-3 py-1.5 text-[12px] font-medium rounded-xl cursor-pointer transition-colors ${isActive ? 'bg-[#2D6A6A] text-white shadow-sm' : 'bg-[#F4F7F7] text-[#666666] hover:bg-gray-200'}`}
+                                  >
+                                    {opcion}
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </div>
@@ -373,7 +382,7 @@ const BarraFiltros = ({
                                 }}
                                 className="w-4 h-4 accent-white rounded cursor-pointer" 
                               />
-                              Atención a domicilio
+                              Profesional con atención a domicilio
                             </label>
                             <label className={`flex items-center gap-2 cursor-pointer p-2.5 rounded-[16px] border text-[12px] font-medium transition-colors ${filtros.guardia24hs ? 'bg-red-500 text-white border-red-500' : 'bg-red-50 border-red-100 text-red-600 hover:bg-red-100/50'}`}>
                               <input 
@@ -387,7 +396,7 @@ const BarraFiltros = ({
                                 }}
                                 className="w-4 h-4 accent-white rounded cursor-pointer" 
                               />
-                              Guardia 24hs
+                              Clínica con guardia 24hs
                             </label>
                           </div>
                         </div>

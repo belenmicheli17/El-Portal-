@@ -167,12 +167,24 @@ const PASOS_CARTILLA = [
         const profesionalesData = [];
         snapProfesionales.forEach((doc) => {
           const data = doc.data();
+          const opcionesProfesional = data.servicios
+            ? Array.isArray(data.servicios)
+              ? data.servicios.map(s => s.titulo)
+              : Object.values(data.servicios)
+                  .filter(s => s.activo)
+                  .flatMap(s => [
+                    ...(s.subOpcionesSeleccionadas || []),
+                    ...(s.serviciosPersonalizados || [])
+                  ])
+            : [];
+
           profesionalesData.push({
             ...data,
             id: data.slug || doc.id,
             tipo: 'profesional',
             domicilio: data.atiendeDomicilio || false,
-            servicios: data.servicios ? data.servicios.map(s => s.titulo) : []
+            servicios: opcionesProfesional,
+            opcionesFiltro: opcionesProfesional
           });
         });
 
@@ -181,12 +193,24 @@ const PASOS_CARTILLA = [
           const data = doc.data();
           // Solo mostramos clínicas que tengan nombre y dirección cargados
           if (!data.nombre?.trim()) return;
+
+          // Extraemos las sub-opciones seleccionadas para que el filtro de especialidades funcione
+          const opcionesClinica = data.servicios && !Array.isArray(data.servicios)
+            ? Object.values(data.servicios)
+                .filter(s => s.activo)
+                .flatMap(s => [
+                  ...(s.subOpcionesSeleccionadas || []),
+                  ...(s.serviciosPersonalizados || [])
+                ])
+            : [];
+
           clinicasData.push({
             ...data,
             id: data.slug || doc.id,
             tipo: 'clinica',
-            // Extraemos los nombres de los servicios activos para las etiquetas
-            servicios: data.servicios
+            opcionesFiltro: opcionesClinica,
+            // Extraemos los nombres de los servicios activos para las etiquetas visuales
+            servicios: data.servicios && !Array.isArray(data.servicios)
               ? Object.entries(data.servicios)
                   .filter(([_, s]) => s.activo)
                   .map(([_, s]) => {
@@ -230,13 +254,13 @@ const PASOS_CARTILLA = [
 
   const getParam = (key) => searchParams.get(key) ? searchParams.get(key).split(',') : [];
 
-  const filtros = {
-    zonas: getParam('zonas'),
-    mascotas: getParam('mascotas'),
-    especialidades: getParam('especialidades'),
+  const filtros = React.useMemo(() => ({
+    zonas: searchParams.get('zonas') ? searchParams.get('zonas').split(',') : [],
+    mascotas: searchParams.get('mascotas') ? searchParams.get('mascotas').split(',') : [],
+    especialidades: searchParams.get('especialidades') ? searchParams.get('especialidades').split(',') : [],
     domicilio: searchParams.get('domicilio') === 'true',
     guardia24hs: searchParams.get('guardia24hs') === 'true'
-  };
+  }), [searchParams]);
 
   
 
@@ -263,12 +287,26 @@ const PASOS_CARTILLA = [
     }
     
     // Filtros de Botones (esto se mantiene igual)
+    console.log('filtros activos:', JSON.stringify(filtros));
     if (filtros.zonas.length > 0 && !filtros.zonas.includes(v.provincia)) return false;
-    if (filtros.especialidades.length > 0 && v.tipo === 'profesional' && !filtros.especialidades.includes(v.especialidad)) return false;
+    if (filtros.especialidades.length > 0) {
+      if (v.tipo === 'profesional') {
+        // Busca en subOpcionesSeleccionadas y serviciosPersonalizados de todos los grupos activos
+        const opcionesProfesional = v.opcionesFiltro || v.servicios || [];
+        const tieneAlguna = filtros.especialidades.some(f => opcionesProfesional.includes(f));
+        if (!tieneAlguna) return false;
+      } else if (v.tipo === 'clinica') {
+        // Para clínicas: las opciones ya vienen procesadas en el array "servicios"
+        const opcionesClinica = v.opcionesFiltro || (Array.isArray(v.servicios) ? v.servicios : []);
+        const tieneAlguna = filtros.especialidades.some(f => opcionesClinica.includes(f));
+        if (!tieneAlguna) return false;
+      }
+    }
     if (filtros.domicilio && !v.domicilio) return false;
     if (filtros.guardia24hs && !v.guardia24hs) return false;
     
-    return true; // Si pasó todas las trabas, se muestra
+    console.log('profesional:', v.nombre, '| opcionesFiltro:', v.opcionesFiltro, '| filtros.especialidades:', filtros.especialidades);
+    return true;
   });
   
  return (
@@ -398,7 +436,7 @@ const PASOS_CARTILLA = [
                       <article
                         key={item.id}
                         onClick={() => navigate(`/${item.tipo}/${item.id}`)}
-                        className={`bg-white rounded-[24px] p-4 sm:p-5 border border-gray-100 shadow-sm hover:border-[#2D6A6A]/30 hover:shadow-[0_15px_30px_rgba(45,106,106,0.08)] transition-all duration-300 ease-in-out cursor-pointer group flex flex-col h-full min-h-[170px] sm:min-h-[220px] relative mt-6 sm:mt-4 z-20 ${isProfesional ? 'text-center' : ''}`}
+                        className={`bg-white rounded-[24px] p-4 sm:p-5 border border-gray-100 shadow-sm hover:border-[#2D6A6A]/30 hover:shadow-[0_15px_30px_rgba(45,106,106,0.08)] transition-all duration-300 ease-in-out cursor-pointer group flex flex-col relative mt-6 sm:mt-4 z-20 ${isProfesional ? 'text-center' : ''}`}
                       >
                         {/* BADGES FLOTANTES */}
                         {isProfesional ? (
@@ -442,14 +480,22 @@ const PASOS_CARTILLA = [
                                 {lastName && <span className="block truncate">{lastName}</span>}
                               </h2>
                             </div>
-                            <div className="mb-2">
+                            <div className="mb-0 flex flex-col gap-1.5">
                               <span className="inline-flex flex-col justify-center bg-[#F4F7F7] px-3 py-2 rounded-xl w-full">
-                                <span className="text-[#2D6A6A] text-[11px] sm:text-[12px] font-semibold leading-[1.3] truncate">
+                                <span className="text-[#2D6A6A] text-[12px] sm:text-[13px] font-semibold leading-[1.3] break-words">
                                   {item.especialidad}
                                 </span>
                               </span>
+                              {item.opcionesFiltro && item.opcionesFiltro.length > 0 && (
+                                <span className="px-3 pb-0 pt-1 w-full text-[11px] sm:text-[12px] font-medium text-[#333333] leading-relaxed">
+                                  {item.opcionesFiltro.slice(0, 4).join(', ')}
+                                  {item.opcionesFiltro.length > 4 && (
+                                    <span className="font-bold text-gray-400"> +{item.opcionesFiltro.length - 4}</span>
+                                  )}
+                                </span>
+                              )}
                             </div>
-                            <div className="flex items-center justify-between pt-2 border-t border-gray-50 mt-auto">
+                            <div className="flex items-center justify-between pt-2 border-t border-gray-50 mt-2">
                               <div className="flex items-center gap-1 text-[#666666] font-medium text-[11px] sm:text-[12px] min-w-0 max-w-[70%]">
                                 <MapPin className="w-3.5 h-3.5 shrink-0" />
                                 <span className="truncate font-bold text-[#1A3D3D]">{item.provincia}</span>

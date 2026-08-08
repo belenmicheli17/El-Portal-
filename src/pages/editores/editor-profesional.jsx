@@ -9,6 +9,7 @@ import { auth } from '../../firebase';
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject, uploadString } from 'firebase/storage'; // <-- Sumamos funciones de Storage
 import FooterSimple from '../../components/FooterSimple';
 import { useAuth } from '../../context/AuthContext';
+import especialidadesData from '../../data/especialidades.json';
 import { 
   Camera, Info, AlertCircle, Save, X, Plus, Trash2, Crown,
   ArrowUp, ArrowDown, MapPin, ShieldCheck, Check, ArrowLeft,
@@ -333,6 +334,8 @@ export default function EditorProfesional() {
   const [openSection, setOpenSection] = useState(null);
   const [cropModal, setCropModal] = useState({ isOpen: false, imageSrc: null, targetId: null, type: null, caseId: null });
   const [saveStatus, setSaveStatus] = useState('idle');
+  const [gruposExpandidos, setGruposExpandidos] = useState({});
+  const [nuevosServicios, setNuevosServicios] = useState({});
 const [tooltipHintVisto, setTooltipHintVisto] = useState(true); 
 
   const [planType, setPlanType] = useState('pro');
@@ -1810,97 +1813,234 @@ if (!formData.nombre.trim() || !formData.especialidad.trim() || !formData.foto |
             {activeTab === 'servicios' && isPro && (
   <div className="w-full bg-white rounded-[32px] shadow-sm border border-gray-100 p-6 md:p-10 relative animate-in fade-in duration-300 min-h-[500px]">
     <div className="mb-8">
-       <h3 className="text-2xl font-black text-[#1A3D3D] font-['Montserrat']">Servicios Médicos</h3>
-       <p className="text-sm text-gray-500 mt-1">Detalla las prácticas específicas que realizás.</p>
+      <h3 className="text-2xl font-black text-[#1A3D3D] font-['Montserrat']">Servicios Médicos</h3>
+      <p className="text-sm text-gray-500 mt-1">Seleccioná las áreas en las que trabajás. Podés agregar una descripción opcional por grupo.</p>
     </div>
 
-    <div className="space-y-4">
-      {formData.servicios.map((item, index) => {
-        // Lista de íconos disponibles para este ítem
-        const iconsList = [
-          { name: 'Stethoscope', comp: <Stethoscope className="w-5 h-5" />, bigComp: <Stethoscope className="w-6 h-6" /> },
-          { name: 'Syringe', comp: <Syringe className="w-5 h-5" />, bigComp: <Syringe className="w-6 h-6" /> },
-          { name: 'Activity', comp: <Activity className="w-5 h-5" />, bigComp: <Activity className="w-6 h-6" /> },
-          { name: 'Microscope', comp: <Microscope className="w-5 h-5" />, bigComp: <Microscope className="w-6 h-6" /> },
-          { name: 'Bone', comp: <IconoHueso className="w-5 h-5" />, bigComp: <IconoHueso className="w-6 h-6" /> },
-          { name: 'Heart', comp: <Heart className="w-5 h-5" />, bigComp: <Heart className="w-6 h-6" /> },
-          { name: 'Pill', comp: <IconoPildora className="w-5 h-5" />, bigComp: <IconoPildora className="w-6 h-6" /> },
-          { name: 'Brain', comp: <Brain className="w-5 h-5" />, bigComp: <Brain className="w-6 h-6" /> },    
-          { name: 'Turtle', comp: <Turtle className="w-5 h-5" />, bigComp: <Turtle className="w-6 h-6" /> },
-          { name: 'Briefcase', comp: <Briefcase className="w-5 h-5" />, bigComp: <Briefcase className="w-6 h-6" /> },
-          { name: 'ShieldCheck', comp: <ShieldCheck className="w-5 h-5" />, bigComp: <ShieldCheck className="w-6 h-6" /> },
-          { name: 'FileText', comp: <FileText className="w-5 h-5" />, bigComp: <FileText className="w-6 h-6" /> },
-          { name: 'Clock', comp: <Clock className="w-5 h-5" />, bigComp: <Clock className="w-6 h-6" /> },
-          { name: 'Eye', comp: <Eye className="w-5 h-5" />, bigComp: <Eye className="w-6 h-6" /> },
-        ];
-        
-        // Buscamos el ícono seleccionado actualmente (si no hay, por defecto Stethoscope)
-        const activeIcon = iconsList.find(i => i.name === item.icono) || iconsList[0];
+    <div className="flex flex-col gap-3">
+      {especialidadesData.map(grupo => {
+        const grupoActual = formData.servicios[grupo.id] || { activo: false, subOpcionesSeleccionadas: [], desc: '', serviciosPersonalizados: [] };
+        const isActive = grupoActual.activo;
+        const seleccionadas = grupoActual.subOpcionesSeleccionadas || [];
+        const personalizados = grupoActual.serviciosPersonalizados || [];
+        const totalSeleccionadas = seleccionadas.length + personalizados.length;
+        const expandido = gruposExpandidos[grupo.id] || false;
+        const setExpandido = (val) => setGruposExpandidos(prev => ({ ...prev, [grupo.id]: typeof val === 'function' ? val(prev[grupo.id] || false) : val }));
+        const nuevoServicio = nuevosServicios[grupo.id] || '';
+        const setNuevoServicio = (val) => setNuevosServicios(prev => ({ ...prev, [grupo.id]: val }));
+
+        const toggleGrupo = () => {
+          if (!isActive) {
+            // Activar y abrir
+            setFormData(prev => ({
+              ...prev,
+              servicios: {
+                ...prev.servicios,
+                [grupo.id]: { ...grupoActual, activo: true }
+              }
+            }));
+            setExpandido(true);
+          } else {
+            // Solo colapsar/expandir sin desactivar
+            setExpandido(e => !e);
+          }
+        };
+
+        const desactivarGrupo = (e) => {
+          e.stopPropagation();
+          setFormData(prev => ({
+            ...prev,
+            servicios: {
+              ...prev.servicios,
+              [grupo.id]: { ...grupoActual, activo: false, subOpcionesSeleccionadas: [], serviciosPersonalizados: [] }
+            }
+          }));
+          setExpandido(false);
+        };
+
+        const agregarPersonalizado = () => {
+          const texto = nuevoServicio.trim();
+          if (!texto) return;
+          const capitalizado = texto.charAt(0).toUpperCase() + texto.slice(1);
+          if (personalizados.includes(capitalizado)) return;
+          setFormData(prev => ({
+            ...prev,
+            servicios: {
+              ...prev.servicios,
+              [grupo.id]: { ...grupoActual, serviciosPersonalizados: [...personalizados, capitalizado] }
+            }
+          }));
+          setNuevoServicio('');
+        };
+
+        const quitarPersonalizado = (srv) => {
+          setFormData(prev => ({
+            ...prev,
+            servicios: {
+              ...prev.servicios,
+              [grupo.id]: { ...grupoActual, serviciosPersonalizados: personalizados.filter(p => p !== srv) }
+            }
+          }));
+        };
 
         return (
-          <div key={item.id} className="bg-gray-50/50 p-5 rounded-2xl border border-gray-100 flex gap-4 text-left shadow-sm transition-all hover:shadow-md">
-            
-            {/* LADO IZQUIERDO: Ícono Seleccionado */}
-            <div className="shrink-0 flex flex-col justify-start">
-              {/* Caja idéntica a la del tacho de basura en tamaño, bordes y centrado. 
-                  El [&>svg] fuerza a que el IconoHueso obedezca el mismo tamaño que los demás. */}
-              <div className="w-12 h-12 bg-white rounded-xl border border-gray-200 shadow-sm flex items-center justify-center text-[#2D6A6A] [&>svg]:w-6 [&>svg]:h-6">
-                {activeIcon.bigComp}
+          <div key={grupo.id} className={`rounded-[20px] border transition-all duration-300 overflow-hidden ${isActive ? 'border-[#2D6A6A] bg-white shadow-sm' : 'border-gray-200 bg-gray-50/50'}`}>
+
+            {/* HEADER — siempre visible */}
+            <div
+              className="p-4 flex items-center gap-3 cursor-pointer select-none"
+              onClick={toggleGrupo}
+            >
+              {/* Checkbox de activación */}
+              <div
+                onClick={isActive ? desactivarGrupo : undefined}
+                className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors shrink-0 ${isActive ? 'bg-[#1A3D3D] border-[#1A3D3D]' : 'bg-white border-gray-300'}`}
+              >
+                {isActive && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
               </div>
+
+              {/* Nombre del grupo */}
+              <span className={`flex-1 text-sm font-black ${isActive ? 'text-[#1A3D3D]' : 'text-gray-500'}`}>
+                {grupo.grupo}
+              </span>
+
+              {/* Pills de seleccionadas (cuando está cerrado y activo) */}
+              {isActive && !expandido && totalSeleccionadas > 0 && (
+                <span className="text-[11px] font-bold text-[#2D6A6A] bg-[#2D6A6A]/10 px-2.5 py-1 rounded-full shrink-0">
+                  {totalSeleccionadas} seleccionada{totalSeleccionadas !== 1 ? 's' : ''}
+                </span>
+              )}
+
+              {/* Chevron */}
+              <ChevronDown className={`w-4 h-4 transition-transform duration-300 shrink-0 ${expandido ? 'rotate-180 text-[#2D6A6A]' : 'text-gray-300'}`} />
             </div>
 
-            {/* CENTRO: Formularios y Selector */}
-            <div className="flex-1 space-y-3">
-              <input type="text" value={item.titulo} placeholder="Nombre del servicio (Ej: Ecografía abdominal)" onChange={(e) => handleArrayUpdate('servicios', item.id, 'titulo', e.target.value)} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold focus:border-[#2D6A6A] outline-none" />
-              <textarea value={item.desc} placeholder="Descripción corta del procedimiento..." onChange={(e) => handleArrayUpdate('servicios', item.id, 'desc', e.target.value)} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm resize-none h-20 focus:border-[#2D6A6A] outline-none" />
-              
-              {/* SELECTOR DE ÍCONOS */}
-              <div>
-                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 block">Elegí un ícono para este servicio</label>
-                <div className="grid grid-cols-6 md:grid-cols-8 gap-2">
-                  {iconsList.map((icon) => (
-                    <button 
-                      type="button"
-                      key={icon.name}
-                      onClick={() => handleArrayUpdate('servicios', item.id, 'icono', icon.name)}
-                      /* Eliminamos padding (p-0), forzamos aspect-square con w-full, y agrandamos el SVG */
-                      className={`w-full aspect-square p-0 flex items-center justify-center rounded-xl border-2 transition-all [&_svg]:w-6 [&_svg]:h-6 md:[&_svg]:w-7 md:[&_svg]:h-7 ${item.icono === icon.name ? 'border-[#2D6A6A] bg-[#2D6A6A]/10 text-[#1A3D3D]' : 'border-transparent bg-white text-gray-500 hover:text-[#2D6A6A] hover:bg-gray-50 shadow-sm'}`}
-                    >
-                      {icon.comp}
-                    </button>
-                  ))}
+            {/* RESUMEN DE SELECCIONADAS — visible cuando cerrado y activo */}
+            {isActive && !expandido && totalSeleccionadas > 0 && (
+              <div className="px-4 pb-3 flex flex-wrap gap-1.5">
+                {seleccionadas.map(s => (
+                  <span key={s} className="text-[11px] font-medium bg-[#F4F7F7] text-[#2D6A6A] border border-[#2D6A6A]/20 px-2.5 py-1 rounded-full">{s}</span>
+                ))}
+                {personalizados.map(s => (
+                  <span key={s} className="text-[11px] font-medium bg-[#F4F7F7] text-[#666666] border border-gray-200 px-2.5 py-1 rounded-full">{s}</span>
+                ))}
+              </div>
+            )}
+
+            {/* CONTENIDO EXPANDIDO */}
+            {expandido && (
+              <div className="px-4 pb-5 border-t border-gray-100 pt-4 animate-in fade-in slide-in-from-top-2 duration-200">
+
+                {/* SUB-OPCIONES */}
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Especialidades</p>
+                <div className="flex flex-col gap-2 mb-4">
+                  {grupo.opciones.map(opcion => {
+                    const isChecked = seleccionadas.includes(opcion);
+                    return (
+                      <button
+                        key={opcion}
+                        type="button"
+                        onClick={() => {
+                          const nuevas = isChecked
+                            ? seleccionadas.filter(o => o !== opcion)
+                            : [...seleccionadas, opcion];
+                          setFormData(prev => ({
+                            ...prev,
+                            servicios: {
+                              ...prev.servicios,
+                              [grupo.id]: { ...grupoActual, subOpcionesSeleccionadas: nuevas }
+                            }
+                          }));
+                        }}
+                        className={`w-full justify-start px-4 py-2.5 rounded-xl text-[13px] font-bold border transition-colors flex items-center gap-3 ${isChecked ? 'bg-[#1A3D3D] text-white border-[#1A3D3D]' : 'bg-white text-gray-600 border-gray-200 hover:border-[#2D6A6A]'}`}
+                      >
+                        <div className={`w-4 h-4 rounded-[4px] border flex items-center justify-center shrink-0 ${isChecked ? 'bg-white border-white' : 'border-gray-300'}`}>
+                          {isChecked && <Check className="w-3 h-3 text-[#1A3D3D]" />}
+                        </div>
+                        <span className="text-left">{opcion}</span>
+                      </button>
+                    );
+                  })}
                 </div>
-              </div>
-            </div>
 
-            {/* LADO DERECHO: Acciones (Basura + Flechas) */}
-            <div className="flex flex-col gap-3 shrink-0 items-center border-l border-gray-200/50 pl-4 ml-2">
-              <button onClick={() => handleArrayRemove('servicios', item.id)} className="w-12 h-12 bg-white rounded-xl border border-gray-200 shadow-sm flex items-center justify-center text-gray-400 hover:text-white hover:bg-red-500 transition-colors" title="Eliminar servicio">
-                <Trash2 className="w-6 h-6" />
-              </button>
-              
-              {/* Contenedor tipo "píldora" para las flechitas */}
-              <div className="flex flex-col mt-auto bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                <button type="button" onClick={() => handleArrayMove('servicios', index, 'up')} disabled={index === 0} className="p-2 text-gray-400 hover:text-[#1A3D3D] hover:bg-gray-50 disabled:opacity-20 disabled:bg-transparent transition-colors" title="Mover arriba">
-                  <ArrowUp className="w-4 h-4" />
-                </button>
-                <div className="w-full h-[1px] bg-gray-100"></div>
-                <button type="button" onClick={() => handleArrayMove('servicios', index, 'down')} disabled={index === formData.servicios.length - 1} className="p-2 text-gray-400 hover:text-[#1A3D3D] hover:bg-gray-50 disabled:opacity-20 disabled:bg-transparent transition-colors" title="Mover abajo">
-                  <ArrowDown className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
+                {/* SERVICIOS PERSONALIZADOS YA AGREGADOS */}
+                {personalizados.length > 0 && (
+                  <div className="flex flex-col gap-2 mb-4">
+                    {personalizados.map(srv => (
+                      <div key={srv} className="w-full justify-start px-4 py-2.5 rounded-xl text-[13px] font-bold border bg-[#1A3D3D] text-white border-[#1A3D3D] flex items-center gap-3">
+                        <div className="w-4 h-4 rounded-[4px] bg-white border-white border flex items-center justify-center shrink-0">
+                          <Check className="w-3 h-3 text-[#1A3D3D]" />
+                        </div>
+                        <span className="flex-1 text-left">{srv}</span>
+                        <button
+                          type="button"
+                          onClick={() => quitarPersonalizado(srv)}
+                          className="shrink-0 opacity-60 hover:opacity-100 transition-opacity"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
 
+                {/* AGREGAR SERVICIO PERSONALIZADO */}
+                <div className="border-t border-gray-100 pt-4 mt-2">
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">¿No encontrás lo que buscás? Agregá uno propio</p>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={nuevoServicio}
+                      onChange={(e) => setNuevoServicio(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); agregarPersonalizado(); } }}
+                      placeholder="Ej: Acupuntura veterinaria..."
+                      className="flex-1 bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:border-[#2D6A6A] outline-none text-[#1A3D3D]"
+                    />
+                    <button
+                      type="button"
+                      onClick={agregarPersonalizado}
+                      className="bg-[#2D6A6A] text-white p-2.5 rounded-xl hover:bg-[#1A3D3D] transition-colors shrink-0"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* DESCRIPCIÓN OPCIONAL */}
+                <div className="mt-4">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 block">
+                    Descripción opcional del grupo
+                  </label>
+                  <textarea
+                    placeholder="Contá brevemente cómo trabajás en esta área..."
+                    value={grupoActual.desc || ''}
+                    maxLength={200}
+                    rows={2}
+                    onChange={(e) => {
+                      setFormData(prev => ({
+                        ...prev,
+                        servicios: {
+                          ...prev.servicios,
+                          [grupo.id]: { ...grupoActual, desc: e.target.value }
+                        }
+                      }));
+                    }}
+                    className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm resize-none focus:border-[#2D6A6A] outline-none text-[#1A3D3D] font-medium"
+                  />
+                  <p className={`text-right text-[10px] font-bold mt-1 ${(grupoActual.desc?.length || 0) >= 180 ? 'text-red-400' : 'text-gray-300'}`}>
+                    {grupoActual.desc?.length || 0} / 200
+                  </p>
+                </div>
+
+              </div>
+            )}
           </div>
         );
       })}
-      
-      <button onClick={() => handleArrayAdd('servicios', { titulo: "", desc: "", icono: "Stethoscope" })} className="w-full py-4 border-2 border-dashed border-[#2D6A6A]/30 bg-white rounded-xl text-[#2D6A6A] text-xs font-bold hover:bg-[#2D6A6A]/5 hover:border-[#2D6A6A] transition-colors uppercase tracking-widest flex items-center justify-center gap-2">
-        <Plus className="w-4 h-4" /> Añadir Actividad Médica
-      </button>
     </div>
   </div>
 )}
+        
             {activeTab === 'casos' && isPro && (
               <div className="w-full bg-white rounded-[32px] shadow-sm border border-gray-100 p-6 md:p-10 relative animate-in fade-in duration-300 min-h-[500px]">
                 <div className="mb-8 flex justify-between items-end">

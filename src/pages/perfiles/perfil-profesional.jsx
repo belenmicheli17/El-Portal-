@@ -3,12 +3,12 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../../firebase'; // Ajustá esta ruta hacia tu archivo firebase.js
 import { doc, collection, query, where, getDocs, getDoc } from 'firebase/firestore';
 import { useAuth } from '../../context/AuthContext';
-
+import especialidadesData from '../../data/especialidades.json';
 import { 
   ShieldCheck, MessageCircle, Star, Award, MapPin, Images, GalleryHorizontal, 
   ChevronRight, ChevronLeft, GraduationCap, Briefcase, Stethoscope, 
   Syringe, Send, Phone, Building2, Home, ChevronDown, 
-  Instagram, Linkedin, Facebook, Mail, User, X,
+  Instagram, Linkedin, Facebook, Mail, User, X, PawPrint,
   Activity, Microscope, Heart, Brain, Turtle, Camera,
   Clock, Eye, FileText, Sparkles, Globe, BookOpen, FileDown, Download, Check
 } from 'lucide-react';
@@ -612,21 +612,87 @@ setData({
 {activeTab === 'especialidad' && isPro && (
             <div className="space-y-8">
               {/* SERVICIOS */}
-              {data.servicios && data.servicios.length > 0 && (
-                <div>
-                  <h3 className="font-extrabold text-[16px] text-[#1A3D3D] font-['Montserrat'] uppercase tracking-widest mb-3 pl-2 text-left">Actualmente</h3>
-                  <div className="space-y-3">
-                    {data.servicios.map((s) => (
-                      <div key={s.id} className="bg-white p-5 rounded-2xl border border-gray-50 flex gap-4 items-center text-left">
-                        <div className="text-[#2D6A6A] shrink-0">{renderIcon(s.icono, "w-8 h-8")}</div>
-                        <div>
-                          <h4 className="font-bold font-['Montserrat'] text-[15px] text-[#1A3D3D] uppercase mb-1">{s.titulo}</h4>
-                          <p className="text-gray-500 text-[16px] leading-snug">{s.desc}</p>
-                        </div>
+              {data.servicios && (
+                (() => {
+                  // Normalizamos: soportamos formato viejo (array) y nuevo (objeto)
+                  const serviciosNormalizados = Array.isArray(data.servicios)
+                    ? data.servicios.map(s => ({ titulo: s.titulo, desc: s.desc }))
+                    : Object.entries(data.servicios)
+                        .filter(([_, s]) => s.activo)
+                        .flatMap(([grupoId, s]) => {
+                          const todasLasOpciones = [
+                            ...(s.subOpcionesSeleccionadas || []),
+                            ...(s.serviciosPersonalizados || [])
+                          ];
+                          if (todasLasOpciones.length === 0) return [];
+                          return [{
+                            grupoId,
+                            opciones: todasLasOpciones,
+                            desc: s.desc || ''
+                          }];
+                        });
+
+                  if (serviciosNormalizados.length === 0) return null;
+
+                  return (
+                    <div>
+                      <h3 className="font-extrabold text-[16px] text-[#1A3D3D] font-['Montserrat'] uppercase tracking-widest mb-3 pl-2 text-left">Actualmente</h3>
+                      <div className="space-y-3">
+                        {serviciosNormalizados.map((s, i) => (
+                          Array.isArray(data.servicios)
+                            ? (
+                              // Formato viejo: una tarjeta por servicio
+                              <div key={i} className="bg-white p-5 rounded-2xl border border-gray-50 flex gap-4 items-center text-left">
+                                <div className="text-[#2D6A6A] shrink-0">{renderIcon(s.icono, "w-8 h-8")}</div>
+                                <div>
+                                  <h4 className="font-bold font-['Montserrat'] text-[15px] text-[#1A3D3D] uppercase mb-1">{s.titulo}</h4>
+                                  <p className="text-gray-500 text-[16px] leading-snug">{s.desc}</p>
+                                </div>
+                              </div>
+                            ) : (
+                              // Formato nuevo: una tarjeta por grupo con título y pills
+                              <div key={s.grupoId} className="bg-white p-5 rounded-2xl border border-gray-50 text-left">
+                                {(() => {
+                                  const iconosGrupo = {
+                                    consulta_general: Stethoscope,
+                                    especialidades_medicas: Activity,
+                                    quirurgico_critico: IconoBisturi,
+                                    imagenes: Camera,
+                                    laboratorio: Microscope,
+                                    atencion_por_especie: PawPrint,
+                                    bienestar_comportamiento: Heart,
+                                    terapias_holisticas: Sparkles
+                                  };
+                                  const IconoGrupo = iconosGrupo[s.grupoId] || Stethoscope;
+                                  return (
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <IconoGrupo className="w-3.5 h-3.5 text-[#2D6A6A] shrink-0" />
+                                      <p className="text-[10px] font-black text-[#2D6A6A] uppercase tracking-widest opacity-70">
+                                        {especialidadesData.find(g => g.id === s.grupoId)?.grupo || s.grupoId}
+                                      </p>
+                                    </div>
+                                  );
+                                })()}
+                                <div className="flex flex-col gap-1.5 mb-2">
+                                  {s.opciones.map(opcion => (
+                                    <div key={opcion} className="flex items-center gap-2">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-[#2D6A6A] shrink-0" />
+                                      <span className="text-[12px] font-medium text-[#333333]">
+                                        {opcion}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                                {s.desc && (
+                                  <p className="text-gray-500 text-[14px] leading-relaxed font-medium mt-2 pt-2 border-t border-gray-100">{s.desc}</p>
+                                )}
+                              </div>
+                            )
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                </div>
+                    </div>
+                  );
+                })()
               )}
 
               {/* TRAYECTORIA */}
@@ -898,22 +964,83 @@ setData({
             {isPro && (
               <>
                 {/* SERVICIOS */}
-                {data.servicios && data.servicios.length > 0 && (
-                  <div id="actualmente" className="bg-[#F4F7F7]/60 p-10 md:p-16 border-t border-b border-gray-50">
-                    <div className="mb-10 text-left">
-                      <h2 className="text-[24px] md:text-[30px] font-extrabold text-[#1A3D3D] font-['Montserrat'] mb-2 uppercase tracking-tight">Actualmente</h2>
-                      <p className="text-gray-500 text-[17px] font-bold uppercase tracking-[0.2em] opacity-80 leading-none">¿En qué me especializo hoy en día?</p>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      {data.servicios.map((servicio) => (
-                        <div key={servicio.id} className="bg-white p-8 rounded-[36px] border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group">
-                          <div className="text-[#2D6A6A] mb-6 group-hover:text-[#1A3D3D] transition-colors">{renderIcon(servicio.icono, "w-10 h-10")}</div>
-                          <h4 className="font-bold font-['Montserrat'] text-[17px] text-[#1A3D3D] mb-3 uppercase tracking-wider">{servicio.titulo}</h4>
-                          <p className="text-gray-600 font-medium text-[17px] leading-relaxed">{servicio.desc}</p>
+                {data.servicios && (
+                  (() => {
+                    const serviciosNormalizados = Array.isArray(data.servicios)
+                      ? data.servicios.map(s => ({ titulo: s.titulo, desc: s.desc, icono: s.icono }))
+                      : Object.entries(data.servicios)
+                          .filter(([_, s]) => s.activo)
+                          .flatMap(([grupoId, s]) => {
+                            const todasLasOpciones = [
+                              ...(s.subOpcionesSeleccionadas || []),
+                              ...(s.serviciosPersonalizados || [])
+                            ];
+                            if (todasLasOpciones.length === 0) return [];
+                            return [{ grupoId, opciones: todasLasOpciones, desc: s.desc || '' }];
+                          });
+
+                    if (serviciosNormalizados.length === 0) return null;
+
+                    return (
+                      <div id="actualmente" className="bg-[#F4F7F7]/60 p-10 md:p-16 border-t border-b border-gray-50">
+                        <div className="mb-10 text-left">
+                          <h2 className="text-[24px] md:text-[30px] font-extrabold text-[#1A3D3D] font-['Montserrat'] mb-2 uppercase tracking-tight">Actualmente</h2>
+                          <p className="text-gray-500 text-[17px] font-bold uppercase tracking-[0.2em] opacity-80 leading-none">¿En qué me especializo hoy en día?</p>
                         </div>
-                      ))}
-                    </div>
-                  </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                          {serviciosNormalizados.map((s, i) => (
+                            Array.isArray(data.servicios)
+                              ? (
+                                // Formato viejo: una tarjeta por servicio con ícono
+                                <div key={i} className="bg-white p-8 rounded-[36px] border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group">
+                                  <div className="text-[#2D6A6A] mb-6 group-hover:text-[#1A3D3D] transition-colors">{renderIcon(s.icono, "w-10 h-10")}</div>
+                                  <h4 className="font-bold font-['Montserrat'] text-[17px] text-[#1A3D3D] mb-3 uppercase tracking-wider">{s.titulo}</h4>
+                                  <p className="text-gray-600 font-medium text-[17px] leading-relaxed">{s.desc}</p>
+                                </div>
+                              ) : (
+                                // Formato nuevo: una tarjeta por grupo con título y pills
+                                <div key={s.grupoId} className="bg-white p-8 rounded-[36px] border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group text-left">
+                                  {(() => {
+                                  const iconosGrupo = {
+                                    consulta_general: Stethoscope,
+                                    especialidades_medicas: Activity,
+                                    quirurgico_critico: IconoBisturi,
+                                    imagenes: Camera,
+                                    laboratorio: Microscope,
+                                    atencion_por_especie: PawPrint,
+                                    bienestar_comportamiento: Heart,
+                                    terapias_holisticas: Sparkles
+                                  };
+                                  const IconoGrupo = iconosGrupo[s.grupoId] || Stethoscope;
+                                  return (
+                                    <div className="flex items-center gap-2 mb-4">
+                                      <IconoGrupo className="w-4 h-4 text-[#2D6A6A] shrink-0" />
+                                      <h4 className="font-bold font-['Montserrat'] text-[13px] text-[#2D6A6A] uppercase tracking-widest opacity-70">
+                                        {especialidadesData.find(g => g.id === s.grupoId)?.grupo || s.grupoId}
+                                      </h4>
+                                    </div>
+                                  );
+                                })()}
+                                <div className="flex flex-col gap-2 mb-4">
+                                  {s.opciones.map(opcion => (
+                                    <div key={opcion} className="flex items-center gap-2">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-[#2D6A6A] shrink-0" />
+                                      <span className="text-[13px] font-medium text-[#333333]">
+                                        {opcion}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                                  {s.desc && (
+                                    <p className="text-gray-600 font-medium text-[15px] leading-relaxed mt-3 pt-3 border-t border-gray-50">{s.desc}</p>
+                                  )}
+                                </div>
+                              )
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()
                 )}
 
                 {/* TRAYECTORIA */}

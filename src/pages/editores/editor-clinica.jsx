@@ -11,6 +11,7 @@ import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 import { useAuth } from '../../context/AuthContext';
 import FooterSimple from '../../components/FooterSimple';
+import especialidadesData from '../../data/especialidades.json';
 import { 
   Camera, Info, AlertCircle, Save, X, Plus, Trash2, 
   ArrowUp, ArrowDown, MapPin, ShieldCheck, Check, ArrowLeft,
@@ -18,20 +19,21 @@ import {
   ArrowRight, ExternalLink, Heart, Lock, Zap, Clock, Crown,
   Menu, User, LayoutGrid, Edit, Briefcase, FileText, Undo2, Redo2, FileCheck, Building2, AlertTriangle, Syringe, Activity, Microscope, Stethoscope, Crop, Sparkles, Loader2, Globe, CreditCard, ArrowUpRight, Eye, EyeOff, MessageSquare
 } from 'lucide-react';
-
-// ==========================================
-// CATÁLOGO DE SERVICIOS PREDEFINIDOS
-// ==========================================
-const CATALOGO_SERVICIOS = [
-  { id: 'guardia', icono: Activity, titulo: 'Guardia e Internación', opciones: ['Terapia Intensiva (UTI)', 'Monitoreo Continuo', 'Oxigenoterapia', 'Transfusiones'] },
-  { id: 'consulta', icono: Stethoscope, titulo: 'Clínica Médica General', opciones: ['Clínica Médica', 'Geriatría y Gerontología', 'Nutrición', 'Comportamiento Animal - Etología', 'Enfermedades Infecciosas y Parasitarias'] },
-  { id: 'especialidades', icono: Award, titulo: 'Especialidades Médicas', opciones: ['Cardiología', 'Endocrinología', 'Dermatología', 'Neurología', 'Oftalmología', 'Oncología', 'Nefro y urología'] },
-  { id: 'cirugia', icono: Syringe, titulo: 'Quirófano y Cirugías', opciones: ['Cirugía y Anestesiología', 'Traumatología', 'Tejidos Blandos', 'Cirugía de Alta Complejidad'] },
-  { id: 'imagenes', icono: Microscope, titulo: 'Diagnóstico por Imágenes', opciones: ['Radiología', 'Ecografía', 'Tomografía (TAC)', 'Resonancia Magnética (RMN)'] },
-  { id: 'laboratorio', icono: FileText, titulo: 'Laboratorio Clínico Propio', opciones: ['Hematología', 'Bioquímica Clínica', 'Test PCR Infecciosas'] },
-  { id: 'odontologia', icono: Sparkles, titulo: 'Odontología', opciones: ['Limpieza por Ultrasonido', 'Extracciones Dentales', 'Cirugía Maxilofacial'] },
-  { id: 'rehabilitacion', icono: Activity, titulo: 'Fisiatría y Terapias', opciones: ['Fisiatría', 'Terapias Holísticas', 'Magnetoterapia'] },
-];
+const CATALOGO_SERVICIOS = especialidadesData.map(grupo => ({
+  id: grupo.id,
+  icono: {
+    consulta_general: Stethoscope,
+    especialidades_medicas: Award,
+    quirurgico_critico: Syringe,
+    imagenes: Microscope,
+    laboratorio: FileText,
+    atencion_por_especie: Activity,
+    bienestar_comportamiento: Heart,
+    terapias_holisticas: Sparkles,
+  }[grupo.id] || Stethoscope,
+  titulo: grupo.grupo,
+  opciones: grupo.opciones
+}));
 
 // ==========================================
 // COMPONENTES DE UI REUTILIZABLES
