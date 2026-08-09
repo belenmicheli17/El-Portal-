@@ -30,6 +30,7 @@ import SalaDeEspera from './pages/SalaDeEspera';
 
 // Panel Admin
 import RutaProtegidaAdmin from './components/admin/RutaProtegidaAdmin';
+import RutaProtegida from './components/admin/RutaProtegida';
 import AdminLayout from './pages/admin/AdminLayout';
 import DashboardAdmin from './pages/admin/DashboardAdmin';
 import GestionUsuarios from './pages/admin/GestionUsuarios';
@@ -127,10 +128,10 @@ export default function App() {
           {/* Cada página maneja su propio layout              */}
           {/* ================================================ */}
           <Route path="/Login" element={<Login />} />
-          <Route element={<PrivateLayout />}>
+          <Route element={<RutaProtegida useLayout />}>
   <Route path="/ecosistema" element={<Ecosistema />} />
 </Route>
-<Route element={<Outlet />}>
+<Route element={<RutaProtegida />}>
   <Route path="/editor-profesional" element={<Editor />} />
   <Route path="/editor-clinica" element={<EditorClinica />} />
   <Route path="/editor-proveedores" element={<EditorProveedor />} />

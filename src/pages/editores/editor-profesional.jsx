@@ -1993,7 +1993,7 @@ if (!formData.nombre.trim() || !formData.especialidad.trim() || !formData.foto |
                       value={nuevoServicio}
                       onChange={(e) => setNuevoServicio(e.target.value)}
                       onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); agregarPersonalizado(); } }}
-                      placeholder="Ej: Acupuntura veterinaria..."
+                     
                       className="flex-1 bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:border-[#2D6A6A] outline-none text-[#1A3D3D]"
                     />
                     <button

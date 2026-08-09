@@ -5,7 +5,7 @@ import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import {
    Lock, Eye, EyeOff,
-  Loader2, AlertCircle, X, Hospital, Store
+  Loader2, AlertCircle, X, Hospital, Store, LogIn, Loader
 } from "lucide-react";
 import { db } from "../firebase";
 import {
@@ -173,6 +173,12 @@ export default function SalaDeEspera() {
   const [cargando, setCargando] = useState(false);
   const [errorDrawer, setErrorDrawer] = useState('');
 const [linkCopiado, setLinkCopiado] = useState(false);
+const [showLogin, setShowLogin] = useState(false);
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [loginError, setLoginError] = useState('');
+  const [showLoginPassword, setShowLoginPassword] = useState(true);
 
   // — Lógica de registro del drawer —
   const handleRegistroDrawer = async () => {
@@ -202,6 +208,39 @@ const [linkCopiado, setLinkCopiado] = useState(false);
       setErrorDrawer(traducirError(err.code));
     } finally {
       setCargando(false);
+    }
+  };
+const handleLogin = async () => {
+    // Leemos directo del DOM por si el autocompletado del browser no disparó onChange
+    const emailVal = document.querySelector('input[name="login-email"]')?.value || loginEmail;
+    const passVal = document.querySelector('input[name="login-password"]')?.value || loginPassword;
+
+    if (!emailVal || !passVal) {
+      setLoginError('Completá los dos campos para continuar.');
+      return;
+    }
+    setLoginLoading(true);
+    setLoginError('');
+    try {
+      const auth = getAuth();
+      const { signInWithEmailAndPassword } = await import('firebase/auth');
+      const userCredential = await signInWithEmailAndPassword(auth, emailVal, passVal);
+      const uid = userCredential.user.uid;
+      const { doc, getDoc } = await import('firebase/firestore');
+      const { db } = await import('../firebase');
+      const snap = await getDoc(doc(db, 'usuarios', uid));
+      const rol = snap.data()?.rol;
+      setShowLogin(false);
+      if (rol === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/ecosistema');
+      }
+    } catch (error) {
+      console.error(error.code);
+      setLoginError('Email o contraseña incorrectos. Intentá de nuevo.');
+    } finally {
+      setLoginLoading(false);
     }
   };
 
@@ -306,9 +345,11 @@ const [linkCopiado, setLinkCopiado] = useState(false);
         <div className="absolute top-[35%] left-[-10%] w-[50vw] h-[50vw] bg-[#4DB6AC]/30 rounded-full blur-[130px]"></div>
       </div>
 
+      
+
       {/* ── NAVBAR SIMPLE ─────────────────────────────────────────────────── */}
-      <nav className="w-full px-6 md:px-10 h-[60px] md:h-[90px] flex items-center border-b border-gray-100 shadow-sm" style={{ backgroundColor: '#FFFFFF', backdropFilter: 'none', WebkitBackdropFilter: 'none', isolation: 'isolate', position: 'relative', zIndex: 1 }}>
-        <div className="max-w-5xl mx-auto w-full">
+      <nav className="w-full px-6 md:px-10 h-[60px] md:h-[90px] flex items-center border-b border-gray-100 shadow-sm" style={{ backgroundColor: '#FFFFFF', backdropFilter: 'none', WebkitBackdropFilter: 'none', position: 'relative', zIndex: 110 }}>
+        <div className="max-w-5xl mx-auto w-full flex items-center justify-between">
           <div
             className="cursor-pointer w-fit flex items-center gap-3"
             onClick={() => navigate("/sala-de-espera")}
@@ -329,6 +370,106 @@ const [linkCopiado, setLinkCopiado] = useState(false);
                 Veterinario<span className="text-[#2D6A6A]">.</span>
               </div>
             </div>
+          </div>
+
+          {/* BOTÓN INICIAR SESIÓN + DROPDOWN */}
+          <div className="relative">
+            <button
+              onClick={() => { 
+              setShowLogin(v => !v); 
+              setLoginError(''); 
+              setLoginEmail(''); 
+              setLoginPassword(''); 
+            }}
+              className={`flex items-center gap-2 font-bold text-[13px] transition-colors border px-4 py-2 rounded-xl ${
+                showLogin
+                  ? 'bg-[#1A3D3D] text-white border-[#1A3D3D]'
+                  : 'text-[#1A3D3D] bg-gray-50 hover:bg-gray-100 border-gray-200'
+              }`}
+            >
+              <LogIn className="w-4 h-4" />
+              <span className="hidden sm:inline">Iniciar sesión</span>
+            </button>
+
+            {/* DROPDOWN */}
+            {showLogin && (
+              <>
+                {/* Capa invisible para cerrar al hacer click afuera */}
+                <div
+                  className="fixed inset-0 z-[100]"
+                  style={{ backgroundColor: 'transparent' }}
+                  onClick={() => { setShowLogin(false); setLoginError(''); loginEmail && setLoginEmail(''); setLoginPassword(''); }}
+                />
+
+                <div className="fixed right-4 top-[70px] md:absolute md:right-0 md:top-full md:mt-3 w-[calc(100vw-32px)] md:w-[300px] bg-white rounded-[24px] shadow-[0_20px_60px_rgba(26,61,61,0.15)] border border-gray-100 p-6 z-[101] animate-in fade-in slide-in-from-top-2 duration-200 flex flex-col gap-4">
+
+                  {/* HEADER */}
+                  <div>
+                    <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[16px] leading-tight">Bienvenido de vuelta</h3>
+                    <p className="text-gray-400 text-[12px] font-medium mt-0.5">Ingresá con tu cuenta</p>
+                  </div>
+
+                  {/* ERROR */}
+                  {loginError && (
+                    <div className="bg-red-50 border border-red-100 rounded-xl px-3 py-2.5 flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
+                      <p className="text-red-600 text-[12px] font-medium">{loginError}</p>
+                    </div>
+                  )}
+
+                  {/* FORMULARIO */}
+                  <div className="flex flex-col gap-2.5">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-0.5">Email</label>
+                      <input
+                          type="email"
+                          value={loginEmail}
+                          onChange={(e) => setLoginEmail(e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+                          placeholder="tu@email.com"
+                          autoComplete="username"
+                          name="login-email"
+                          className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-[14px] font-medium text-[#1A3D3D] focus:outline-none focus:border-[#2D6A6A] focus:bg-white transition-colors"
+                        />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-0.5">Contraseña</label>
+                      <div className="relative">
+                        <input
+                          type={showLoginPassword ? 'text' : 'password'}
+                          value={loginPassword}
+                          onChange={(e) => setLoginPassword(e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+                          placeholder="••••••••"
+                          autoComplete="current-password"
+                          name="login-password"
+                          className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 pr-11 text-[14px] font-medium text-[#1A3D3D] focus:outline-none focus:border-[#2D6A6A] focus:bg-white transition-colors"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowLoginPassword(v => !v)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#2D6A6A] transition-colors p-1"
+                        >
+                          {showLoginPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* BOTÓN */}
+                  <button
+                    onClick={handleLogin}
+                    disabled={loginLoading}
+                    className="w-full bg-[#1A3D3D] text-white font-bold text-[12px] uppercase tracking-widest py-3.5 rounded-xl hover:bg-[#2D6A6A] transition-colors shadow-md flex items-center justify-center gap-2 disabled:opacity-70"
+                  >
+                    {loginLoading
+                      ? <><Loader className="w-4 h-4 animate-spin" /> Ingresando...</>
+                      : 'Ingresar'
+                    }
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </nav>

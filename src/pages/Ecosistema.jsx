@@ -444,17 +444,16 @@ export default function Ecosistema() {
       { targetId: 'tour-btn-accesibilidad', titulo: 'Opciones de accesibilidad', desc: 'Ajustá el tamaño del texto, activá modo escala de grises y más.', abrirAccs: true, posicion: 'derecha' },
     ],
   };
-
-  useEffect(() => {
-    if (!loading && !currentUser) navigate('/login');
-  }, [currentUser, loading, navigate]);
-
   const handleLogout = async () => {
     try { if (logout) await logout(); navigate('/'); }
     catch (error) { console.error("Error al cerrar sesión", error); }
   };
 
-  if (loading) return <div className="min-h-screen bg-[#F4F7F7] flex items-center justify-center text-[#2D6A6A] font-bold">Cargando ecosistema...</div>;
+  if (loading) return (
+    <div className="min-h-screen bg-[#F4F7F7] flex items-center justify-center">
+      <div className="w-10 h-10 border-4 border-[#2D6A6A]/20 border-t-[#2D6A6A] rounded-full animate-spin" />
+    </div>
+  );
   if (!currentUser) return null;
 
   // Pantalla para usuarios dados de baja

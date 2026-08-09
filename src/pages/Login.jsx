@@ -142,9 +142,24 @@ export default function Login() {
         <div className="max-w-[1100px] mx-auto w-full flex justify-between items-center pointer-events-auto">
           <div
             onClick={() => navigate('/')}
-            className="font-['Montserrat'] font-extrabold text-2xl tracking-tighter cursor-pointer text-[#1A3D3D] md:text-white transition-transform hover:scale-105"
+            className="cursor-pointer transition-transform hover:scale-105 flex items-center gap-3"
           >
-            El Portal<span className="text-[#2D6A6A] md:text-[#4DB6AC]">.</span>
+            {/* Isotipo — solo visible en móvil */}
+            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-9 h-9 md:hidden">
+              <path d="M 18 85 V 45 A 32 32 0 0 1 82 45 V 85" stroke="#1A3D3D" strokeWidth="12" strokeLinecap="round" fill="none"/>
+              <path d="M 38 85 V 55 A 12 12 0 0 1 62 55 V 85" stroke="#2D6A6A" strokeWidth="12" strokeLinecap="round" fill="none"/>
+            </svg>
+
+            {/* Logo tipográfico — solo visible en desktop */}
+            <div
+              className="hidden md:block font-['Montserrat'] font-extrabold tracking-tighter"
+              style={{ lineHeight: 0.75 }}
+            >
+              <div className="text-white text-3xl" style={{ lineHeight: '1' }}>Portal</div>
+              <div className="text-white text-3xl" style={{ lineHeight: '0.9' }}>
+                Veterinario<span className="text-[#4DB6AC]">.</span>
+              </div>
+            </div>
           </div>
           {(view !== 'login' || accountType) && (
             <button onClick={handleBack} className="text-[#1A3D3D] bg-white/70 backdrop-blur-md p-2.5 md:p-2 rounded-full hover:bg-white hover:scale-105 transition-all shadow-sm border border-gray-200/50">
