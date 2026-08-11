@@ -7,18 +7,18 @@ import {
   ChevronRight, ChevronLeft, ChevronDown, MapPin, Phone, Mail, Globe, 
   Clock, Star, ShieldCheck, Heart, AlertTriangle, 
   Stethoscope, Syringe, Microscope, Activity, Building2, 
-  Facebook, Instagram, Info, Award, ArrowRight, Users, Sparkles, FileText
+  Facebook, Instagram, Info, Award, ArrowRight, Users, Sparkles, FileText, Brain
 } from 'lucide-react';
 
 const INFO_SERVICIOS = {
-  'guardia': { icono: Activity, titulo: 'Guardia e Internación' },
-  'consulta': { icono: Stethoscope, titulo: 'Clínica Médica General' },
-  'especialidades': { icono: Award, titulo: 'Especialidades Médicas' },
-  'cirugia': { icono: Syringe, titulo: 'Quirófano y Cirugías' },
-  'imagenes': { icono: Microscope, titulo: 'Diagnóstico por Imágenes' },
-  'laboratorio': { icono: FileText, titulo: 'Laboratorio Clínico Propio' },
-  'odontologia': { icono: Sparkles, titulo: 'Odontología' },
-  'rehabilitacion': { icono: Heart, titulo: 'Fisiatría y Terapias' },
+  'consulta_general':        { icono: Stethoscope, titulo: 'Consulta y Medicina General' },
+  'especialidades_medicas':  { icono: Activity,    titulo: 'Especialidades Médicas' },
+  'quirurgico_critico':      { icono: Syringe,     titulo: 'Quirúrgico' },
+  'imagenes':                { icono: Microscope,  titulo: 'Imágenes' },
+  'laboratorio':             { icono: FileText,    titulo: 'Laboratorio' },
+  'atencion_por_especie':    { icono: Heart,       titulo: 'Atención por Especie' },
+  'bienestar_comportamiento':{ icono: Sparkles,    titulo: 'Bienestar y Comportamiento' },
+  'terapias_holisticas':     { icono: Brain,       titulo: 'Terapias Holísticas' },
 };
 
 // Urgencias de fallback completas para cuando la clínica activa la guardia
@@ -30,9 +30,119 @@ const URGENCIAS_FALLBACK = [
   { id: 4, paso: "04", titulo: "Traé historial", desc: "Si toma medicación o tiene estudios previos, traelos con vos." }
 ];
 
+function StaffCarrusel({ staff, setFotoModal }) {
+  const staffFiltrado = staff.filter(m => m.nombre && m.nombre.trim());
+  const [staffIndex, setStaffIndex] = useState(0);
+  const scrollRefPC = useRef(null);
+  const visibles = 4;
+  const necesitaFlechas = staffFiltrado.length > visibles;
+
+  const scrollA = (idx) => {
+    const nuevoIdx = Math.max(0, Math.min(staffFiltrado.length - 1, idx));
+    setStaffIndex(nuevoIdx);
+    if (scrollRefPC.current) {
+      const card = scrollRefPC.current.children[nuevoIdx];
+      if (card) card.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
+    }
+  };
+
+  // Contenido interno de cada card — igual para móvil y PC
+  const CardInterna = ({ m }) => (
+    <>
+      {m.foto ? (
+        <button
+          type="button"
+          onClick={() => setFotoModal(m.foto)}
+          className="w-24 h-24 rounded-[24px] bg-gray-200 overflow-hidden mb-5 border border-white shadow-md hover:scale-105 transition-transform block shrink-0 cursor-zoom-in"
+        >
+          <img src={m.foto} alt={m.nombre} className="w-full h-full object-cover" />
+        </button>
+      ) : (
+        <div className="w-24 h-24 rounded-[24px] bg-gray-200 overflow-hidden mb-5 border border-white shadow-md shrink-0">
+          <div className="w-full h-full bg-[#2D6A6A]/10 flex items-center justify-center text-[#2D6A6A]">
+            <Users className="w-8 h-8" />
+          </div>
+        </div>
+      )}
+      <h3 className="text-[18px] font-black text-[#1A3D3D] font-['Montserrat'] leading-tight mb-1">{m.nombre}</h3>
+      <p className="text-[#2D6A6A] text-[11px] font-black uppercase tracking-widest mb-4 text-center">{m.especialidad}</p>
+      <p className="text-gray-500 text-[14px] font-medium leading-relaxed mb-6 px-2 text-center line-clamp-4">{m.bio}</p>
+      <div className="w-full mt-auto bg-white rounded-2xl p-3.5 border border-gray-100 text-left flex items-center justify-between">
+        <div className="text-left">
+          <p className="text-[10px] font-bold text-gray-400 uppercase leading-none mb-1">Matrícula</p>
+          <p className="text-[13px] font-bold text-[#1A3D3D] leading-none">{m.matricula}</p>
+        </div>
+        <Award className="w-4 h-4 text-[#2D6A6A]" />
+      </div>
+    </>
+  );
+
+  return (
+    <div className="relative">
+
+      {/* MÓVIL: scroll horizontal tipo peek — se ve la primera card y un pedacito de la segunda */}
+      <div
+        className="lg:hidden flex gap-4 overflow-x-auto no-scrollbar pl-6 pr-3"
+        style={{ scrollSnapType: 'x mandatory' }}
+      >
+        {staffFiltrado.map((m, idx) => (
+          <div
+            key={m.id || idx}
+            className="bg-[#F4F7F7] border border-gray-100 rounded-[32px] p-6 shadow-sm flex flex-col items-center shrink-0"
+            style={{ scrollSnapAlign: 'start', width: '80vw' }}
+          >
+            <CardInterna m={m} />
+          </div>
+        ))}
+        {/* Espaciador para que la última card no quede pegada al borde */}
+        <div className="shrink-0 w-3" />
+      </div>
+
+      {/* PC: flechas solo si hay más de 4, grid centrado */}
+      <div className="hidden lg:block relative">
+        {necesitaFlechas && (
+          <button
+            onClick={() => scrollA(staffIndex - 1)}
+            disabled={staffIndex === 0}
+            className="absolute -left-6 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white border border-gray-200 rounded-full shadow-md flex items-center justify-center text-[#1A3D3D] hover:border-[#4DB6AC] hover:text-[#4DB6AC] disabled:opacity-30 transition-all"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+        )}
+        {necesitaFlechas && (
+          <button
+            onClick={() => scrollA(staffIndex + 1)}
+            disabled={staffIndex >= staffFiltrado.length - visibles}
+            className="absolute -right-6 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white border border-gray-200 rounded-full shadow-md flex items-center justify-center text-[#1A3D3D] hover:border-[#4DB6AC] hover:text-[#4DB6AC] disabled:opacity-30 transition-all"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+        )}
+
+        <div
+          ref={scrollRefPC}
+          className={`flex gap-6 justify-center items-start ${necesitaFlechas ? 'overflow-x-auto no-scrollbar' : ''}`}
+        >
+          {staffFiltrado.map((m, idx) => (
+            <div
+              key={m.id || idx}
+              className="bg-[#F4F7F7] border border-gray-100 rounded-[32px] p-6 shadow-sm hover:shadow-xl transition-all flex flex-col items-center w-[260px] shrink-0"
+              style={necesitaFlechas ? { scrollSnapAlign: 'start' } : {}}
+            >
+              <CardInterna m={m} />
+            </div>
+          ))}
+        </div>
+      </div>
+
+    </div>
+  );
+}
+
 export default function PerfilClinica() {
   const navigate = useNavigate();
   const [openFaq, setOpenFaq] = useState(null);
+  const [fotoModal, setFotoModal] = useState(null);
   const [highlightContacto, setHighlightContacto] = useState(false);
   const scrollRef = useRef(null);
 
@@ -44,18 +154,30 @@ export default function PerfilClinica() {
   useEffect(() => {
     const fetchClinicaInfo = async () => {
       try {
-        if (!slug) return; 
+        if (!slug) return;
 
         const docRef = doc(db, 'clinicas', slug);
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
           const firebaseData = docSnap.data();
-          
-          // FIX BUG #3: Fallback completo de urgencias con los 4 pasos
-          // Si la clínica tiene urgencias guardadas las usa; si no, usa el array de fallback completo
+
+          // Buscamos el doc de usuarios para leer socioVitalicio
+          // El uid del usuario está guardado en el doc de la clínica
+          let esSocioVitalicio = false;
+          if (firebaseData.uid) {
+            const userSnap = await getDoc(doc(db, 'usuarios', firebaseData.uid));
+            if (userSnap.exists()) {
+              esSocioVitalicio = userSnap.data().socioVitalicio || false;
+            }
+          }
+
+          // Si es socio vitalicio o tiene plan pro, consideramos planActual como 'pro'
+          const planFinal = esSocioVitalicio || firebaseData.planActual === 'pro' ? 'pro' : 'gratis';
+
           const mergedData = {
             ...firebaseData,
+            planActual: planFinal,
             urgencias: (firebaseData.urgencias && firebaseData.urgencias.length > 0)
               ? firebaseData.urgencias
               : URGENCIAS_FALLBACK,
@@ -151,7 +273,24 @@ export default function PerfilClinica() {
   const faqsActivas = data.faqs ? data.faqs.filter(faq => faq.respuesta && faq.respuesta.trim() !== '') : [];
 
   return (
-    <div className="bg-[#F4F7F7] font-['Inter'] antialiased relative text-left overflow-x-hidden selection:bg-[#2D6A6A] selection:text-white pb-20">
+    <div className="font-['Inter'] bg-white min-h-screen">
+    {/* MODAL DE FOTO GLOBAL */}
+      {fotoModal && (
+        <div
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[500] flex items-center justify-center p-6"
+          onClick={() => setFotoModal(null)}
+        >
+          <div className="relative max-w-sm w-full" onClick={e => e.stopPropagation()}>
+            <button
+              onClick={() => setFotoModal(null)}
+              className="absolute -top-4 -right-4 w-9 h-9 bg-white rounded-full flex items-center justify-center shadow-lg z-10 hover:bg-gray-100 transition-colors"
+            >
+              <span className="text-[#1A3D3D] font-black text-lg leading-none">×</span>
+            </button>
+            <img src={fotoModal} alt="Foto del profesional" className="w-full rounded-[24px] shadow-2xl object-cover" />
+          </div>
+        </div>
+      )}
 
       {/* HERO */}
       <main className="relative w-full bg-white overflow-hidden pt-[18px] md:pt-[45px]">
@@ -183,9 +322,7 @@ export default function PerfilClinica() {
               </span>
             </h1>
             
-            {data.subtitulo && (
-              <p className="text-[11px] font-bold text-[#2D6A6A] uppercase tracking-[0.2em] mb-3">{data.subtitulo}</p>
-            )}
+           
             <p className="text-[15px] lg:text-[16px] text-gray-500 font-medium leading-relaxed mb-6 max-w-[500px]">
               {data.descripcion}
             </p>
@@ -264,16 +401,19 @@ export default function PerfilClinica() {
       {/* NUESTRA HISTORIA */}
       <section id="nosotros" className="py-8 md:py-12 bg-[#F4F7F7] reveal-on-scroll">
         <div className="max-w-[1100px] mx-auto px-6 md:px-10 flex flex-col md:flex-row items-center gap-10">
-          <div className="w-full md:w-[45%] lg:w-[40%] h-[300px] md:h-[400px] rounded-[32px] overflow-hidden shadow-xl border border-gray-200 shrink-0 bg-[#1A3D3D] flex items-center justify-center relative">
-            <div className="absolute inset-0 bg-gradient-to-br from-[#1A3D3D] to-[#2D6A6A] opacity-90" />
+          <div className="w-full md:w-[45%] lg:w-[40%] h-[300px] md:h-[400px] rounded-[32px] shadow-xl border border-gray-200 shrink-0 relative bg-[#1A3D3D] p-4">
             {data.foto ? (
-              <img
-                src={data.foto}
-                alt={data.nombre}
-                className="relative z-10 w-48 h-48 object-contain drop-shadow-2xl"
-              />
+              <div className="w-full h-full flex items-center justify-center">
+                <img
+                  src={data.foto}
+                  alt={data.nombre}
+                  className="w-full h-full object-contain rounded-[24px]"
+                />
+              </div>
             ) : (
-              <Building2 className="relative z-10 w-24 h-24 text-white/30" />
+              <div className="w-full h-full bg-gradient-to-br from-[#1A3D3D] to-[#2D6A6A] flex items-center justify-center rounded-[24px]">
+                <Building2 className="w-24 h-24 text-white/30" />
+              </div>
             )}
           </div>
 
@@ -282,7 +422,7 @@ export default function PerfilClinica() {
               <div className="w-10 h-10 rounded-xl bg-[#2D6A6A]/10 text-[#2D6A6A] flex items-center justify-center">
                 <Building2 className="w-5 h-5" />
               </div>
-              <h3 className="text-[#2D6A6A] font-bold text-[11px] uppercase tracking-[0.2em]">Trayectoria y Compromiso</h3>
+              <h3 className="text-[#2D6A6A] font-bold text-[11px] uppercase tracking-[0.2em]">Trayectoria</h3>
             </div>
             <h2 className="text-2xl md:text-3xl lg:text-4xl font-black text-[#1A3D3D] font-['Montserrat'] mb-5 tracking-tight leading-tight">
               Cuidamos a cada mascota <br className="hidden md:block" /> como si fuera nuestra.
@@ -296,7 +436,7 @@ export default function PerfilClinica() {
                  <>
                    <div className="bg-white px-5 py-3 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-3">
                       <Award className="w-5 h-5 text-amber-500" />
-                      <span className="text-[13px] font-bold text-[#1A3D3D]">Alta Complejidad</span>
+                      <span className="text-[13px] font-bold text-[#1A3D3D]">Veterinaria destacada</span>
                    </div>
                    <div className="bg-white px-5 py-3 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-3">
                       <Users className="w-5 h-5 text-[#2D6A6A]" />
@@ -311,17 +451,16 @@ export default function PerfilClinica() {
 
       {/* SECCIÓN PRO: ESPECIALIDADES */}
       {planActual === 'pro' && data.servicios && (
-        <section id="servicios" className="py-8 md:py-12 bg-white reveal-on-scroll relative">
+        <section id="servicios" className="pt-8 pb-8 md:pt-12 md:pb-12 bg-white reveal-on-scroll relative">
           <div className="max-w-[1100px] mx-auto px-6 md:px-10">
-            <div className="mb-8 text-left flex flex-col md:flex-row md:items-end justify-between gap-4">
-              <div>
-                <h3 className="text-[#2D6A6A] font-bold text-[10px] uppercase tracking-widest mb-1">Especialidades</h3>
-                <h2 className="text-3xl md:text-4xl font-black text-[#1A3D3D] font-['Montserrat'] tracking-tight">Servicios Médicos</h2>
-              </div>
+            <div className="mb-5 text-left">
+            
+            <h2 className="text-3xl md:text-4xl font-black text-[#1A3D3D] font-['Montserrat'] tracking-tight leading-none">Servicios Médicos</h2>
+              <h3 className="text-[#2D6A6A] font-bold text-[12px] uppercase tracking-widest mb-1">Que ofrecemos en nuestro centro</h3>
             </div>
 
             {/* Renderizado dinámico de tarjetas de servicios */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-5">
               {Object.entries(data.servicios)
                 .filter(([_, serv]) => serv.activo)
                 .map(([key, serv]) => {
@@ -330,23 +469,21 @@ export default function PerfilClinica() {
                   const IconoServicio = infoBase.icono;
 
                   return (
-                    <div key={key} className="bg-[#F4F7F7]/50 border border-gray-100 p-6 md:p-8 rounded-[32px] hover:border-[#2D6A6A]/40 shadow-sm transition-all group flex flex-col text-left">
-                      <div className="flex items-center gap-4 mb-6">
-                        <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-[#2D6A6A] group-hover:bg-[#2D6A6A] group-hover:text-white transition-colors shrink-0 shadow-sm border border-gray-100">
-                          <IconoServicio className="w-6 h-6" />
-                        </div>
-                        <h3 className="text-lg font-black text-[#1A3D3D] font-['Montserrat'] leading-tight">{infoBase.titulo}</h3>
+                    <div key={key} className="bg-[#F4F7F7]/50 border border-gray-100 p-4 md:p-8 rounded-[24px] md:rounded-[32px] hover:border-[#2D6A6A]/40 shadow-sm transition-all group flex flex-col text-left">
+                      <div className="flex items-center gap-2 md:gap-4 mb-3 md:mb-4">
+                        <IconoServicio className="w-5 md:w-6 h-5 md:h-6 text-[#2D6A6A] shrink-0" />
+                        <h3 className="text-xs md:text-lg font-black text-[#1A3D3D] font-['Montserrat'] leading-tight">{infoBase.titulo}</h3>
                       </div>
                       
-                      <div className="flex flex-wrap gap-2.5 mt-auto">
+                      <div className="flex flex-wrap gap-1.5 md:gap-2.5">
                         {serv.subOpcionesSeleccionadas && serv.subOpcionesSeleccionadas.length > 0 ? (
                           serv.subOpcionesSeleccionadas.map((opcion, i) => (
-                            <span key={i} className="px-3 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-xs font-bold shadow-sm">
+                            <span key={i} className="px-2 md:px-3 py-1 md:py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-[10px] md:text-xs font-bold shadow-sm">
                               {opcion}
                             </span>
                           ))
                         ) : (
-                          <span className="px-3 py-1.5 bg-white border border-gray-200 text-gray-500 rounded-lg text-xs font-medium italic shadow-sm">
+                          <span className="px-2 md:px-3 py-1 md:py-1.5 bg-white border border-gray-200 text-gray-500 rounded-lg text-[10px] md:text-xs font-medium italic shadow-sm">
                             Consulta general y asesoramiento
                           </span>
                         )}
@@ -364,20 +501,20 @@ export default function PerfilClinica() {
       {planActual === 'pro' && faqsActivas.length > 0 && (
         <section className="py-8 md:py-12 bg-white reveal-on-scroll">
           <div className="max-w-[1100px] mx-auto px-6 md:px-10">
-            <div className="max-w-4xl mx-auto bg-[#F9FBFA] rounded-[32px] p-6 md:p-10 border border-gray-200 shadow-sm">
-              <h3 className="text-center font-black text-[#1A3D3D] font-['Montserrat'] text-2xl mb-8 tracking-tight">Preguntas Frecuentes</h3>
-              <div className="space-y-3">
+            <div className="max-w-4xl mx-auto bg-[#F9FBFA] rounded-[32px] p-5 md:p-8 border border-gray-200 shadow-sm">
+              <h3 className="text-left font-black text-[#1A3D3D] font-['Montserrat'] text-2xl mb-6 tracking-tight">Preguntas Frecuentes</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {faqsActivas.map((faq) => (
                   <div key={faq.id} className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm text-left transition-all">
-                    <button onClick={() => setOpenFaq(openFaq === faq.id ? null : faq.id)} className="w-full flex items-center justify-between px-6 py-5 hover:bg-gray-50 transition-colors">
-                      <span className="font-bold text-[#1A3D3D] text-[14px]">{faq.pregunta}</span>
-                      <div className={`w-8 h-8 shrink-0 rounded-full bg-[#F4F7F7] flex items-center justify-center transition-transform ${openFaq === faq.id ? 'rotate-180 bg-[#1A3D3D] text-white' : 'text-[#2D6A6A]'}`}>
+                    <button onClick={() => setOpenFaq(openFaq === faq.id ? null : faq.id)} className="w-full flex items-center justify-between px-4 py-4 hover:bg-gray-50 transition-colors gap-3 text-left">
+                      <span className="font-bold text-[#1A3D3D] text-[14px] leading-snug text-left">{faq.pregunta}</span>
+                      <div className={`w-7 h-7 shrink-0 rounded-full bg-[#F4F7F7] flex items-center justify-center transition-transform ${openFaq === faq.id ? 'rotate-180 bg-[#1A3D3D] text-white' : 'text-[#2D6A6A]'}`}>
                         <ChevronDown className="w-4 h-4" />
                       </div>
                     </button>
                     {openFaq === faq.id && (
-                      <div className="px-6 pb-6">
-                        <p className="text-gray-500 text-sm font-medium leading-relaxed border-t border-gray-50 pt-4">
+                      <div className="px-4 pb-4">
+                        <p className="text-gray-500 text-sm font-medium leading-relaxed border-t border-gray-50 pt-3">
                           {faq.respuesta}
                         </p>
                       </div>
@@ -394,24 +531,46 @@ export default function PerfilClinica() {
       {data.guardia24hs && (
         <section id="urgencias" className="py-8 md:py-12 bg-white reveal-on-scroll relative">
           <div className="max-w-[1100px] mx-auto px-6 md:px-10">
-            <div className="bg-red-50 border border-red-100 rounded-[40px] p-8 md:p-10 relative overflow-hidden shadow-sm">
+            <div className="bg-red-50 border border-red-100 rounded-[40px] p-4 md:p-10 relative overflow-hidden shadow-sm">
               <div className="absolute top-0 right-0 p-12 opacity-[0.03] pointer-events-none">
                 <AlertTriangle className="w-64 h-64 text-red-500" />
               </div>
 
               <div className="relative z-10 max-w-2xl mx-auto mb-8 text-center">
-                <h3 className="text-red-500 font-bold text-[10px] uppercase tracking-[0.3em] mb-3 text-center">Protocolo Crítico</h3>
-                <h2 className="text-3xl md:text-5xl font-black text-red-600 font-['Montserrat'] tracking-tight mb-4 leading-tight text-center">¿Qué hacer en una urgencia?</h2>
-                <p className="text-red-900/60 font-medium text-[15px] text-center">Instrucciones vitales para actuar mientras venís en camino a nuestra guardia.</p>
+                <h2 className="text-3xl md:text-5xl font-black text-red-600 font-['Montserrat'] tracking-tight mb-4 leading-tight text-center">
+                  <span className="block md:hidden">¿Qué hacer ante<br />una urgencia?</span>
+                  <span className="hidden md:block">¿Qué hacer ante una urgencia?</span>
+                </h2>
+                <p className="text-red-900/60 font-medium text-[16px] md:text-[16px] text-center">Instrucciones vitales para actuar mientras venís en camino a nuestra guardia.</p>
               </div>
 
               {/* FIX BUG #3: data.urgencias siempre tiene los 4 pasos completos gracias al fallback */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5 text-left">
+              {/* MÓVIL: una sola caja con grid 2x2 y líneas divisorias */}
+              <div className="lg:hidden bg-white border border-red-100 rounded-[32px] shadow-sm overflow-hidden grid grid-cols-2">
                 {data.urgencias.map((u, i) => (
-                  <div key={i} className="bg-white border border-red-100 p-6 rounded-[32px] shadow-sm hover:border-red-200 transition-all group">
-                    <div className="w-10 h-10 rounded-2xl bg-red-50 text-red-500 font-black font-['Montserrat'] text-lg flex items-center justify-center mb-5 border border-red-100 group-hover:-translate-y-1 transition-transform">{u.paso}</div>
-                    <h4 className="font-bold text-red-600 font-['Montserrat'] text-[16px] tracking-tight mb-2 leading-snug">{u.titulo}</h4>
-                    <p className="text-red-900/70 text-[13px] leading-relaxed font-medium">{u.desc}</p>
+                  <div key={i} className={`p-5 flex flex-col text-left
+                    ${i % 2 === 0 ? 'border-r border-red-100' : ''}
+                    ${i < 2 ? 'border-b border-red-100' : ''}
+                    ${i === 0 ? 'col-start-1' : ''}
+                  `}
+                  style={{ gridColumn: i % 2 === 0 ? '1' : '2', gridRow: i < 2 ? '1' : '2' }}
+                  >
+                    <div className="w-9 h-9 rounded-xl bg-red-50 text-red-500 font-black font-['Montserrat'] text-base flex items-center justify-center shrink-0 border border-red-100 mb-2">{u.paso}</div>
+                    <h4 className="font-bold text-red-600 font-['Montserrat'] text-[16px] tracking-tight leading-snug mb-3">{u.titulo}</h4>
+                    <p className="text-red-900/70 text-[15px] leading-relaxed font-medium">{u.desc}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* PC: 4 cajas separadas */}
+              <div className="hidden lg:grid lg:grid-cols-4 gap-5 text-left">
+                {data.urgencias.map((u, i) => (
+                  <div key={i} className="bg-white border border-red-100 p-5 rounded-[32px] shadow-sm hover:border-red-200 transition-all group flex flex-col">
+                    <div className="flex items-start gap-3 mb-4">
+                      <div className="w-10 h-10 rounded-2xl bg-red-50 text-red-500 font-black font-['Montserrat'] text-lg flex items-center justify-center shrink-0 border border-red-100 group-hover:-translate-y-1 transition-transform">{u.paso}</div>
+                      <h4 className="font-bold text-red-600 font-['Montserrat'] text-[16px] tracking-tight leading-snug self-center">{u.titulo}</h4>
+                    </div>
+                    <p className="text-red-900/70 text-[15px] leading-relaxed font-medium">{u.desc}</p>
                   </div>
                 ))}
               </div>
@@ -435,35 +594,49 @@ export default function PerfilClinica() {
               <h2 className="text-3xl md:text-5xl font-black text-[#1A3D3D] font-['Montserrat'] tracking-tight text-center">Equipo Médico</h2>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-left">
-              {data.staff.filter(m => m.nombre && m.nombre.trim()).map((m, idx) => (
-                <div key={m.id || idx} className={`bg-[#F4F7F7] border border-gray-100 rounded-[32px] p-6 shadow-sm hover:shadow-xl transition-all h-full relative flex flex-col items-center group ${idx % 2 !== 0 ? 'lg:mt-8' : ''}`}>
-                  <div className="w-24 h-24 rounded-[24px] bg-gray-200 overflow-hidden mb-5 border border-white shadow-md group-hover:scale-105 transition-transform">
+            {/* UN SOLO MIEMBRO: centrado */}
+            {data.staff.filter(m => m.nombre && m.nombre.trim()).length === 1 && (
+              <div className="flex justify-center">
+                {data.staff.filter(m => m.nombre && m.nombre.trim()).map((m, idx) => (
+                  <div key={m.id || idx} className="bg-[#F4F7F7] border border-gray-100 rounded-[32px] p-6 shadow-sm hover:shadow-xl transition-all relative flex flex-col items-center group w-full max-w-[280px]">
                     {m.foto ? (
-                      // FIX BUG #1: foto ya viene como URL de Firebase Storage (no Base64)
-                      <img src={m.foto} alt={m.nombre} className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setFotoModal(m.foto)}
+                        className="w-24 h-24 rounded-[24px] bg-gray-200 overflow-hidden mb-5 border border-white shadow-md group-hover:scale-105 transition-transform block shrink-0 cursor-zoom-in"
+                      >
+                        <img src={m.foto} alt={m.nombre} className="w-full h-full object-cover" />
+                      </button>
                     ) : (
-                      <div className="w-full h-full bg-[#2D6A6A]/10 flex items-center justify-center text-[#2D6A6A]"><Users className="w-8 h-8" /></div>
+                      <div className="w-24 h-24 rounded-[24px] bg-gray-200 overflow-hidden mb-5 border border-white shadow-md shrink-0">
+                        <div className="w-full h-full bg-[#2D6A6A]/10 flex items-center justify-center text-[#2D6A6A]"><Users className="w-8 h-8" /></div>
+                      </div>
                     )}
-                  </div>
-                  <h3 className="text-[16px] font-black text-[#1A3D3D] font-['Montserrat'] leading-tight mb-1">{m.nombre}</h3>
-                  <p className="text-[#2D6A6A] text-[9px] font-black uppercase tracking-widest mb-4 h-6 text-center line-clamp-2">{m.especialidad}</p>
-                  <p className="text-gray-500 text-[12px] font-medium leading-relaxed mb-6 flex-1 px-2 text-center">{m.bio}</p>
-                  
-                  <div className="w-full mt-auto bg-white rounded-2xl p-3.5 border border-gray-100 text-left flex items-center justify-between">
-                     <div className="text-left">
-                       <p className="text-[8px] font-bold text-gray-400 uppercase leading-none mb-1 text-left">Matrícula</p>
-                       <p className="text-[11px] font-bold text-[#1A3D3D] leading-none text-left">{m.matricula}</p>
-                     </div>
-                     <Award className="w-4 h-4 text-[#2D6A6A]" />
-                  </div>
-                </div>
-              ))}
+                    <h3 className="text-[18px] font-black text-[#1A3D3D] font-['Montserrat'] leading-tight mb-1">{m.nombre}</h3>
+            <p className="text-[#2D6A6A] text-[11px] font-black uppercase tracking-widest mb-4 text-center">{m.especialidad}</p>
+            <p className="text-gray-500 text-[14px] font-medium leading-relaxed mb-6 flex-1 px-2 text-center">{m.bio}</p>
+            <div className="w-full mt-auto bg-white rounded-2xl p-3.5 border border-gray-100 text-left flex items-center justify-between">
+              <div className="text-left">
+                <p className="text-[10px] font-bold text-gray-400 uppercase leading-none mb-1">Matrícula</p>
+                <p className="text-[13px] font-bold text-[#1A3D3D] leading-none">{m.matricula}</p>
+              </div>
+              <Award className="w-4 h-4 text-[#2D6A6A]" />
             </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* MÁS DE UN MIEMBRO: scroll horizontal en móvil, grid en PC */}
+            {data.staff.filter(m => m.nombre && m.nombre.trim()).length > 1 && (
+              <StaffCarrusel staff={data.staff} setFotoModal={setFotoModal} />
+            )}
+
           </div>
         </section>
       )}
 
+      {/* CONTACTO & MAPA */}
       {/* CONTACTO & MAPA */}
       <section id="contacto" className="py-8 md:py-12 bg-white reveal-on-scroll">
         <div className="max-w-[1100px] mx-auto px-6 md:px-10">

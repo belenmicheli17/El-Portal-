@@ -17,23 +17,13 @@ import {
   ArrowUp, ArrowDown, MapPin, ShieldCheck, Check, ArrowLeft,
   Smartphone, Home, Mail, Award, ChevronDown, 
   ArrowRight, ExternalLink, Heart, Lock, Zap, Clock, Crown,
-  Menu, User, LayoutGrid, Edit, Briefcase, FileText, Undo2, Redo2, FileCheck, Building2, AlertTriangle, Syringe, Activity, Microscope, Stethoscope, Crop, Sparkles, Loader2, Globe, CreditCard, ArrowUpRight, Eye, EyeOff, MessageSquare
+  Menu, User, LayoutGrid, Edit, Brain, Briefcase, FileText, Undo2, Redo2, FileCheck, Building2, AlertTriangle, Syringe, Activity, Microscope, Stethoscope, Crop, Sparkles, Loader2, Globe, CreditCard, ArrowUpRight, Eye, EyeOff, MessageSquare
 } from 'lucide-react';
-const CATALOGO_SERVICIOS = especialidadesData.map(grupo => ({
-  id: grupo.id,
-  icono: {
-    consulta_general: Stethoscope,
-    especialidades_medicas: Award,
-    quirurgico_critico: Syringe,
-    imagenes: Microscope,
-    laboratorio: FileText,
-    atencion_por_especie: Activity,
-    bienestar_comportamiento: Heart,
-    terapias_holisticas: Sparkles,
-  }[grupo.id] || Stethoscope,
-  titulo: grupo.grupo,
-  opciones: grupo.opciones
-}));
+const IconoBisturi = ({ className }) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M14 22 18.5 7.5L22 11l-6 11Z"/><path d="M12 5 8 9"/><path d="m11 8 4 4"/><path d="m5 12 7 7"/>
+  </svg>
+);
 
 // ==========================================
 // COMPONENTES DE UI REUTILIZABLES
@@ -314,7 +304,10 @@ export default function EditorClinico() {
   const [nuevaSubOpcion, setNuevaSubOpcion] = useState({ idServicio: null, texto: '' });
   const [cropModal, setCropModal] = useState({ isOpen: false, imageSrc: null, targetId: null, type: null });
   const [saveStatus, setSaveStatus] = useState('idle');
+  const [tiempoSinGuardar, setTiempoSinGuardar] = useState(0);
   const [exitModalOpen, setExitModalOpen] = useState(false);
+   const [gruposExpandidos, setGruposExpandidos] = useState({});
+  const [nuevosServicios, setNuevosServicios] = useState({});
   const [pendingNavigation, setPendingNavigation] = useState(null);
   // Estado de carga inicial desde Firebase
   const [isLoadingData, setIsLoadingData] = useState(true);
@@ -348,7 +341,7 @@ export default function EditorClinico() {
     email: "",
     planActual: '',
     redes: { instagram: "", facebook: "" },
-    guardia24hs: true,
+    guardia24hs: false,
     telefonoGuardia: "",
     horarios: { semanaDesde: "", semanaHasta: "", sabadoDesde: "", sabadoHasta: "" },
     urgencias: [
@@ -377,7 +370,6 @@ export default function EditorClinico() {
   const [future, setFuture] = useState([]);
   const isUndoRedAction = useRef(false);
   const fileInputRef = useRef(null);
-  const [personalizarUrgencias, setPersonalizarUrgencias] = useState(false);
   const formData = _formData;
   const haycambiosSinGuardar = JSON.stringify(formData) !== JSON.stringify(savedData);
   
@@ -469,10 +461,28 @@ export default function EditorClinico() {
     }));
   };
 
+  const PREGUNTAS_SUGERIDAS = [
+    "¿Atienden feriados y fines de semana?",
+    "¿Puedo visitar a mi mascota si está internada?",
+    "¿Atienden animales exóticos?",
+    "¿Tienen quirófano para cirugías de alta complejidad?",
+    "¿Aceptan obras sociales o seguros para mascotas?",
+    "¿Qué medios de pago aceptan?",
+    "¿Cómo me avisan si el estado de mi mascota cambia durante la internación?",
+    "¿Puedo llamar para preguntar cómo está mi mascota internada?",
+  ];
+
   const addCustomFaq = () => {
+    const preguntasYaUsadas = formData.faqs.map(f => f.pregunta.trim());
+    const siguienteSugerida = PREGUNTAS_SUGERIDAS.find(p => !preguntasYaUsadas.includes(p));
     setFormData(prev => ({
       ...prev,
-      faqs: [...prev.faqs, { id: Date.now(), pregunta: '', respuesta: '', isDefault: false }]
+      faqs: [...prev.faqs, { 
+        id: Date.now(), 
+        pregunta: siguienteSugerida || '', 
+        respuesta: '', 
+        isDefault: false 
+      }]
     }));
   };
 
@@ -556,7 +566,7 @@ export default function EditorClinico() {
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
         
-        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.95);
         setCropModal({ isOpen: true, imageSrc: compressedBase64, targetId, type });
       };
       img.src = event.target.result;
@@ -794,6 +804,18 @@ export default function EditorClinico() {
     setTempSelectedPlan(planType);
     setIsPlanModalOpen(true);
   };
+
+// Contador de tiempo sin guardar — avisa al usuario cada 3 minutos
+  useEffect(() => {
+    if (!haycambiosSinGuardar) {
+      setTiempoSinGuardar(0);
+      return;
+    }
+    const intervalo = setInterval(() => {
+      setTiempoSinGuardar(prev => prev + 1);
+    }, 60000); // cada 1 minuto
+    return () => clearInterval(intervalo);
+  }, [haycambiosSinGuardar]);
 
   useEffect(() => {
     const link = document.createElement('link');
@@ -1208,7 +1230,20 @@ export default function EditorClinico() {
           <div className="flex-1 w-full flex flex-col min-w-0">
             
             {/* BARRA DE ACCIÓN SUPERIOR ALINEADA (Alto 52px) */}
-            <div className="flex justify-between items-center mb-6 md:h-[52px] w-full">
+            <div className="flex flex-col gap-2 mb-6 w-full">
+              {haycambiosSinGuardar && tiempoSinGuardar >= 2 && (
+                <div className="w-full bg-yellow-50 border border-yellow-200 rounded-2xl px-4 py-3 flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                  <AlertTriangle className="w-4 h-4 text-yellow-500 shrink-0" />
+                  <p className="text-xs font-bold text-yellow-700 flex-1">Llevas varios minutos sin guardar. Guardá para no perder los cambios.</p>
+                  <button
+                    onClick={handleSaveData}
+                    className="text-xs font-black text-yellow-700 underline underline-offset-2 hover:text-yellow-900 transition-colors shrink-0"
+                  >
+                    Guardar ahora
+                  </button>
+                </div>
+              )}
+              <div className="flex justify-between items-center md:h-[52px] w-full">
                <div className="flex items-center gap-2 shrink-0">
                   <button onClick={undo} disabled={past.length === 0} className={`p-2.5 rounded-xl transition-all border ${past.length > 0 ? 'bg-white border-gray-200 text-[#1A3D3D] hover:border-[#4DB6AC] hover:text-[#4DB6AC] shadow-sm' : 'bg-transparent border-transparent text-gray-300'}`} title="Deshacer"><Undo2 className="w-5 h-5" /></button>
                   <button onClick={redo} disabled={future.length === 0} className={`p-2.5 rounded-xl transition-all border ${future.length > 0 ? 'bg-white border-gray-200 text-[#1A3D3D] hover:border-[#4DB6AC] hover:text-[#4DB6AC] shadow-sm' : 'bg-transparent border-transparent text-gray-300'}`} title="Rehacer"><Redo2 className="w-5 h-5" /></button>
@@ -1233,19 +1268,20 @@ export default function EditorClinico() {
                   <span className="hidden sm:inline">Guardar Cambios</span>}
                  {saveStatus === 'idle' && <span className="sm:hidden">Guardar</span>}
                </button>
+              </div>
             </div>
 
             {/* TAB 1: SOBRE MI CUENTA */}
             {activeTab === 'cuenta' && (
-              <div className="w-full bg-white rounded-[32px] shadow-sm border border-gray-100 p-6 md:p-10 animate-in fade-in duration-300 min-h-[500px]">
+              <div className="w-full bg-white rounded-[32px] shadow-sm border border-gray-100 p-6 md:p-10 animate-in fade-in duration-300">
                 
-                <h3 className="text-2xl font-black text-[#1A3D3D] mb-2 font-['Montserrat']">Sobre mi cuenta</h3>
+                <h3 className="text-2xl font-black text-[#1A3D3D] mb-2 font-['Montserrat']">Sobre mi plan</h3>
                 <p className="text-sm text-gray-500 mb-6">Información privada para el acceso a la plataforma y facturación. Esto no será visible para los usuarios.</p>
 
                 <div className="max-w-2xl">
                   
                   {/* ESTADO DE MENSUALIDAD DINÁMICO SEGÚN PLAN */}
-                  <div className="mb-8 pb-8 border-b border-gray-100">
+                  <div className={!socioVitalicio ? 'mb-8 pb-8 border-b border-gray-100' : ''}>
                      <h4 className="flex items-center gap-2 text-sm font-bold text-[#1A3D3D] uppercase tracking-widest leading-none mb-4">
                        <CreditCard className="w-5 h-5 text-[#2D6A6A]" /> Estado de la suscripción
                      </h4>
@@ -1297,21 +1333,6 @@ export default function EditorClinico() {
                        </div>
                      </div>
                      )}
-                  </div>
-
-                  {/* DATOS DE ACCESO */}
-                  <div>
-                      <h4 className="flex items-center gap-2 text-sm font-bold text-[#1A3D3D] uppercase tracking-widest leading-none mb-5">
-                       <User className="w-5 h-5 text-[#2D6A6A]" /> Datos de Acceso
-                     </h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 items-start">
-                         {/* FIX SINCRO #3: el email se popula desde currentUser.email al montar */}
-                         <InputGroup label="Email de Acceso" id="cuentaEmail" type="email" value={formData.cuentaEmail} readOnly tooltip="Este email está vinculado a tu cuenta y no puede modificarse desde aquí." />
-                         <InputGroup label="Contraseña" id="cuentaPassword" type="password" value={formData.cuentaPassword} onChange={handleChange} placeholder="••••••••" tooltip="Modificá este campo solo si querés cambiar tu contraseña." />
-                         <div className="md:col-span-2">
-                           <InputGroup label="Teléfono de Recuperación" id="cuentaTelefono" type="tel" value={formData.cuentaTelefono} readOnly tooltip="Número validado para la recuperación de la cuenta." />
-                         </div>
-                      </div>
                   </div>
 
                 </div>
@@ -1369,7 +1390,7 @@ export default function EditorClinico() {
                     <Accordion title="Identidad de la Clínica" icon={Building2} isOpen={openSection === 'identidad'} onToggle={() => setOpenSection(openSection === 'identidad' ? null : 'identidad')}>
                       <div className="flex flex-col sm:flex-row gap-8 mb-8 mt-2 md:mt-0">
                         <div className="relative group cursor-pointer shrink-0 text-left">
-                          <div onClick={() => triggerFileInput(fileInputRef)} className={`w-32 h-32 rounded-[28px] overflow-hidden border-2 border-dashed ${formData.foto ? 'border-transparent' : 'border-gray-200'} transition-all flex items-center justify-center bg-gray-50 block cursor-pointer relative group/img shadow-sm hover:border-[#2D6A6A]`}>
+                          <div onClick={() => fileInputRef.current?.click()} className={`w-32 h-32 rounded-[28px] overflow-hidden border-2 border-dashed ${formData.foto ? 'border-transparent' : 'border-gray-200'} transition-all flex items-center justify-center bg-gray-50 block cursor-pointer relative group/img shadow-sm hover:border-[#2D6A6A]`}>
                             {formData.foto ? (
                               <>
                                 <img src={formData.foto} className="w-full h-full object-cover" alt="Logo" />
@@ -1405,9 +1426,9 @@ export default function EditorClinico() {
                       </div>
 
                       <InputGroup type="textarea" rows="2" label="Nombre de la Institución" id="nombre" value={formData.nombre} onChange={handleChange} required />
-                      <InputGroup type="textarea" rows="2" label="Eslogan / Subtítulo" id="subtitulo" value={formData.subtitulo} onChange={handleChange} maxLength={60} tooltip="Atrae la atención rápidamente. Ej: Cuidado profesional para tu mejor amigo" />
+                     
                       <InputGroup type="textarea" rows="3" label="Descripción Corta (Hero)" id="descripcion" value={formData.descripcion} onChange={handleChange} maxLength={200} placeholder="Breve resumen de 2 o 3 líneas sobre su institución..." tooltip="Este texto acompaña tu logo principal en la presentación de la página." />
-                      <InputGroup type="number" label="Años de Experiencia" id="añosExperiencia" value={formData.añosExperiencia} onChange={handleChange} tooltip="Se mostrará de forma destacada como una medalla de confianza." />
+                      <InputGroup type="number" label="Años de Experiencia" id="añosExperiencia" value={formData.añosExperiencia} onChange={(e) => { if (e.target.value === '' || Number(e.target.value) >= 0) handleChange(e); }} tooltip="Se mostrará de forma destacada como una medalla de confianza." />
                       <InputGroup type="textarea" label="Nuestra Historia" id="historia" value={formData.historia} onChange={handleChange} maxLength={800} tooltip="Aparecerá en la sección principal 'Nosotros'. Cuéntale al público cómo nació la clínica y cuáles son sus valores." />
                     </Accordion>
 
@@ -1415,55 +1436,33 @@ export default function EditorClinico() {
                     <Accordion title="Guardia y Emergencias" icon={AlertTriangle} isOpen={openSection === 'urgencias'} onToggle={() => setOpenSection(openSection === 'urgencias' ? null : 'urgencias')} tooltip="Activa la atención 24hs para destacar automáticamente la guardia a tus clientes.">
                       <div className="bg-red-50/50 p-6 rounded-3xl border border-red-100 flex flex-col gap-4 text-left transition-all">
                          <ToggleSwitch 
-                            label="Atención de Guardia 24hs" 
+                            label="Ofreces atención con guardia 24hs?" 
                             checked={formData.guardia24hs} 
                             onChange={(v) => setFormData(p => ({...p, guardia24hs: v}))} 
                             tooltip="Agrega un cartel destacado en tu perfil indicando la atención continua de emergencias." 
                          />
                          {formData.guardia24hs && (
                            <div className="pt-4 border-t border-red-200/50 mt-2 animate-in fade-in slide-in-from-top-2 flex flex-col gap-4">
-                             <InputGroup label="Línea Directa de Emergencias (Opcional)" id="telefonoGuardia" value={formData.telefonoGuardia} onChange={handleChange} placeholder="Dejar vacío para usar el teléfono principal" tooltip="Si tienes un celular o línea exclusiva para urgencias, ingrésalo aquí." />
+                             <InputGroup label="Línea Directa de Emergencias (Opcional)" id="telefonoGuardia" value={formData.telefonoGuardia} onChange={handleChange} placeholder="Dejar vacío para usar el número de teléfono principal de tu veterinaria" tooltip="Si tienes un celular o línea exclusiva para urgencias, ingrésalo aquí." />
                              
                              <div className="bg-white border border-red-100 rounded-2xl p-5 shadow-sm mt-2">
-                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
-                                  <div>
-                                    <h4 className="text-sm font-bold text-[#1A3D3D] mb-1">Protocolo Crítico de Acción</h4>
-                                    <p className="text-xs text-gray-500 font-medium">Instrucciones de 4 pasos para clientes en camino.</p>
-                                  </div>
-                                  <button 
-                                    onClick={() => setPersonalizarUrgencias(!personalizarUrgencias)}
-                                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-colors border ${personalizarUrgencias ? 'bg-red-50 text-red-600 border-red-200' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'}`}
-                                  >
-                                    {personalizarUrgencias ? 'Ocultar edición' : 'Personalizar pasos'}
-                                  </button>
+                                <div className="mb-4">
+                                  <h4 className="text-m font-bold text-[#1A3D3D] mb-1">Protocolo Crítico de Acción</h4>
+                                  <p className="text-s text-gray-500 font-medium">Instrucciones estándar que verán tus clientes en tu perfil cuando estén en camino a la guardia.</p>
                                 </div>
-
-                                {personalizarUrgencias ? (
-                                  <div className="space-y-4 pt-4 border-t border-gray-100 animate-in fade-in">
-                                    {formData.urgencias.map((urgencia, index) => (
-                                      <div key={urgencia.id} className="flex gap-4 items-start bg-gray-50 p-4 rounded-xl border border-gray-200">
-                                        <div className="w-10 h-10 rounded-lg bg-red-100 text-red-600 font-black flex items-center justify-center shrink-0 border border-red-200">
-                                          {urgencia.paso}
-                                        </div>
-                                        <div className="flex-1 space-y-3">
-                                          <div>
-                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Título corto</label>
-                                            <input type="text" value={urgencia.titulo} onChange={(e) => handleArrayUpdate('urgencias', urgencia.id, 'titulo', e.target.value)} className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm font-bold text-[#1A3D3D] focus:border-red-400 outline-none" maxLength={25} />
-                                          </div>
-                                          <div>
-                                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1">Instrucción</label>
-                                            <input type="text" value={urgencia.desc} onChange={(e) => handleArrayUpdate('urgencias', urgencia.id, 'desc', e.target.value)} className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs font-medium text-gray-600 focus:border-red-400 outline-none" maxLength={90} />
-                                          </div>
-                                        </div>
+                                <div className="space-y-3">
+                                  {formData.urgencias.map((urgencia) => (
+                                    <div key={urgencia.id} className="flex gap-4 items-start bg-gray-50 p-4 rounded-xl border border-gray-100">
+                                      <div className="w-9 h-9 rounded-lg bg-red-100 text-red-600 font-black text-sm flex items-center justify-center shrink-0 border border-red-200">
+                                        {urgencia.paso}
                                       </div>
-                                    ))}
-                                  </div>
-                                ) : (
-                                  <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 mt-2 flex items-center gap-3">
-                                    <Info className="w-5 h-5 text-gray-400 shrink-0" />
-                                    <p className="text-xs text-gray-500 font-medium leading-relaxed">Se mostrará el protocolo estándar de 4 pasos recomendado por El Portal. Podés personalizarlo si tu clínica tiene otras normativas.</p>
-                                  </div>
-                                )}
+                                      <div className="flex-1">
+                                        <p className="text-sm font-bold text-[#1A3D3D] leading-tight mb-0.5">{urgencia.titulo}</p>
+                                        <p className="text-xs text-gray-500 font-medium leading-relaxed">{urgencia.desc}</p>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
                              </div>
                            </div>
                          )}
@@ -1473,7 +1472,7 @@ export default function EditorClinico() {
                     {/* PREGUNTAS FRECUENTES */}
                     <Accordion title="Preguntas Frecuentes (FAQ)" icon={MessageSquare} isOpen={openSection === 'faq'} onToggle={() => setOpenSection(openSection === 'faq' ? null : 'faq')} tooltip="Respuestas rápidas para tus clientes. Las preguntas vacías no se mostrarán en tu perfil.">
                       <div className="space-y-5">
-                        <div className="bg-[#F4F7F7] border border-[#2D6A6A]/20 text-[#2D6A6A] text-xs font-medium px-4 py-3 rounded-xl flex items-start gap-2 leading-relaxed">
+                        <div className="bg-[#F4F7F7] border border-[#2D6A6A]/20 text-[#2D6A6A] text-s font-medium px-4 py-3 rounded-xl flex items-start gap-2 leading-relaxed">
                           <Info className="w-4 h-4 shrink-0 mt-0.5" /> 
                           <span>Te sugerimos algunas preguntas clave. Si no completás la respuesta, esa pregunta simplemente se ocultará en tu perfil público.</span>
                         </div>
@@ -1495,7 +1494,7 @@ export default function EditorClinico() {
                                   type="text" 
                                   value={faq.pregunta} 
                                   onChange={(e) => handleFaqChange(faq.id, 'pregunta', e.target.value)} 
-                                  placeholder="Ej: ¿Atienden animales exóticos?" 
+                                  placeholder="Podés personalizar tu propia pregunta acá..." 
                                   className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-bold text-[#1A3D3D] focus:border-[#2D6A6A] outline-none transition-colors" 
                                 />
                               </div>
@@ -1515,7 +1514,7 @@ export default function EditorClinico() {
                         ))}
                         
                         <button type="button" onClick={addCustomFaq} className="w-full py-3.5 border-2 border-dashed border-[#2D6A6A]/30 bg-white rounded-xl text-[#2D6A6A] text-xs font-bold hover:bg-[#2D6A6A]/5 hover:border-[#2D6A6A] transition-colors flex items-center justify-center gap-2">
-                          <Plus className="w-4 h-4" /> Agregar otra pregunta
+                          <Plus className="w-4 h-4" /> Agregar otra pregunta sugerida
                         </button>
                       </div>
                     </Accordion>
@@ -1612,10 +1611,13 @@ export default function EditorClinico() {
                       </div>
 
                       <div className="pt-8 mt-6 border-t border-gray-100">
-                        <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest ml-1 mb-5">Redes Sociales</h3>
+                        <div className="flex items-center gap-2 mb-5 text-left">
+                          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Redes Sociales (Opcional)</h3>
+                          <Tooltip text="Copia el link (URL) de tu perfil y pégalo aquí. Si dejas el campo vacío, el ícono correspondiente no aparecerá en tu perfil público." />
+                        </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
-                          <InputGroup label="Instagram" id="instagram" value={formData.redes.instagram} onChange={(e) => handleRedesChange('instagram', e.target.value)} canTest />
-                          <InputGroup label="Facebook" id="facebook" value={formData.redes.facebook} onChange={(e) => handleRedesChange('facebook', e.target.value)} canTest />
+                          <InputGroup label="Instagram" id="instagram" value={formData.redes.instagram} onChange={(e) => handleRedesChange('instagram', e.target.value)} placeholder="Link de perfil" canTest />
+                          <InputGroup label="Facebook" id="facebook" value={formData.redes.facebook} onChange={(e) => handleRedesChange('facebook', e.target.value)} placeholder="Link de perfil" canTest />
                         </div>
                       </div>
                     </Accordion>
@@ -1627,91 +1629,208 @@ export default function EditorClinico() {
 
             {/* TAB 3: ESPECIALIDADES */}
             {activeTab === 'servicios' && isPro && (
-              <div className="w-full bg-white rounded-[32px] shadow-sm border border-gray-100 p-6 md:p-10 relative animate-in fade-in duration-300 min-h-[500px]">
-                <div className="mb-8">
-                   <h3 className="text-2xl font-black text-[#1A3D3D] font-['Montserrat']">Especialidades y Servicios</h3>
-                   <p className="text-sm text-gray-500 mt-1">Selecciona las prestaciones disponibles en tu centro médico.</p>
+  <div className="w-full bg-white rounded-[32px] shadow-sm border border-gray-100 p-6 md:p-10 relative animate-in fade-in duration-300 min-h-[500px]">
+    <div className="mb-8">
+      <h3 className="text-2xl font-black text-[#1A3D3D] font-['Montserrat']">Especialidades y Servicios</h3>
+      <p className="text-sm text-gray-500 mt-1">Seleccioná las prestaciones disponibles en tu centro médico.</p>
+    </div>
+
+    <div className="flex flex-col gap-3">
+      {especialidadesData.map(grupo => {
+        const grupoActual = formData.servicios[grupo.id] || { activo: false, subOpcionesSeleccionadas: [], desc: '', serviciosPersonalizados: [] };
+        const isActive = grupoActual.activo;
+        const seleccionadas = grupoActual.subOpcionesSeleccionadas || [];
+        const personalizados = grupoActual.serviciosPersonalizados || [];
+        const totalSeleccionadas = seleccionadas.length + personalizados.length;
+        const expandido = gruposExpandidos[grupo.id] || false;
+        const setExpandido = (val) => setGruposExpandidos(prev => ({ ...prev, [grupo.id]: typeof val === 'function' ? val(prev[grupo.id] || false) : val }));
+        const nuevoServicio = nuevosServicios[grupo.id] || '';
+        const setNuevoServicio = (val) => setNuevosServicios(prev => ({ ...prev, [grupo.id]: val }));
+
+        const toggleGrupo = () => {
+          if (!isActive) {
+            setFormData(prev => ({
+              ...prev,
+              servicios: { ...prev.servicios, [grupo.id]: { ...grupoActual, activo: true } }
+            }));
+            setExpandido(true);
+          } else {
+            const sinSeleccion = totalSeleccionadas === 0;
+            if (expandido && sinSeleccion) {
+              setFormData(prev => ({
+                ...prev,
+                servicios: { ...prev.servicios, [grupo.id]: { ...grupoActual, activo: false } }
+              }));
+            }
+            setExpandido(e => !e);
+          }
+        };
+
+        const desactivarGrupo = (e) => {
+          e.stopPropagation();
+          setFormData(prev => ({
+            ...prev,
+            servicios: { ...prev.servicios, [grupo.id]: { ...grupoActual, activo: false, subOpcionesSeleccionadas: [], serviciosPersonalizados: [] } }
+          }));
+          setExpandido(false);
+        };
+
+        const agregarPersonalizado = () => {
+          const texto = nuevoServicio.trim();
+          if (!texto) return;
+          const capitalizado = texto.charAt(0).toUpperCase() + texto.slice(1);
+          if (personalizados.includes(capitalizado)) return;
+          setFormData(prev => ({
+            ...prev,
+            servicios: { ...prev.servicios, [grupo.id]: { ...grupoActual, serviciosPersonalizados: [...personalizados, capitalizado] } }
+          }));
+          setNuevoServicio('');
+        };
+
+        const quitarPersonalizado = (srv) => {
+          setFormData(prev => ({
+            ...prev,
+            servicios: { ...prev.servicios, [grupo.id]: { ...grupoActual, serviciosPersonalizados: personalizados.filter(p => p !== srv) } }
+          }));
+        };
+
+        return (
+          <div key={grupo.id} className={`rounded-[20px] border transition-all duration-300 overflow-hidden ${isActive ? 'border-[#2D6A6A] bg-white shadow-sm' : 'border-gray-200 bg-gray-50/50'}`}>
+
+            {/* HEADER */}
+            {(() => {
+              const iconosGrupo = {
+                consulta_general: Stethoscope,
+                especialidades_medicas: Activity,
+                quirurgico_critico: IconoBisturi,
+                imagenes: Microscope,
+                laboratorio: FileText,
+                atencion_por_especie: Heart,
+                bienestar_comportamiento: Brain,
+                terapias_holisticas: Sparkles,
+              };
+              const IconoGrupo = iconosGrupo[grupo.id] || Stethoscope;
+              return (
+                <div className="p-4 flex items-center gap-3 cursor-pointer select-none" onClick={toggleGrupo}>
+                  <IconoGrupo
+                    onClick={isActive ? desactivarGrupo : undefined}
+                    className={`w-5 h-5 shrink-0 transition-colors duration-300 ${isActive ? 'text-[#2D6A6A]' : 'text-gray-500'}`}
+                  />
+                  <span className={`flex-1 text-sm font-black ${isActive ? 'text-[#1A3D3D]' : 'text-gray-500'}`}>
+                    {grupo.grupo}
+                  </span>
+                  {isActive && !expandido && totalSeleccionadas > 0 && (
+                    <span className="text-[11px] font-bold text-[#2D6A6A] bg-[#2D6A6A]/10 px-2.5 py-1 rounded-full shrink-0">
+                      {totalSeleccionadas} seleccionada{totalSeleccionadas !== 1 ? 's' : ''}
+                    </span>
+                  )}
+                  <ChevronDown strokeWidth={2.5} className={`w-5 h-5 transition-transform duration-300 shrink-0 ${expandido && isActive ? 'rotate-180 text-[#2D6A6A]' : 'text-gray-500'}`} />
                 </div>
+              );
+            })()}
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  {CATALOGO_SERVICIOS.map(srv => {
-                    const isActive = formData.servicios[srv.id]?.activo;
-                    const seleccionadas = formData.servicios[srv.id]?.subOpcionesSeleccionadas || [];
+            {/* RESUMEN DE SELECCIONADAS */}
+            {isActive && !expandido && totalSeleccionadas > 0 && (
+              <div className="px-4 pb-3 flex flex-wrap gap-1.5">
+                {seleccionadas.map(s => (
+                  <span key={s} className="text-[11px] font-medium bg-[#F4F7F7] text-[#2D6A6A] border border-[#2D6A6A]/20 px-2.5 py-1 rounded-full">{s}</span>
+                ))}
+                {personalizados.map(s => (
+                  <span key={s} className="text-[11px] font-medium bg-[#F4F7F7] text-[#666666] border border-gray-200 px-2.5 py-1 rounded-full">{s}</span>
+                ))}
+              </div>
+            )}
 
+            {/* CONTENIDO EXPANDIDO */}
+            {expandido && (
+              <div className="px-4 pb-5 border-t border-gray-100 pt-4 animate-in fade-in slide-in-from-top-2 duration-200">
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Sub-especialidades</p>
+                <div className="flex flex-col gap-2 mb-4">
+                  {grupo.opciones.map(opcion => {
+                    const isChecked = seleccionadas.includes(opcion);
                     return (
-                      <div key={srv.id} className={`flex flex-col rounded-[24px] border transition-all duration-300 ${isActive ? 'border-[#2D6A6A] bg-white shadow-sm' : 'border-gray-200 bg-gray-50/50'}`}>
-                        <div className="p-5 flex items-center gap-4 cursor-pointer hover:bg-gray-50/50 transition-colors rounded-t-[24px]" onClick={() => toggleServicio(srv.id)}>
-                          <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-colors shrink-0 ${isActive ? 'bg-[#1A3D3D] border-[#1A3D3D]' : 'bg-white border-gray-300'}`}>
-                            {isActive && <Check className="w-4 h-4 text-white stroke-[3]" />}
-                          </div>
-                          <div className="flex items-center gap-3">
-                             <srv.icono className={`w-5 h-5 ${isActive ? 'text-[#2D6A6A]' : 'text-gray-400'}`} />
-                             <span className={`text-base font-black ${isActive ? 'text-[#1A3D3D]' : 'text-gray-500'}`}>{srv.titulo}</span>
-                          </div>
+                      <button
+                        key={opcion}
+                        type="button"
+                        onClick={() => {
+                          const nuevas = isChecked ? seleccionadas.filter(o => o !== opcion) : [...seleccionadas, opcion];
+                          setFormData(prev => ({
+                            ...prev,
+                            servicios: { ...prev.servicios, [grupo.id]: { ...grupoActual, subOpcionesSeleccionadas: nuevas } }
+                          }));
+                        }}
+                        className={`w-full justify-start px-4 py-2.5 rounded-xl text-[13px] font-bold border transition-colors flex items-center gap-3 ${isChecked ? 'bg-[#1A3D3D] text-white border-[#1A3D3D]' : 'bg-white text-gray-600 border-gray-200 hover:border-[#2D6A6A]'}`}
+                      >
+                        <div className={`w-4 h-4 rounded-[4px] border flex items-center justify-center shrink-0 ${isChecked ? 'bg-white border-white' : 'border-gray-300'}`}>
+                          {isChecked && <Check className="w-3 h-3 text-[#1A3D3D]" />}
                         </div>
-                        
-                        <div className="px-5 pb-6">
-                          <div className="border-t border-gray-200/60 pt-5">
-                             <p className={`text-[10px] font-black uppercase tracking-widest mb-3 ${isActive ? 'text-gray-400' : 'text-gray-300'}`}>Sub-especialidades</p>
-                             <div className={`flex flex-col items-start gap-2.5 transition-all duration-300 ${isActive ? 'opacity-100' : 'opacity-40 grayscale pointer-events-none'}`}>
-                               {[...new Set([...srv.opciones, ...seleccionadas])].map(opcion => {
-                                 const isChecked = seleccionadas.includes(opcion);
-                                 return (
-                                   <React.Fragment key={opcion}>
-                                     <button 
-                                      type="button" onClick={() => toggleSubOpcion(srv.id, opcion)}
-                                      className={`w-full justify-start px-4 py-2.5 rounded-xl text-[13px] font-bold border transition-colors flex items-center gap-3 shadow-sm ${isChecked ? 'bg-[#1A3D3D] text-white border-[#1A3D3D]' : 'bg-white text-gray-600 border-gray-200 hover:border-[#2D6A6A]'}`}
-                                     >
-                                       <div className={`w-4 h-4 rounded-[4px] border flex items-center justify-center shrink-0 ${isChecked ? 'bg-white border-white' : 'border-gray-300'}`}>
-                                         {isChecked && <Check className="w-3 h-3 text-[#1A3D3D]" />}
-                                      </div>
-                                       <span className="text-left">{opcion}</span>
-                                     </button>
-                                     {opcion === 'Terapias Holísticas' && isChecked && (
-                                       <div className="w-full pl-6 pr-1 py-1 animate-in fade-in slide-in-from-top-1">
-                                         <div className="relative">
-                                           <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-[#2D6A6A]/20 -ml-3 rounded-full"></div>
-                                           <input 
-                                             type="text" placeholder="Ej: Acupuntura, Reiki, Flores de Bach..." 
-                                             value={formData.servicios[srv.id]?.detalleHolistico || ''}
-                                             onChange={(e) => handleDetalleHolistico(srv.id, e.target.value)}
-                                             className="w-full bg-white border border-gray-200 focus:border-[#2D6A6A] rounded-xl px-4 py-3 text-xs font-medium focus:outline-none transition-colors text-[#1A3D3D] shadow-sm"
-                                           />
-                                         </div>
-                                       </div>
-                                     )}
-                                   </React.Fragment>
-                                 );
-                               })}
-                               
-                               {nuevaSubOpcion.idServicio === srv.id ? (
-                                 <div className="flex items-center gap-2 w-full mt-1">
-                                   <input 
-                                    type="text" autoFocus value={nuevaSubOpcion.texto}
-                                    onChange={(e) => setNuevaSubOpcion({ ...nuevaSubOpcion, texto: e.target.value })}
-                                    onKeyDown={(e) => { if(e.key === 'Enter') { e.preventDefault(); agregarSubOpcionPersonalizada(srv.id); } }}
-                                    placeholder="Escribir especialidad..." className="px-4 py-3 text-xs font-bold rounded-xl border border-[#2D6A6A] outline-none flex-1 bg-white shadow-sm"
-                                   />
-                                   <button type="button" onClick={() => agregarSubOpcionPersonalizada(srv.id)} className="bg-[#2D6A6A] text-white p-3 rounded-xl shrink-0 shadow-sm hover:bg-[#1A3D3D] transition-colors"><Plus className="w-4 h-4" /></button>
-                                   <button type="button" onClick={() => setNuevaSubOpcion({ idServicio: null, texto: '' })} className="bg-white border border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-200 p-3 rounded-xl shrink-0 shadow-sm transition-colors"><X className="w-4 h-4" /></button>
-                                 </div>
-                               ) : (
-                                 <button 
-                                  type="button" onClick={() => setNuevaSubOpcion({ idServicio: srv.id, texto: '' })}
-                                  className="w-full justify-center mt-1 px-4 py-3 rounded-xl text-xs font-bold text-[#2D6A6A] border border-dashed border-[#2D6A6A]/50 hover:bg-[#2D6A6A]/5 hover:border-[#2D6A6A] transition-colors flex items-center gap-2 bg-white shadow-sm"
-                                 >
-                                   <Plus className="w-4 h-4" /> Añadir especialidad
-                                 </button>
-                               )}
-                             </div>
-                          </div>
-                        </div>
-                      </div>
+                        <span className="text-left">{opcion}</span>
+                      </button>
                     );
                   })}
                 </div>
+
+                {personalizados.length > 0 && (
+                  <div className="flex flex-col gap-2 mb-4">
+                    {personalizados.map(srv => (
+                      <div key={srv} className="w-full justify-start px-4 py-2.5 rounded-xl text-[13px] font-bold border bg-[#1A3D3D] text-white border-[#1A3D3D] flex items-center gap-3">
+                        <div className="w-4 h-4 rounded-[4px] bg-white border-white border flex items-center justify-center shrink-0">
+                          <Check className="w-3 h-3 text-[#1A3D3D]" />
+                        </div>
+                        <span className="flex-1 text-left">{srv}</span>
+                        <button type="button" onClick={() => quitarPersonalizado(srv)} className="shrink-0 opacity-60 hover:opacity-100 transition-opacity">
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="border-t border-gray-100 pt-4 mt-2">
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">¿No encontrás lo que buscás? Agregá uno propio</p>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={nuevoServicio}
+                      onChange={(e) => setNuevoServicio(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); agregarPersonalizado(); } }}
+                      className="flex-1 bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:border-[#2D6A6A] outline-none text-[#1A3D3D]"
+                    />
+                    <button type="button" onClick={agregarPersonalizado} className="bg-[#2D6A6A] text-white p-2.5 rounded-xl hover:bg-[#1A3D3D] transition-colors shrink-0">
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 block">
+                    Descripción opcional del grupo
+                  </label>
+                  <textarea
+                    placeholder="Contá brevemente cómo trabajan en esta área..."
+                    value={grupoActual.desc || ''}
+                    maxLength={200}
+                    rows={2}
+                    onChange={(e) => {
+                      setFormData(prev => ({
+                        ...prev,
+                        servicios: { ...prev.servicios, [grupo.id]: { ...grupoActual, desc: e.target.value } }
+                      }));
+                    }}
+                    className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm resize-none focus:border-[#2D6A6A] outline-none text-[#1A3D3D] font-medium"
+                  />
+                  <p className={`text-right text-[10px] font-bold mt-1 ${(grupoActual.desc?.length || 0) >= 180 ? 'text-red-400' : 'text-gray-300'}`}>
+                    {grupoActual.desc?.length || 0} / 200
+                  </p>
+                </div>
               </div>
             )}
+          </div>
+        );
+      })}
+    </div>
+  </div>
+)}
 
             {/* TAB 4: STAFF */}
             {activeTab === 'staff' && isPro && (

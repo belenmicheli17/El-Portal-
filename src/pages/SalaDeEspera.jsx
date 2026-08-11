@@ -178,7 +178,9 @@ const [showLogin, setShowLogin] = useState(false);
   const [loginPassword, setLoginPassword] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState('');
-  const [showLoginPassword, setShowLoginPassword] = useState(true);
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const loginEmailRef = useRef(null);
+  const loginPasswordRef = useRef(null);
 
   // — Lógica de registro del drawer —
   const handleRegistroDrawer = async () => {
@@ -211,9 +213,14 @@ const [showLogin, setShowLogin] = useState(false);
     }
   };
 const handleLogin = async () => {
-    // Leemos directo del DOM por si el autocompletado del browser no disparó onChange
-    const emailVal = document.querySelector('input[name="login-email"]')?.value || loginEmail;
-    const passVal = document.querySelector('input[name="login-password"]')?.value || loginPassword;
+    const emailVal = loginEmailRef.current?.value || loginEmail;
+    const passVal = loginPasswordRef.current?.value || loginPassword;
+
+    console.log('🔐 handleLogin llamado');
+    console.log('📧 emailVal (ref):', loginEmailRef.current?.value);
+    console.log('📧 loginEmail (state):', loginEmail);
+    console.log('🔑 passVal (ref):', loginPasswordRef.current?.value ? '***tiene valor***' : 'VACÍO');
+    console.log('🔑 loginPassword (state):', loginPassword ? '***tiene valor***' : 'VACÍO');
 
     if (!emailVal || !passVal) {
       setLoginError('Completá los dos campos para continuar.');
@@ -328,7 +335,12 @@ const handleLogin = async () => {
       setEnviado(true);
       setEmail("");
     } catch (err) {
-      setError("Hubo un problema. Intentá de nuevo.");
+      console.error("Error al guardar en Firestore:", err);
+      if (err.code === 'unavailable' || err.message?.includes('network')) {
+        setError("Error de conexión. Verificá tu internet e intentá de nuevo.");
+      } else {
+        setError("Hubo un problema. Intentá de nuevo.");
+      }
     } finally {
       setEnviando(false);
     }
@@ -388,7 +400,7 @@ const handleLogin = async () => {
               }`}
             >
               <LogIn className="w-4 h-4" />
-              <span className="hidden sm:inline">Iniciar sesión</span>
+              <span>Iniciar sesión</span>
             </button>
 
             {/* DROPDOWN */}
@@ -422,6 +434,7 @@ const handleLogin = async () => {
                     <div className="flex flex-col gap-1">
                       <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-0.5">Email</label>
                       <input
+                          ref={loginEmailRef}
                           type="email"
                           value={loginEmail}
                           onChange={(e) => setLoginEmail(e.target.value)}
@@ -436,6 +449,7 @@ const handleLogin = async () => {
                       <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-0.5">Contraseña</label>
                       <div className="relative">
                         <input
+                          ref={loginPasswordRef}
                           type={showLoginPassword ? 'text' : 'password'}
                           value={loginPassword}
                           onChange={(e) => setLoginPassword(e.target.value)}

@@ -1841,7 +1841,17 @@ if (!formData.nombre.trim() || !formData.especialidad.trim() || !formData.foto |
             }));
             setExpandido(true);
           } else {
-            // Solo colapsar/expandir sin desactivar
+            // Si está expandido y no tiene nada seleccionado, desactivar al cerrar
+            const sinSeleccion = totalSeleccionadas === 0;
+            if (expandido && sinSeleccion) {
+              setFormData(prev => ({
+                ...prev,
+                servicios: {
+                  ...prev.servicios,
+                  [grupo.id]: { ...grupoActual, activo: false }
+                }
+              }));
+            }
             setExpandido(e => !e);
           }
         };
@@ -1887,22 +1897,30 @@ if (!formData.nombre.trim() || !formData.especialidad.trim() || !formData.foto |
           <div key={grupo.id} className={`rounded-[20px] border transition-all duration-300 overflow-hidden ${isActive ? 'border-[#2D6A6A] bg-white shadow-sm' : 'border-gray-200 bg-gray-50/50'}`}>
 
             {/* HEADER — siempre visible */}
-            <div
-              className="p-4 flex items-center gap-3 cursor-pointer select-none"
-              onClick={toggleGrupo}
-            >
-              {/* Checkbox de activación */}
-              <div
-                onClick={isActive ? desactivarGrupo : undefined}
-                className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors shrink-0 ${isActive ? 'bg-[#1A3D3D] border-[#1A3D3D]' : 'bg-white border-gray-300'}`}
-              >
-                {isActive && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
-              </div>
-
-              {/* Nombre del grupo */}
-              <span className={`flex-1 text-sm font-black ${isActive ? 'text-[#1A3D3D]' : 'text-gray-500'}`}>
-                {grupo.grupo}
-              </span>
+            {(() => {
+              const iconosGrupo = {
+                consulta_general: Stethoscope,
+                especialidades_medicas: Activity,
+                quirurgico_critico: IconoBisturi,
+                imagenes: Microscope,
+                laboratorio: FileText,
+                atencion_por_especie: Heart,
+                bienestar_comportamiento: Brain,
+                terapias_holisticas: Sparkles,
+              };
+              const IconoGrupo = iconosGrupo[grupo.id] || Stethoscope;
+              return (
+                <div
+                  className="p-4 flex items-center gap-3 cursor-pointer select-none"
+                  onClick={toggleGrupo}
+                >
+                  <IconoGrupo
+                    onClick={isActive ? desactivarGrupo : undefined}
+                    className={`w-5 h-5 shrink-0 transition-colors duration-300 ${isActive ? 'text-[#2D6A6A]' : 'text-gray-500'}`}
+                  />
+                  <span className={`flex-1 text-sm font-black ${isActive ? 'text-[#1A3D3D]' : 'text-gray-500'}`}>
+                    {grupo.grupo}
+                  </span>
 
               {/* Pills de seleccionadas (cuando está cerrado y activo) */}
               {isActive && !expandido && totalSeleccionadas > 0 && (
@@ -1911,9 +1929,10 @@ if (!formData.nombre.trim() || !formData.especialidad.trim() || !formData.foto |
                 </span>
               )}
 
-              {/* Chevron */}
-              <ChevronDown className={`w-4 h-4 transition-transform duration-300 shrink-0 ${expandido ? 'rotate-180 text-[#2D6A6A]' : 'text-gray-300'}`} />
-            </div>
+              <ChevronDown strokeWidth={2.5} className={`w-5 h-5 transition-transform duration-300 shrink-0 ${expandido && isActive ? 'rotate-180 text-[#2D6A6A]' : 'text-gray-500'}`} />
+                </div>
+              );
+            })()}
 
             {/* RESUMEN DE SELECCIONADAS — visible cuando cerrado y activo */}
             {isActive && !expandido && totalSeleccionadas > 0 && (
