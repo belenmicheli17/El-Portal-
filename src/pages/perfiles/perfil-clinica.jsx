@@ -30,6 +30,31 @@ const URGENCIAS_FALLBACK = [
   { id: 4, paso: "04", titulo: "Traé historial", desc: "Si toma medicación o tiene estudios previos, traelos con vos." }
 ];
 
+function BioExpandible({ bio }) {
+  const [expandido, setExpandido] = useState(false);
+  if (!bio) return null;
+
+  // Solo mostramos el botón si el texto es largo (más de 180 caracteres)
+  const esLargo = bio.length > 120;
+
+  return (
+    <div className="mb-6 px-2 text-center w-full">
+      <p className="text-gray-500 text-[14px] font-medium leading-relaxed" style={{ display: '-webkit-box', WebkitBoxOrient: 'vertical', WebkitLineClamp: !expandido && esLargo ? 4 : 'unset', overflow: !expandido && esLargo ? 'hidden' : 'visible' }}>
+        {bio}
+      </p>
+      {esLargo && (
+        <button
+          onClick={() => setExpandido(!expandido)}
+          className="mt-2 text-[#2D6A6A] text-[12px] font-bold hover:text-[#1A3D3D] transition-colors flex items-center gap-1 mx-auto"
+        >
+          {expandido ? 'Ver menos' : 'Ver más'}
+          <ChevronDown className={`w-3.5 h-3.5 transition-transform ${expandido ? 'rotate-180' : ''}`} />
+        </button>
+      )}
+    </div>
+  );
+}
+
 function StaffCarrusel({ staff, setFotoModal }) {
   const staffFiltrado = staff.filter(m => m.nombre && m.nombre.trim());
   const [staffIndex, setStaffIndex] = useState(0);
@@ -66,13 +91,13 @@ function StaffCarrusel({ staff, setFotoModal }) {
       )}
       <h3 className="text-[18px] font-black text-[#1A3D3D] font-['Montserrat'] leading-tight mb-1">{m.nombre}</h3>
       <p className="text-[#2D6A6A] text-[11px] font-black uppercase tracking-widest mb-4 text-center">{m.especialidad}</p>
-      <p className="text-gray-500 text-[14px] font-medium leading-relaxed mb-6 px-2 text-center line-clamp-4">{m.bio}</p>
+      <BioExpandible bio={m.bio} />
       <div className="w-full mt-auto bg-white rounded-2xl p-3.5 border border-gray-100 text-left flex items-center justify-between">
         <div className="text-left">
           <p className="text-[10px] font-bold text-gray-400 uppercase leading-none mb-1">Matrícula</p>
           <p className="text-[13px] font-bold text-[#1A3D3D] leading-none">{m.matricula}</p>
         </div>
-        <Award className="w-4 h-4 text-[#2D6A6A]" />
+        <Award className="w-4 h-4 text-[#FF9800]" />
       </div>
     </>
   );
@@ -126,7 +151,7 @@ function StaffCarrusel({ staff, setFotoModal }) {
           {staffFiltrado.map((m, idx) => (
             <div
               key={m.id || idx}
-              className="bg-[#F4F7F7] border border-gray-100 rounded-[32px] p-6 shadow-sm hover:shadow-xl transition-all flex flex-col items-center w-[260px] shrink-0"
+              className="bg-[#F4F7F7] border border-gray-100 rounded-[32px] p-6 px-4 shadow-sm hover:shadow-xl transition-all flex flex-col items-center w-[260px] shrink-0"
               style={necesitaFlechas ? { scrollSnapAlign: 'start' } : {}}
             >
               <CardInterna m={m} />
@@ -135,6 +160,53 @@ function StaffCarrusel({ staff, setFotoModal }) {
         </div>
       </div>
 
+    </div>
+  );
+}
+
+function EmailCard({ email }) {
+  const [copiado, setCopiado] = useState(false);
+
+  const copiar = (e) => {
+    e.preventDefault();
+    navigator.clipboard.writeText(email).then(() => {
+      setCopiado(true);
+      setTimeout(() => setCopiado(false), 2000);
+    });
+  };
+
+  return (
+    <div className="w-full flex items-center gap-4 bg-[#F9FBFA] border border-gray-100 rounded-2xl p-5 hover:border-[#2D6A6A]/30 transition-all group relative">
+      <div className="w-12 h-12 bg-[#2D6A6A]/10 rounded-xl flex items-center justify-center text-[#2D6A6A] shrink-0">
+        <Mail className="w-5 h-5" />
+      </div>
+      <div className="text-left min-w-0 flex-1">
+        <p className="text-[10px] font-bold text-gray-400 uppercase leading-none mb-1.5">Email Oficial</p>
+        <a
+          href={`mailto:${email}`}
+          className="text-[#1A3D3D] font-black text-sm leading-none truncate block hover:text-[#2D6A6A] transition-colors"
+        >
+          {email}
+        </a>
+      </div>
+      <button
+        onClick={copiar}
+        className="shrink-0 w-9 h-9 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-[#2D6A6A] hover:bg-[#2D6A6A] hover:text-white transition-all shadow-sm"
+        title="Copiar email"
+      >
+        {copiado ? (
+          <span className="text-[10px] font-black">✓</span>
+        ) : (
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+          </svg>
+        )}
+      </button>
+      {copiado && (
+        <div className="absolute right-14 top-1/2 -translate-y-1/2 bg-[#1A3D3D] text-white text-[11px] font-bold px-3 py-1.5 rounded-xl shadow-lg">
+          ✓ Copiado
+        </div>
+      )}
     </div>
   );
 }
@@ -294,11 +366,55 @@ export default function PerfilClinica() {
 
       {/* HERO */}
       <main className="relative w-full bg-white overflow-hidden pt-[18px] md:pt-[45px]">
+        {/* BURBUJAS DECORATIVAS DE FONDO */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {/* PATRÓN HEXAGONAL — connotación médica/científica */}
+          <svg
+            className="absolute inset-0 w-full h-full opacity-[0.12]"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <defs>
+              <pattern id="hex-pattern" x="0" y="0" width="44" height="76" patternUnits="userSpaceOnUse">
+                <polygon
+                  points="22,2 41,13 41,35 22,46 3,35 3,13"
+                  fill="none"
+                  stroke="#1A3D3D"
+                  strokeWidth="0.8"
+                />
+                <polygon
+                  points="44,40 63,51 63,73 44,84 25,73 25,51"
+                  fill="none"
+                  stroke="#1A3D3D"
+                  strokeWidth="0.8"
+                />
+                <polygon
+                  points="0,40 19,51 19,73 0,84 -19,73 -19,51"
+                  fill="none"
+                  stroke="#1A3D3D"
+                  strokeWidth="0.8"
+                />
+                <polygon
+                  points="44,-36 63,-25 63,-3 44,8 25,-3 25,-25"
+                  fill="none"
+                  stroke="#1A3D3D"
+                  strokeWidth="0.8"
+                />
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#hex-pattern)" />
+          </svg>
+          {/* GRADIENTE — desvanece el patrón en los bordes */}
+          <div className="absolute inset-0 bg-gradient-to-br from-white/90 via-white/40 to-white/70" />
+          {/* Burbuja esmeralda sutil izquierda */}
+          <div className="absolute -top-20 -left-20 w-[350px] h-[350px] rounded-full bg-[#2D6A6A]/4 blur-[80px]" />
+          {/* Burbuja teal sutil derecha */}
+          <div className="absolute bottom-0 right-[15%] w-[250px] h-[250px] rounded-full bg-[#4DB6AC]/5 blur-[70px]" />
+        </div>
         {/* FIX DETALLE #1: "Volver atrás" con navigate(-1) en lugar de link hardcodeado a Cartilla */}
         <div className="w-full flex justify-start pl-6">
           <button 
             onClick={() => navigate(-1)} 
-            className="flex items-center gap-2 text-gray-400 hover:text-[#1A3D3D] font-bold text-xs md:text-[10px] uppercase tracking-[0.3em] mb-8 transition-colors group"
+            className="flex items-center gap-2 text-gray-900 hover:text-[#1A3D3D] font-bold text-xs md:text-[10px] uppercase tracking-[0.3em] mb-8 transition-colors group"
           >
             <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Volver atrás
           </button>
@@ -328,62 +444,92 @@ export default function PerfilClinica() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-              <a href={`https://wa.me/${data.whatsapp}`} className="flex items-center justify-center gap-2.5 bg-[#25D366] text-white px-8 py-4 rounded-2xl font-black uppercase text-[11px] shadow-lg tracking-widest hover:bg-[#20bd5a] transition-colors">
-                <Phone className="w-4 h-4" /> Enviar WhatsApp 
-              </a>
-              {planActual === 'pro' && (
-                <a href="#servicios" className="flex items-center justify-center gap-2.5 bg-white border-2 border-gray-100 text-[#1A3D3D] px-8 py-4 rounded-2xl font-black uppercase text-[11px] hover:border-[#2D6A6A]/30 transition-all tracking-widest">
-                  Ver Servicios
-                </a>
-              )}
+             <a
+             href="#contacto"
+  onClick={e => { e.preventDefault(); document.getElementById('contacto')?.scrollIntoView({ behavior: 'smooth' }); }}
+  className="flex items-center justify-center gap-2.5 bg-[#FF9800]/90 text-white px-8 py-4 rounded-2xl font-black uppercase text-[11px] hover:bg-[#e68900] hover:-translate-y-1 hover:shadow-xl transition-all tracking-widest shadow-[0_4px_20px_rgba(255,152,0,0.25)]"
+>
+  <MapPin className="w-4 h-4" /> Contacto y Ubicación
+</a>
             </div>
           </div>
 
           <div className="lg:col-span-5 relative group">
-            <div className="bg-white rounded-[32px] p-8 shadow-2xl border border-gray-100 flex flex-col relative z-10 text-left">
+            <div className="bg-white rounded-[32px] p-7 shadow-2xl border border-gray-100 flex flex-col relative z-10 text-left">
+
+              {/* ENCABEZADO */}
               <div className="flex items-center gap-4 mb-6">
-                <div className="w-10 h-10 bg-[#F4F7F7] rounded-xl flex items-center justify-center text-[#2D6A6A] shadow-inner">
+                <div className="w-10 h-10 bg-[#2D6A6A]/10 rounded-xl flex items-center justify-center text-[#2D6A6A]">
                   <Clock className="w-5 h-5" />
                 </div>
-                <h3 className="text-[#1A3D3D] font-black font-['Montserrat'] text-lg">Horarios de atención</h3>
+                <div>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] leading-none mb-0.5">Información</p>
+                  <h3 className="text-[#1A3D3D] font-black font-['Montserrat'] text-lg leading-none">Horarios de atención</h3>
+                </div>
               </div>
-              
-              <div className="space-y-3 mb-6">
+
+              {/* HORARIOS */}
+              <div className="space-y-2.5 mb-4">
                 {data.guardia24hs ? (
-                  <div className="bg-[#2D6A6A]/5 border border-[#2D6A6A]/20 p-5 rounded-2xl flex items-center gap-4">
-                     <div className="bg-white p-2.5 rounded-xl shadow-sm">
-                       <Activity className="w-6 h-6 text-[#2D6A6A]" />
-                     </div>
-                     <div>
-                       <h4 className="font-black text-[#1A3D3D] text-[15px] font-['Montserrat'] leading-tight mb-1">Atención Continua</h4>
-                       <p className="text-xs font-bold text-gray-500">Horario cubierto por guardia permanente 24hs.</p>
-                     </div>
+                  <div className="bg-gradient-to-r from-[#2D6A6A]/8 to-[#4DB6AC]/8 border border-[#2D6A6A]/20 p-4 rounded-2xl flex items-center gap-3.5">
+                    <div className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center shrink-0">
+                      <Activity className="w-5 h-5 text-[#2D6A6A]" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <h4 className="font-black text-[#1A3D3D] text-[14px] font-['Montserrat'] leading-none">Atención Continua</h4>
+                        <span className="relative flex h-1.5 w-1.5">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#2D6A6A] opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#2D6A6A]"></span>
+                        </span>
+                      </div>
+                      <p className="text-[13px] font-bold text-[#2D6A6A]/70">Guardia permanente las 24hs.</p>
+                    </div>
                   </div>
                 ) : (
                   <>
                     {data.horarios && data.horarios.semanaDesde && (
-                      <div className="flex justify-between py-3.5 px-4 rounded-xl border bg-gray-50 border-gray-100">
-                        <span className="text-[12px] font-black lowercase tracking-wider text-[#1A3D3D]">lunes a viernes</span>
-                        <span className="text-[12px] font-medium text-gray-500">{data.horarios.semanaDesde} - {data.horarios.semanaHasta} hs</span>
+                      <div className="flex justify-between items-center py-3 px-4 rounded-xl border bg-[#F4F7F7] border-gray-100">
+                        <div className="flex items-center gap-2">
+                          <div className="w-1.5 h-1.5 rounded-full bg-[#2D6A6A]" />
+                          <span className="text-[12px] font-black lowercase text-[#1A3D3D]">lunes a viernes</span>
+                        </div>
+                        <span className="text-[12px] font-bold text-[#2D6A6A]">{data.horarios.semanaDesde} – {data.horarios.semanaHasta} hs</span>
                       </div>
                     )}
                     {data.horarios && data.horarios.sabadoDesde && data.horarios.sabadoHasta && (
-                      <div className="flex justify-between py-3.5 px-4 rounded-xl border bg-gray-50 border-gray-100">
-                        <span className="text-[12px] font-black lowercase tracking-wider text-[#1A3D3D]">sábados</span>
-                        <span className="text-[12px] font-medium text-gray-500">{data.horarios.sabadoDesde} - {data.horarios.sabadoHasta} hs</span>
+                      <div className="flex justify-between items-center py-3 px-4 rounded-xl border bg-[#F4F7F7] border-gray-100">
+                        <div className="flex items-center gap-2">
+                          <div className="w-1.5 h-1.5 rounded-full bg-[#4DB6AC]" />
+                          <span className="text-[12px] font-black lowercase text-[#1A3D3D]">sábados</span>
+                        </div>
+                        <span className="text-[12px] font-bold text-[#2D6A6A]">{data.horarios.sabadoDesde} – {data.horarios.sabadoHasta} hs</span>
                       </div>
                     )}
                   </>
                 )}
               </div>
 
-              <div className="flex items-center gap-3 bg-[#F9FBFA] p-3.5 rounded-xl border border-gray-100">
-                <MapPin className="w-4 h-4 text-[#2D6A6A] shrink-0" />
-                <span className="text-xs font-bold text-[#1A3D3D] leading-snug">{data.direccion}</span>
-              </div>
+              {/* SEPARADOR */}
+              <div className="border-t border-gray-100 mb-4" />
 
+              {/* DIRECCIÓN CLICKEABLE */}
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data.direccion)}`}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-3 bg-[#F4F7F7] hover:bg-[#2D6A6A]/8 border border-gray-100 hover:border-[#2D6A6A]/30 p-3.5 rounded-xl transition-all group"
+              >
+                <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shadow-sm shrink-0 group-hover:bg-[#2D6A6A] transition-colors">
+                  <MapPin className="w-4 h-4 text-[#2D6A6A] group-hover:text-white transition-colors" />
+                </div>
+                <span className="text-[12px] font-bold text-[#1A3D3D] leading-snug flex-1 group-hover:text-[#2D6A6A] transition-colors">{data.direccion}</span>
+                <ArrowRight className="w-3.5 h-3.5 text-gray-300 group-hover:text-[#2D6A6A] group-hover:translate-x-0.5 transition-all shrink-0" />
+              </a>
+
+              {/* BADGE AÑOS DE EXPERIENCIA — reposicionado para no cortarse */}
               {data.añosExperiencia && (
-                <div className="absolute -bottom-6 -right-8 bg-[#1A3D3D] rounded-2xl py-3 px-4 shadow-xl border border-white/10 flex items-center gap-2.5 hidden sm:flex">
+                <div className="absolute -bottom-12 -right-12 bg-[#1A3D3D] rounded-2xl py-3 px-4 shadow-xl border border-white/10 sm:flex hidden items-center gap-2.5">
                   <div className="w-8 h-8 bg-[#2D6A6A] rounded-xl flex items-center justify-center shrink-0">
                     <Star className="w-4 h-4 text-white fill-white" />
                   </div>
@@ -393,11 +539,11 @@ export default function PerfilClinica() {
                   </div>
                 </div>
               )}
-            </div>
+
+           </div>
           </div>
         </div>
       </main>
-
       {/* NUESTRA HISTORIA */}
       <section id="nosotros" className="py-8 md:py-12 bg-[#F4F7F7] reveal-on-scroll">
         <div className="max-w-[1100px] mx-auto px-6 md:px-10 flex flex-col md:flex-row items-center gap-10">
@@ -620,7 +766,7 @@ export default function PerfilClinica() {
                 <p className="text-[10px] font-bold text-gray-400 uppercase leading-none mb-1">Matrícula</p>
                 <p className="text-[13px] font-bold text-[#1A3D3D] leading-none">{m.matricula}</p>
               </div>
-              <Award className="w-4 h-4 text-[#2D6A6A]" />
+              <Award className="w-4 h-4 text-[#FF9800]" />
             </div>
                   </div>
                 ))}
@@ -641,7 +787,7 @@ export default function PerfilClinica() {
       <section id="contacto" className="py-8 md:py-12 bg-white reveal-on-scroll">
         <div className="max-w-[1100px] mx-auto px-6 md:px-10">
           
-          <div className={`highlight-animation bg-white rounded-[40px] p-6 md:p-10 flex flex-col lg:flex-row gap-10 border border-gray-100
+          <div className={`highlight-animation bg-[#2D6A6A]/12 rounded-[40px] p-6 md:p-10 flex flex-col lg:flex-row gap-4 lg:gap-10 border border-gray-100
             ${highlightContacto 
               ? 'scale-[1.02] shadow-[0_0_80px_rgba(45,106,106,0.3)] ring-4 ring-[#4DB6AC]/50 ring-offset-4 ring-offset-white relative z-50' 
               : 'scale-100 shadow-[0_30px_60px_rgba(26,61,61,0.06)] relative z-10'}`}
@@ -649,21 +795,97 @@ export default function PerfilClinica() {
             
             <div className="flex-1 flex flex-col text-left">
               <h3 className="text-[#2D6A6A] font-bold text-[11px] uppercase tracking-[0.3em] mb-2 text-left">Contacto Directo</h3>
-              <h2 className="text-3xl md:text-4xl font-black text-[#1A3D3D] font-['Montserrat'] mb-8 tracking-tight leading-tight text-left">Estamos para ayudarte, <br /> siempre cerca.</h2>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-                {/* WhatsApp */}
-                <a href={`https://wa.me/${data.whatsapp}`} target="_blank" rel="noreferrer" className="flex items-center gap-4 bg-[#F9FBFA] border border-gray-100 rounded-2xl p-5 hover:border-[#25D366]/30 transition-all group">
-                  <div className="w-12 h-12 bg-[#25D366]/10 rounded-xl flex items-center justify-center text-[#25D366] group-hover:bg-[#25D366] group-hover:text-white transition-colors shrink-0">
-                    <Phone className="w-5 h-5" />
+              <h2 className="text-3xl md:text-4xl font-black text-[#1A3D3D] font-['Montserrat'] mb-6 tracking-tight leading-tight text-left">Estamos para ayudarte, <br /> siempre cerca.</h2>
+
+              {/* MÓVIL: cajita compacta con todo junto */}
+              <div className="lg:hidden bg-[#F9FBFA] border border-gray-100 rounded-2xl p-4 mb-4 flex flex-col gap-3">
+                <a href={`https://wa.me/${data.whatsapp}`} target="_blank" rel="noreferrer" className="flex items-center gap-3">
+                  <div className="w-9 h-9 bg-[#25D366]/10 rounded-xl flex items-center justify-center text-[#25D366] shrink-0">
+                    <Phone className="w-4 h-4" />
                   </div>
-                  <div className="text-left min-w-0">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase leading-none mb-1.5">WhatsApp</p>
-                    <p className="text-[#1A3D3D] font-black text-sm leading-none truncate">+{data.whatsapp}</p>
+                  <div>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase leading-none mb-1">WhatsApp</p>
+                    <p className="text-[#1A3D3D] font-black text-sm leading-none">+{data.whatsapp}</p>
                   </div>
                 </a>
-                
-                {/* Teléfono Fijo (Condicional) */}
+                {data.email && (
+                  <a href={`mailto:${data.email}`} className="flex items-center gap-3">
+                    <div className="w-9 h-9 bg-[#2D6A6A]/10 rounded-xl flex items-center justify-center text-[#2D6A6A] shrink-0">
+                      <Mail className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-bold text-gray-400 uppercase leading-none mb-1">Email</p>
+                      <p className="text-[#1A3D3D] font-black text-sm leading-none truncate">{data.email}</p>
+                    </div>
+                  </a>
+                )}
+                {data.redes && (data.redes.instagram || data.redes.facebook) && (
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 bg-[#2D6A6A]/10 rounded-xl flex items-center justify-center text-[#2D6A6A] shrink-0">
+                      <Globe className="w-4 h-4" />
+                    </div>
+                    <div className="flex gap-2">
+                      {data.redes.instagram && (
+                        <a href={data.redes.instagram} target="_blank" rel="noreferrer" className="w-8 h-8 rounded-full bg-white border border-gray-100 flex items-center justify-center text-[#E4405F] shadow-sm">
+                          <Instagram className="w-4 h-4" />
+                        </a>
+                      )}
+                      {data.redes.facebook && (
+                        <a href={data.redes.facebook} target="_blank" rel="noreferrer" className="w-8 h-8 rounded-full bg-white border border-gray-100 flex items-center justify-center text-[#1877F2] shadow-sm">
+                          <Facebook className="w-4 h-4" />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* PC: fila 1 = WhatsApp + Redes, fila 2 = Email completo */}
+              <div className="hidden lg:flex lg:flex-col gap-4 mb-8">
+                {/* Fila 1: WhatsApp y Redes lado a lado */}
+                <div className="flex gap-4">
+                  {/* WhatsApp */}
+                  <a href={`https://wa.me/${data.whatsapp}`} target="_blank" rel="noreferrer" className="flex-1 flex items-center gap-4 bg-[#F9FBFA] border border-gray-100 rounded-2xl p-5 hover:border-[#25D366]/30 transition-all group">
+                    <div className="w-12 h-12 bg-[#25D366]/10 rounded-xl flex items-center justify-center text-[#25D366] group-hover:bg-[#25D366] group-hover:text-white transition-colors shrink-0">
+                      <Phone className="w-5 h-5" />
+                    </div>
+                    <div className="text-left min-w-0">
+                      <p className="text-[10px] font-bold text-gray-400 uppercase leading-none mb-1.5">WhatsApp</p>
+                      <p className="text-[#1A3D3D] font-black text-sm leading-none truncate">+{data.whatsapp}</p>
+                    </div>
+                  </a>
+
+                  {/* Redes Sociales */}
+                  {data.redes && (data.redes.instagram || data.redes.facebook) && (
+                    <div className="flex-1 flex items-center gap-4 bg-[#F9FBFA] border border-gray-100 rounded-2xl p-5">
+                      <div className="w-12 h-12 bg-[#2D6A6A]/10 rounded-xl flex items-center justify-center text-[#2D6A6A] shrink-0">
+                        <Globe className="w-5 h-5" />
+                      </div>
+                      <div className="text-left">
+                        <p className="text-[10px] font-bold text-gray-400 uppercase mb-2">Nuestra Comunidad</p>
+                        <div className="flex gap-2.5">
+                          {data.redes.instagram && (
+                            <a href={data.redes.instagram} target="_blank" rel="noreferrer" className="w-9 h-9 rounded-full bg-white border border-gray-100 flex items-center justify-center text-[#E4405F] hover:bg-[#E4405F] hover:text-white transition-all shadow-sm">
+                              <Instagram className="w-4 h-4" />
+                            </a>
+                          )}
+                          {data.redes.facebook && (
+                            <a href={data.redes.facebook} target="_blank" rel="noreferrer" className="w-9 h-9 rounded-full bg-white border border-gray-100 flex items-center justify-center text-[#1877F2] hover:bg-[#1877F2] hover:text-white transition-all shadow-sm">
+                              <Facebook className="w-4 h-4" />
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Fila 2: Email ancho completo */}
+                {data.email && (
+                  <EmailCard email={data.email} />
+                )}
+
+                {/* Teléfono fijo (condicional, fila extra) */}
                 {data.telefono && (
                   <div className="flex items-center gap-4 bg-[#F9FBFA] border border-gray-100 rounded-2xl p-5">
                     <div className="w-12 h-12 bg-[#2D6A6A]/10 rounded-xl flex items-center justify-center text-[#2D6A6A] shrink-0">
@@ -675,47 +897,10 @@ export default function PerfilClinica() {
                     </div>
                   </div>
                 )}
-
-                {/* Email */}
-                {data.email && (
-                  <div className="flex items-center gap-4 bg-[#F9FBFA] border border-gray-100 rounded-2xl p-5 sm:col-span-2">
-                    <div className="w-12 h-12 bg-[#2D6A6A]/10 rounded-xl flex items-center justify-center text-[#2D6A6A] shrink-0">
-                      <Mail className="w-5 h-5" />
-                    </div>
-                    <div className="text-left min-w-0">
-                      <p className="text-[10px] font-bold text-gray-400 uppercase leading-none mb-1.5">Email Oficial</p>
-                      <p className="text-[#1A3D3D] font-black text-sm leading-none truncate">{data.email}</p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Redes Sociales */}
-                {data.redes && (data.redes.instagram || data.redes.facebook) && (
-                  <div className="flex items-center gap-4 bg-[#F9FBFA] border border-gray-100 rounded-2xl p-5 sm:col-span-2 mt-2">
-                    <div className="w-12 h-12 bg-[#2D6A6A]/10 rounded-xl flex items-center justify-center text-[#2D6A6A] shrink-0">
-                      <Globe className="w-5 h-5" />
-                    </div>
-                    <div className="text-left">
-                      <p className="text-[10px] font-bold text-gray-400 uppercase mb-2">Nuestra Comunidad</p>
-                      <div className="flex gap-2.5">
-                         {data.redes.instagram && (
-                           <a href={data.redes.instagram} target="_blank" rel="noreferrer" className="w-9 h-9 rounded-full bg-white border border-gray-100 flex items-center justify-center text-[#E4405F] hover:bg-[#E4405F] hover:text-white transition-all shadow-sm">
-                              <Instagram className="w-4 h-4" />
-                           </a>
-                         )}
-                         {data.redes.facebook && (
-                           <a href={data.redes.facebook} target="_blank" rel="noreferrer" className="w-9 h-9 rounded-full bg-white border border-gray-100 flex items-center justify-center text-[#1877F2] hover:bg-[#1877F2] hover:text-white transition-all shadow-sm">
-                              <Facebook className="w-4 h-4" />
-                           </a>
-                         )}
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
 
-            <div className="flex-1 min-h-[350px] rounded-[32px] overflow-hidden border border-gray-100 shadow-inner bg-gray-50">
+            <div className="h-[150px] lg:flex-1 lg:min-h-[350px] rounded-[32px] overflow-hidden border border-gray-100 shadow-inner bg-gray-50">
               {mapaAutomatico && (
                 <iframe
                   title="Ubicación en Mapa"
