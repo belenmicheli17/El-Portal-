@@ -27,7 +27,7 @@ import Capacitaciones from './pages/Capacitaciones';
 import CartillaProveedores from './pages/CartillaProveedores';
 import Ecosistema from './pages/Ecosistema';
 import SalaDeEspera from './pages/SalaDeEspera';
-
+import PantallaCarga from './components/PantallaCarga';
 // Panel Admin
 import RutaProtegidaAdmin from './components/admin/RutaProtegidaAdmin';
 import RutaProtegida from './components/admin/RutaProtegida';
@@ -154,7 +154,10 @@ export default function App() {
             <Route path="configuracion" element={<Configuracion />} />
           </Route>
 
-          <Route path="/sala-de-espera" element={<SalaDeEspera />} />
+          {import.meta.env.DEV && (
+  <Route path="/dev/carga" element={<PantallaCarga pagina="ecosistema" />} />
+)}
+<Route path="/sala-de-espera" element={<SalaDeEspera />} />
           <Route path="/" element={<SalaDeEspera />} />
           <Route path="*" element={<Navigate to="/" replace />} />
 

@@ -184,7 +184,7 @@ const [showLogin, setShowLogin] = useState(false);
 
   // — Lógica de registro del drawer —
   const handleRegistroDrawer = async () => {
-    if (!formDrawer.nombre.trim() || !formDrawer.email.trim() || !formDrawer.password.trim()) {
+    if (!formDrawer.nombre.trim() || (rolDrawer === 'profesional' && !formDrawer.apellido?.trim()) || !formDrawer.email.trim() || !formDrawer.password.trim()) {
       setErrorDrawer('Completá todos los campos para continuar.');
       return;
     }
@@ -194,17 +194,24 @@ const [showLogin, setShowLogin] = useState(false);
       const auth = getAuth();
       const userCredential = await createUserWithEmailAndPassword(auth, formDrawer.email, formDrawer.password);
       const user = userCredential.user;
-      const slugGenerado = formDrawer.nombre.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
-      await setDoc(doc(db, 'usuarios', user.uid), {
-        nombre: formDrawer.nombre.trim(),
-        email: formDrawer.email.toLowerCase().trim(),
-        rol: rolDrawer,
-        slug: slugGenerado,
-        fechaRegistro: new Date().toISOString(),
-        estado: 'activo',
-        esBeta: true,
-        socioVitalicio: true,
-      });
+      const nombreCompleto = rolDrawer === 'profesional'
+  ? `${formDrawer.nombre.trim()} ${formDrawer.apellido?.trim() || ''}`.trim()
+  : formDrawer.nombre.trim();
+
+const slugGenerado = nombreCompleto.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+
+await setDoc(doc(db, 'usuarios', user.uid), {
+  nombre: formDrawer.nombre.trim(),
+  apellido: rolDrawer === 'profesional' ? formDrawer.apellido?.trim() || '' : '',
+  nombreCompleto,
+  email: formDrawer.email.toLowerCase().trim(),
+  rol: rolDrawer,
+  slug: slugGenerado,
+  fechaRegistro: new Date().toISOString(),
+  estado: 'activo',
+  esBeta: true,
+  socioVitalicio: true,
+});
       setPasoDrawer('exito');
     } catch (err) {
       setErrorDrawer(traducirError(err.code));
@@ -746,16 +753,28 @@ Creá tu perfil, aparecé en búsquedas y conectate con colegas, clínicas y pro
                       {pasoDrawer === 'datos' && (
                         <div className="space-y-3">
                           <div>
-                            <label className="text-[#1A3D3D] text-[12px] font-bold uppercase tracking-widest block mb-1.5">
-                              {rolDrawer === 'profesional' ? 'Tu nombre completo' : rolDrawer === 'clinica' ? 'Nombre de la clínica' : 'Nombre de la empresa'}
-                            </label>
-                            <input
-                              type="text"
-                              value={formDrawer.nombre}
-                              onChange={(e) => { setFormDrawer({ ...formDrawer, nombre: e.target.value }); setErrorDrawer(''); }}
-                              placeholder={rolDrawer === 'profesional' ? 'Ej: María González' : rolDrawer === 'clinica' ? 'Ej: Clínica Veterinaria Sur' : 'Ej: Laboratorio XYZ'}
-                              className="w-full px-4 py-3 bg-[#F4F7F7] border border-transparent rounded-xl text-[13px] text-[#1A3D3D] placeholder-gray-400 focus:bg-white focus:border-[#2D6A6A] focus:ring-2 focus:ring-[#2D6A6A]/20 outline-none transition-all"
-                            />
+                           <label className="text-[#1A3D3D] text-[12px] font-bold uppercase tracking-widest block mb-1.5">
+  {rolDrawer === 'profesional' ? 'Tu nombre' : rolDrawer === 'clinica' ? 'Nombre de la clínica' : 'Nombre de la empresa'}
+</label>
+<input
+  type="text"
+  value={formDrawer.nombre}
+  onChange={(e) => { setFormDrawer({ ...formDrawer, nombre: e.target.value }); setErrorDrawer(''); }}
+  placeholder={rolDrawer === 'profesional' ? 'Ej: María' : rolDrawer === 'clinica' ? 'Ej: Clínica Veterinaria Sur' : 'Ej: Laboratorio XYZ'}
+  className="w-full px-4 py-3 bg-[#F4F7F7] border border-transparent rounded-xl text-[13px] text-[#1A3D3D] placeholder-gray-400 focus:bg-white focus:border-[#2D6A6A] focus:ring-2 focus:ring-[#2D6A6A]/20 outline-none transition-all"
+/>
+{rolDrawer === 'profesional' && (
+  <div className="mt-2">
+    <label className="text-[#1A3D3D] text-[12px] font-bold uppercase tracking-widest block mb-1.5">Tu apellido</label>
+    <input
+      type="text"
+      value={formDrawer.apellido || ''}
+      onChange={(e) => { setFormDrawer({ ...formDrawer, apellido: e.target.value }); setErrorDrawer(''); }}
+      placeholder="Ej: González"
+      className="w-full px-4 py-3 bg-[#F4F7F7] border border-transparent rounded-xl text-[13px] text-[#1A3D3D] placeholder-gray-400 focus:bg-white focus:border-[#2D6A6A] focus:ring-2 focus:ring-[#2D6A6A]/20 outline-none transition-all"
+    />
+  </div>
+)}
                           </div>
                           <div>
                             <label className="text-[#1A3D3D] text-[12px] font-bold uppercase tracking-widest block mb-1.5">Correo electrónico</label>

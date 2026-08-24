@@ -217,7 +217,7 @@ setData({
       <div className="min-h-screen bg-[#F4F7F7] flex flex-col items-center justify-center text-center p-6">
         <h2 className="text-[24px] md:text-[30px] font-black text-[#1A3D3D] font-['Montserrat'] mb-2">Perfil no encontrado</h2>
         <p className="text-gray-500 mb-6 text-[17px]">El profesional que buscás no existe o el enlace es incorrecto.</p>
-        <button onClick={() => navigate('/Cartilla')} className="bg-[#2D6A6A] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#1A3D3D] transition-colors text-[17px]">Volver atrás</button>
+        <button onClick={() => navigate(-1)} className="bg-[#2D6A6A] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#1A3D3D] transition-colors text-[17px]">Volver atrás</button>
       </div>
     );
   }
@@ -482,7 +482,7 @@ setData({
         
         {/* BOTÓN VOLVER A La Cartilla - MÓVIL */}
         <div className="px-6 pt-6 pb-2 bg-[#1A3D3D]">
-          <button onClick={() => navigate('/Cartilla')} className="flex items-center gap-2 text-white/70 hover:text-white font-bold text-[10px] uppercase tracking-[0.3em] transition-colors group">
+          <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-white/70 hover:text-white font-bold text-[10px] uppercase tracking-[0.3em] transition-colors group">
             <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Volver
           </button>
         </div>
@@ -503,6 +503,13 @@ setData({
               <h1 className="text-[24px] font-extrabold font-['Montserrat'] text-white tracking-tight uppercase leading-tight mb-2">{data.nombre}</h1>
               <h2 className="text-[14px] font-black text-[#F4F7F7] uppercase tracking-[0.1em] opacity-80">{data.especialidad}</h2>
              <div className="mt-2 text-white/30 font-bold text-[11px] uppercase tracking-[0.3em]">{data.tipoMatricula || 'MP'}: {data.matricula}</div>
+              {(data.instagram || data.linkedin || data.facebook) && (
+                <div className="flex items-center justify-center gap-3 mt-3">
+                  {data.instagram && <a href={data.instagram} target="_blank" rel="noreferrer" className="text-white/50 hover:text-white p-2 bg-white/10 rounded-xl border border-white/20 transition-all"><Instagram className="w-4 h-4" /></a>}
+                  {data.linkedin && <a href={data.linkedin} target="_blank" rel="noreferrer" className="text-white/50 hover:text-white p-2 bg-white/10 rounded-xl border border-white/20 transition-all"><Linkedin className="w-4 h-4" /></a>}
+                  {data.facebook && <a href={data.facebook} target="_blank" rel="noreferrer" className="text-white/50 hover:text-white p-2 bg-white/10 rounded-xl border border-white/20 transition-all"><Facebook className="w-4 h-4" /></a>}
+                </div>
+              )}
                         </div>
           </div>
         </section>
@@ -527,19 +534,21 @@ setData({
             <div className="space-y-5">
               <div className="bg-white p-6 rounded-[28px] shadow-sm border border-gray-50 text-center">
                 <p className="text-gray-600 text-[16px] leading-relaxed font-medium italic">&ldquo;{data.bio}&rdquo;</p>
-                <div className="flex flex-wrap justify-center gap-4 mt-3 pt-3 border-t border-gray-50">
-  <div className="flex flex-col items-center gap-1.5 min-w-[80px]">
-    <MapPin size={24} className="text-[#2D6A6A] mb-1" />
-    <p className="font-bold text-[#1A3D3D] text-[11px] uppercase tracking-wide">{data.provincia}</p>
+                <div className="flex flex-wrap justify-center items-start gap-4 mt-3 pt-3 border-t border-gray-50">
+  <div className="flex flex-col items-center gap-1.5 w-[80px]">
+    <div className="w-8 h-8 rounded-2xl bg-[#F4F7F7] flex items-center justify-center text-[#2D6A6A]">
+      <MapPin className="w-4 h-4" />
+    </div>
+    <p className="font-bold text-[#1A3D3D] text-[11px] uppercase tracking-wide text-center">{data.provincia}</p>
   </div>
-  <div className="flex flex-col items-center gap-1.5 min-w-[80px]">
+  <div className="flex flex-col items-center gap-1.5 w-[80px]">
     <div className="w-8 h-8 rounded-2xl bg-yellow-50 flex items-center justify-center text-yellow-600 border border-yellow-100">
       <Award className="w-4 h-4" />
     </div>
     <p className="font-bold text-[#1A3D3D] text-[11px] uppercase tracking-wide text-center">Destacada</p>
   </div>
   {data.atiendeDomicilio && (
-    <div className="flex flex-col items-center gap-1.5 min-w-[80px]">
+    <div className="flex flex-col items-center gap-1.5 w-[80px]">
       <div className="w-8 h-8 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 border border-blue-100">
         <Home className="w-4 h-4" />
       </div>
@@ -584,7 +593,7 @@ setData({
 
                                 {/* DIRECCIÓN */}
                                 {c.direccion && (
-                                  <a href={mapsUrl} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} className="flex items-center gap-1.5 text-[13px] text-gray-600 active:text-[#4DB6AC] transition-colors">
+                                  <a href={mapsUrl} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} className="flex items-center gap-1.5 text-[13px] text-[#2D6A6A] font-bold transition-colors active:text-[#1A3D3D]">
                                     <MapPin className="w-3 h-3 text-[#2D6A6A] shrink-0" />
                                     {c.direccion}
                                   </a>
@@ -592,7 +601,7 @@ setData({
 
                                 {/* TELÉFONO → WHATSAPP */}
                                 {c.telefono && (
-                                  <a href={waUrl} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-[13px] text-gray-600 hover:text-[#25D366] transition-colors font-medium">
+                                  <a href={waUrl} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-[13px] text-[#25D366] font-bold transition-colors active:text-[#20b858]">
                                     <Phone className="w-3 h-3 shrink-0 text-[#25D366]" />
                                     {c.telefono}
                                   </a>
@@ -665,15 +674,20 @@ setData({
                                   };
                                   const IconoGrupo = iconosGrupo[s.grupoId] || Stethoscope;
                                   return (
-                                    <div className="flex items-center gap-2 mb-2">
-                                      <IconoGrupo className="w-3.5 h-3.5 text-[#2D6A6A] shrink-0" />
-                                      <p className="text-[10px] font-black text-[#2D6A6A] uppercase tracking-widest opacity-70">
+                                    <div className="flex items-center gap-2 mb-3">
+                                      <IconoGrupo className="w-4 h-4 text-[#2D6A6A] shrink-0" />
+                                      <h4 className="font-bold font-['Montserrat'] text-[12px] text-[#2D6A6A] uppercase tracking-widest opacity-70 leading-tight">
                                         {especialidadesData.find(g => g.id === s.grupoId)?.grupo || s.grupoId}
-                                      </p>
+                                      </h4>
                                     </div>
                                   );
                                 })()}
-                                <div className="flex flex-col gap-1.5 mb-2">
+                                {s.desc && (
+                                  <p className="text-gray-500 text-[12px] leading-relaxed font-medium italic mb-3 pb-3 border-b border-gray-100">
+                                    {s.desc}
+                                  </p>
+                                )}
+                                <div className="flex flex-col gap-1.5">
                                   {s.opciones.map(opcion => (
                                     <div key={opcion} className="flex items-center gap-2">
                                       <span className="w-1.5 h-1.5 rounded-full bg-[#2D6A6A] shrink-0" />
@@ -683,9 +697,6 @@ setData({
                                     </div>
                                   ))}
                                 </div>
-                                {s.desc && (
-                                  <p className="text-gray-500 text-[14px] leading-relaxed font-medium mt-2 pt-2 border-t border-gray-100">{s.desc}</p>
-                                )}
                               </div>
                             )
                         ))}
@@ -884,7 +895,7 @@ setData({
           
           {/* BOTÓN VOLVER AL Cartilla - ESCRITORIO */}
           <div className="w-full flex justify-start">
-            <button onClick={() => navigate('/Cartilla')} className="flex items-center gap-2 text-gray-400 hover:text-[#1A3D3D] font-bold text-[10px] md:text-[12px] uppercase tracking-[0.3em] mb-8 transition-colors group">
+            <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-gray-400 hover:text-[#1A3D3D] font-bold text-[10px] md:text-[12px] uppercase tracking-[0.3em] mb-8 transition-colors group">
               <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Volver a la Cartilla
             </button>
           </div>
@@ -1001,39 +1012,41 @@ setData({
                                 // Formato nuevo: una tarjeta por grupo con título y pills
                                 <div key={s.grupoId} className="bg-white p-8 rounded-[36px] border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group text-left">
                                   {(() => {
-                                  const iconosGrupo = {
-                                    consulta_general: Stethoscope,
-                                    especialidades_medicas: Activity,
-                                    quirurgico_critico: IconoBisturi,
-                                    imagenes: Camera,
-                                    laboratorio: Microscope,
-                                    atencion_por_especie: PawPrint,
-                                    bienestar_comportamiento: Heart,
-                                    terapias_holisticas: Sparkles
-                                  };
-                                  const IconoGrupo = iconosGrupo[s.grupoId] || Stethoscope;
-                                  return (
-                                    <div className="flex items-center gap-2 mb-4">
-                                      <IconoGrupo className="w-4 h-4 text-[#2D6A6A] shrink-0" />
-                                      <h4 className="font-bold font-['Montserrat'] text-[13px] text-[#2D6A6A] uppercase tracking-widest opacity-70">
-                                        {especialidadesData.find(g => g.id === s.grupoId)?.grupo || s.grupoId}
-                                      </h4>
-                                    </div>
-                                  );
-                                })()}
-                                <div className="flex flex-col gap-2 mb-4">
-                                  {s.opciones.map(opcion => (
-                                    <div key={opcion} className="flex items-center gap-2">
-                                      <span className="w-1.5 h-1.5 rounded-full bg-[#2D6A6A] shrink-0" />
-                                      <span className="text-[13px] font-medium text-[#333333]">
-                                        {opcion}
-                                      </span>
-                                    </div>
-                                  ))}
-                                </div>
+                                    const iconosGrupo = {
+                                      consulta_general: Stethoscope,
+                                      especialidades_medicas: Activity,
+                                      quirurgico_critico: IconoBisturi,
+                                      imagenes: Camera,
+                                      laboratorio: Microscope,
+                                      atencion_por_especie: PawPrint,
+                                      bienestar_comportamiento: Heart,
+                                      terapias_holisticas: Sparkles
+                                    };
+                                    const IconoGrupo = iconosGrupo[s.grupoId] || Stethoscope;
+                                    return (
+                                      <div className="flex items-center gap-2 mb-3">
+                                        <IconoGrupo className="w-4 h-4 text-[#2D6A6A] shrink-0" />
+                                        <h4 className="font-bold font-['Montserrat'] text-[12px] text-[#2D6A6A] uppercase tracking-widest opacity-70 leading-tight">
+                                          {especialidadesData.find(g => g.id === s.grupoId)?.grupo || s.grupoId}
+                                        </h4>
+                                      </div>
+                                    );
+                                  })()}
                                   {s.desc && (
-                                    <p className="text-gray-600 font-medium text-[15px] leading-relaxed mt-3 pt-3 border-t border-gray-50">{s.desc}</p>
+                                    <p className="text-gray-500 text-[14px] leading-relaxed font-medium italic mb-4 pb-4 border-b border-gray-100">
+                                      {s.desc}
+                                    </p>
                                   )}
+                                  <div className="flex flex-col gap-2">
+                                    {s.opciones.map(opcion => (
+                                      <div key={opcion} className="flex items-center gap-2">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-[#2D6A6A] shrink-0" />
+                                        <span className="text-[14px] font-medium text-[#333333]">
+                                          {opcion}
+                                        </span>
+                                      </div>
+                                    ))}
+                                  </div>
                                 </div>
                               )
                           ))}
@@ -1042,7 +1055,6 @@ setData({
                     );
                   })()
                 )}
-
                 {/* TRAYECTORIA */}
                 {data.trayectoria && data.trayectoria.length > 0 && (
                   <div id="trayectoria" className="p-10 md:p-16 text-left bg-white">

@@ -10,6 +10,7 @@ import { ref, uploadBytesResumable, getDownloadURL, deleteObject, uploadString }
 import FooterSimple from '../../components/FooterSimple';
 import { useAuth } from '../../context/AuthContext';
 import especialidadesData from '../../data/especialidades.json';
+import provincias from '../../data/provincias.js';
 import { 
   Camera, Info, AlertCircle, Save, X, Plus, Trash2, Crown,
   ArrowUp, ArrowDown, MapPin, ShieldCheck, Check, ArrowLeft,
@@ -289,7 +290,7 @@ const SimpleCropper = ({ imageSrc, onCrop, onCancel, type }) => {
           ref={imgRef} src={imageSrc} alt="Original" className="absolute pointer-events-none select-none max-w-none" draggable={false}
           style={{
             transform: `translate3d(calc(-50% + ${position.x}px), calc(-50% + ${position.y}px), 0) scale(${zoom})`,
-            left: '50%', top: '50%', width: '100%', height: '100%', objectFit: 'cover', transformOrigin: 'center center'
+            left: '50%', top: '50%', width: 'auto', height: 'auto', maxWidth: 'none', transformOrigin: 'center center'
           }}
         />
         <div className="absolute inset-0 pointer-events-none border-4 border-[#2D6A6A]/40" style={{ borderRadius }}></div>
@@ -315,7 +316,7 @@ const SimpleCropper = ({ imageSrc, onCrop, onCancel, type }) => {
 // APLICACIÓN PRINCIPAL (EDITOR PROFESIONAL)
 // ==========================================
 export default function EditorProfesional() { 
-  const { currentUser } = useAuth();
+  const { currentUser, refreshUser } = useAuth();
   const navigate = useNavigate(); 
   const location = useLocation(); // <-- Inicializamos useLocation
   const [activeTab, setActiveTab] = useState('cuenta'); 
@@ -329,6 +330,7 @@ export default function EditorProfesional() {
     }
   }, [location]); 
   const [modalConfig, setModalConfig] = useState({ isOpen: false, title: '', message: '', type: 'info', onConfirm: null });
+  const [desktopHintVisto] = useState(() => !!localStorage.getItem('editorDesktopHintVisto'));
   const [isSubModalOpen, setIsSubModalOpen] = useState(false); 
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
   const [openSection, setOpenSection] = useState(null);
@@ -407,6 +409,7 @@ console.log("🔍 TRAYECTORIA CRUDA:", JSON.stringify(dataCompleta.trayectoria, 
   // Perfil Profesional
   slug: '',
   nombre: '',
+apellido: '',
   especialidad: '',
   matricula: '',
   tipoMatricula: 'MP',
@@ -547,29 +550,9 @@ const handleFileSelect = (e, target, caseId = null) => {
 
     const reader = new FileReader();
     reader.onload = (event) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 1200;
-        const MAX_HEIGHT = 1200;
-        let width = img.width;
-        let height = img.height;
-
-        if (width > height) {
-          if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
-        } else {
-          if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-        
-        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.95);
-        setCropModal({ isOpen: true, imageSrc: compressedBase64, targetId: target, caseId, type: target });
-      };
-      img.src = event.target.result;
+      // Pasamos la imagen original al cropper sin procesar
+      // El recorte y compresión ocurre DESPUÉS en saveCroppedImage
+      setCropModal({ isOpen: true, imageSrc: event.target.result, targetId: target, caseId, type: target });
     };
     reader.readAsDataURL(file);
     e.target.value = null;
@@ -682,7 +665,14 @@ const handleFileSelect = (e, target, caseId = null) => {
     }));
   };
   // === FIN LÓGICA PDFs ===
-
+const normalizarRedSocial = (valor, red) => {
+  if (!valor) return '';
+  const v = valor.trim();
+  if (red !== 'instagram') return v;
+  if (v.startsWith('http://') || v.startsWith('https://')) return v;
+  const usuario = v.startsWith('@') ? v.slice(1) : v;
+  return `https://instagram.com/${usuario}`;
+};
 const generarSlug = (texto) => {
   return texto
     .toLowerCase()
@@ -728,11 +718,29 @@ if (!formData.nombre.trim() || !formData.especialidad.trim() || !formData.foto |
         })
       );
       perfilDataToSave.galeria = galeriaSubida;
+      perfilDataToSave.instagram = normalizarRedSocial(perfilDataToSave.instagram, 'instagram');
       perfilDataToSave.slug = currentUser.slug;
 
       // 2. Guardamos el perfil "limpio" (Esto borrará los papers viejos del documento del profesional automáticamente)
       const docRef = doc(db, 'profesionales', currentUser.uid);
-      await setDoc(docRef, perfilDataToSave);
+await setDoc(docRef, perfilDataToSave);
+
+// Sincronizamos nombre y slug en la colección usuarios
+const nombreCompleto = `${formData.nombre.trim()} ${(formData.apellido || '').trim()}`.trim();
+const slugNuevo = generarSlug(nombreCompleto);
+const { updateDoc } = await import('firebase/firestore');
+await updateDoc(doc(db, 'usuarios', currentUser.uid), {
+  nombre: formData.nombre.trim(),
+  apellido: (formData.apellido || '').trim(),
+  nombreCompleto,
+  slug: slugNuevo,
+});
+await updateDoc(doc(db, 'profesionales', currentUser.uid), {
+  slug: slugNuevo,
+  nombre: formData.nombre.trim(),
+  apellido: (formData.apellido || '').trim(),
+  nombreCompleto,
+});
 
       // 3. Guardamos los papers en la colección global usando un Batch (Procesamiento en lote)
       const batch = writeBatch(db);
@@ -754,6 +762,8 @@ if (!formData.nombre.trim() || !formData.especialidad.trim() || !formData.foto |
       setSaveStatus('saved');
       setSavedData(_formData);
       setTimeout(() => setSaveStatus('idle'), 2500);
+      await refreshUser();
+      return true;
 
     } catch (error) {
       console.error("Error al guardar en Firebase:", error);
@@ -765,6 +775,7 @@ if (!formData.nombre.trim() || !formData.especialidad.trim() || !formData.foto |
         type: 'error' 
       });
       setTimeout(() => setSaveStatus('idle'), 2500);
+      return false;
     }
   };  
   const handleConfirmChangePlan = () => {
@@ -814,10 +825,12 @@ if (!formData.nombre.trim() || !formData.especialidad.trim() || !formData.foto |
             <div className="flex flex-col gap-3">
               <button
                 onClick={async () => {
-                  await handleSaveData();
-                  setExitModalOpen(false);
-                  if (pendingNavigation) navigate(pendingNavigation);
-                }}
+  await handleSaveData();
+  setExitModalOpen(false);
+  setPendingNavigation(null);
+  if (pendingNavigation) navigate(pendingNavigation);
+}}
+
                 className="w-full px-8 py-3.5 rounded-xl font-bold text-white bg-[#1A3D3D] hover:bg-[#2D6A6A] transition-colors shadow-lg text-sm flex items-center justify-center gap-2"
               >
                 <Save className="w-4 h-4" /> Guardar y salir
@@ -864,11 +877,9 @@ if (!formData.nombre.trim() || !formData.especialidad.trim() || !formData.foto |
         </div>
       )}
 
-      {/* MODAL CROPPER */}
-      {cropModal.isOpen && (
-        <div className="fixed inset-0 bg-[#1A3D3D]/40 backdrop-blur-md z-[200] overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4">
-            <div className="bg-white rounded-[32px] w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col animate-in zoom-in duration-200">
+          {cropModal.isOpen && (
+        <div className="fixed inset-0 bg-[#1A3D3D]/40 backdrop-blur-md z-[200] flex items-center justify-center p-4">
+          <div className="bg-white rounded-[32px] w-full max-w-lg overflow-hidden shadow-2xl flex flex-col animate-in zoom-in duration-200">
               <div className="p-6 border-b border-gray-100 flex justify-between items-center">
                 <div>
                   <h3 className="font-bold font-['Montserrat'] text-xl text-[#1A3D3D]">Encuadre de Imagen</h3>
@@ -876,8 +887,8 @@ if (!formData.nombre.trim() || !formData.especialidad.trim() || !formData.foto |
                 </div>
                 <button onClick={() => setCropModal({ isOpen: false })} className="p-2.5 bg-gray-100 rounded-full hover:bg-red-100 hover:text-red-500 transition-colors"><X className="w-6 h-6" /></button>
               </div>
-              <div className="bg-[#F4F7F7] p-8 flex justify-center items-center relative overflow-hidden">
-                 <SimpleCropper 
+              <div className="bg-[#F4F7F7] p-8 flex justify-center items-center relative">
+                 <SimpleCropper
                    imageSrc={cropModal.imageSrc} 
                    type={cropModal.type} 
                    onCrop={saveCroppedImage} 
@@ -885,7 +896,6 @@ if (!formData.nombre.trim() || !formData.especialidad.trim() || !formData.foto |
                  />
               </div>
             </div>
-          </div>
         </div>
       )}
 
@@ -1018,6 +1028,30 @@ if (!formData.nombre.trim() || !formData.especialidad.trim() || !formData.foto |
           </div>
         </div>
       )}
+
+{/* BANNER RECOMENDACIÓN DESKTOP — solo móvil, solo primera vez */}
+{!desktopHintVisto && (
+  <div className="fixed inset-0 bg-[#1A3D3D]/40 backdrop-blur-md z-[400] flex items-center justify-center md:hidden p-4">
+    <div className="bg-white rounded-[32px] w-full max-w-sm p-8 text-center shadow-2xl animate-in slide-in-from-bottom-4 duration-300">
+      <div className="w-16 h-16 bg-[#2D6A6A]/10 rounded-full flex items-center justify-center mx-auto mb-5">
+        <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-[#2D6A6A]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
+        </svg>
+      </div>
+      <h3 className="font-bold font-['Montserrat'] text-xl text-[#1A3D3D] mb-3">Mejor desde la computadora</h3>
+      <p className="text-m text-gray-500 mb-8 leading-relaxed">Para completar tu perfil más cómodamente y aprovechar todas las opciones del editor, te recomendamos hacerlo desde una computadora.</p>
+      <button
+        onClick={() => {
+          localStorage.setItem('editorDesktopHintVisto', 'true');
+          window.dispatchEvent(new Event('storage'));
+        }}
+        className="w-full px-8 py-3.5 rounded-xl font-bold text-white bg-[#1A3D3D] hover:bg-[#2D6A6A] transition-colors shadow-lg text-m"
+      >
+        Entendido, continuar
+      </button>
+    </div>
+  </div>
+)}
 
       {/* NAVBAR DE APLICACIÓN (h: 64px) */}
       <nav className="fixed top-0 w-full z-[80] h-[64px] bg-white/90 backdrop-blur-md border-b border-gray-100 flex items-center px-6 md:px-10 shadow-sm">
@@ -1393,8 +1427,9 @@ if (!formData.nombre.trim() || !formData.especialidad.trim() || !formData.foto |
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
-                        <InputGroup label="Nombre Completo" id="nombre" value={formData.nombre} onChange={handleChange} required  />
-                        <InputGroup label="Especialidad Principal" id="especialidad" value={formData.especialidad} onChange={handleChange} required tooltip="Tu título principal. Es lo primero que verán los usuarios bajo tu nombre." />
+                      <InputGroup label="Nombre" id="nombre" value={formData.nombre} onChange={handleChange} required />
+<InputGroup label="Apellido" id="apellido" value={formData.apellido || ''} onChange={handleChange} required />
+<InputGroup label="Especialidad Principal" id="especialidad" value={formData.especialidad} onChange={handleChange} required tooltip="Tu título principal. Es lo primero que verán los usuarios bajo tu nombre." />
                         <div className="mb-6 w-full">
                           <label className="flex items-center text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">
                             Matrícula <span className="text-red-400 ml-1">*</span>
@@ -1424,7 +1459,7 @@ if (!formData.nombre.trim() || !formData.especialidad.trim() || !formData.foto |
                         <div className="mb-6 text-left">
                           <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 block ml-1">Provincia Base</label>
                           <select id="provincia" value={formData.provincia} onChange={handleChange} className="w-full bg-gray-50/50 border border-gray-200 rounded-2xl px-5 py-3.5 text-base font-medium focus:outline-none focus:border-[#2D6A6A] text-[#1A3D3D] shadow-sm transition-colors">
-                            {["Buenos Aires", "CABA", "Córdoba", "Santa Fe", "Mendoza", "Tucumán", "Salta", "Entre Ríos"].map(p => <option key={p} value={p}>{p}</option>)}
+                            {provincias.map(p => <option key={p} value={p}>{p}</option>)}
                           </select>
                         </div>
                       </div>
@@ -1466,9 +1501,40 @@ if (!formData.nombre.trim() || !formData.especialidad.trim() || !formData.foto |
 {isPro && (
   <Accordion title="Zonas de Atención" icon={MapPin} isOpen={openSection === 'zonas'} onToggle={() => setOpenSection(openSection === 'zonas' ? null : 'zonas')} tooltip="Así es exactamente como van a ver tus datos los tutores en tu perfil público.">
 
-    <ToggleSwitch label="Ofrezco consultas a domicilio" checked={formData.atiendeDomicilio} onChange={(v) => setFormData(p => ({...p, atiendeDomicilio: v}))} tooltip="Añadirá un distintivo especial en tu perfil público." />
-    <div className="w-full h-px bg-gray-100 my-5"></div>
+    <ToggleSwitch label="Ofrezco consultas a domicilio" checked={formData.atiendeDomicilio} onChange={(v) => {
+  if (v) {
+    setFormData(p => ({
+      ...p,
+      atiendeDomicilio: true,
+      whatsappActivo: true,
+      whatsappVisibilidad: 'todos'
+    }));
+  } else {
+    setFormData(p => ({ ...p, atiendeDomicilio: false }));
+  }
+}} tooltip="Añadirá un distintivo especial en tu perfil público." />
 
+{/* WHATSAPP FORZADO — solo visible si ofrece domicilio */}
+{formData.atiendeDomicilio && (
+  <div className="mt-5 animate-in fade-in slide-in-from-top-2 duration-300">
+    <div className="flex items-start gap-3 bg-[#25D366]/8 border border-[#25D366]/20 rounded-2xl px-4 py-3.5 mb-4">
+      <Phone className="w-4 h-4 text-[#25D366] shrink-0 mt-0.5" />
+      <p className="text-xs font-medium text-[#1A3D3D] leading-relaxed">
+        Como ofrecés consultas a domicilio, tu WhatsApp es <span className="font-black">obligatorio y visible para todo el público</span> para que los tutores puedan coordinar con vos.
+      </p>
+    </div>
+    <InputGroup
+      label="Tu número de WhatsApp (con código de país, ej: 5411...)"
+      id="whatsappNum"
+      value={formData.whatsappNum}
+      onChange={handleChange}
+      placeholder="Ej: 54911..."
+      required
+    />
+  </div>
+)}
+
+<div className="w-full h-px bg-gray-100 my-5"></div>
     {/* AVISO EXPLICATIVO */}
     <div className="flex items-start gap-3 bg-[#2D6A6A]/5 border border-[#2D6A6A]/15 rounded-2xl px-4 py-3.5 mb-6">
       <MapPin className="w-4 h-4 text-[#2D6A6A] shrink-0 mt-0.5" />
@@ -1509,31 +1575,36 @@ if (!formData.nombre.trim() || !formData.especialidad.trim() || !formData.foto |
 
                 {/* FILA PRINCIPAL: punto verde + autocomplete + borrar */}
                 {/* FILA 1: NOMBRE PROPIO + BARRIO */}
-                <div className="flex items-center gap-3 px-4 py-3.5 border-b border-gray-50">
-                  <div className="w-2 h-2 rounded-full bg-[#2D6A6A] shrink-0" />
-                  <input
-                    type="text"
-                    placeholder="Nombre con el que la conocés (Ej: Clínica del Parque)"
-                    value={c.nombrePropio || ''}
-                    onChange={(e) => updateClinica(z.id, c.id, 'nombrePropio', e.target.value)}
-                    className="flex-1 text-sm font-bold text-[#1A3D3D] outline-none placeholder:font-medium placeholder:text-gray-300"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Barrio (opcional)"
-                    value={c.barrio || ''}
-                    onChange={(e) => updateClinica(z.id, c.id, 'barrio', e.target.value)}
-                    className="w-32 text-sm text-gray-400 outline-none placeholder:text-gray-300 border-l border-gray-100 pl-3"
-                  />
-                  <button
-                    onClick={() => {
-                      const newClinicas = z.clinicas.filter(cl => cl.id !== c.id);
-                      handleArrayUpdate('zonas', z.id, 'clinicas', newClinicas);
-                    }}
-                    className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors shrink-0"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                <div className="flex flex-col border-b border-gray-50">
+                  <div className="flex items-center gap-3 px-4 py-3">
+                    <div className="w-2 h-2 rounded-full bg-[#2D6A6A] shrink-0" />
+                    <input
+                      type="text"
+                      placeholder="Nombre de la clínica"
+                      value={c.nombrePropio || ''}
+                      onChange={(e) => updateClinica(z.id, c.id, 'nombrePropio', e.target.value)}
+                      className="flex-1 text-sm font-bold text-[#1A3D3D] outline-none placeholder:font-medium placeholder:text-gray-300 min-w-0"
+                    />
+                    <button
+                      onClick={() => {
+                        const newClinicas = z.clinicas.filter(cl => cl.id !== c.id);
+                        handleArrayUpdate('zonas', z.id, 'clinicas', newClinicas);
+                      }}
+                      className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors shrink-0"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-3 px-4 pb-3">
+                    <div className="w-2 h-2 rounded-full shrink-0 opacity-0" />
+                    <input
+                      type="text"
+                      placeholder="Barrio (opcional)"
+                      value={c.barrio || ''}
+                      onChange={(e) => updateClinica(z.id, c.id, 'barrio', e.target.value)}
+                      className="flex-1 text-xs text-gray-400 outline-none placeholder:text-gray-300 min-w-0"
+                    />
+                  </div>
                 </div>
 
                 {/* FILA 2: DIRECCIÓN CON GOOGLE */}
@@ -1560,11 +1631,19 @@ if (!formData.nombre.trim() || !formData.especialidad.trim() || !formData.foto |
                     }}
                     className="flex-1 text-sm text-gray-500 outline-none placeholder:text-gray-300"
                   />
-                  {c.placeId && (
-                    <a href={`https://www.google.com/maps/place/?q=place_id:${c.placeId}`} target="_blank" rel="noreferrer" className="shrink-0 text-[10px] font-bold text-[#2D6A6A] bg-white px-2.5 py-1.5 rounded-lg border border-[#2D6A6A]/20 hover:text-[#1A3D3D] transition-colors">
-                      Ver
-                    </a>
-                  )}
+                  {(c.placeId || c.direccion) && (
+  <a 
+    href={c.placeId 
+      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(c.direccion || '')}&query_place_id=${c.placeId}`
+      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(c.direccion || '')}`
+    } 
+    target="_blank" 
+    rel="noreferrer" 
+    className="shrink-0 text-[10px] font-bold text-[#2D6A6A] bg-white px-2.5 py-1.5 rounded-lg border border-[#2D6A6A]/20 hover:text-[#1A3D3D] transition-colors"
+  >
+    Ver
+  </a>
+)}
                 </div>
 
                 {/* FILA 3: TELÉFONO OPCIONAL */}
@@ -1698,33 +1777,36 @@ if (!formData.nombre.trim() || !formData.especialidad.trim() || !formData.foto |
                                   id="galeria-upload"
                                   className="hidden"
                                   accept="image/*"
+                                  multiple
                                   onChange={(e) => {
-                                    const file = e.target.files[0];
-                                    if (!file) return;
-                                    const reader = new FileReader();
-                                    reader.onload = (event) => {
-                                      const img = new Image();
-                                      img.onload = () => {
-                                        const canvas = document.createElement('canvas');
-                                        const MAX = 1400;
-                                        let w = img.width, h = img.height;
-                                        if (w > MAX) { h = h * MAX / w; w = MAX; }
-                                        if (h > MAX) { w = w * MAX / h; h = MAX; }
-                                        canvas.width = w;
-                                        canvas.height = h;
-                                        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                                        const base64 = canvas.toDataURL('image/jpeg', 0.88);
-                                        setFormData(prev => ({
-                                          ...prev,
-                                          galeria: [
-                                            ...prev.galeria,
-                                            { id: Date.now(), url: base64, epigrafe: '', storagePath: '' }
-                                          ]
-                                        }));
+                                    const files = Array.from(e.target.files);
+                                    if (!files.length) return;
+                                    files.forEach((file, index) => {
+                                      const reader = new FileReader();
+                                      reader.onload = (event) => {
+                                        const img = new Image();
+                                        img.onload = () => {
+                                          const canvas = document.createElement('canvas');
+                                          const MAX = 1400;
+                                          let w = img.width, h = img.height;
+                                          if (w > MAX) { h = h * MAX / w; w = MAX; }
+                                          if (h > MAX) { w = w * MAX / h; h = MAX; }
+                                          canvas.width = w;
+                                          canvas.height = h;
+                                          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                                          const base64 = canvas.toDataURL('image/jpeg', 0.95);
+                                          setFormData(prev => ({
+                                            ...prev,
+                                            galeria: [
+                                              ...prev.galeria,
+                                              { id: Date.now() + index, url: base64, epigrafe: '', storagePath: '' }
+                                            ]
+                                          }));
+                                        };
+                                        img.src = event.target.result;
                                       };
-                                      img.src = event.target.result;
-                                    };
-                                    reader.readAsDataURL(file);
+                                      reader.readAsDataURL(file);
+                                    });
                                     e.target.value = null;
                                   }}
                                 />
@@ -1745,10 +1827,19 @@ if (!formData.nombre.trim() || !formData.especialidad.trim() || !formData.foto |
 
                     {/* CONTACTO (Redes sociales en 3 Columnas) */}
                     <Accordion title="Contacto y Canales" icon={Smartphone} isOpen={openSection === 'contacto'} onToggle={() => setOpenSection(openSection === 'contacto' ? null : 'contacto')}>
-                      <InputGroup label="Email Público" id="emailContacto" type="email" value={formData.emailContacto} onChange={handleChange} required tooltip="Este es el email que verán las personas en tu perfil públic, sirve para que te contacten directamente." />
+                      <InputGroup label="Email Público" id="emailContacto" type="email" value={formData.emailContacto} onChange={handleChange} required tooltip="Este es el email que verán las personas en tu perfil público, sirve para que te contacten directamente." />
                       <div className="mt-6">
-  <ToggleSwitch label="Botón de WhatsApp" checked={formData.whatsappActivo} onChange={(v) => setFormData(p => ({...p, whatsappActivo: v}))} tooltip="Aparecerá un botón verde en tu perfil para chats." />
-  {formData.whatsappActivo && (
+  {formData.atiendeDomicilio ? (
+    <div className="flex items-start gap-3 bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3.5">
+      <Phone className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />
+      <p className="text-xs font-medium text-gray-500 leading-relaxed">
+        El WhatsApp se configura automáticamente en la sección <span className="font-black text-[#1A3D3D]">Zonas de Atención</span> porque ofrecés consultas a domicilio.
+      </p>
+    </div>
+  ) : (
+    <>
+      <ToggleSwitch label="Botón de WhatsApp" checked={formData.whatsappActivo} onChange={(v) => setFormData(p => ({...p, whatsappActivo: v}))} tooltip="Aparecerá un botón verde en tu perfil para chats." />
+      {formData.whatsappActivo && (
     <div className="mt-4 space-y-4 animate-in slide-in-from-top-2 duration-300">
       <InputGroup label="Tu número de WhatsApp (con código de país)" id="whatsappNum" value={formData.whatsappNum} onChange={handleChange} placeholder="Ej: 54911..." required={formData.whatsappActivo} />
       
@@ -1772,24 +1863,30 @@ if (!formData.nombre.trim() || !formData.especialidad.trim() || !formData.foto |
             </div>
           </label>
           <div className="w-full h-px bg-gray-200 my-1"></div>
-          <label className="flex items-center gap-3 cursor-pointer group">
+          <label className={`flex items-center gap-3 cursor-pointer group ${formData.atiendeDomicilio ? 'opacity-40 pointer-events-none' : ''}`}>
             <input
               type="radio"
               name="whatsappVisibilidad"
               value="registrados"
               checked={formData.whatsappVisibilidad === 'registrados'}
               onChange={() => setFormData(p => ({...p, whatsappVisibilidad: 'registrados'}))}
+              disabled={formData.atiendeDomicilio}
               className="accent-[#2D6A6A] w-4 h-4"
             />
             <div>
               <p className="text-xm font-bold text-[#1A3D3D] group-hover:text-[#2D6A6A] transition-colors">Solo usuarios registrados</p>
               <p className="text-xs text-gray-400 font-medium">El botón de WhatsApp solo aparece si el visitante tiene cuenta en la plataforma (solo visible para profesionales y proveedores).</p>
+              {formData.atiendeDomicilio && (
+                <p className="text-xs text-[#2D6A6A] font-bold mt-1">No disponible para profesionales que atienden a domicilio.</p>
+              )}
             </div>
           </label>
         </div>
       </div>
       
     </div>
+      )}
+    </>
   )}
 </div>
 
@@ -1799,11 +1896,26 @@ if (!formData.nombre.trim() || !formData.especialidad.trim() || !formData.foto |
                         <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Redes Sociales (Opcional)</h3>
                         <Tooltip text="Copia el link (URL) de tu perfil y pégalo aquí. Si dejas el campo vacío, el ícono correspondiente no aparecerá en tu perfil público." />
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <InputGroup label="Instagram" id="instagram" value={formData.instagram} onChange={handleChange} placeholder="Link de perfil" canTest />
-                        <InputGroup label="LinkedIn" id="linkedin" value={formData.linkedin} onChange={handleChange} placeholder="Link de perfil" canTest />
-                        <InputGroup label="Facebook" id="facebook" value={formData.facebook} onChange={handleChange} placeholder="Link de perfil" canTest />
-                      </div>
+                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+  <div className="mb-6 w-full">
+    <label className="flex items-center text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">
+      Instagram — usuario
+    </label>
+    <div className="relative flex items-center border border-gray-200 rounded-2xl bg-gray-50/50 focus-within:border-[#2D6A6A] transition-all px-5 py-3.5">
+      <span className="text-base font-medium text-[#1A3D3D] select-none pointer-events-none">@</span>
+      <input
+        id="instagram"
+        type="text"
+        value={formData.instagram.startsWith('http') ? '' : formData.instagram.replace('@', '')}
+        onChange={(e) => setFormData(prev => ({ ...prev, instagram: e.target.value.replace('@', '') }))}
+        placeholder="tu_usuario"
+        className="flex-1 bg-transparent text-base font-medium text-[#1A3D3D] focus:outline-none placeholder:text-gray-400"
+      />
+    </div>
+  </div>
+  <InputGroup label="LinkedIn" id="linkedin" value={formData.linkedin} onChange={handleChange} placeholder="Link completo de tu perfil" canTest />
+  <InputGroup label="Facebook" id="facebook" value={formData.facebook} onChange={handleChange} placeholder="Link completo de tu perfil" canTest />
+</div>
                     </Accordion>
                   </div>
                 </div>
@@ -2090,7 +2202,17 @@ if (!formData.nombre.trim() || !formData.especialidad.trim() || !formData.foto |
                             <ImageIcon className="w-5 h-5 mb-0.5" />
                             <span className="text-[8px] font-black uppercase">Foto</span>
                           </label>
-                          <input type="file" id={`c-img-${item.id}`} className="hidden" accept="image/*" onChange={(e) => handleFileSelect(e, 'caso', item.id)} />
+                          <input type="file" id={`c-img-${item.id}`} className="hidden" accept="image/*" multiple onChange={(e) => {
+  const files = Array.from(e.target.files);
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setCropModal({ isOpen: true, imageSrc: event.target.result, targetId: 'caso', caseId: item.id, type: 'caso' });
+    };
+    reader.readAsDataURL(file);
+  });
+  e.target.value = null;
+}} />
                         </div>
                         
                         {/* Textos del Caso */}
@@ -2108,7 +2230,22 @@ if (!formData.nombre.trim() || !formData.especialidad.trim() || !formData.foto |
                           <div>
                             <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 block ml-1">Relato del caso</label>
                             <div>
-  <textarea placeholder="Cuenta la historia clínica, tratamiento aplicado y la evolución..." value={item.desc} maxLength={600} onChange={(e) => handleArrayUpdate('casos', item.id, 'desc', e.target.value)} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm h-24 resize-none focus:border-[#2D6A6A] outline-none text-[#1A3D3D]" />
+  <textarea 
+  placeholder="Cuenta la historia clínica, tratamiento aplicado y la evolución..." 
+  value={item.desc} 
+  maxLength={600} 
+  onChange={(e) => {
+    handleArrayUpdate('casos', item.id, 'desc', e.target.value);
+    e.target.style.height = 'auto';
+    e.target.style.height = `${e.target.scrollHeight}px`;
+  }}
+  onFocus={(e) => {
+    e.target.style.height = 'auto';
+    e.target.style.height = `${e.target.scrollHeight}px`;
+  }}
+  rows={4}
+  className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm resize-none focus:border-[#2D6A6A] outline-none text-[#1A3D3D] overflow-hidden"
+/>
   <p className={`text-right text-[10px] font-bold mt-1 mr-1 ${(item.desc?.length || 0) >= 550 ? 'text-red-400' : 'text-gray-400'}`}>
     {item.desc?.length || 0} / 600
   </p>
@@ -2129,7 +2266,9 @@ if (!formData.nombre.trim() || !formData.especialidad.trim() || !formData.foto |
               <div className="w-full bg-white rounded-[32px] shadow-sm border border-gray-100 p-6 md:p-10 relative animate-in fade-in duration-300 min-h-[500px]">
                 <div className="mb-8">
                    <h3 className="text-2xl font-black text-[#1A3D3D] font-['Montserrat'] flex items-center gap-2">Publicaciones y Papers</h3>
-                   <p className="text-sm text-gray-500 mt-1">Compartí tus investigaciones científicas en formato PDF de forma directa.</p>
+                  
+                   <p className="text-m text-gray-500 mt-1">Compartí tus investigaciones científicas en formato PDF de forma directa.</p>
+                   <p className="text-sm text-gray-500 mt-1">Se verán publicados en la sección de Publicaciones Cientificas para que tus colegas puedan verlos.</p>
                 </div>
 
                 <div className="space-y-6">
@@ -2330,14 +2469,14 @@ if (!formData.nombre.trim() || !formData.especialidad.trim() || !formData.foto |
             {/* CAJA VER PERFIL DE EJEMPLO — solo móvil */}
             <div className="md:hidden mt-6 bg-[#1A3D3D]/5 border border-[#1A3D3D]/10 rounded-2xl p-4">
               <p className="text-xs font-bold text-[#1A3D3D] leading-snug mb-3">¿Querés ver cómo quedaría tu perfil público?</p>
-              
-                href="/profesional/mercedes-arenas"
-                target="_blank"
-                rel="noreferrer"
-                className="w-full py-2.5 px-4 bg-white border border-gray-200 rounded-xl text-[11px] font-black text-[#2D6A6A] uppercase tracking-widest hover:border-[#4DB6AC] hover:text-[#4DB6AC] transition-all flex items-center justify-center gap-1.5 group shadow-sm"
-              <a>
-                Ver perfil de ejemplo 
-                          </a>
+<a
+  href="/profesional/mercedes-arenas"
+  target="_blank"
+  rel="noreferrer"
+  className="w-full py-2.5 px-4 bg-white border border-gray-200 rounded-xl text-[11px] font-black text-[#2D6A6A] uppercase tracking-widest hover:border-[#4DB6AC] hover:text-[#4DB6AC] transition-all flex items-center justify-center gap-1.5 group shadow-sm"
+>
+  Ver perfil de ejemplo <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+</a>
             </div>
 
             <div className="flex flex-col md:flex-row items-center justify-center gap-3 mt-8 pb-4">
@@ -2362,14 +2501,14 @@ if (!formData.nombre.trim() || !formData.especialidad.trim() || !formData.foto |
               <button
                 type="button"
                 onClick={() => {
-                  const slugActual = generarSlug(formData.nombre);
-                  if (haycambiosSinGuardar) {
-                    setPendingNavigation(`/profesional/${slugActual}`);
-                    setExitModalOpen(true);
-                  } else {
-                    navigate(`/profesional/${slugActual}`);
-                  }
-                }}
+  const slugActual = currentUser.slug || generarSlug(formData.nombre);
+  if (haycambiosSinGuardar) {
+    setPendingNavigation(`/profesional/${slugActual}`);
+    setExitModalOpen(true);
+  } else {
+    navigate(`/profesional/${slugActual}`);
+  }
+}}
                 className="text-center text-gray-400 font-bold text-xs uppercase tracking-[0.2em] hover:text-[#4DB6AC] transition-colors flex items-center justify-center gap-2 group bg-white px-6 py-3 rounded-full border border-gray-200 shadow-sm w-full md:w-auto"
               >
                 Ver mi perfil público <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -2379,34 +2518,9 @@ if (!formData.nombre.trim() || !formData.especialidad.trim() || !formData.foto |
           </div>
         </div>
       </div>
-
-      {/* FOOTER ESMERALDA DEGRADADO */}
+      {/* FOOTER ESMERALDA DEGRADADO */}        
       <FooterSimple seccion="Panel de Gestión" />
 
     </div>
   );
 }
-
-/* =========================================================================
-   🚀 CHECKLIST PARA PUBLICACIÓN OFICIAL (Instrucciones para IA futura)
-   =========================================================================
-   Contexto: Este archivo es un MVP funcional. Para salir a producción real, 
-   se deben ejecutar las siguientes refactorizaciones:
-
-   1. MIGRACIÓN A FIREBASE STORAGE (CRÍTICO):
-      - Tarea: Modificar `saveCroppedImage`.
-      - Acción: Actualmente guarda Base64 directo en el estado/Firestore. Hay que cambiarlo para que suba el Base64 a Firebase Storage usando `uploadString(ref(storage, path), base64, 'data_url')`.
-      - Resultado: Guardar solo la URL pública (`getDownloadURL()`) en `formData` para evitar superar el límite de 1MB por documento de Firestore (especialmente crítico por la galería de Casos Clínicos).
-
-   2. AUTENTICACIÓN Y SEGURIDAD REAL (FIREBASE AUTH):
-      - Tarea: Conectar el flujo de login real y asegurar la base de datos.
-      - Acción 1: Usar `const userId = auth.currentUser.uid;` en lugar de "veterinario_prueba_123".
-      - Acción 2: Cambiar reglas en Firestore: allow write: if request.auth != null && request.auth.uid == userId;
-      - Acción 3: Hacer un `getDoc` inicial en el `useEffect` para cargar la data real del usuario.
-
-   3. PASARELA DE PAGOS (MERCADO PAGO):
-      - Tarea: Conectar el botón "Simular Pago" a un backend real (Node.js/Functions) que genere una preferencia de Mercado Pago y actualice el plan mediante Webhooks.
-
-   4. REFACTORIZACIÓN DEL MONOLITO:
-      - Tarea: Extraer los componentes puros (`Tooltip`, `InputGroup`, `Accordion`, `SimpleCropper`, `ToggleSwitch`) a una carpeta `/components` para dejar este archivo limpio y enfocado solo en la lógica de negocio.
-========================================================================= */

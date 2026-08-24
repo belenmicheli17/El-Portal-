@@ -510,18 +510,18 @@ export default function Ecosistema() {
             <div className="order-1 lg:col-span-2 w-full flex flex-col justify-center gap-6">
               <div>
                 <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-[#1A3D3D] font-['Montserrat'] leading-[1.1] tracking-tight">
-                  ¡Hola, {currentUser.nombre ? currentUser.nombre.split(' ')[0] : 'Profesional'}! <br className="hidden md:block" />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#1A3D3D] to-[#2D6A6A]">
-                    Bienvenidx al ecosistema.
-                  </span>
-                </h1>
+  ¡Hola, {currentUser.nombre || 'Profesional'}! <br className="hidden md:block" />
+  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#1A3D3D] to-[#2D6A6A]">
+    Bienvenido al ecosistema.
+  </span>
+</h1>
                 <h3 className="text-[#2D6A6A] font-bold text-[12px] md:text-[13px] uppercase tracking-[0.2em] mb-2 mt-4">
                   ¿Qué te gustaría hacer hoy?
                 </h3>
               </div>
               <div className="flex flex-row items-center gap-3 w-full md:w-auto mt-2">
-                <button
-                  onClick={() => navigate(`/profesional/${currentUser?.slug}`)}
+               <button
+  onClick={() => navigate(`/${currentUser.rol === 'clinica' ? 'clinica' : currentUser.rol === 'proveedor' ? 'proveedor' : 'profesional'}/${currentUser?.slug}`)}
                   className="bg-white/60 backdrop-blur-md border border-white/50 text-[#1A3D3D] px-4 py-2.5 rounded-xl font-bold text-[12px] md:text-[13px] uppercase tracking-wider hover:bg-white hover:shadow-sm transition-all flex items-center justify-center gap-2 flex-1 md:flex-none"
                 >
                   <Eye className="w-4 h-4 text-[#2D6A6A]" /> Ver mi perfil público

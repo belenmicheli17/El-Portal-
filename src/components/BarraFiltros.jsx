@@ -10,7 +10,7 @@ import {
 // Importamos los datos centralizados
 import especialidadesData from '../data/especialidades.json';
 import filtrosConfig from '../data/filtrosConfig.json';
-
+// FALTA IMPORTAR LAS PROVINCIAS 
 // Mapeo de íconos para las mascotas
 const iconMap = {
   'perros_gatos': Cat,
@@ -30,7 +30,9 @@ const BarraFiltros = ({
   setSearchTerm,
   showModalidad = true,
   modo = 'default',
-  aniosDisponibles = [] // <-- NUEVO: Recibe los años de la base de datos
+  aniosDisponibles = [],
+  provinciasDisponibles = {},
+  especialidadesDisponibles = {}
 }) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [showFilters, setShowFilters] = useState(false);
@@ -290,22 +292,30 @@ const BarraFiltros = ({
                       <div className="max-h-56 overflow-y-auto pr-2 grid grid-cols-3 gap-2 custom-scrollbar">
                         {filtrosConfig.provincias
                           .filter(prov => prov.toLowerCase().includes(zonaSearch))
+                          .filter(prov => Object.keys(provinciasDisponibles).length === 0 || provinciasDisponibles[prov])
                           .map(p => {
                             const isActive = filtros.zonas.includes(p);
+                            const cantidad = provinciasDisponibles[p] || 0;
                             return (
                               <button
                                 key={p}
                                 onClick={() => toggleFiltro('zonas', p)}
-                                className={`text-[12px] px-2 py-2 rounded-lg text-left transition-colors truncate ${
+                                className={`text-[12px] px-2 py-2 rounded-lg text-left transition-colors truncate flex flex-col ${
                                   isActive ? 'bg-[#2D6A6A] text-white' : 'hover:bg-[#F4F7F7] text-[#666666]'
                                 }`}
                               >
-                                {p}
+                                <span className="truncate">{p}</span>
+                                {cantidad > 0 && (
+                                  <span className={`text-[10px] font-bold ${isActive ? 'text-white/70' : 'text-gray-400'}`}>
+                                    {cantidad}
+                                  </span>
+                                )}
                               </button>
                             )
                           })
                         }
                       </div>
+
                     </div>
                   </div>
 
@@ -327,27 +337,39 @@ const BarraFiltros = ({
 
                     <div className={`overflow-hidden transition-all duration-300 ease-in-out lg:max-h-none lg:opacity-100 ${openSection === 'especialidad' ? 'max-h-[800px] opacity-100 pb-4 lg:pb-0' : 'max-h-0 opacity-0'}`}>
                       <div className="flex flex-col gap-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                        {especialidadesData.map(grupo => (
-                          <div key={grupo.id}>
-                            <p className="text-[10px] font-black text-[#1A3D3D] uppercase tracking-[0.15em] mb-2 opacity-50">
-                              {grupo.grupo}
-                            </p>
-                            <div className="flex flex-wrap gap-2">
-                              {grupo.opciones.map(opcion => {
-                                const isActive = filtros.especialidades.includes(opcion);
-                                return (
-                                  <span
-                                    key={opcion}
-                                    onClick={() => toggleFiltro('especialidades', opcion)}
-                                    className={`px-3 py-1.5 text-[12px] font-medium rounded-xl cursor-pointer transition-colors ${isActive ? 'bg-[#2D6A6A] text-white shadow-sm' : 'bg-[#F4F7F7] text-[#666666] hover:bg-gray-200'}`}
-                                  >
-                                    {opcion}
-                                  </span>
-                                );
-                              })}
+                        {especialidadesData.map(grupo => {
+                          const opcionesFiltradas = grupo.opciones.filter(
+                            opcion => Object.keys(especialidadesDisponibles).length === 0 || especialidadesDisponibles[opcion]
+                          );
+                          if (opcionesFiltradas.length === 0) return null;
+                          return (
+                            <div key={grupo.id}>
+                              <p className="text-[10px] font-black text-[#1A3D3D] uppercase tracking-[0.15em] mb-2 opacity-50">
+                                {grupo.grupo}
+                              </p>
+                              <div className="flex flex-wrap gap-2">
+                                {opcionesFiltradas.map(opcion => {
+                                  const isActive = filtros.especialidades.includes(opcion);
+                                  const cantidad = especialidadesDisponibles[opcion] || 0;
+                                  return (
+                                    <span
+                                      key={opcion}
+                                      onClick={() => toggleFiltro('especialidades', opcion)}
+                                      className={`px-3 py-1.5 text-[12px] font-medium rounded-xl cursor-pointer transition-colors flex items-center gap-1.5 ${isActive ? 'bg-[#2D6A6A] text-white shadow-sm' : 'bg-[#F4F7F7] text-[#666666] hover:bg-gray-200'}`}
+                                    >
+                                      {opcion}
+                                      {cantidad > 0 && (
+                                        <span className={`text-[10px] font-bold ${isActive ? 'text-white/70' : 'text-gray-400'}`}>
+                                          ({cantidad})
+                                        </span>
+                                      )}
+                                    </span>
+                                  );
+                                })}
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
                   </div>

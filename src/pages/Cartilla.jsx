@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useMemo } from 'react';
 import { 
   Search, MapPin, Home, 
   ChevronRight, Award, Dog, Cat, Filter, 
@@ -274,6 +275,25 @@ const PASOS_CARTILLA = [
     setSearchTerm('');
   };
 
+    // Filtros dinámicos: solo muestran opciones que tienen al menos 1 resultado
+  const provinciasDisponibles = useMemo(() => {
+    const conteo = {};
+    veterinarios.forEach(v => {
+      if (v.provincia) conteo[v.provincia] = (conteo[v.provincia] || 0) + 1;
+    });
+    return conteo;
+  }, [veterinarios]);
+
+  const especialidadesDisponibles = useMemo(() => {
+    const conteo = {};
+    veterinarios.forEach(v => {
+      (v.opcionesFiltro || []).forEach(esp => {
+        if (esp) conteo[esp] = (conteo[esp] || 0) + 1;
+      });
+    });
+    return conteo;
+  }, [veterinarios]);
+
   const veterinariosFiltrados = veterinarios.filter(v => {
     // Buscador de texto libre
     if (searchTerm) {
@@ -394,6 +414,8 @@ const PASOS_CARTILLA = [
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
           showModalidad={true}
+          provinciasDisponibles={provinciasDisponibles}
+          especialidadesDisponibles={especialidadesDisponibles}
         />
 
         <div className="grid grid-cols-1 max-w-6xl mx-auto w-full px-4 mt-2 sm:mt-2 mb-4 relative z-10 font-['Inter'] min-h-[80vh]">

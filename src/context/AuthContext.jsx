@@ -48,9 +48,23 @@ export function AuthProvider({ children }) {
     return signOut(auth);
   };
 
+   const refreshUser = async () => {
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (!user) return;
+    try {
+      const docRef = doc(db, 'usuarios', user.uid);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        setCurrentUser({ uid: user.uid, ...docSnap.data() });
+      }
+    } catch (error) {
+      console.error("Error refrescando usuario:", error);
+    }
+  };
+
   return (
-    // 👇 Agregamos logout para que Ecosistema.jsx pueda usarlo
-    <AuthContext.Provider value={{ currentUser, loading, logout }}>
+    <AuthContext.Provider value={{ currentUser, loading, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );
