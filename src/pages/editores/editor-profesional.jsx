@@ -330,7 +330,15 @@ export default function EditorProfesional() {
     }
   }, [location]); 
   const [modalConfig, setModalConfig] = useState({ isOpen: false, title: '', message: '', type: 'info', onConfirm: null });
-  const [desktopHintVisto] = useState(() => !!localStorage.getItem('editorDesktopHintVisto'));
+  const [desktopHintVisto, setDesktopHintVisto] = useState(() => !!localStorage.getItem('editorDesktopHintVisto'));
+
+  useEffect(() => {
+    const handleStorage = () => {
+      setDesktopHintVisto(!!localStorage.getItem('editorDesktopHintVisto'));
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
   const [isSubModalOpen, setIsSubModalOpen] = useState(false); 
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
   const [openSection, setOpenSection] = useState(null);
@@ -363,12 +371,22 @@ const [tooltipHintVisto, setTooltipHintVisto] = useState(true);
         const docRef = doc(db, 'profesionales', currentUser.uid);
         const docSnap = await getDoc(docRef);
         
+        // Leemos siempre los datos de 'usuarios' (incluso si no hay perfil en 'profesionales' aún)
+        const userDocSnap = await getDoc(doc(db, 'usuarios', currentUser.uid));
+        const datosUsuario = userDocSnap.exists() ? userDocSnap.data() : {};
+        console.log('🔍 datosUsuario desde Firestore:', datosUsuario);
+        console.log('🏅 socioVitalicio:', datosUsuario.socioVitalicio);
+        setTooltipHintVisto(datosUsuario.tooltipHintVisto ?? false);
+
+        // Siempre inyectamos socioVitalicio en formData, exista o no el doc de profesionales
+        _setFormData(prev => ({ ...prev, socioVitalicio: datosUsuario.socioVitalicio || false }));
+
         if (docSnap.exists()) {
           const dbData = docSnap.data();
           // Cargamos el email desde Firebase Auth directamente
           dbData.cuentaEmail = auth.currentUser?.email || '';
-          // Leemos socioVitalicio del documento del usuario en la colección usuarios
-          const userDocSnap = await getDoc(doc(db, 'usuarios', currentUser.uid));
+          // Inyectamos socioVitalicio desde 'usuarios'
+          dbData.socioVitalicio = datosUsuario.socioVitalicio || false;
           if (userDocSnap.exists()) {
             dbData.socioVitalicio = userDocSnap.data().socioVitalicio || false;
             setTooltipHintVisto(userDocSnap.data().tooltipHintVisto ?? false);
@@ -1047,7 +1065,7 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
         }}
         className="w-full px-8 py-3.5 rounded-xl font-bold text-white bg-[#1A3D3D] hover:bg-[#2D6A6A] transition-colors shadow-lg text-m"
       >
-        Entendido, continuar
+        Entendido
       </button>
     </div>
   </div>

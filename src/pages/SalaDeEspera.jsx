@@ -212,6 +212,28 @@ await setDoc(doc(db, 'usuarios', user.uid), {
   esBeta: true,
   socioVitalicio: true,
 });
+      // — Envío de mail de bienvenida vía Brevo —
+      try {
+        const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'api-key': import.meta.env.VITE_BREVO_API_KEY,
+          },
+          body: JSON.stringify({
+            to: [{ email: formDrawer.email.toLowerCase().trim(), name: nombreCompleto }],
+            templateId: 1,
+            params: { nombre: formDrawer.nombre.trim() },
+          }),
+        });
+        const brevoData = await brevoRes.json();
+        console.log('Brevo status:', brevoRes.status);
+        console.log('Brevo respuesta:', brevoData);
+      } catch (mailErr) {
+        // El mail falló pero el registro fue exitoso — no bloqueamos al usuario
+        console.warn('No se pudo enviar el mail de bienvenida:', mailErr);
+      }
+
       setPasoDrawer('exito');
     } catch (err) {
       setErrorDrawer(traducirError(err.code));

@@ -85,7 +85,7 @@ export default function App() {
   }, []);
 
   return (
-    <AuthProvider>
+    <AuthProvider loadingFallback={<PantallaCarga />}>
       <div className="relative min-h-screen bg-gray-50 selection:bg-[#2D6A6A] selection:text-white">
         
         <style dangerouslySetInnerHTML={{ __html: `

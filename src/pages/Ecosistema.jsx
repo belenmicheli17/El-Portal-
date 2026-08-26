@@ -17,7 +17,7 @@ const DashboardCard = ({ titulo, descripcion, icon: Icon, onClick, customBg = "b
   <button 
     onClick={onClick}
     type="button"
-    className={`${customBg} backdrop-blur-xl border border-white/60 p-5 md:p-6 rounded-[24px] md:rounded-[32px] shadow-[0_8px_32px_rgba(0,0,0,0.04)] hover:bg-white/90 hover:shadow-[0_20px_40px_rgba(26,61,61,0.12)] transition-all duration-300 transform hover:-translate-y-1 active:scale-[0.97] active:translate-y-0 min-h-[180px] md:min-h-[210px] flex flex-col justify-center items-center text-center group cursor-pointer w-full outline-none focus:ring-4 focus:ring-[#2D6A6A]/10`}
+    className={`${customBg} backdrop-blur-xl border border-white/60 p-5 md:p-6 rounded-[24px] md:rounded-[32px] shadow-[0_8px_32px_rgba(0,0,0,0.04)] hover:bg-white/90 hover:shadow-[0_20px_40px_rgba(26,61,61,0.12)] transition-all duration-300 transform hover:-translate-y-1 active:scale-[0.97] active:translate-y-0 min-h-[180px] md:min-h-[210px] h-full flex flex-col justify-center items-center text-center group cursor-pointer w-full outline-none focus:ring-4 focus:ring-[#2D6A6A]/10`}
   >
     <Icon strokeWidth={1.5} className="w-8 h-8 md:w-10 md:h-10 text-[#2D6A6A] mb-3 group-hover:scale-110 group-hover:-translate-y-1 group-hover:text-[#1A3D3D] transition-all duration-300" />
     <h2 className="text-[17px] md:text-[21px] font-black text-[#1A3D3D] font-['Montserrat'] mb-1 leading-tight">{titulo}</h2>
@@ -512,7 +512,7 @@ export default function Ecosistema() {
                 <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-[#1A3D3D] font-['Montserrat'] leading-[1.1] tracking-tight">
   ¡Hola, {currentUser.nombre || 'Profesional'}! <br className="hidden md:block" />
   <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#1A3D3D] to-[#2D6A6A]">
-    Bienvenido al ecosistema.
+    Bienvenido/a al ecosistema.
   </span>
 </h1>
                 <h3 className="text-[#2D6A6A] font-bold text-[12px] md:text-[13px] uppercase tracking-[0.2em] mb-2 mt-4">
@@ -562,9 +562,9 @@ export default function Ecosistema() {
             )}
 
             {/* CARDS DE HERRAMIENTAS */}
-            <div className={`order-3 w-full grid gap-3 md:gap-6 transition-all duration-500 ${isNotifOpen ? 'lg:col-span-2 grid-cols-2 lg:grid-cols-2' : 'lg:col-span-3 grid-cols-2 lg:grid-cols-3'}`}>
+            <div className={`order-3 w-full grid gap-3 md:gap-6 transition-all duration-500 ${isNotifOpen ? 'lg:col-span-2 grid-cols-2 lg:grid-cols-2' : 'lg:col-span-3 grid-cols-2 md:grid-cols-3'}`}>
 
-              <div id="tour-editar-perfil">
+              <div id="tour-editar-perfil" className="h-full">
                 <DashboardCard
                   titulo="Editar Perfil"
                   descripcion="Actualizá tus datos profesionales para que el público conozca tus servicios y formación"
@@ -592,23 +592,23 @@ export default function Ecosistema() {
               </div>
 
               {activeRole !== 'proveedor' && (
-                <div id="tour-empleos">
+                <div id="tour-empleos" className="h-full">
                   <DashboardCard titulo="Bolsa de trabajo" descripcion="Acá podrás encontrar ofertas de clinicas que buscan personal y marcarte como disponible para nuevas oportunidades." icon={Briefcase} onClick={() => navigate('/bolsa-de-trabajo')} />
                 </div>
               )}
 
               {activeRole !== 'proveedor' && (
-                <div id="tour-colegas">
+                <div id="tour-colegas" className="h-full">
                   <DashboardCard titulo="Cartilla de colegas" descripcion="Tené los contactos siempre a mano de tus colegas para derivaciones o trabajos en equipo" icon={Users} onClick={() => navigate('/cartilla')} />
                 </div>
               )}
 
-              <div id="tour-proveedores">
+              <div id="tour-proveedores" className="h-full">
                 <DashboardCard titulo="Cartilla de proveedores" descripcion="Directorio de distribuidores mayoristas, laboratorios y mas rubros afines" icon={Package} onClick={() => navigate('/cartilla-proveedores')} />
               </div>
 
               {activeRole !== 'proveedor' && (
-                <div id="tour-publicaciones">
+                <div id="tour-publicaciones" className="h-full">
                   <DashboardCard titulo="Publicaciones científicas" descripcion="Actualizaciones y papers de la comunidad veterinaria" icon={Newspaper} onClick={() => navigate('/papers')} />
                 </div>
               )}

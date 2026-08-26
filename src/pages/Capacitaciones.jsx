@@ -848,7 +848,11 @@ El equipo de El Portal Veterinario`
             </button>
           </article>
 
-          {cursosMostrados.length > 0 ? (
+          {isLoading ? (
+            <div className="flex items-center justify-center py-24">
+              <div className="w-10 h-10 border-4 border-[#2D6A6A]/20 border-t-[#2D6A6A] rounded-full animate-spin" />
+            </div>
+          ) : cursosMostrados.length > 0 ? (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
                 {cursosMostrados.map(curso => (

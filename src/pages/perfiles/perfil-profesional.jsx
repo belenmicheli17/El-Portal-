@@ -205,9 +205,9 @@ setData({
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F4F7F7] flex flex-col items-center justify-center">
-        <div className="w-12 h-12 border-4 border-[#2D6A6A]/30 border-t-[#2D6A6A] rounded-full animate-spin mb-4"></div>
-        <p className="text-[#1A3D3D] font-bold">Cargando perfil...</p>
+      <div className="min-h-screen bg-[#F4F7F7] flex flex-col items-center justify-center gap-4">
+        <div className="w-10 h-10 border-4 border-[#2D6A6A]/20 border-t-[#2D6A6A] rounded-full animate-spin" />
+        <p className="text-[#1A3D3D] font-bold text-sm">Cargando perfil...</p>
       </div>
     );
   }
@@ -328,7 +328,7 @@ setData({
           <button className="absolute top-6 right-6 text-white/50 hover:text-white transition-colors p-2">
             <X className="w-8 h-8" />
           </button>
-          <img src={data.foto} alt={data.nombre} className="max-w-full max-h-[85vh] rounded-2xl object-contain shadow-2xl animate-in zoom-in duration-300" onClick={(e) => e.stopPropagation()} />
+          <img src={data.foto} alt={`${data.nombre} ${data.apellido}`} className="max-w-full max-h-[85vh] rounded-2xl object-contain shadow-2xl animate-in zoom-in duration-300" onClick={(e) => e.stopPropagation()} />
         </div>
       )}
 
@@ -500,7 +500,7 @@ setData({
               </div>
             </div>
             <div className="flex-1">
-              <h1 className="text-[24px] font-extrabold font-['Montserrat'] text-white tracking-tight uppercase leading-tight mb-2">{data.nombre}</h1>
+              <h1 className="text-[24px] font-extrabold font-['Montserrat'] text-white tracking-tight uppercase leading-tight mb-2">{data.nombre} {data.apellido}</h1>
               <h2 className="text-[14px] font-black text-[#F4F7F7] uppercase tracking-[0.1em] opacity-80">{data.especialidad}</h2>
              <div className="mt-2 text-white/30 font-bold text-[11px] uppercase tracking-[0.3em]">{data.tipoMatricula || 'MP'}: {data.matricula}</div>
               {(data.instagram || data.linkedin || data.facebook) && (
@@ -896,7 +896,7 @@ setData({
           {/* BOTÓN VOLVER AL Cartilla - ESCRITORIO */}
           <div className="w-full flex justify-start">
             <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-gray-400 hover:text-[#1A3D3D] font-bold text-[10px] md:text-[12px] uppercase tracking-[0.3em] mb-8 transition-colors group">
-              <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Volver a la Cartilla
+              <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Volver
             </button>
           </div>
 
@@ -923,7 +923,7 @@ setData({
               </div>
               
               <div className="z-10 w-full flex flex-col items-center">
-                <h1 className="text-[24px] md:text-[30px] font-extrabold font-['Montserrat'] text-white tracking-tight mb-2 uppercase leading-tight">{data.nombre}</h1>
+                <h1 className="text-[24px] md:text-[30px] font-extrabold font-['Montserrat'] text-white tracking-tight mb-2 uppercase leading-tight">{data.nombre} {data.apellido}</h1>
                 <h2 className="text-[16px] md:text-[20px] font-black text-[#F4F7F7] mb-4 uppercase tracking-widest opacity-90">{data.especialidad}</h2>
                 <p className="text-white/30 font-semibold text-[12px] uppercase tracking-[0.5em] mb-10">{data.tipoMatricula || 'MP'}: {data.matricula}</p>
               </div>
