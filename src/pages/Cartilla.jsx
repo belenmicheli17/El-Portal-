@@ -36,7 +36,7 @@ const Cartilla = () => {
   // Sincronizamos activeTab con la URL: si hay filtro de guardia arrancamos en 'clinicas'
   const [activeTab, setActiveTab] = useState(() => {
     const params = new URLSearchParams(window.location.search);
-    return params.get('guardia24hs') === 'true' ? 'clinicas' : 'todos';
+    return params.get('guardia24hs') === 'true' ? 'clinicas' : 'especialistas';
   });
   const [mostrarTourCartilla, setMostrarTourCartilla] = useState(false);
   const [veterinarios, setVeterinarios] = useState([]);
@@ -498,8 +498,7 @@ const PASOS_CARTILLA = [
                             </div>
                             <div className="mb-2">
                               <h2 className="font-montserrat font-extrabold text-[#1A3D3D] text-[14px] sm:text-[15px] leading-[1.2] line-clamp-2">
-                                <span className="block truncate">{firstName}</span>
-                                {lastName && <span className="block truncate">{lastName}</span>}
+                                <span className="block truncate">{item.nombre} {item.apellido || lastName}</span>
                               </h2>
                             </div>
                             <div className="mb-0 flex flex-col gap-1.5">

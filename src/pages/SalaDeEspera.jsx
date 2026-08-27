@@ -147,6 +147,55 @@ function QuienesSomos() {
   );
 }
 
+function BarraVitalicios() {
+  const [total, setTotal] = useState(0);
+  const [cargando, setCargando] = useState(true);
+  const LIMITE = 60;
+
+  useEffect(() => {
+    const fetchTotal = async () => {
+      try {
+        const { collection, query, where, getCountFromServer } = await import('firebase/firestore');
+        const q = query(collection(db, 'usuarios'), where('socioVitalicio', '==', true));
+        const snap = await getCountFromServer(q);
+        setTotal(snap.data().count);
+      } catch (e) {
+        console.error('Error contando socios vitalicios:', e);
+      } finally {
+        setCargando(false);
+      }
+    };
+    fetchTotal();
+  }, []);
+
+  // TEMPORAL para previsualizar — volver a 15 antes del lanzamiento
+  if (cargando) return null;
+
+  const quedan = Math.max(LIMITE - total, 0);
+  const porcentaje = Math.min((total / LIMITE) * 100, 100);
+
+  return (
+    <div className="mb-5 bg-[#1A3D3D] rounded-2xl p-5 border border-[#1A3D3D]">
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-[13px] font-black text-white leading-snug font-['Montserrat']">
+          {quedan > 0
+            ? <>Quedan <span className="text-[#4DB6AC]">{quedan} lugares</span> de {LIMITE} para acceso vitalicio.</>
+            : <>Los {LIMITE} lugares vitalicios ya fueron ocupados.</>
+          }
+        </p>
+      </div>
+      <div className="w-full h-3 bg-white/20 rounded-full overflow-hidden mb-3">
+        <div
+          className={`h-full rounded-full transition-all duration-700 ${porcentaje > 80 ? 'bg-red-400' : 'bg-[#4DB6AC]'}`}
+          style={{ width: `${porcentaje === 0 ? 2 : porcentaje}%` }}
+        />
+      </div>
+      <p className="text-[11px] md:text-[13px] text-white/50 font-medium">
+        Después del límite, el acceso será por suscripción.
+      </p>
+    </div>
+  );
+}
 
 // ── Componente principal ───────────────────────────────────────────────────
 export default function SalaDeEspera() {
@@ -446,7 +495,7 @@ const handleLogin = async () => {
 
                   {/* HEADER */}
                   <div>
-                    <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[16px] leading-tight">Bienvenido de vuelta</h3>
+                    <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[16px] leading-tight">Bienvenido/a de vuelta</h3>
                     <p className="text-gray-400 text-[12px] font-medium mt-0.5">Ingresá con tu cuenta</p>
                   </div>
 
@@ -704,12 +753,12 @@ Creá tu perfil, aparecé en búsquedas y conectate con colegas, clínicas y pro
                   <span className="w-1.5 h-1.5 rounded-full bg-[#4DB6AC] animate-pulse" />
                   Acceso anticipado
                 </span>
-                <h2 className="font-['Montserrat'] font-bold text-[#1A3D3D] text-3xl md:text-4xl max-w-[260px] md:max-w-lg leading-snug">
+                <h2 className="font-['Montserrat'] font-bold text-[#1A3D3D] text-3xl md:text-[42px] max-w-[260px] md:max-w-lg leading-snug">
   Ya podés registrarte y ser el primero en explorar la plataforma.
 </h2>
                 <div className="flex flex-col gap-1 max-w-[260px] md:max-w-sm">
-                  <p className="text-[#1A3D3D] font-bold text-[1px] md:text-[16px]">Los que llegan primero, construyen la plataforma.</p>
-                  <p className="text-[#666666] text-[18px] md:text-[16px] leading-relaxed">
+                  <p className="text-[#1A3D3D] font-bold text-[1px] md:text-[18px]">Los que llegan primero, construyen la plataforma.</p>
+                  <p className="text-[#666666] text-[18px] md:text-[17px] leading-relaxed">
                     Como beta tester vas a ser parte del grupo que le da forma a lo que viene. Tu perfil estará listo y activo desde el día del lanzamiento — solo necesitamos tu compromiso de completarlo y probarlo con nosotros.
                   </p>
                 </div>
@@ -734,6 +783,9 @@ Creá tu perfil, aparecé en búsquedas y conectate con colegas, clínicas y pro
                     </div>
 
                     <div className="p-6">
+                      {/* — Barra de socios vitalicios — */}
+                      <BarraVitalicios />
+
                       {/* Error */}
                       {errorDrawer && (
                         <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-xl flex items-center gap-2">
@@ -746,27 +798,37 @@ Creá tu perfil, aparecé en búsquedas y conectate con colegas, clínicas y pro
                       {pasoDrawer === 'rol' && (
                         <div className="space-y-3">
                           {[
-                            { valor: 'profesional', label: 'Soy Profesional', sub: 'Veterinario/a que busca conectar y crecer.', Icono: Stethoscope, color: 'blue' },
-                            { valor: 'clinica', label: 'Soy una Clínica', sub: 'Institución que busca talento y visibilidad.', Icono: Hospital, color: 'emerald' },
-                            { valor: 'proveedor', label: 'Proveedor o empresa', sub: 'Ofrezco insumos mayoristas, equipamiento o servicios para los usuarios mencionados anteriormente.', Icono: Store, color: 'purple' },
-                          ].map(({ valor, label, sub, Icono, color }) => (
-                            <button
-                              key={valor}
-                              onClick={() => { setRolDrawer(valor); setPasoDrawer('datos'); setErrorDrawer(''); }}
-                              className={`w-full text-left p-4 rounded-2xl border-2 transition-all group flex items-center gap-4 ${
-                                rolDrawer === valor
-                                  ? 'border-[#2D6A6A] bg-[#F4F7F7]'
-                                  : 'border-gray-100 hover:border-[#2D6A6A] hover:bg-[#F4F7F7]'
-                              }`}
-                            >
-                              <div className={`bg-${color}-50 p-2.5 rounded-full text-${color}-600 group-hover:scale-110 transition-transform`}>
-                                <Icono size={18} />
-                              </div>
-                              <div>
-                                <h4 className="font-bold text-[#1A3D3D] text-[14px]">{label}</h4>
-                                <p className="text-gray-500 text-[13px] leading-tight mt-0.5">{sub}</p>
-                              </div>
-                            </button>
+                            { valor: 'profesional', label: 'Soy Profesional', sub: 'Veterinario/a que busca conectar y crecer.', Icono: Stethoscope, color: 'blue', proximamente: false },
+                            { valor: 'clinica', label: 'Soy una Clínica', sub: 'Institución que busca talento y visibilidad.', Icono: Hospital, color: 'emerald', proximamente: true },
+                            { valor: 'proveedor', label: 'Proveedor o empresa', sub: 'Ofrezco insumos mayoristas, equipamiento o servicios para los usuarios mencionados anteriormente.', Icono: Store, color: 'purple', proximamente: true },
+                          ].map(({ valor, label, sub, Icono, proximamente }) => (
+                            <div key={valor} className="relative mt-4 first:mt-0">
+                              {proximamente && (
+                                <div className="absolute -top-2.5 right-2 flex items-center gap-1.5 bg-gray-400 text-white text-[10px] font-bold uppercase tracking-[0.15em] px-2.5 py-1 rounded-full z-10">
+                                  <span className="w-1 h-1 rounded-full bg-white animate-pulse shrink-0"></span>
+                                  Próximamente
+                                </div>
+                              )}
+                              <button
+                                key={valor}
+                                onClick={() => { if (proximamente) return; setRolDrawer(valor); setPasoDrawer('datos'); setErrorDrawer(''); }}
+                                className={`w-full text-left p-4 rounded-2xl border-2 transition-all flex items-center gap-4 ${
+                                  proximamente
+                                    ? 'border-gray-100 bg-gray-50 cursor-not-allowed opacity-60'
+                                    : rolDrawer === valor
+                                      ? 'border-[#2D6A6A] bg-[#F4F7F7]'
+                                      : 'border-[#2D6A6A]/40 hover:border-[#2D6A6A] hover:bg-[#F4F7F7] group active:scale-[0.98]'
+                                }`}
+                              >
+                                <div className={`p-2.5 rounded-full transition-transform ${proximamente ? 'bg-gray-100 text-gray-400' : 'bg-blue-50 text-blue-600 group-hover:scale-110'}`}>
+                                  <Icono size={18} />
+                                </div>
+                                <div>
+                                  <h4 className={`font-bold text-[14px] ${proximamente ? 'text-gray-400' : 'text-[#1A3D3D]'}`}>{label}</h4>
+                                  <p className="text-gray-400 text-[13px] leading-tight mt-0.5">{sub}</p>
+                                </div>
+                              </button>
+                            </div>
                           ))}
                         </div>
                       )}

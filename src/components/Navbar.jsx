@@ -256,14 +256,7 @@ export default function Navbar() {
         </div>
       </nav>
       
-    {import.meta.env.DEV && (
-        <a
-          href="/dev/carga"
-          className="fixed bottom-5 right-5 z-[9999] bg-[#4DB6AC] text-white text-[11px] font-black uppercase tracking-widest px-4 py-2.5 rounded-xl shadow-lg hover:bg-[#2D6A6A] transition-all"
-        >
-          🛠 Carga
-        </a>
-      )}
+
     </>
   );
 }

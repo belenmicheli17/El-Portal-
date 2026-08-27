@@ -837,16 +837,26 @@ El equipo de El Portal Veterinario`
             />
           </div>
 
-          <article ref={bannerRef} onMouseMove={handleMouseMove} className="bg-[#1A3D3D] px-5 py-4 md:px-8 md:py-5 rounded-[20px] md:rounded-[24px] text-left relative overflow-hidden group shadow-md flex flex-row items-center justify-between gap-3 md:gap-6 border border-white/5">
-            <div className="absolute pointer-events-none transition-transform duration-300 ease-out bg-white opacity-5 rounded-full blur-3xl" style={{ width: '300px', height: '300px', left: mousePos.x - 150, top: mousePos.y - 150 }} />
-            <div id="tour-publicar-curso" className="relative z-10 flex flex-col items-start gap-1">
-              <h2 className="text-white font-['Montserrat'] font-black text-[13px] md:text-lg uppercase leading-none tracking-tight">¿Representás a una institución?</h2>
-              <p className="text-white/50 text-[10px] md:text-xs font-medium italic hidden sm:block mt-0.5">Publicá tu programa académico gratis y llegá a más profesionales.</p>
+          <div className="relative mt-3">
+            <div className="absolute -top-4 -right-4 flex items-center gap-2 bg-[#4DB6AC] text-white text-[11px] font-bold uppercase tracking-[0.15em] px-3 py-1.5 rounded-full shadow-md z-10">
+              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse shrink-0"></span>
+              Próximamente
             </div>
-            <button onClick={() => setView('propuesta')} className="bg-[#2D6A6A] text-white px-5 py-2.5 md:px-6 md:py-3 rounded-full text-[10px] font-bold uppercase tracking-widest relative z-10 shadow-lg hover:bg-[#3d8b8b] transition-all whitespace-nowrap">
-              Publicar Curso
-            </button>
-          </article>
+            <article ref={bannerRef} className="bg-gray-400 px-5 py-4 md:px-8 md:py-5 rounded-[20px] md:rounded-[24px] text-left relative overflow-hidden shadow-md flex flex-row items-center justify-between gap-3 md:gap-6 border border-gray-300">
+              <div id="tour-publicar-curso" className="relative z-10 flex flex-col items-start gap-1">
+                <h2 className="text-white font-['Montserrat'] font-black text-[13px] md:text-lg uppercase leading-none tracking-tight">¿Representás a una institución?</h2>
+                <p className="text-white/50 text-[10px] md:text-xs font-medium italic hidden sm:block mt-0.5">Publicá tu programa académico gratis y llegá a más profesionales.</p>
+              </div>
+              <div className="relative z-10">
+                <button
+                  disabled
+                  className="bg-gray-500/40 text-white/60 px-5 py-2.5 md:px-6 md:py-3 rounded-full text-[10px] font-bold uppercase tracking-widest cursor-not-allowed whitespace-nowrap"
+                >
+                  Publicar Curso
+                </button>
+              </div>
+            </article>
+          </div>
 
           {isLoading ? (
             <div className="flex items-center justify-center py-24">
@@ -1195,12 +1205,18 @@ El equipo de El Portal Veterinario`
         >
           <ChevronLeft className="w-4 h-4" /> Volver
         </button>
-        <button 
-              onClick={() => { setView('wizard'); window.scrollTo(0,0); }}
-              className="bg-[#2D6A6A] text-white px-10 py-5 rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] hover:bg-[#1A3D3D] transition-colors shadow-lg active:scale-95"
-            >
-              Publicar mi curso ahora
-            </button>
+        <div className="relative">
+              <div className="absolute -top-3 -right-3 flex items-center gap-2 bg-[#4DB6AC] text-white text-[11px] font-bold uppercase tracking-[0.15em] px-3 py-1.5 rounded-full shadow-md z-10">
+                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse shrink-0"></span>
+                Próximamente
+              </div>
+              <button
+                disabled
+                className="bg-gray-400 text-white/60 px-10 py-5 rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] cursor-not-allowed shadow-lg"
+              >
+                Publicar mi curso ahora
+              </button>
+            </div>
         <button 
           onClick={handleDownloadPDF}
           disabled={isGeneratingPDF}
@@ -1370,12 +1386,18 @@ El equipo de El Portal Veterinario`
             <p className="text-gray-500 font-medium text-[16px] md:text-[18px] mb-12 max-w-2xl mx-auto leading-relaxed">
               Postulá tu programa académico hoy y expandí el alcance de tu conocimiento sin riesgos operativos.
             </p>
-            <button 
-              onClick={() => { setView('wizard'); window.scrollTo(0,0); }}
-              className="bg-[#2D6A6A] text-white px-10 py-5 rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] hover:bg-[#1A3D3D] transition-colors shadow-lg active:scale-95"
-            >
-              Publicar mi curso ahora
-            </button>
+            <div className="relative inline-block">
+              <div className="absolute -top-3 -right-3 flex items-center gap-2 bg-[#4DB6AC] text-white text-[11px] font-bold uppercase tracking-[0.15em] px-3 py-1.5 rounded-full shadow-md z-10">
+                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse shrink-0"></span>
+                Próximamente
+              </div>
+              <button
+                disabled
+                className="bg-gray-400 text-white/60 px-10 py-5 rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] cursor-not-allowed shadow-lg"
+              >
+                Publicar mi curso ahora
+              </button>
+            </div>
             <p className="mt-8 text-gray-500 text-[10px] font-bold uppercase tracking-[0.2em] flex items-center justify-center gap-2">
               <ShieldCheck className="w-4 h-4 text-[#2D6A6A]" /> Postular tu temario es 100% gratis
             </p>
@@ -1877,9 +1899,18 @@ El equipo de El Portal Veterinario`
             <BookOpen className="w-16 h-16 text-gray-100 mb-6" />
             <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-2xl mb-4">Todavía no publicaste cursos</h3>
             <p className="text-gray-500 max-w-sm mx-auto mb-8 font-medium">Compartí tu conocimiento con la comunidad veterinaria.</p>
-            <button onClick={() => setView('propuesta')} className="bg-[#1A3D3D] text-white px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-[#2D6A6A] transition-all shadow-lg">
-              Publicar mi primer curso
-            </button>
+            <div className="relative inline-block">
+              <div className="absolute -top-3 -right-3 flex items-center gap-2 bg-[#4DB6AC] text-white text-[11px] font-bold uppercase tracking-[0.15em] px-3 py-1.5 rounded-full shadow-md z-10">
+                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse shrink-0"></span>
+                Próximamente
+              </div>
+              <button
+                disabled
+                className="bg-gray-400 text-white/60 px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-xs cursor-not-allowed shadow-lg"
+              >
+                Publicar mi primer curso
+              </button>
+            </div>
           </div>
         ) : (
           <div className="space-y-4">

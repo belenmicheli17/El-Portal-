@@ -1541,14 +1541,25 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
         Como ofrecés consultas a domicilio, tu WhatsApp es <span className="font-black">obligatorio y visible para todo el público</span> para que los tutores puedan coordinar con vos.
       </p>
     </div>
-    <InputGroup
-      label="Tu número de WhatsApp (con código de país, ej: 5411...)"
-      id="whatsappNum"
-      value={formData.whatsappNum}
-      onChange={handleChange}
-      placeholder="Ej: 54911..."
-      required
-    />
+    <div className="mb-6 w-full">
+      <label className="flex items-center text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">
+        Tu número de WhatsApp <span className="text-red-400 ml-1">*</span>
+      </label>
+      <div className="flex items-center border border-gray-200 rounded-2xl bg-gray-50/50 focus-within:border-[#2D6A6A] transition-all overflow-hidden">
+        <span className="px-4 py-3.5 text-base font-black text-[#1A3D3D] bg-gray-100 border-r border-gray-200 shrink-0 select-none">+54</span>
+        <input
+          id="whatsappNum"
+          type="tel"
+          value={formData.whatsappNum.replace(/^\+?54/, '')}
+          onChange={(e) => {
+            const num = e.target.value.replace(/\D/g, '');
+            setFormData(prev => ({ ...prev, whatsappNum: '54' + num }));
+          }}
+          placeholder="911..."
+          className="flex-1 bg-transparent px-4 py-3.5 text-base font-medium focus:outline-none text-[#1A3D3D]"
+        />
+      </div>
+    </div>
   </div>
 )}
 
@@ -1859,7 +1870,25 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
       <ToggleSwitch label="Botón de WhatsApp" checked={formData.whatsappActivo} onChange={(v) => setFormData(p => ({...p, whatsappActivo: v}))} tooltip="Aparecerá un botón verde en tu perfil para chats." />
       {formData.whatsappActivo && (
     <div className="mt-4 space-y-4 animate-in slide-in-from-top-2 duration-300">
-      <InputGroup label="Tu número de WhatsApp (con código de país)" id="whatsappNum" value={formData.whatsappNum} onChange={handleChange} placeholder="Ej: 54911..." required={formData.whatsappActivo} />
+      <div className="mb-6 w-full">
+        <label className="flex items-center text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">
+          Tu número de WhatsApp <span className="text-red-400 ml-1">*</span>
+        </label>
+        <div className="flex items-center border border-gray-200 rounded-2xl bg-gray-50/50 focus-within:border-[#2D6A6A] transition-all overflow-hidden">
+          <span className="px-4 py-3.5 text-base font-black text-[#1A3D3D] bg-gray-100 border-r border-gray-200 shrink-0 select-none">+54</span>
+          <input
+            id="whatsappNum"
+            type="tel"
+            value={formData.whatsappNum.replace(/^\+?54/, '')}
+            onChange={(e) => {
+              const num = e.target.value.replace(/\D/g, '');
+              setFormData(prev => ({ ...prev, whatsappNum: '54' + num }));
+            }}
+            placeholder="911..."
+            className="flex-1 bg-transparent px-4 py-3.5 text-base font-medium focus:outline-none text-[#1A3D3D]"
+          />
+        </div>
+      </div>
       
 {/* VISIBILIDAD DEL WHATSAPP */}
       <div className="bg-gray-50 border border-gray-100 rounded-2xl p-4">

@@ -27,7 +27,6 @@ import Capacitaciones from './pages/Capacitaciones';
 import CartillaProveedores from './pages/CartillaProveedores';
 import Ecosistema from './pages/Ecosistema';
 import SalaDeEspera from './pages/SalaDeEspera';
-import PantallaCarga from './components/PantallaCarga';
 // Panel Admin
 import RutaProtegidaAdmin from './components/admin/RutaProtegidaAdmin';
 import RutaProtegida from './components/admin/RutaProtegida';
@@ -85,7 +84,13 @@ export default function App() {
   }, []);
 
   return (
-    <AuthProvider loadingFallback={<PantallaCarga />}>
+    <AuthProvider loadingFallback={
+      window.location.pathname === '/' || window.location.pathname === '/sala-de-espera'
+        ? null
+        : <div className="min-h-screen bg-[#F4F7F7] flex items-center justify-center">
+            <div className="w-10 h-10 border-4 border-[#2D6A6A]/20 border-t-[#2D6A6A] rounded-full animate-spin" />
+          </div>
+    }>
       <div className="relative min-h-screen bg-gray-50 selection:bg-[#2D6A6A] selection:text-white">
         
         <style dangerouslySetInnerHTML={{ __html: `
@@ -154,9 +159,6 @@ export default function App() {
             <Route path="configuracion" element={<Configuracion />} />
           </Route>
 
-          {import.meta.env.DEV && (
-  <Route path="/dev/carga" element={<PantallaCarga pagina="ecosistema" />} />
-)}
 <Route path="/sala-de-espera" element={<SalaDeEspera />} />
           <Route path="/" element={<SalaDeEspera />} />
           <Route path="*" element={<Navigate to="/" replace />} />

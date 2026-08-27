@@ -341,10 +341,10 @@ const PROVINCIAS_ARG = [
             <div className="bg-white rounded-[32px] border border-gray-100 p-12 text-center flex flex-col items-center justify-center w-full h-full">
               <Package className="w-10 h-10 text-gray-200 mb-4" />
               <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-lg mb-2">
-                {soloFavoritos ? 'No tenés productos guardados' : 'Aún no hay proveedores cargados'}
+                {soloFavoritos ? 'No tenés productos guardados' : 'Aún no hay proveedores'}
               </h3>
               <p className="text-[#333333] text-[15px] font-medium">
-                {soloFavoritos ? 'Explorá la cartilla y guardá los que te interesen con el corazón.' : 'Estamos actualizando la base de datos o probá con otro filtro.'}
+                {soloFavoritos ? 'Explorá la cartilla y guardá los que te interesen con el corazón.' : 'Proximamente!'}
               </p>
               {soloFavoritos && (
                 <button onClick={() => setSoloFavoritos(false)} className="mt-6 px-6 py-3 bg-[#1A3D3D] text-white text-[11px] font-bold uppercase tracking-widest rounded-full hover:bg-[#2D6A6A] transition-all shadow-sm">

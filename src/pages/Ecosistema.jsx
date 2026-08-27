@@ -12,6 +12,7 @@ import {
 import NotificationBox from '../components/NotificationBox';
 import FooterSimple from '../components/FooterSimple';
 import TourGuia from '../components/TourGuia';
+import PantallaCarga from '../components/PantallaCarga';
 
 const DashboardCard = ({ titulo, descripcion, icon: Icon, onClick, customBg = "bg-white/80" }) => (
   <button 
@@ -19,10 +20,10 @@ const DashboardCard = ({ titulo, descripcion, icon: Icon, onClick, customBg = "b
     type="button"
     className={`${customBg} backdrop-blur-xl border border-white/60 p-5 md:p-6 rounded-[24px] md:rounded-[32px] shadow-[0_8px_32px_rgba(0,0,0,0.04)] hover:bg-white/90 hover:shadow-[0_20px_40px_rgba(26,61,61,0.12)] transition-all duration-300 transform hover:-translate-y-1 active:scale-[0.97] active:translate-y-0 min-h-[180px] md:min-h-[210px] h-full flex flex-col justify-center items-center text-center group cursor-pointer w-full outline-none focus:ring-4 focus:ring-[#2D6A6A]/10`}
   >
-    <Icon strokeWidth={1.5} className="w-8 h-8 md:w-10 md:h-10 text-[#2D6A6A] mb-3 group-hover:scale-110 group-hover:-translate-y-1 group-hover:text-[#1A3D3D] transition-all duration-300" />
+        <Icon strokeWidth={1.5} className="w-8 h-8 md:w-10 md:h-10 text-[#2D6A6A] mb-3 group-hover:scale-110 group-hover:-translate-y-1 group-hover:text-[#4DB6AC] transition-all duration-300" />
     <h2 className="text-[17px] md:text-[21px] font-black text-[#1A3D3D] font-['Montserrat'] mb-1 leading-tight">{titulo}</h2>
     <p className="text-[#333333]/70 font-medium text-[14px] md:text-[15px] px-2 mb-3 leading-normal">{descripcion}</p>
-    <span className="text-[13px] font-bold text-[#2D6A6A] group-hover:text-[#1A3D3D] flex items-center gap-1 transition-colors mt-auto">
+    <span className="text-[13px] font-bold text-[#2D6A6A] group-hover:text-[#4DB6AC] flex items-center gap-1 transition-colors mt-auto">
       Ingresar <ChevronRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
     </span>
   </button>
@@ -449,11 +450,7 @@ export default function Ecosistema() {
     catch (error) { console.error("Error al cerrar sesión", error); }
   };
 
-  if (loading) return (
-    <div className="min-h-screen bg-[#F4F7F7] flex items-center justify-center">
-      <div className="w-10 h-10 border-4 border-[#2D6A6A]/20 border-t-[#2D6A6A] rounded-full animate-spin" />
-    </div>
-  );
+  if (loading) return <PantallaCarga />;
   if (!currentUser) return null;
 
   // Pantalla para usuarios dados de baja
@@ -552,12 +549,14 @@ export default function Ecosistema() {
                 </div>
               </div>
             ) : (
-              <div id="tour-actividad" className="order-2 lg:col-span-1 w-full relative">
-                <div className="absolute inset-0 z-10 rounded-[24px] md:rounded-[32px] bg-[#E8EFEF]/80 backdrop-blur-[2px] flex flex-col items-center justify-center gap-3 pointer-events-none">
-                  <p className="text-[22px] font-black text-[#1A3D3D]/30 font-['Montserrat'] leading-none">Notificaciones</p>
-                  <span className="bg-[#1A3D3D]/10 text-[#1A3D3D]/40 text-[10px] font-black uppercase tracking-[0.2em] px-3 py-1 rounded-full">Próximamente</span>
+              <div id="tour-actividad" className="order-2 lg:col-span-1 w-full relative mt-3">
+                <div className="absolute -top-3 -right-4 flex items-center gap-2 bg-[#4DB6AC] text-white text-[11px] font-bold uppercase tracking-[0.15em] px-3 py-1.5 rounded-full shadow-md z-10">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse shrink-0"></span>
+                  Próximamente
                 </div>
-                <NotificationBox isNotifOpen={isNotifOpen} setIsNotifOpen={setIsNotifOpen} userRole={activeRole} userId={currentUser?.uid} />
+                <div className="rounded-[24px] md:rounded-[32px] overflow-hidden opacity-40 pointer-events-none grayscale">
+                  <NotificationBox isNotifOpen={isNotifOpen} setIsNotifOpen={setIsNotifOpen} userRole={activeRole} userId={currentUser?.uid} />
+                </div>
               </div>
             )}
 
@@ -580,7 +579,7 @@ export default function Ecosistema() {
               {/* Card Cursos */}
               <div id="tour-cursos" className="bg-white/80 backdrop-blur-xl border border-white/60 rounded-[24px] md:rounded-[32px] shadow-[0_8px_32px_rgba(0,0,0,0.04)] flex flex-col overflow-hidden min-h-[180px] md:min-h-[210px] group hover:bg-white/90 hover:shadow-[0_20px_40px_rgba(26,61,61,0.12)] transition-all duration-300">
                 <button onClick={() => navigate('/capacitaciones')} className="flex-1 flex flex-col justify-center items-center text-center p-5 transition-all">
-                  <BookOpen strokeWidth={1.5} className="w-8 h-8 md:w-10 md:h-10 text-[#2D6A6A] mb-2 group-hover:scale-110 group-hover:text-[#1A3D3D] transition-all duration-300" />
+                                    <BookOpen strokeWidth={1.5} className="w-8 h-8 md:w-10 md:h-10 text-[#2D6A6A] mb-2 group-hover:scale-110 group-hover:text-[#4DB6AC] transition-all duration-300" />
                   <h2 className="text-[17px] md:text-[19px] font-black text-[#1A3D3D] font-['Montserrat'] mb-1 leading-tight">Cursos</h2>
                   <p className="text-[#333333]/70 font-medium text-[16px] px-2 leading-normal">Encontra todas las especializaciones y capacitaciones. Publicar es gratis. </p>
                 </button>
@@ -599,8 +598,19 @@ export default function Ecosistema() {
 
               {activeRole !== 'proveedor' && (
                 <div id="tour-colegas" className="h-full">
-                  <DashboardCard titulo="Cartilla de colegas" descripcion="Tené los contactos siempre a mano de tus colegas para derivaciones o trabajos en equipo" icon={Users} onClick={() => navigate('/cartilla')} />
-                </div>
+                <button 
+                  onClick={() => navigate('/cartilla')}
+                  type="button"
+                  className="bg-white/80 backdrop-blur-xl border border-white/60 p-5 md:p-6 rounded-[24px] md:rounded-[32px] shadow-[0_8px_32px_rgba(0,0,0,0.04)] hover:bg-white/90 hover:shadow-[0_20px_40px_rgba(26,61,61,0.12)] transition-all duration-300 transform hover:-translate-y-1 active:scale-[0.97] active:translate-y-0 min-h-[180px] md:min-h-[210px] h-full flex flex-col justify-center items-center text-center group cursor-pointer w-full outline-none focus:ring-4 focus:ring-[#FF9800]/10"
+                >
+                  <Users strokeWidth={1.5} className="w-8 h-8 md:w-10 md:h-10 text-[#2D6A6A] mb-3 group-hover:scale-110 group-hover:-translate-y-1 group-hover:text-[#e68900] transition-all duration-300" />
+                  <h2 className="text-[17px] md:text-[21px] font-black text-[#1A3D3D] font-['Montserrat'] mb-1 leading-tight">Cartilla de colegas</h2>
+                  <p className="text-[#333333]/70 font-medium text-[14px] md:text-[15px] px-2 mb-3 leading-normal">Tené los contactos siempre a mano de tus colegas para derivaciones o trabajos en equipo. Esta pantalla es para <span className="group-hover:text-[#e68900] transition-colors duration-300">todo público.</span></p>
+                  <span className="text-[13px] font-bold text-[#2D6A6A] group-hover:text-[#e68900] flex items-center gap-1 transition-colors mt-auto">
+                    Ingresar <ChevronRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
+                  </span>
+                </button>
+              </div>
               )}
 
               <div id="tour-proveedores" className="h-full">
