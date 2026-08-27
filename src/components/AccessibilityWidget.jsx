@@ -111,16 +111,18 @@ const location = useLocation();
     try {
       await addDoc(collection(db, 'comentarios'), {
         texto: feedbackTexto.trim(),
-        usuarioId: currentUser.uid,
-        usuarioNombre: currentUser.nombre || '',
-        usuarioEmail: currentUser.email || '',
-        usuarioRol: currentUser.rol || '',
+        usuarioId: currentUser?.uid || '',
+        usuarioNombre: currentUser?.nombre || currentUser?.displayName || '',
+        usuarioEmail: currentUser?.cuentaEmail || currentUser?.emailContacto || '',
+        usuarioRol: currentUser?.rol || '',
         creadoEn: serverTimestamp(),
       });
       setFeedbackTexto('');
       setFeedbackEnviado(true);
+      // Mantenemos el panel abierto para mostrar el mensaje de éxito
     } catch (e) {
       console.error('Error enviando feedback:', e);
+      alert('Hubo un error al enviar. Intentá de nuevo.');
     }
     setFeedbackEnviando(false);
   };

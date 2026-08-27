@@ -652,7 +652,13 @@ const PASOS_CARTILLA = [
             pasos={PASOS_CARTILLA}
             userId={currentUser?.uid}
             claveStorage="cartilla"
-            onFin={() => setMostrarTourCartilla(false)}
+            onFin={async () => {
+              setMostrarTourCartilla(false);
+              try {
+                const { doc, updateDoc } = await import('firebase/firestore');
+                await updateDoc(doc(db, 'usuarios', currentUser.uid), { 'tourVisto.cartilla': true });
+              } catch (e) { console.error('Error guardando tour cartilla:', e); }
+            }}
           />
         )}
       </main>

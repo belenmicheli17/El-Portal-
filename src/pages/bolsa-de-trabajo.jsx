@@ -31,7 +31,6 @@ export default function BolsaTrabajo() {
   const userRole = currentUser?.rol || 'visitante';
   const [roleAlert, setRoleAlert] = useState(null);
   const [mostrarTourBolsa, setMostrarTourBolsa] = useState(false);
-  const [tourBolsaContador, setTourBolsaContador] = useState(0);
 
 
   const PASOS_BOLSA = [
@@ -53,13 +52,10 @@ export default function BolsaTrabajo() {
     const fetchContador = async () => {
       try {
         const snap = await getDoc(doc(db, 'usuarios', currentUser.uid));
-        const contador = snap.data()?.tourVisto?.bolsaContador || 0;
-        setTourBolsaContador(contador);
-        if (contador < 2) {
-          setTimeout(() => setMostrarTourBolsa(true), 800);
-        }
+        const visto = snap.data()?.tourVisto?.bolsa || false;
+        if (!visto) setTimeout(() => setMostrarTourBolsa(true), 800);
       } catch (e) {
-        console.error('Error leyendo contador del tour:', e);
+        console.error('Error leyendo tour bolsa:', e);
       }
     };
 
@@ -1810,13 +1806,9 @@ const toggleFiltro = (categoria, valor) => {
         onFin={async () => {
           setMostrarTourBolsa(false);
           try {
-            const nuevoContador = tourBolsaContador + 1;
-            await updateDoc(doc(db, 'usuarios', currentUser.uid), {
-              'tourVisto.bolsaContador': nuevoContador
-            });
-            setTourBolsaContador(nuevoContador);
+            await updateDoc(doc(db, 'usuarios', currentUser.uid), { 'tourVisto.bolsa': true });
           } catch (e) {
-            console.error('Error guardando contador del tour:', e);
+            console.error('Error guardando tour bolsa:', e);
           }
         }}
       />

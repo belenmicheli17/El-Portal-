@@ -213,11 +213,55 @@ setData({
   }
 
   if (!data) {
+    const esPerfilPropio = currentUser?.slug === slug;
+
     return (
       <div className="min-h-screen bg-[#F4F7F7] flex flex-col items-center justify-center text-center p-6">
-        <h2 className="text-[24px] md:text-[30px] font-black text-[#1A3D3D] font-['Montserrat'] mb-2">Perfil no encontrado</h2>
-        <p className="text-gray-500 mb-6 text-[17px]">El profesional que buscás no existe o el enlace es incorrecto.</p>
-        <button onClick={() => navigate(-1)} className="bg-[#2D6A6A] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#1A3D3D] transition-colors text-[17px]">Volver atrás</button>
+        <div className="bg-white rounded-[32px] shadow-sm border border-gray-100 p-10 max-w-md w-full flex flex-col items-center gap-5">
+          <div className="w-20 h-20 bg-[#2D6A6A]/10 rounded-full flex items-center justify-center">
+            <User className="w-10 h-10 text-[#2D6A6A]" />
+          </div>
+
+          {esPerfilPropio ? (
+            <>
+              <h2 className="text-[22px] font-black text-[#1A3D3D] font-['Montserrat'] leading-tight">
+                Todavía no completaste tu perfil
+              </h2>
+              <p className="text-gray-500 text-[15px] leading-relaxed font-medium">
+                Para que otros puedan encontrarte, necesitás completar tu información en el editor.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 w-full mt-2">
+                <button
+                  onClick={() => navigate(-1)}
+                  className="flex-1 px-6 py-3 rounded-xl font-bold text-[13px] border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors"
+                >
+                  Volver atrás
+                </button>
+                <button
+                  onClick={() => navigate('/editor-profesional')}
+                  className="flex-1 px-6 py-3 rounded-xl font-bold text-[13px] bg-[#2D6A6A] text-white hover:bg-[#1A3D3D] transition-colors shadow-md"
+                >
+                  Ir al editor
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <h2 className="text-[22px] font-black text-[#1A3D3D] font-['Montserrat'] leading-tight">
+                Perfil no encontrado
+              </h2>
+              <p className="text-gray-500 text-[15px] leading-relaxed font-medium">
+                El profesional que buscás no existe o el enlace es incorrecto.
+              </p>
+              <button
+                onClick={() => navigate(-1)}
+                className="w-full px-6 py-3 rounded-xl font-bold text-[13px] bg-[#2D6A6A] text-white hover:bg-[#1A3D3D] transition-colors shadow-md"
+              >
+                Volver atrás
+              </button>
+            </>
+          )}
+        </div>
       </div>
     );
   }

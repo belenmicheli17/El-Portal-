@@ -63,7 +63,6 @@ export default function Capacitaciones() {
   const location = useLocation();
   const [view, setView] = useState(location.state?.vista || 'grid');
   const [mostrarTourCaps, setMostrarTourCaps] = useState(false);
-  const [tourCapsContador, setTourCapsContador] = useState(0);
 
   useEffect(() => {
     if (!currentUser || view !== 'grid') return;
@@ -71,11 +70,8 @@ export default function Capacitaciones() {
     const fetchContador = async () => {
       try {
         const snap = await getDoc(doc(db, 'usuarios', currentUser.uid));
-        const contador = snap.data()?.tourVisto?.capacitacionesContador || 0;
-        setTourCapsContador(contador);
-        if (contador < 2) {
-          setTimeout(() => setMostrarTourCaps(true), 800);
-        }
+        const visto = snap.data()?.tourVisto?.capacitaciones || false;
+        if (!visto) setTimeout(() => setMostrarTourCaps(true), 800);
       } catch (e) {
         console.error('Error leyendo contador del tour de capacitaciones:', e);
       }
@@ -150,6 +146,7 @@ setSeminarios(todos.filter(c => {
   const [favoritos, setFavoritos] = useState([]);
  const [visibleCourses, setVisibleCourses] = useState(6);
   const [filtroTipo, setFiltroTipo] = useState(null);
+  const [mostrarFiltrosMobile, setMostrarFiltrosMobile] = useState(false);
 
   // WIZARD CURSO
   const [wizardStep, setWizardStep] = useState(1);
@@ -825,17 +822,43 @@ El equipo de El Portal Veterinario`
         </aside>
 
         <section className="lg:col-span-9 flex flex-col gap-5 md:gap-6 w-full">
-          <div className="relative w-full">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 w-4 h-4" aria-hidden="true" />
-         <input 
-              id="tour-busqueda-caps"
-              type="search" 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="¿Qué quieres aprender hoy? (ej. Cirugía, Dermatología...)" 
-              className="bg-white border border-gray-100 rounded-full pl-11 pr-6 py-3.5 text-base md:text-sm font-medium focus:outline-none focus:border-[#2D6A6A] w-full shadow-sm placeholder:text-gray-400 transition-all" 
-            />
+          <div id="tour-busqueda-caps" className="flex gap-2 w-full">
+            <div className="relative flex-1">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 w-4 h-4" aria-hidden="true" />
+              <input 
+                type="search" 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="¿Qué quieres aprender hoy? (ej. Cirugía, Dermatología...)" 
+                className="bg-white border border-gray-100 rounded-full pl-11 pr-6 py-3.5 text-base md:text-sm font-medium focus:outline-none focus:border-[#2D6A6A] w-full shadow-sm placeholder:text-gray-400 transition-all" 
+              />
+            </div>
+            <button
+              onClick={() => setMostrarFiltrosMobile(!mostrarFiltrosMobile)}
+              className={`md:hidden flex items-center gap-2 px-4 py-3.5 rounded-full text-[13px] font-medium transition-all shrink-0 ${
+                mostrarFiltrosMobile ? 'bg-[#1A3D3D] text-white shadow-md' : 'bg-white border border-gray-100 text-[#666666] shadow-sm'
+              }`}
+            >
+              <Filter className="w-4 h-4" />
+            </button>
           </div>
+
+          {/* PANEL FILTROS MOBILE */}
+          {mostrarFiltrosMobile && (
+            <div className="md:hidden bg-white rounded-[24px] border border-gray-100 shadow-lg p-5 animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-[11px] font-black text-[#1A3D3D] uppercase tracking-widest">Filtros</p>
+                <button onClick={() => setMostrarFiltrosMobile(false)} className="text-gray-400 hover:text-gray-600"><X className="w-4 h-4" /></button>
+              </div>
+              {renderFiltros()}
+              <button
+                onClick={() => setMostrarFiltrosMobile(false)}
+                className="w-full mt-4 bg-[#1A3D3D] text-white py-3 rounded-[16px] text-[13px] font-medium"
+              >
+                Ver resultados
+              </button>
+            </div>
+          )}
 
           <div className="relative mt-3">
             <div className="absolute -top-4 -right-4 flex items-center gap-2 bg-[#4DB6AC] text-white text-[11px] font-bold uppercase tracking-[0.15em] px-3 py-1.5 rounded-full shadow-md z-10">
@@ -2234,11 +2257,7 @@ El equipo de El Portal Veterinario`
           onFin={async () => {
             setMostrarTourCaps(false);
             try {
-              const nuevoContador = tourCapsContador + 1;
-              await updateDoc(doc(db, 'usuarios', currentUser.uid), {
-                'tourVisto.capacitacionesContador': nuevoContador
-              });
-              setTourCapsContador(nuevoContador);
+              await updateDoc(doc(db, 'usuarios', currentUser.uid), { 'tourVisto.capacitaciones': true });
             } catch (e) {
               console.error('Error guardando contador del tour de capacitaciones:', e);
             }

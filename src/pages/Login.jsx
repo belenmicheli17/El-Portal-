@@ -305,13 +305,27 @@ export default function Login() {
 
             {(view === 'login' || view === 'register') && (
               <div className="mt-8 md:mt-6 text-center shrink-0">
-                <p className="text-[12px] text-gray-500 font-medium">{view === 'login' ? '¿Aún no eres parte de la red?' : '¿Ya tienes una cuenta?'}</p>
-                <button
-                  onClick={() => { setView(view === 'login' ? 'register' : 'login'); setAccountType(null); setErrorMsg(''); }}
-                  className="mt-2 text-[12px] font-bold uppercase tracking-widest text-[#1A3D3D] hover:text-[#2D6A6A] transition-colors"
-                >
-                  {view === 'login' ? 'Solicitar Registro' : 'Iniciar Sesión'}
-                </button>
+                <p className="text-[12px] text-gray-500 font-medium">
+                  {view === 'login' ? '¿Aún no eres parte de la red?' : '¿Ya tienes una cuenta?'}
+                </p>
+                {view === 'login' ? (
+                  <div className="mt-2 inline-flex items-center gap-1.5">
+                    <span className="text-[12px] font-bold uppercase tracking-widest text-gray-300 cursor-not-allowed">
+                      Solicitar Registro
+                    </span>
+                    <span className="inline-flex items-center gap-1 bg-[#4DB6AC] text-white text-[9px] font-bold uppercase tracking-[0.15em] px-2 py-0.5 rounded-full">
+                      <span className="w-1 h-1 rounded-full bg-white animate-pulse shrink-0"></span>
+                      Próximamente
+                    </span>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => { setView('login'); setAccountType(null); setErrorMsg(''); }}
+                    className="mt-2 text-[12px] font-bold uppercase tracking-widest text-[#1A3D3D] hover:text-[#2D6A6A] transition-colors"
+                  >
+                    Iniciar Sesión
+                  </button>
+                )}
               </div>
             )}
 

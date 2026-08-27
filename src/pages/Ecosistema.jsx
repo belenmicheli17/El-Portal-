@@ -381,16 +381,14 @@ export default function Ecosistema() {
   const { currentUser, loading, logout } = useAuth();
   const activeRole = currentUser?.rol || 'visitante';
   const [mostrarTour, setMostrarTour] = useState(false);
-  const [tourContador, setTourContador] = useState(0);
 
   useEffect(() => {
     if (!currentUser) return;
     const fetchContador = async () => {
       try {
         const snap = await getDoc(doc(db, 'usuarios', currentUser.uid));
-        const contador = snap.data()?.tourVisto?.ecosistemaContador || 0;
-        setTourContador(contador);
-        if (contador < 2) setTimeout(() => setMostrarTour(true), 800);
+        const visto = snap.data()?.tourVisto?.ecosistema || false;
+        if (!visto) setTimeout(() => setMostrarTour(true), 800);
       } catch (e) { console.error('Error leyendo contador del tour:', e); }
     };
     fetchContador();
@@ -640,9 +638,7 @@ export default function Ecosistema() {
           onFin={async () => {
             setMostrarTour(false);
             try {
-              const nuevoContador = tourContador + 1;
-              await updateDoc(doc(db, 'usuarios', currentUser.uid), { 'tourVisto.ecosistemaContador': nuevoContador });
-              setTourContador(nuevoContador);
+              await updateDoc(doc(db, 'usuarios', currentUser.uid), { 'tourVisto.ecosistema': true });
             } catch (e) { console.error('Error guardando contador del tour:', e); }
           }}
           onPaso={handlePasoTour}

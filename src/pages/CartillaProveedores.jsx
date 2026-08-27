@@ -9,7 +9,7 @@ import { collection, getDocs } from 'firebase/firestore';
 import { 
   Search, Filter, MapPin, Phone, Mail, Globe, Star, ShieldCheck, 
   Truck, Package, ChevronLeft, ChevronRight, CheckCircle2, Heart, 
-  Plus, Building2, Wrench, Clock, UploadCloud
+  Plus, Building2, Wrench, Clock, UploadCloud, X
 } from 'lucide-react';
 
 const CATEGORIAS_PROVEEDORES = [
@@ -104,7 +104,8 @@ export default function CartillaProveedores() {
     window.scrollTo(0, 0);
   };
 
-const [soloEnvios, setSoloEnvios] = useState(false);
+  const [soloEnvios, setSoloEnvios] = useState(false);
+  const [mostrarFiltrosMobile, setMostrarFiltrosMobile] = useState(false);
 const [soloFavoritos, setSoloFavoritos] = useState(false);
 const [filtroProvincia, setFiltroProvincia] = useState(null);
 
@@ -227,16 +228,69 @@ const PROVINCIAS_ARG = [
 
         <section className="lg:col-span-9 flex flex-col gap-5 md:gap-6 w-full">
           
-          <div className="relative w-full">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 w-4 h-4" />
-            <input 
-              type="search" 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Buscar por marca, insumo o equipamiento..." 
-              className="bg-white border border-gray-100 rounded-full pl-11 pr-6 py-3.5 text-base md:text-sm font-medium focus:outline-none focus:border-[#2D6A6A] w-full shadow-sm placeholder:text-gray-400 transition-all" 
-            />
+          <div className="flex gap-2 w-full max-w-xl">
+            <div className="relative flex-1">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 w-4 h-4" />
+              <input
+                type="search"
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                placeholder="Buscá por nombre, rubro o producto..."
+                className="bg-white border border-gray-100 rounded-full pl-11 pr-6 py-3.5 text-sm font-medium focus:outline-none focus:border-[#2D6A6A] w-full shadow-sm placeholder:text-gray-400 transition-all"
+              />
+            </div>
+            <button
+              onClick={() => setMostrarFiltrosMobile(!mostrarFiltrosMobile)}
+              className={`md:hidden flex items-center gap-2 px-4 py-3.5 rounded-full text-[13px] font-medium transition-all shrink-0 ${
+                mostrarFiltrosMobile ? 'bg-[#1A3D3D] text-white shadow-md' : 'bg-white border border-gray-100 text-[#666666] shadow-sm'
+              }`}
+            >
+              <Filter className="w-4 h-4" />
+            </button>
           </div>
+
+          {/* PANEL FILTROS MOBILE */}
+          {mostrarFiltrosMobile && (
+            <div className="md:hidden bg-white rounded-[24px] border border-gray-100 shadow-lg p-5 animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-[11px] font-black text-[#1A3D3D] uppercase tracking-widest">Filtros</p>
+                <button onClick={() => setMostrarFiltrosMobile(false)} className="text-gray-400 hover:text-gray-600"><X className="w-4 h-4" /></button>
+              </div>
+              <div className="flex flex-col gap-3">
+                <select
+                  value={filtroProvincia}
+                  onChange={e => setFiltroProvincia(e.target.value)}
+                  className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-[#1A3D3D] font-medium focus:outline-none focus:border-[#2D6A6A] bg-white"
+                >
+                  <option value="">Todas las provincias</option>
+                  {provinciasDisponibles.map(p => <option key={p} value={p}>{p}</option>)}
+                </select>
+                <select
+                  value={filtroRubro}
+                  onChange={e => setFiltroRubro(e.target.value)}
+                  className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-[#1A3D3D] font-medium focus:outline-none focus:border-[#2D6A6A] bg-white"
+                >
+                  <option value="">Todos los rubros</option>
+                  {rubrosDisponibles.map(r => <option key={r} value={r}>{r}</option>)}
+                </select>
+                <label className="flex items-center gap-2 text-sm font-medium text-[#1A3D3D] cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={soloEnvios}
+                    onChange={e => setSoloEnvios(e.target.checked)}
+                    className="accent-[#2D6A6A] w-4 h-4"
+                  />
+                  Solo con envíos
+                </label>
+              </div>
+              <button
+                onClick={() => setMostrarFiltrosMobile(false)}
+                className="w-full mt-4 bg-[#1A3D3D] text-white py-3 rounded-[16px] text-[13px] font-medium"
+              >
+                Ver resultados
+              </button>
+            </div>
+          )}
 
 
 {isLoading ? (
