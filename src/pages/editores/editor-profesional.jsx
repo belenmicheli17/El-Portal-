@@ -708,6 +708,16 @@ const seccionesIncompletas = () => {
   if (!formData.emailContacto?.trim()) {
     incompletas.add('contacto');
   }
+  const serviciosObj = formData.servicios && !Array.isArray(formData.servicios) ? formData.servicios : {};
+  const tieneAlgunServicioActivo = Object.values(serviciosObj).some(s => 
+    s.activo && (
+      (s.subOpcionesSeleccionadas && s.subOpcionesSeleccionadas.length > 0) ||
+      (s.serviciosPersonalizados && s.serviciosPersonalizados.length > 0)
+    )
+  );
+  if (!tieneAlgunServicioActivo) {
+    incompletas.add('servicios');
+  }
   return incompletas;
 };
 
@@ -950,8 +960,10 @@ if (!formData.nombre.trim() || !formData.especialidad.trim() || trayectoriaIncom
     }
 
     const incompletas = seccionesIncompletas();
+    
 if (incompletas.size > 0) {
   setMostrarErroresSecciones(true);
+  
 }
 setSaveStatus('saving');
     
@@ -1821,7 +1833,7 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
                         isOpen={openSection === 'servicios'}
                         onToggle={() => setOpenSection(openSection === 'servicios' ? null : 'servicios')}
                         tooltip="Indicá las especialidades y servicios que ofrecés en tu práctica."
-                        alerta={(mostrarErroresSecciones || savedData === null) && !Object.values(formData.servicios || {}).some(s => s.activo)}
+                        alerta={(mostrarErroresSecciones || savedData === null) && seccionesIncompletas().has('servicios')}
                       >
                         <BuscadorEspecialidades
                           formData={formData}
