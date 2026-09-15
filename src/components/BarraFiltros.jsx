@@ -112,23 +112,58 @@ const BarraFiltros = ({
         
         {/* PESTAÑAS DINÁMICAS */}
         {tabs.length > 0 && (
-          <div className="grid grid-cols-3 bg-[#F4F7F7] p-1.5 rounded-[20px] w-full md:w-auto shrink-0">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <button 
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center justify-center gap-1.5 px-3 sm:px-5 py-2.5 rounded-2xl text-[13px] font-medium transition-all ${
-                    activeTab === tab.id ? 'bg-white text-[#1A3D3D] shadow-sm' : 'text-[#666666] hover:text-[#1A3D3D]'
-                  }`}
-                >
-                  {Icon && <Icon className="w-4 h-4 hidden sm:block" />}
-                  <span className="inline">{tab.label}</span>
-                </button>
-              )
-            })}
-          </div>
+          <>
+            {/* DESKTOP: toggle + buscador + filtros en fila (como antes pero sin "Todos") */}
+            <div className="hidden md:grid grid-cols-2 bg-[#F4F7F7] p-1.5 rounded-[20px] w-auto shrink-0">
+              {tabs.filter(t => t.id !== 'todos').map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-2xl text-[13px] font-medium transition-all ${
+                      activeTab === tab.id ? 'bg-white text-[#1A3D3D] shadow-sm' : 'text-[#666666] hover:text-[#1A3D3D]'
+                    }`}
+                  >
+                    {Icon && <Icon className="w-4 h-4" />}
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* MÓVIL: toggle doble + botón filtros en el mismo renglón */}
+            <div className="flex md:hidden items-center gap-2 w-full">
+              <div className="grid grid-cols-2 bg-[#F4F7F7] p-1.5 rounded-[20px] flex-1">
+                {tabs.filter(t => t.id !== 'todos').map((tab) => {
+                  const Icon = tab.icon;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-2xl text-[13px] font-medium transition-all ${
+                        activeTab === tab.id ? 'bg-white text-[#1A3D3D] shadow-sm' : 'text-[#666666] hover:text-[#1A3D3D]'
+                      }`}
+                    >
+                      {Icon && <Icon className="w-4 h-4" />}
+                      <span>{tab.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Botón filtros — mismo renglón en móvil */}
+              <button
+                onClick={toggleModal}
+                className={`shrink-0 px-4 py-3.5 rounded-[18px] text-[13px] font-medium flex items-center justify-center gap-2 transition-all duration-300 ${
+                  showFilters ? 'bg-[#1A3D3D] text-white shadow-md' : 'bg-[#F4F7F7] text-[#666666] hover:bg-gray-200'
+                }`}
+              >
+                <Filter className="w-4 h-4" />
+                <span>Filtros</span>
+              </button>
+            </div>
+          </>
         )}
         
         {/* BUSCADOR LIBRE */}
@@ -143,10 +178,10 @@ const BarraFiltros = ({
           />
         </div>
 
-        {/* BOTÓN ABRIR MODAL FILTROS */}
+        {/* BOTÓN ABRIR MODAL FILTROS — solo desktop (en móvil está dentro del toggle) */}
         <button 
           onClick={toggleModal} 
-          className={`w-full md:w-auto px-6 py-3.5 md:py-3 rounded-[18px] text-[13px] font-medium flex items-center justify-center gap-2 transition-all duration-300 shrink-0 ${
+          className={`hidden md:flex w-auto px-6 py-3 rounded-[18px] text-[13px] font-medium items-center justify-center gap-2 transition-all duration-300 shrink-0 ${
             showFilters ? 'bg-[#1A3D3D] text-white shadow-md' : 'bg-[#F4F7F7] text-[#666666] hover:bg-gray-200'
           }`}
         >

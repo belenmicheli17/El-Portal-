@@ -45,6 +45,8 @@ const Cartilla = () => {
   const [buscandoUbicacion, setBuscandoUbicacion] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
+  const hayClinicas = veterinarios.some(v => v.tipo === 'clinica');
+
 useEffect(() => {
   if (!currentUser) return;
   const fetchContador = async () => {
@@ -507,14 +509,7 @@ const PASOS_CARTILLA = [
                                   {item.especialidad}
                                 </span>
                               </span>
-                              {item.opcionesFiltro && item.opcionesFiltro.length > 0 && (
-                                <span className="px-3 pb-0 pt-1 w-full text-[11px] sm:text-[12px] font-medium text-[#333333] leading-relaxed">
-                                  {item.opcionesFiltro.slice(0, 4).join(', ')}
-                                  {item.opcionesFiltro.length > 4 && (
-                                    <span className="font-bold text-gray-400"> +{item.opcionesFiltro.length - 4}</span>
-                                  )}
-                                </span>
-                              )}
+                           
                             </div>
                             <div className="flex items-center justify-between pt-2 border-t border-gray-50 mt-2">
                               <div className="flex items-center gap-1 text-[#666666] font-medium text-[11px] sm:text-[12px] min-w-0 max-w-[70%]">
@@ -635,9 +630,27 @@ const PASOS_CARTILLA = [
 
                       {/* VISTA 3: CLÍNICAS */}
                       {activeTab === 'clinicas' && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 sm:gap-x-6 gap-y-3 sm:gap-y-8 pt-0 mt-0">
-                          {veterinariosFiltrados.filter(v => v.tipo === 'clinica').map(renderCard)}
-                        </div>
+                        <>
+                          {veterinariosFiltrados.filter(v => v.tipo === 'clinica').length === 0 ? (
+                            <div className="flex flex-col items-center justify-center py-20 text-center">
+                              
+                              <span className="inline-flex items-center gap-2 bg-[#1A3D3D] text-[#4DB6AC] text-[11px] font-bold uppercase tracking-[0.2em] px-4 py-2 rounded-full mb-4">
+                                <span className="w-1.5 h-1.5 rounded-full bg-[#4DB6AC] animate-pulse" />
+                                Próximamente
+                              </span>
+                              <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[20px] md:text-[24px] mb-2">
+                                Las clínicas están en camino
+                              </h3>
+                              <p className="text-[#666666] font-medium text-[14px] max-w-md mx-auto">
+                                Pronto vas a poder encontrar clínicas y centros veterinarios de alta complejidad en esta sección.
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 sm:gap-x-6 gap-y-3 sm:gap-y-8 pt-0 mt-0">
+                              {veterinariosFiltrados.filter(v => v.tipo === 'clinica').map(renderCard)}
+                            </div>
+                          )}
+                        </>
                       )}
                     </>
                   );

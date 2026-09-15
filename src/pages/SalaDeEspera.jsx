@@ -39,44 +39,48 @@ const traducirError = (code) => {
 
 // ── Cajita zona pública ────────────────────────────────────────────────────
 const CardPublica = ({ icono: Icono, titulo, descripcion, highlight }) => (
-  <div className={`bg-white border rounded-[24px] isolate overflow-visible max-w-[1080px] transition-all duration-700 relative hover:shadow-[0_8px_24px_rgba(255,152,0,0.18)] hover:border-[#FF9800]/30 hover:-translate-y-0.5 ${
-    highlight
-      ? 'shadow-[0_8px_24px_rgba(255,152,0,0.18)] border-[#FF9800]/30 -translate-y-0.5'
-      : 'shadow-[0_2px_8px_rgba(0,0,0,0.06)] border-gray-200'
-  }`}>
+  <>
+    <a
+      href="/cartilla"
+      target="_blank"
+      rel="noreferrer"
+      className={`bg-white border rounded-[24px] isolate overflow-visible max-w-[1080px] transition-all duration-700 relative flex flex-col no-underline cursor-pointer group hover:shadow-[0_8px_24px_rgba(255,152,0,0.18)] hover:border-[#FF9800]/30 hover:-translate-y-0.5 ${
+        highlight
+          ? 'shadow-[0_8px_24px_rgba(255,152,0,0.18)] border-[#FF9800]/30 -translate-y-0.5'
+          : 'shadow-[0_2px_8px_rgba(0,0,0,0.06)] border-gray-200'
+      }`}
+    >
+      <div className="flex flex-col sm:flex-row">
 
-    {/* Pill próximamente — sobresale de la card, levemente rotada */}
-    <div className="absolute -top-3 right-2 flex items-center gap-2 bg-[#FF9800] text-white text-[11px] font-bold uppercase tracking-[0.15em] px-3 py-1.5 rounded-full shadow-md  z-10">
-      <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse shrink-0"></span>
-      Próximamente
-    </div>
-    <div className="flex flex-col sm:flex-row">
-
-      {/* — Columna izquierda: texto — */}
-      <div className="flex flex-col gap-3 p-5 sm:p-8 flex-1">
-        <Icono size={24} className="text-[#FF9800]" strokeWidth={2.5} />
-        <div>
-          <h3 className="font-['Montserrat'] font-bold text-[#FF9800] text-[19px] md:text-[18px] mb-2">{titulo}</h3>
-          <p className="text-[#333333] text-[17px] md:text-[16px] font-medium leading-relaxed">{descripcion}</p>
+        {/* — Columna izquierda: texto — */}
+        <div className="flex flex-col gap-3 p-5 sm:p-8 flex-1">
+          <Icono size={24} className="text-[#FF9800]" strokeWidth={2.5} />
+          <div>
+            <h3 className="font-['Montserrat'] font-bold text-[#FF9800] text-[19px] md:text-[18px] mb-2">{titulo}</h3>
+            <p className="text-[#333333] text-[17px] md:text-[16px] font-medium leading-relaxed">{descripcion}</p>
+          </div>
         </div>
+
+        {/* — Columna derecha: mockup cartilla — */}
+        <div className="w-full sm:w-[55%] h-[140px] sm:h-auto sm:max-h-[240px] shrink-0 relative overflow-hidden rounded-b-[24px] sm:rounded-b-none sm:rounded-r-[24px]">
+          <img
+            src="/mockup-cartilla.png"
+            alt="Vista previa de la Cartilla veterinaria"
+            className="w-full h-full object-cover object-center group-hover:scale-[1.02] transition-transform duration-500"
+          />
+          {/* Degradado suave para integrar la imagen con el texto */}
+          <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-white to-transparent pointer-events-none" />
+        </div>
+
       </div>
+    </a>
 
-      {/* — Columna derecha: mockup cartilla — */}
-      <div className="w-full sm:w-[55%] h-[140px] sm:h-auto sm:max-h-[240px] shrink-0 relative overflow-hidden rounded-b-[24px] sm:rounded-b-none sm:rounded-r-[24px]">
-        <img
-          src="/mockup-cartilla.png"
-          alt="Vista previa de la Cartilla veterinaria"
-          className="w-full h-full object-cover object-center"
-        />
-        {/* Degradado suave para integrar la imagen con el texto */}
-        <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-white to-transparent"></div>
-
-       
-      </div>
-
-
+    {/* Hint por fuera de la caja */}
+    <div className="flex items-center justify-end gap-1.5 mt-3 pr-2 text-[#FF9800]">
+      <ArrowRight size={25} strokeWidth={2} className="rotate-[225deg]" />
+      <span className="text-[20px] font-bold">¡Presiona para ver la cartilla!</span>
     </div>
-  </div>
+  </>
 );
 
 // ── Cajita zona exclusiva ──────────────────────────────────────────────────
@@ -147,55 +151,6 @@ function QuienesSomos() {
   );
 }
 
-function BarraVitalicios() {
-  const [total, setTotal] = useState(0);
-  const [cargando, setCargando] = useState(true);
-  const LIMITE = 60;
-
-  useEffect(() => {
-    const fetchTotal = async () => {
-      try {
-        const { collection, query, where, getCountFromServer } = await import('firebase/firestore');
-        const q = query(collection(db, 'usuarios'), where('socioVitalicio', '==', true));
-        const snap = await getCountFromServer(q);
-        setTotal(snap.data().count);
-      } catch (e) {
-        console.error('Error contando socios vitalicios:', e);
-      } finally {
-        setCargando(false);
-      }
-    };
-    fetchTotal();
-  }, []);
-
-  // TEMPORAL para previsualizar — volver a 15 antes del lanzamiento
-  if (cargando) return null;
-
-  const quedan = Math.max(LIMITE - total, 0);
-  const porcentaje = Math.min((total / LIMITE) * 100, 100);
-
-  return (
-    <div className="mb-5 bg-[#1A3D3D] rounded-2xl p-5 border border-[#1A3D3D]">
-      <div className="flex items-center justify-between mb-3">
-        <p className="text-[13px] font-black text-white leading-snug font-['Montserrat']">
-          {quedan > 0
-            ? <>Quedan <span className="text-[#4DB6AC]">{quedan} lugares</span> de {LIMITE} para acceso vitalicio.</>
-            : <>Los {LIMITE} lugares vitalicios ya fueron ocupados.</>
-          }
-        </p>
-      </div>
-      <div className="w-full h-3 bg-white/20 rounded-full overflow-hidden mb-3">
-        <div
-          className={`h-full rounded-full transition-all duration-700 ${porcentaje > 80 ? 'bg-red-400' : 'bg-[#4DB6AC]'}`}
-          style={{ width: `${porcentaje === 0 ? 2 : porcentaje}%` }}
-        />
-      </div>
-      <p className="text-[11px] md:text-[13px] text-white/50 font-medium">
-        Después del límite, el acceso será por suscripción.
-      </p>
-    </div>
-  );
-}
 
 // ── Componente principal ───────────────────────────────────────────────────
 export default function SalaDeEspera() {
@@ -261,6 +216,41 @@ await setDoc(doc(db, 'usuarios', user.uid), {
   esBeta: true,
   socioVitalicio: true,
 });
+
+// Creamos también el documento base en 'profesionales' para que el editor lo encuentre
+if (rolDrawer === 'profesional') {
+  await setDoc(doc(db, 'profesionales', user.uid), {
+    nombre: formDrawer.nombre.trim(),
+    apellido: formDrawer.apellido?.trim() || '',
+    nombreCompleto,
+    slug: slugGenerado,
+    cuentaEmail: formDrawer.email.toLowerCase().trim(),
+    emailContacto: formDrawer.email.toLowerCase().trim(),
+    especialidad: '',
+    matricula: '',
+    tipoMatricula: 'MP',
+    matricula2: '',
+    tipoMatricula2: 'MP',
+    provincia: 'Buenos Aires',
+    bio: '',
+    foto: '',
+    fotosPerfil: [],
+    trayectoria: [],
+    servicios: [],
+    casos: [],
+    zonas: [],
+    papers: [],
+    galeria: [],
+    visible: true,
+    planActual: 'pro',
+    atiendeDomicilio: false,
+    whatsappActivo: false,
+    whatsappNum: '',
+    instagram: '',
+    linkedin: '',
+    facebook: '',
+  });
+}
       // — Envío de mail de bienvenida vía Brevo —
       try {
         const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
@@ -595,31 +585,18 @@ Creá tu perfil, aparecé en búsquedas y conectate con colegas, clínicas y pro
       </p>
       <div className="mt-6 flex items-center gap-2 flex-wrap">
         {!esBeta && (
-          <p className="text-[#999999] text-[22px] md:text-[17px] font-normal">
-            Estamos en etapa final de desarrollo.
-          </p>
+          <a
+            href="/cartilla"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-2 bg-[#FF9800] text-white font-bold text-[16px] md:text-[15px] px-5 py-3 rounded-2xl hover:bg-[#e68900] transition-all duration-200 shadow-md hover:-translate-y-0.5 group"
+          >
+            <PawPrint className="w-5 h-5" />
+            Ya podés ver la Cartilla
+            <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform duration-200" />
+          </a>
         )}
-        {!esBeta && (
-          <>
-            <span className="text-[#2D6A6A] text-[20px] select-none">·</span>
-            <button
-              onClick={() => {
-                const el = document.getElementById("cta-email");
-                if (!el) return;
-                const top = el.getBoundingClientRect().top + window.scrollY - 20;
-                window.scrollTo({ top, behavior: "smooth" });
-                setTimeout(() => {
-                  setDestelloCTA(true);
-                  setTimeout(() => setDestelloCTA(false), 2000);
-                }, 900);
-              }}
-              className="inline-flex items-center gap-1.5 text-[#2D6A6A] text-[21px] md:text-[17px] font-bold hover:text-[#1A3D3D] transition-colors duration-200 group"
-            >
-              Avisarme el lanzamiento
-              <ArrowRight size={17} className="group-hover:translate-x-1 transition-transform duration-200" />
-            </button>
-          </>
-        )}
+        
       </div>
     </div>
   </div>
@@ -649,7 +626,7 @@ Creá tu perfil, aparecé en búsquedas y conectate con colegas, clínicas y pro
 
 
       {/* ── ZONA PÚBLICA ──────────────────────────────────────────────────── */}
-      <section className="snap-start min-h-screen md:min-h-0 flex flex-col justify-center md:block pt-25 pb-16 md:pt-24 md:pb-28 relative z-10">
+      <section id="seccion-publica" className="snap-start min-h-screen md:min-h-0 flex flex-col justify-center md:block pt-25 pb-16 md:pt-24 md:pb-28 relative z-10">
         <div className="max-w-5xl mx-auto px-6">
           <div className="mb-6 text-center">
             <h2 className="font-['Montserrat'] font-semibold text-[#2D6A6A] text-[23px] md:text-[19px] mt-2 mb-2 uppercase tracking-[0.08em]">
@@ -783,8 +760,7 @@ Creá tu perfil, aparecé en búsquedas y conectate con colegas, clínicas y pro
                     </div>
 
                     <div className="p-6">
-                      {/* — Barra de socios vitalicios — */}
-                      <BarraVitalicios />
+                   
 
                       {/* Error */}
                       {errorDrawer && (
@@ -953,60 +929,41 @@ Creá tu perfil, aparecé en búsquedas y conectate con colegas, clínicas y pro
           ) : (
 
             /* ── Vista pública ── */
-            <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12 w-full pl-4 lg:pl-0">
+            <div className="flex flex-col items-center text-center gap-6 w-full py-4">
 
-              {/* — Columna izquierda: textos — */}
-              <div className="flex flex-col items-start gap-5 flex-1 min-w-0">
-                <span className="inline-flex items-center gap-2 bg-[#1A3D3D] border border-[#4DB6AC]/30 text-[#4DB6AC] text-[11px] font-bold uppercase tracking-[0.2em] px-4 py-2 rounded-full">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#4DB6AC] animate-pulse" />
-                  Próximamente
-                </span>
-                <h2 className="font-['Montserrat'] font-bold text-[#1A3D3D] text-3xl md:text-4xl max-w-lg leading-snug">
-                  ¿Querés ser de los primeros en entrar?
-                </h2>
-                <p className="text-[#666666] text-[16px] md:text-[17px] leading-relaxed max-w-sm">
-                  Estamos en etapa final de desarrollo. Dejanos tu mail y te avisamos el día del lanzamiento.
-                </p>
-              </div>
+              {/* — Etiqueta — */}
+              <span className="inline-flex items-center gap-2 bg-[#1A3D3D] border border-[#4DB6AC]/30 text-[#4DB6AC] text-[11px] font-bold uppercase tracking-[0.2em] px-4 py-2 rounded-full">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#4DB6AC] animate-pulse" />
+                Seguinos en Instagram
+              </span>
 
-              {/* — Tarjeta formulario — */}
-              <div className="w-[90%] md:w-[360px] shrink-0 mx-auto md:mx-0">
-                <div className="bg-white rounded-[28px] shadow-[0_8px_32px_rgba(26,61,61,0.08)] border border-gray-100 p-6">
-                  <Mail size={20} className="text-[#2D6A6A] shrink-0" />
-                  <h3 className="text-[#1A3D3D] font-['Montserrat'] font-bold text-[18px] mb-5 leading-tight">Avisarme el lanzamiento</h3>
+              {/* — Título — */}
+              <h2 className="font-['Montserrat'] font-bold text-[#1A3D3D] text-3xl md:text-4xl max-w-lg leading-snug">
+                Mantenete al tanto de todas las novedades
+              </h2>
 
-                  {enviado ? (
-                    <div className="flex items-center gap-3 bg-[#F4F7F7] rounded-2xl px-5 py-4">
-                      <CheckCircle size={20} className="text-[#2D6A6A] shrink-0" />
-                      <p className="text-[#1A3D3D] font-semibold text-[14px]">¡Listo! Te avisamos cuando lancemos.</p>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col gap-3">
-                      <input
-                        type="email"
-                        placeholder="tu@email.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        ref={(el) => { if (destelloCTA && el) el.focus(); }}
-                        className={`w-full px-4 py-3 rounded-xl text-[13px] outline-none transition-all duration-500 ${
-                          destelloCTA
-                            ? 'bg-white border-2 border-[#4DB6AC] ring-4 ring-[#4DB6AC]/20 scale-105 text-[#1A3D3D]'
-                            : 'bg-[#F4F7F7] border border-transparent text-[#1A3D3D] placeholder-gray-400 focus:bg-white focus:border-[#2D6A6A] focus:ring-2 focus:ring-[#2D6A6A]/20'
-                        }`}
-                      />
-                      <button
-                        onClick={handleSubmit}
-                        disabled={enviando}
-                        className="w-full bg-[#2D6A6A] text-white font-bold px-6 py-3.5 rounded-xl hover:bg-[#1A3D3D] transition-all duration-300 hover:-translate-y-1 hover:shadow-xl disabled:opacity-50 text-[12px] uppercase tracking-widest"
-                      >
-                        {enviando ? "Enviando..." : "Anotarme"}
-                      </button>
-                      {error && <p className="text-red-500 text-[13px] text-center">{error}</p>}
-                      <p className="text-[#999999] text-[13px] text-center">Sin spam. Solo te escribimos cuando estemos listos.</p>
-                    </div>
-                  )}
-                </div>
-              </div>
+              {/* — Subtexto — */}
+              <p className="text-[#666666] text-[16px] md:text-[17px] leading-relaxed max-w-sm">
+                Estamos construyendo algo grande para el sector veterinario argentino. Seguinos y sé el primero en enterarte cuando todas las novedades.
+              </p>
+
+              {/* — Botón Instagram — */}
+              <a
+                href="https://www.instagram.com/portalveterinario.ar"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-3 bg-[#FF9800] text-white font-bold text-[15px] px-7 py-4 rounded-2xl hover:bg-[#e68900] transition-all duration-200 shadow-md hover:-translate-y-0.5 group"
+              >
+                {/* Ícono Instagram SVG inline */}
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/>
+                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                  <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
+                </svg>
+                @portalveterinario.ar
+                <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-200" />
+              </a>
+
             </div>
 
           )}

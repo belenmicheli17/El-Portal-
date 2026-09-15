@@ -267,7 +267,12 @@ setData({
   }
 
   const isPro = data.planActual === 'pro';
-  const mobileTabs = isPro ? ['perfil', 'especialidad', 'casos'] : ['perfil'];
+  const tieneCasos = isPro && data.casos && data.casos.length > 0;
+const mobileTabs = [
+  'perfil',
+  ...(isPro ? ['especialidad'] : []),
+  ...(tieneCasos ? ['casos'] : []),
+];
 
   const scrollToContacto = (e) => {
     if (e) e.preventDefault();
@@ -535,10 +540,13 @@ setData({
         <section className="bg-[#1A3D3D] px-6 py-8 relative overflow-hidden shrink-0">
           <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent"></div>
           <div className="relative z-10 flex flex-col items-center gap-5 text-center">
-            <div className="relative cursor-pointer" onClick={() => data.foto && setIsPhotoModalOpen(true)}>
-              <div className="w-36 h-36 rounded-[32px] overflow-hidden border-4 border-white/20 shadow-xl bg-gray-100 flex items-center justify-center">
-                {data.foto ? <img src={data.foto} className="w-full h-full object-cover" alt={data.nombre} /> : <User className="text-gray-400 w-12 h-12" />}
-              </div>
+           <div className={`relative ${data.foto ? 'cursor-pointer' : 'cursor-default'}`} onClick={() => data.foto && setIsPhotoModalOpen(true)}>
+  <div className="w-36 h-36 rounded-[32px] overflow-hidden border-4 border-white/20 shadow-xl bg-white/10 flex items-center justify-center">
+    {data.foto
+      ? <img src={data.foto} className="w-full h-full object-cover" alt={data.nombre} />
+      : <User className="text-white/40 w-16 h-16" />
+    }
+  </div>
               <div className="absolute -bottom-2 -right-2 bg-[#2D6A6A] p-2 rounded-2xl border-4 border-[#1A3D3D]">
                 <ShieldCheck className="text-white w-5 h-5" />
               </div>
@@ -546,7 +554,12 @@ setData({
             <div className="flex-1">
               <h1 className="text-[24px] font-extrabold font-['Montserrat'] text-white tracking-tight uppercase leading-tight mb-2">{data.nombre} {data.apellido}</h1>
               <h2 className="text-[14px] font-black text-[#F4F7F7] uppercase tracking-[0.1em] opacity-80">{data.especialidad}</h2>
-             <div className="mt-2 text-white/30 font-bold text-[11px] uppercase tracking-[0.3em]">{data.tipoMatricula || 'MP'}: {data.matricula}</div>
+             <div className="mt-2 flex flex-col items-center gap-1">
+  <span className="text-white/30 font-bold text-[11px] uppercase tracking-[0.3em]">{data.tipoMatricula || 'MP'}: {data.matricula}</span>
+  {data.matricula2 && (
+    <span className="text-white/20 font-bold text-[11px] uppercase tracking-[0.3em]">{data.tipoMatricula2 || 'MP'}: {data.matricula2}</span>
+  )}
+</div>
               {(data.instagram || data.linkedin || data.facebook) && (
                 <div className="flex items-center justify-center gap-3 mt-3">
                   {data.instagram && <a href={data.instagram} target="_blank" rel="noreferrer" className="text-white/50 hover:text-white p-2 bg-white/10 rounded-xl border border-white/20 transition-all"><Instagram className="w-4 h-4" /></a>}
@@ -907,16 +920,25 @@ setData({
           )}
         </div>
 
-        {/* BOTONES DE CONTACTO MÓVIL */}
-        <div className="px-4 py-6 bg-[#F4F7F7] shrink-0 border-t border-gray-100 z-50">
+        {/* BOTONES DE CONTACTO MÓVIL — oculto si no hay nada que mostrar */}
+{(() => {
+  const mostrarWp = data.whatsappActivo && data.whatsappNum && (data.whatsappVisibilidad === 'todos' || !data.whatsappVisibilidad || currentUser);
+  const mostrarEmail = !!data.emailContacto;
+  if (!mostrarWp && !mostrarEmail) return null;
+  return (
+<div className="px-4 py-6 bg-[#F4F7F7] shrink-0 border-t border-gray-100 z-50">
          {(() => {
           const mostrarWp = data.whatsappActivo && data.whatsappNum && (data.whatsappVisibilidad === 'todos' || !data.whatsappVisibilidad || currentUser);
-          return (
-            <div className={`grid gap-2 ${mostrarWp ? 'grid-cols-2' : 'grid-cols-1'}`}>
-              <a href={`mailto:${data.emailContacto}`} target="_blank" rel="noreferrer" className="bg-[#1A3D3D] text-white font-bold rounded-xl flex flex-col items-center justify-center gap-1 py-3 px-2 shadow-lg hover:bg-[#2D6A6A] transition-colors text-center">
-                <Mail size={18} />
-                <span className="text-[9px] font-black uppercase tracking-wider leading-tight">Contactar por Email</span>
-              </a>
+const mostrarEmail = !!data.emailContacto;
+const columnas = [mostrarEmail, mostrarWp].filter(Boolean).length;
+return (
+  <div className={`grid gap-2 ${mostrarEmail && mostrarWp ? 'grid-cols-2' : 'grid-cols-1'}`}>
+              {data.emailContacto && (
+  <a href={`mailto:${data.emailContacto}`} target="_blank" rel="noreferrer" className="bg-[#1A3D3D] text-white font-bold rounded-xl flex flex-col items-center justify-center gap-1 py-3 px-2 shadow-lg hover:bg-[#2D6A6A] transition-colors text-center">
+    <Mail size={18} />
+    <span className="text-[9px] font-black uppercase tracking-wider leading-tight">Contactar por Email</span>
+  </a>
+)}
               {mostrarWp && (
                 <a href={`https://wa.me/${data.whatsappNum}`} target="_blank" rel="noreferrer" className="bg-[#25D366] text-white font-bold rounded-xl flex flex-col items-center justify-center gap-1 py-3 px-2 shadow-lg shadow-[#25D366]/20 hover:bg-[#20b858] transition-colors text-center">
                   <Phone size={18} />
@@ -927,6 +949,8 @@ setData({
           );
         })()}
         </div>
+          );
+})()}
       </div>
 
       {/* ========================================== */}
@@ -957,10 +981,13 @@ setData({
             <div id="perfil" className="bg-[#1A3D3D] rounded-t-[44px] overflow-hidden pt-10 px-10 pb-24 md:pt-14 md:px-14 md:pb-25 flex flex-col items-center text-center relative">
               <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent"></div>
               
-              <div className="relative mb-8 z-10 cursor-pointer" onClick={() => data.foto && setIsPhotoModalOpen(true)}>
-                <div className="w-32 h-32 md:w-40 md:h-40 rounded-[40px] overflow-hidden border-4 border-white/20 shadow-2xl bg-white flex items-center justify-center hover:scale-105 transition-transform">
-                  {data.foto ? <img src={data.foto} className="w-full h-full object-cover" alt={data.nombre} /> : <User className="text-gray-400 w-16 h-16" />}
-                </div>
+             <div className={`relative mb-8 z-10 ${data.foto ? 'cursor-pointer' : 'cursor-default'}`} onClick={() => data.foto && setIsPhotoModalOpen(true)}>
+  <div className={`w-32 h-32 md:w-40 md:h-40 rounded-[40px] overflow-hidden border-4 border-white/20 shadow-2xl flex items-center justify-center ${data.foto ? 'bg-white hover:scale-105 transition-transform' : 'bg-white/10'}`}>
+    {data.foto
+      ? <img src={data.foto} className="w-full h-full object-cover" alt={data.nombre} />
+      : <User className="text-white/40 w-16 h-16" />
+    }
+  </div>
                 <div className="absolute -bottom-2 -right-2 bg-[#2D6A6A] p-3 rounded-2xl border-4 border-[#1A3D3D] shadow-xl">
                   <ShieldCheck className="text-white w-5 h-5" />
                 </div>
@@ -969,7 +996,12 @@ setData({
               <div className="z-10 w-full flex flex-col items-center">
                 <h1 className="text-[24px] md:text-[30px] font-extrabold font-['Montserrat'] text-white tracking-tight mb-2 uppercase leading-tight">{data.nombre} {data.apellido}</h1>
                 <h2 className="text-[16px] md:text-[20px] font-black text-[#F4F7F7] mb-4 uppercase tracking-widest opacity-90">{data.especialidad}</h2>
-                <p className="text-white/30 font-semibold text-[12px] uppercase tracking-[0.5em] mb-10">{data.tipoMatricula || 'MP'}: {data.matricula}</p>
+                <div className="flex flex-col items-center gap-1 mb-10">
+  <p className="text-white/30 font-semibold text-[12px] uppercase tracking-[0.5em]">{data.tipoMatricula || 'MP'}: {data.matricula}</p>
+  {data.matricula2 && (
+    <p className="text-white/20 font-semibold text-[12px] uppercase tracking-[0.5em]">{data.tipoMatricula2 || 'MP'}: {data.matricula2}</p>
+  )}
+</div>
               </div>
               
               {isPro && data.zonas && data.zonas.length > 0 && (
@@ -1275,124 +1307,133 @@ setData({
               </>
             )}
 
-            {/* SECCIÓN CONTACTO + GALERÍA */}
-            <div id="contacto" className={`px-10 pt-8 pb-10 md:px-16 md:pt-10 md:pb-16 bg-white transition-all duration-700 ease-out ${
-              highlightContacto ? 'scale-[1.03] shadow-[0_0_80px_rgba(45,106,106,0.3)] ring-4 ring-[#4DB6AC]/50 ring-offset-4 ring-offset-[#F4F7F7]/50 rounded-[40px] relative z-50 border border-[#4DB6AC]' : 'scale-100 border-transparent rounded-b-[44px] relative z-10 border-gray-100'
-            }`}>
-              <div className={`flex flex-col ${data.galeria && data.galeria.length > 0 ? 'lg:flex-row gap-12 items-start' : 'lg:flex-row gap-16 items-center'}`} style={{alignItems: data.galeria && data.galeria.length > 0 ? 'stretch' : 'center'}}>
 
-                {/* COLUMNA IZQUIERDA: CONTACTO */}
-                <div className="flex-1 text-left min-w-0">
-                  <div className="text-[#2D6A6A] mb-8"><MessageCircle className="w-12 h-12" strokeWidth={1.8} /></div>
-                  <h2 className="text-[24px] md:text-[30px] font-extrabold font-['Montserrat'] text-[#1A3D3D] mb-6 uppercase tracking-tight leading-none">Enviar Propuesta</h2>
-                  <div className="mb-8"></div>
-                  <ContactoEmail
-                    email={data.emailContacto}
-                    nombre={data.nombre}
-                    whatsappActivo={data.whatsappActivo}
-                    whatsappNum={data.whatsappNum}
-                    mostrarWhatsapp={data.whatsappActivo && (data.whatsappVisibilidad === 'todos' || !data.whatsappVisibilidad || currentUser)}
-                  />
-                </div>
 
-                {/* COLUMNA DERECHA: GALERÍA (solo si tiene fotos) */}
-                {data.galeria && data.galeria.length > 0 && (
-                  <div className="w-full lg:w-[45%] flex flex-col">
-                    
-                    {/* HEADER */}
-                    <div className="text-[#2D6A6A] mb-8"><Images className="w-12 h-12" strokeWidth={1.7} /></div>
-                    <h3 className="text-[24px] md:text-[30px] font-extrabold font-['Montserrat'] text-[#1A3D3D] mb-6 uppercase tracking-tight leading-none">Galería</h3>
+                       {/* SECCIÓN CONTACTO + GALERÍA */}
+            {(() => {
+              const tieneEmail = !!data.emailContacto;
+              const tieneWhatsapp = data.whatsappActivo && data.whatsappNum && (data.whatsappVisibilidad === 'todos' || !data.whatsappVisibilidad || currentUser);
+              const tieneGaleria = data.galeria && data.galeria.length > 0;
+              if (!tieneEmail && !tieneWhatsapp && !tieneGaleria) return null;
+              return (
+                <div id="contacto" className={`px-10 pt-8 pb-10 md:px-16 md:pt-10 md:pb-16 bg-white transition-all duration-700 ease-out ${
+                  highlightContacto ? 'scale-[1.03] shadow-[0_0_80px_rgba(45,106,106,0.3)] ring-4 ring-[#4DB6AC]/50 ring-offset-4 ring-offset-[#F4F7F7]/50 rounded-[40px] relative z-50 border border-[#4DB6AC]' : 'scale-100 border-transparent rounded-b-[44px] relative z-10 border-gray-100'
+                }`}>
+                  <div className={`flex flex-col ${tieneGaleria ? 'lg:flex-row gap-12 items-start' : 'lg:flex-row gap-16 items-center'}`} style={{alignItems: tieneGaleria ? 'stretch' : 'center'}}>
 
-                    {/* LAYOUT: FOTO GRANDE ARRIBA + MINIATURAS ABAJO */}
-                    <div className="flex flex-col gap-3 mt-2">
-
-                      {/* FOTO PRINCIPAL */}
-                      <div
-                        className="rounded-[24px] overflow-hidden cursor-pointer group relative aspect-[16/10]"
-                        onClick={() => setGaleriaModal({ isOpen: true, idx: 0 })}
-                      >
-                        <img
-                          src={data.galeria[0].url}
-                          alt={data.galeria[0].epigrafe || 'Galería'}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    {/* COLUMNA IZQUIERDA: CONTACTO */}
+                    {(tieneEmail || tieneWhatsapp) && (
+                      <div className="flex-1 text-left min-w-0">
+                        <div className="text-[#2D6A6A] mb-8"><MessageCircle className="w-12 h-12" strokeWidth={1.8} /></div>
+                        <h2 className="text-[24px] md:text-[30px] font-extrabold font-['Montserrat'] text-[#1A3D3D] mb-6 uppercase tracking-tight leading-none">Enviar Propuesta</h2>
+                        <div className="mb-8"></div>
+                        <ContactoEmail
+                          email={data.emailContacto}
+                          nombre={data.nombre}
+                          whatsappActivo={data.whatsappActivo}
+                          whatsappNum={data.whatsappNum}
+                          mostrarWhatsapp={tieneWhatsapp}
                         />
-                        <div className="absolute inset-0 bg-[#1A3D3D]/0 group-hover:bg-[#1A3D3D]/20 transition-all duration-300 rounded-[24px]" />
                       </div>
+                    )}
 
-                      {/* MINIATURAS */}
-                      {data.galeria.length > 1 && (
-                        <div className="grid grid-cols-3 gap-3">
+                    {/* COLUMNA DERECHA: GALERÍA (solo si tiene fotos) */}
+                    {tieneGaleria && (
+                      <div className="w-full lg:w-[45%] flex flex-col">
+                        
+                        {/* HEADER */}
+                        <div className="text-[#2D6A6A] mb-8"><Images className="w-12 h-12" strokeWidth={1.7} /></div>
+                        <h3 className="text-[24px] md:text-[30px] font-extrabold font-['Montserrat'] text-[#1A3D3D] mb-6 uppercase tracking-tight leading-none">Galería</h3>
 
-                          {/* MINIATURA 1 */}
-                          {data.galeria[1] && (
-                            <div
-                              className="rounded-[16px] overflow-hidden cursor-pointer group relative aspect-square"
-                              onClick={() => setGaleriaModal({ isOpen: true, idx: 1 })}
-                            >
-                              <img
-                                src={data.galeria[1].url}
-                                alt={data.galeria[1].epigrafe || ''}
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                              />
-                              <div className="absolute inset-0 bg-[#1A3D3D]/0 group-hover:bg-[#1A3D3D]/20 transition-all duration-300 rounded-[16px]" />
-                            </div>
-                          )}
+                        {/* LAYOUT: FOTO GRANDE ARRIBA + MINIATURAS ABAJO */}
+                        <div className="flex flex-col gap-3 mt-2">
 
-                          {/* MINIATURA 2 */}
-                          {data.galeria[2] && (
-                            <div
-                              className="rounded-[16px] overflow-hidden cursor-pointer group relative aspect-square"
-                              onClick={() => setGaleriaModal({ isOpen: true, idx: 2 })}
-                            >
-                              <img
-                                src={data.galeria[2].url}
-                                alt={data.galeria[2].epigrafe || ''}
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                              />
-                              <div className="absolute inset-0 bg-[#1A3D3D]/0 group-hover:bg-[#1A3D3D]/20 transition-all duration-300 rounded-[16px]" />
-                            </div>
-                          )}
+                          {/* FOTO PRINCIPAL */}
+                          <div
+                            className="rounded-[24px] overflow-hidden cursor-pointer group relative aspect-[16/10]"
+                            onClick={() => setGaleriaModal({ isOpen: true, idx: 0 })}
+                          >
+                            <img
+                              src={data.galeria[0].url}
+                              alt={data.galeria[0].epigrafe || 'Galería'}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            />
+                            <div className="absolute inset-0 bg-[#1A3D3D]/0 group-hover:bg-[#1A3D3D]/20 transition-all duration-300 rounded-[24px]" />
+                          </div>
 
-                          {/* MINIATURA 3 — con contador si hay más */}
-                          {data.galeria[3] && (
-                            <div
-                              className="rounded-[16px] overflow-hidden cursor-pointer group relative aspect-square"
-                              onClick={() => setGaleriaModal({ isOpen: true, idx: 3 })}
-                            >
-                              <img
-                                src={data.galeria[3].url}
-                                alt={data.galeria[3].epigrafe || ''}
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                              />
-                              {data.galeria.length > 4 && (
-                                <div className="absolute inset-0 bg-[#1A3D3D]/60 flex items-center justify-center rounded-[16px]">
-                                  <span className="text-white font-black text-[22px] font-['Montserrat']">+{data.galeria.length - 4}</span>
+                          {/* MINIATURAS */}
+                          {data.galeria.length > 1 && (
+                            <div className="grid grid-cols-3 gap-3">
+
+                              {data.galeria[1] && (
+                                <div
+                                  className="rounded-[16px] overflow-hidden cursor-pointer group relative aspect-square"
+                                  onClick={() => setGaleriaModal({ isOpen: true, idx: 1 })}
+                                >
+                                  <img
+                                    src={data.galeria[1].url}
+                                    alt={data.galeria[1].epigrafe || ''}
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                  />
+                                  <div className="absolute inset-0 bg-[#1A3D3D]/0 group-hover:bg-[#1A3D3D]/20 transition-all duration-300 rounded-[16px]" />
                                 </div>
                               )}
-                              {data.galeria.length <= 4 && (
-                                <div className="absolute inset-0 bg-[#1A3D3D]/0 group-hover:bg-[#1A3D3D]/20 transition-all duration-300 rounded-[16px]" />
+
+                              {data.galeria[2] && (
+                                <div
+                                  className="rounded-[16px] overflow-hidden cursor-pointer group relative aspect-square"
+                                  onClick={() => setGaleriaModal({ isOpen: true, idx: 2 })}
+                                >
+                                  <img
+                                    src={data.galeria[2].url}
+                                    alt={data.galeria[2].epigrafe || ''}
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                  />
+                                  <div className="absolute inset-0 bg-[#1A3D3D]/0 group-hover:bg-[#1A3D3D]/20 transition-all duration-300 rounded-[16px]" />
+                                </div>
                               )}
+
+                              {data.galeria[3] && (
+                                <div
+                                  className="rounded-[16px] overflow-hidden cursor-pointer group relative aspect-square"
+                                  onClick={() => setGaleriaModal({ isOpen: true, idx: 3 })}
+                                >
+                                  <img
+                                    src={data.galeria[3].url}
+                                    alt={data.galeria[3].epigrafe || ''}
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                  />
+                                  {data.galeria.length > 4 && (
+                                    <div className="absolute inset-0 bg-[#1A3D3D]/60 flex items-center justify-center rounded-[16px]">
+                                      <span className="text-white font-black text-[22px] font-['Montserrat']">+{data.galeria.length - 4}</span>
+                                    </div>
+                                  )}
+                                  {data.galeria.length <= 4 && (
+                                    <div className="absolute inset-0 bg-[#1A3D3D]/0 group-hover:bg-[#1A3D3D]/20 transition-all duration-300 rounded-[16px]" />
+                                  )}
+                                </div>
+                              )}
+
                             </div>
                           )}
 
                         </div>
-                      )}
 
-                    </div>
+                        {/* BOTÓN VER GALERÍA COMPLETA */}
+                        <button
+                          onClick={() => setGaleriaModal({ isOpen: true, idx: 0 })}
+                          className="w-full mt-3 text-[11px] font-black text-[#2D6A6A] uppercase tracking-widest hover:text-[#1A3D3D] transition-colors flex items-center justify-center gap-1.5 group py-2"
+                        >
+                          Ver galería completa <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                        </button>
 
-                    {/* BOTÓN VER GALERÍA COMPLETA */}
-                    <button
-                      onClick={() => setGaleriaModal({ isOpen: true, idx: 0 })}
-                      className="w-full mt-3 text-[11px] font-black text-[#2D6A6A] uppercase tracking-widest hover:text-[#1A3D3D] transition-colors flex items-center justify-center gap-1.5 group py-2"
-                    >
-                      Ver galería completa <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                    </button>
+                      </div>
+                    )}
 
                   </div>
-                )}
-
-              </div>
-            </div>
+                </div>
+              );
+            })()}
           </div>
         </main>
       </div>

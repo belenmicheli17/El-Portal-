@@ -16,7 +16,7 @@ import {
   ArrowUp, ArrowDown, MapPin, ShieldCheck, Check, ArrowLeft,
   Smartphone, Home, Mail, Award, ChevronDown, Phone,
   ArrowRight, ExternalLink, Lock, Zap, Clock, Heart, Brain, Turtle, CircleUserRound,
-  Menu, User, LayoutGrid, Edit, Briefcase, FileText, Undo2, Redo2, FileCheck, Building2, AlertTriangle, Syringe, Activity, Microscope, Stethoscope, Crop, Sparkles, Loader2, Globe, CreditCard, ArrowUpRight, Eye, EyeOff, MessageSquare, Image as ImageIcon, BookOpen, UploadCloud, FileDown 
+  Menu, User, LayoutGrid, Edit, Search, Briefcase, FileText, Undo2, Redo2, FileCheck, Building2, AlertTriangle, Syringe, Activity, Microscope, Stethoscope, Crop, Sparkles, Loader2, Globe, CreditCard, ArrowUpRight, Eye, EyeOff, MessageSquare, Image as ImageIcon, BookOpen, UploadCloud, FileDown 
 } from 'lucide-react';
 
 // ==========================================
@@ -138,12 +138,16 @@ const InputGroup = ({ label, id, type = "text", placeholder, value, onChange, to
         {type === "textarea" ? (
           <textarea
             id={id} name={id} value={value} onChange={onChange} placeholder={placeholder} maxLength={maxLength} rows={rows} disabled={disabled} readOnly={readOnly}
-            className={`w-full border ${error ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-[#2D6A6A]'} rounded-2xl px-5 py-4 text-base font-medium focus:outline-none transition-all resize-none ${readOnly ? 'bg-gray-100 text-gray-500 cursor-not-allowed focus:border-gray-200' : 'bg-gray-50/50 text-[#1A3D3D] disabled:opacity-50'}`}
+            spellCheck="true"
+lang="es"
+className={`w-full border ${error ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-[#2D6A6A]'} rounded-2xl px-5 py-4 text-base font-medium focus:outline-none transition-all resize-none ${readOnly ? 'bg-gray-100 text-gray-500 cursor-not-allowed focus:border-gray-200' : 'bg-gray-50/50 text-[#1A3D3D] disabled:opacity-50'}`}
           />
         ) : (
           <input
             id={id} name={id} type={currentType} value={value} onChange={onChange} placeholder={placeholder} maxLength={maxLength} disabled={disabled} readOnly={readOnly}
-            className={`w-full border ${error ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-[#2D6A6A]'} rounded-2xl px-5 py-3.5 text-base font-medium focus:outline-none transition-all ${readOnly ? 'bg-gray-100 text-gray-500 cursor-not-allowed focus:border-gray-200' : 'bg-gray-50/50 text-[#1A3D3D] disabled:opacity-50'} ${(canTest || isPassword) ? 'pr-12' : ''}`}
+            spellCheck="true"
+lang="es"
+className={`w-full border ${error ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-[#2D6A6A]'} rounded-2xl px-5 py-3.5 text-base font-medium focus:outline-none transition-all ${readOnly ? 'bg-gray-100 text-gray-500 cursor-not-allowed focus:border-gray-200' : 'bg-gray-50/50 text-[#1A3D3D] disabled:opacity-50'} ${(canTest || isPassword) ? 'pr-12' : ''}`}
           />
         )}
         
@@ -189,7 +193,7 @@ const ToggleSwitch = ({ label, checked, onChange, tooltip, className = "" }) => 
   </div>
 );
 
-const Accordion = ({ title, icon: Icon, children, isOpen, onToggle, tooltip, isBioWarning, bioLength }) => {
+const Accordion = ({ title, icon: Icon, children, isOpen, onToggle, tooltip, isBioWarning, bioLength, alerta }) => {
   return (
     <div className="border-b border-gray-100 last:border-0 group relative z-[1]">
       <button 
@@ -201,9 +205,10 @@ const Accordion = ({ title, icon: Icon, children, isOpen, onToggle, tooltip, isB
           <div className={`p-2.5 rounded-xl transition-all duration-300 ease-in-out ${isOpen ? 'bg-[#1A3D3D] text-white' : 'bg-transparent text-[#2D6A6A]'}`}>
             {Icon && <Icon className="w-5 h-5" />}
           </div>
-          <h3 className={`font-black text-sm md:text-base uppercase tracking-wider transition-colors duration-300 ${isOpen ? 'text-[#1A3D3D]' : 'text-gray-500 md:text-[#1A3D3D]'}`}>
-            {title}
-          </h3>
+          <h3 className={`font-black text-sm md:text-base uppercase tracking-wider transition-colors duration-300 flex items-center gap-2 ${isOpen ? 'text-[#1A3D3D]' : 'text-gray-500 md:text-[#1A3D3D]'}`}>
+  {title}
+  {alerta && !isOpen && <span className="w-2 h-2 rounded-full bg-[#FF9800] shrink-0 animate-pulse" />}
+</h3>
           {tooltip && isOpen && (
             <div className="block animate-in fade-in zoom-in duration-300">
               <Tooltip text={tooltip} isSection />
@@ -342,6 +347,187 @@ const SimpleCropper = ({ imageSrc, onCrop, onCancel, type }) => {
   );
 };
 
+const PuntoAlerta = () => (
+  <span className="w-2 h-2 rounded-full bg-[#FF9800] shrink-0 animate-pulse" />
+);
+function BuscadorEspecialidades({ formData, setFormData, especialidadesData }) {
+  const [busqueda, setBusqueda] = useState('');
+  const [modalAgregar, setModalAgregar] = useState({ abierto: false, texto: '' });
+  const [grupoElegido, setGrupoElegido] = useState('');
+
+  const todasLasOpciones = especialidadesData.flatMap(grupo =>
+    grupo.opciones.map(opcion => ({ opcion, grupoId: grupo.id, grupoNombre: grupo.grupo }))
+  );
+
+  const resultados = busqueda.trim().length >= 2
+    ? todasLasOpciones.filter(item =>
+        item.opcion.toLowerCase().includes(busqueda.toLowerCase()) ||
+        item.grupoNombre.toLowerCase().includes(busqueda.toLowerCase())
+      )
+    : [];
+
+  const estaSeleccionada = (grupoId, opcion) => {
+    const g = formData.servicios[grupoId];
+    return g && (g.subOpcionesSeleccionadas || []).includes(opcion);
+  };
+
+  const toggleDesdeResultado = (grupoId, opcion) => {
+    const grupoActual = formData.servicios[grupoId] || { activo: false, subOpcionesSeleccionadas: [], desc: '', serviciosPersonalizados: [] };
+    const seleccionadas = grupoActual.subOpcionesSeleccionadas || [];
+    const yaEsta = seleccionadas.includes(opcion);
+    const nuevas = yaEsta ? seleccionadas.filter(o => o !== opcion) : [...seleccionadas, opcion];
+    setFormData(prev => ({
+      ...prev,
+      servicios: {
+        ...prev.servicios,
+        [grupoId]: { ...grupoActual, activo: nuevas.length > 0 || (grupoActual.serviciosPersonalizados || []).length > 0, subOpcionesSeleccionadas: nuevas }
+      }
+    }));
+  };
+
+  const confirmarAgregarPersonalizado = () => {
+    if (!grupoElegido || !modalAgregar.texto.trim()) return;
+    const texto = modalAgregar.texto.trim();
+    const capitalizado = texto.charAt(0).toUpperCase() + texto.slice(1);
+    const grupoActual = formData.servicios[grupoElegido] || { activo: false, subOpcionesSeleccionadas: [], desc: '', serviciosPersonalizados: [] };
+    const personalizados = grupoActual.serviciosPersonalizados || [];
+    if (!personalizados.includes(capitalizado)) {
+      setFormData(prev => ({
+        ...prev,
+        servicios: {
+          ...prev.servicios,
+          [grupoElegido]: { ...grupoActual, activo: true, serviciosPersonalizados: [...personalizados, capitalizado] }
+        }
+      }));
+    }
+    setBusqueda('');
+    setModalAgregar({ abierto: false, texto: '' });
+    setGrupoElegido('');
+  };
+
+  return (
+    <>
+      {/* MODAL ELEGIR GRUPO */}
+      {modalAgregar.abierto && (
+        <div className="fixed inset-0 bg-[#1A3D3D]/40 backdrop-blur-md z-[300] flex items-center justify-center p-4">
+          <div className="bg-white rounded-[28px] w-full max-w-sm p-6 shadow-2xl animate-in fade-in zoom-in duration-200">
+            <h3 className="font-black text-[#1A3D3D] text-lg font-['Montserrat'] mb-1">¿A qué grupo pertenece?</h3>
+            <p className="text-sm text-gray-500 mb-5">
+              Vas a agregar: <span className="font-bold text-[#1A3D3D]">"{modalAgregar.texto}"</span>
+            </p>
+            <div className="flex flex-col gap-2 max-h-[50vh] overflow-y-auto pr-1">
+              {especialidadesData.map(grupo => (
+                <button
+                  key={grupo.id}
+                  type="button"
+                  onClick={() => setGrupoElegido(grupo.id)}
+                  className={`w-full text-left px-4 py-3 rounded-xl text-sm font-bold border transition-colors ${grupoElegido === grupo.id ? 'bg-[#1A3D3D] text-white border-[#1A3D3D]' : 'bg-white text-gray-600 border-gray-200 hover:border-[#2D6A6A]'}`}
+                >
+                  {grupo.grupo}
+                </button>
+              ))}
+            </div>
+            <div className="flex gap-3 mt-5">
+              <button
+                type="button"
+                onClick={() => { setModalAgregar({ abierto: false, texto: '' }); setGrupoElegido(''); }}
+                className="flex-1 px-4 py-3 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition-colors border border-gray-200"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={confirmarAgregarPersonalizado}
+                disabled={!grupoElegido}
+                className="flex-1 px-4 py-3 rounded-xl text-sm font-bold bg-[#2D6A6A] text-white hover:bg-[#1A3D3D] transition-colors disabled:opacity-40"
+              >
+                Agregar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CAMPO DE BÚSQUEDA */}
+      <div className="relative mb-6">
+        <div className="absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">
+          <Search className="w-4 h-4 text-gray-400" />
+        </div>
+        <input
+          type="text"
+          value={busqueda}
+          onChange={(e) => setBusqueda(e.target.value)}
+          placeholder="Buscar especialidad... (ej: oncología, ecografía)"
+          className="w-full pl-11 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-medium text-[#1A3D3D] focus:outline-none focus:border-[#2D6A6A] focus:bg-white transition-all"
+        />
+        {busqueda && (
+          <button
+            type="button"
+            onClick={() => setBusqueda('')}
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
+      </div>
+
+      {/* RESULTADOS */}
+      {busqueda.trim().length >= 2 && (
+        <div className="mb-6 bg-gray-50 rounded-2xl border border-gray-100 overflow-hidden">
+          {resultados.length > 0 ? (
+            <>
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-4 pt-3 pb-2">
+                {resultados.length} resultado{resultados.length !== 1 ? 's' : ''}
+              </p>
+              <div className="flex flex-col divide-y divide-gray-100">
+                {resultados.map(({ opcion, grupoId, grupoNombre }) => {
+                  const seleccionada = estaSeleccionada(grupoId, opcion);
+                  return (
+                    <button
+                      key={`${grupoId}-${opcion}`}
+                      type="button"
+                      onClick={() => toggleDesdeResultado(grupoId, opcion)}
+                      className={`w-full flex items-center justify-between px-4 py-3.5 text-left transition-colors ${seleccionada ? 'bg-[#1A3D3D]/5' : 'hover:bg-white'}`}
+                    >
+                      <div>
+                        <p className={`text-sm font-bold ${seleccionada ? 'text-[#1A3D3D]' : 'text-gray-700'}`}>{opcion}</p>
+                        <p className="text-[11px] text-gray-400 font-medium mt-0.5">{grupoNombre}</p>
+                      </div>
+                      <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 ml-4 transition-colors ${seleccionada ? 'bg-[#1A3D3D] border-[#1A3D3D]' : 'border-gray-300'}`}>
+                        {seleccionada && <Check className="w-3 h-3 text-white" />}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+              <button
+                type="button"
+                onClick={() => setModalAgregar({ abierto: true, texto: busqueda.trim() })}
+                className="w-full px-4 py-3.5 flex items-center gap-2 text-[#2D6A6A] text-sm font-bold hover:bg-white transition-colors border-t border-gray-100"
+              >
+                <Plus className="w-4 h-4 shrink-0" />
+                Agregar "{busqueda.trim()}" como especialidad propia
+              </button>
+            </>
+          ) : (
+            <div className="px-4 py-5 flex flex-col gap-3">
+              <p className="text-sm text-gray-500 font-medium">
+                No encontramos "<span className="font-bold text-[#1A3D3D]">{busqueda}</span>" entre las especialidades predefinidas.
+              </p>
+              <button
+                type="button"
+                onClick={() => setModalAgregar({ abierto: true, texto: busqueda.trim() })}
+                className="w-full py-3 bg-[#2D6A6A] text-white text-sm font-bold rounded-xl hover:bg-[#1A3D3D] transition-colors flex items-center justify-center gap-2"
+              >
+                <Plus className="w-4 h-4" /> Agregar como especialidad propia
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </>
+  );
+}
 // ==========================================
 // APLICACIÓN PRINCIPAL (EDITOR PROFESIONAL)
 // ==========================================
@@ -365,8 +551,10 @@ export default function EditorProfesional() {
   const [isSubModalOpen, setIsSubModalOpen] = useState(false); 
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
   const [openSection, setOpenSection] = useState(null);
+const [perfilSubTab, setPerfilSubTab] = useState('datos');
   const [cropModal, setCropModal] = useState({ isOpen: false, imageSrc: null, targetId: null, type: null, caseId: null });
   const [saveStatus, setSaveStatus] = useState('idle');
+const [mostrarErroresSecciones, setMostrarErroresSecciones] = useState(false);
   const [gruposExpandidos, setGruposExpandidos] = useState({});
   const [nuevosServicios, setNuevosServicios] = useState({});
 const [tooltipHintVisto, setTooltipHintVisto] = useState(true); 
@@ -453,14 +641,17 @@ console.log("🔍 TRAYECTORIA CRUDA:", JSON.stringify(dataCompleta.trayectoria, 
 apellido: '',
   especialidad: '',
   matricula: '',
-  tipoMatricula: 'MP',
+tipoMatricula: 'MP',
+matricula2: undefined,
+tipoMatricula2: undefined,
   provincia: 'Buenos Aires',
   bio: '',
   foto: '',
   fotosPerfil: [],
   atiendeDomicilio: false,
-  emailContacto: '',
-  instagram: '',
+ emailContacto: '',
+emailVisibilidad: 'todos',
+instagram: '',
   linkedin: '',
   facebook: '',
   whatsappActivo: false,
@@ -499,6 +690,26 @@ papers: [],
       return nextState;
     });
   };
+
+const seccionesIncompletas = () => {
+  const incompletas = new Set();
+  if (!formData.foto || !formData.nombre?.trim() || !formData.especialidad?.trim() || !formData.matricula?.trim()) {
+    incompletas.add('identidad');
+  }
+  if (!formData.bio?.trim() || formData.bio.trim().length < 30) {
+    incompletas.add('bio');
+  }
+  if (!formData.trayectoria || formData.trayectoria.length === 0) {
+    incompletas.add('trayectoria');
+  }
+  if (!formData.zonas || formData.zonas.length === 0) {
+    incompletas.add('zonas');
+  }
+  if (!formData.emailContacto?.trim()) {
+    incompletas.add('contacto');
+  }
+  return incompletas;
+};
 
   const calculateProgress = () => {
     let score = 0;
@@ -724,7 +935,9 @@ const generarSlug = (texto) => {
 
   const handleSaveData = async () => {
     const trayectoriaIncompleta = formData.trayectoria.some(t => !t.titulo.trim());
-if (!formData.nombre.trim() || !formData.especialidad.trim() || !formData.foto || trayectoriaIncompleta) {
+const whatsappInvalido = formData.atiendeDomicilio && !formData.whatsappNum.replace(/^\+?54/, '').trim();
+if (!formData.nombre.trim() || !formData.especialidad.trim() || trayectoriaIncompleta || whatsappInvalido) {
+  setMostrarErroresSecciones(true);
       setModalConfig({ 
         isOpen: true, 
         title: 'Faltan datos requeridos', 
@@ -736,7 +949,11 @@ if (!formData.nombre.trim() || !formData.especialidad.trim() || !formData.foto |
       return;
     }
 
-    setSaveStatus('saving');
+    const incompletas = seccionesIncompletas();
+if (incompletas.size > 0) {
+  setMostrarErroresSecciones(true);
+}
+setSaveStatus('saving');
     
     // ¡ACÁ ABRIMOS EL BLOQUE TRY!
     try {
@@ -764,7 +981,10 @@ if (!formData.nombre.trim() || !formData.especialidad.trim() || !formData.foto |
 
       // 2. Guardamos el perfil "limpio" (Esto borrará los papers viejos del documento del profesional automáticamente)
       const docRef = doc(db, 'profesionales', currentUser.uid);
-await setDoc(docRef, perfilDataToSave);
+// Limpiamos undefined para que Firestore no los ignore
+if (perfilDataToSave.matricula2 === undefined) perfilDataToSave.matricula2 = '';
+if (perfilDataToSave.tipoMatricula2 === undefined) perfilDataToSave.tipoMatricula2 = '';
+      await setDoc(docRef, perfilDataToSave);
 
 // Sincronizamos nombre y slug en la colección usuarios
 const nombreCompleto = `${formData.nombre.trim()} ${(formData.apellido || '').trim()}`.trim();
@@ -848,6 +1068,41 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
     document.head.appendChild(link);
     return () => document.head.removeChild(link);
   }, []);
+
+  // Inicialización robusta del autocomplete de Google para móvil
+  useEffect(() => {
+    const inicializarAutocompletes = () => {
+      if (!window.google || !window.google.maps || !window.google.maps.places) return;
+      
+      const inputs = document.querySelectorAll('input[data-zona-id]');
+      inputs.forEach((el) => {
+        if (el._autocompleteInit) return;
+        el._autocompleteInit = true;
+        
+        const zonaId = el.dataset.zonaId;
+        const clinicaId = el.dataset.clinicaId;
+        
+        const autocomplete = new window.google.maps.places.Autocomplete(el, {
+          componentRestrictions: { country: 'ar' },
+          fields: ['name', 'formatted_address', 'place_id']
+        });
+        
+        autocomplete.addListener('place_changed', () => {
+          const place = autocomplete.getPlace();
+          if (!place.place_id) return;
+          updateClinica(zonaId, clinicaId, 'direccion', place.formatted_address || '');
+          updateClinica(zonaId, clinicaId, 'placeId', place.place_id || '');
+        });
+      });
+    };
+
+    if (window.google?.maps?.places) {
+      inicializarAutocompletes();
+    } else {
+      window.initGoogleMaps = inicializarAutocompletes;
+    }
+    
+  }, [formData.zonas]);
 
   
   return (
@@ -1148,17 +1403,20 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
               </button>
               
               <button onClick={() => setActiveTab('perfil')} className={`flex items-center justify-between px-4 py-3.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap outline-none ${activeTab === 'perfil' ? 'bg-[#2D6A6A]/10 text-[#1A3D3D]' : 'text-gray-500 hover:bg-white hover:text-[#4DB6AC]'}`}>
-                <div className="flex items-center gap-3"><LayoutGrid className={`w-5 h-5 ${activeTab === 'perfil' ? 'text-[#2D6A6A]' : 'text-gray-400'}`} /> Mi perfil público</div>
-              </button>
+  <div className="flex items-center gap-3"><LayoutGrid className={`w-5 h-5 ${activeTab === 'perfil' ? 'text-[#2D6A6A]' : 'text-gray-400'}`} /> Mi perfil público</div>
+  {(() => {
+    const inc = seccionesIncompletas();
+    const tieneServicios = formData.servicios && Object.values(formData.servicios).some(s => s.activo);
+    const seccionesPerfil = ['identidad', 'bio', 'trayectoria', 'zonas', 'contacto'];
+    const tieneFaltantes = seccionesPerfil.some(s => inc.has(s)) || !tieneServicios;
+    return (mostrarErroresSecciones && tieneFaltantes) || (!mostrarErroresSecciones && savedData === null && tieneFaltantes)
+      ? <PuntoAlerta />
+      : null;
+    
+  })()}
+</button>
 
-              <button 
-                onClick={() => isPro && setActiveTab('servicios')} disabled={!isPro}
-                className={`flex items-center justify-between px-4 py-3.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap outline-none
-                  ${!isPro ? 'opacity-50 grayscale cursor-not-allowed text-gray-400' : activeTab === 'servicios' ? 'bg-[#2D6A6A]/10 text-[#1A3D3D]' : 'text-gray-500 hover:bg-white hover:text-[#4DB6AC]'}`}
-              >
-                <div className="flex items-center gap-3"><Briefcase className={`w-5 h-5 ${activeTab === 'servicios' ? 'text-[#2D6A6A]' : 'text-gray-400'}`} /> Servicios Médicos</div>
-                {!isPro && <Lock className="w-3.5 h-3.5 text-gray-400" />}
-              </button>
+              
 
               <button 
                 onClick={() => isPro && setActiveTab('casos')} disabled={!isPro}
@@ -1300,10 +1558,13 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
               </div>
             )}
 
-            {activeTab === 'perfil' && (
-              <div className="flex flex-col w-full animate-in fade-in duration-300 relative">
-                
-                {/* TARJETA DE HEADER UNIFICADA */}
+           {activeTab === 'perfil' && (
+  <div className="flex flex-col w-full animate-in fade-in duration-300 relative">
+
+  
+
+    {perfilSubTab === 'datos' && <>
+    {/* TARJETA DE HEADER UNIFICADA */}
                 <div className="w-full bg-white rounded-[32px] shadow-sm border border-gray-100 mb-6 flex flex-col md:flex-row items-center p-6 gap-6">
                   
                   {/* Avatar */}
@@ -1352,7 +1613,13 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
                   <div className="border-t border-gray-100">
                     
                     {/* IDENTIDAD PROFESIONAL */}
-                    <Accordion title="Identidad Profesional" icon={User} isOpen={openSection === 'identidad'} onToggle={() => setOpenSection(openSection === 'identidad' ? null : 'identidad')}>
+                    <Accordion
+  title="Identidad Profesional"
+  icon={User}
+  isOpen={openSection === 'identidad'}
+  onToggle={() => setOpenSection(openSection === 'identidad' ? null : 'identidad')}
+  alerta={(mostrarErroresSecciones || savedData === null) && seccionesIncompletas().has('identidad')}
+>
                       {!tooltipHintVisto && (
   <div className="flex flex-col gap-3 bg-[#2D6A6A]/8 border border-[#2D6A6A]/20 rounded-2xl px-4 py-4 mb-6 animate-in fade-in slide-in-from-top-2 duration-300">
   <div className="flex items-start gap-3">
@@ -1417,7 +1684,7 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
 
                         <div className="flex-1 text-left flex flex-col justify-center">
                           <h3 className="text-sm font-bold text-[#1A3D3D] mb-2 uppercase tracking-wide flex items-center">
-                            Fotografía de Perfil <span className="text-red-400 ml-1">*</span>
+                            Fotografía de Perfil <span className="text-gray-400 ml-1 font-medium normal-case tracking-normal text-[11px]">(opcional)</span>
                             <Tooltip text="Usa una foto vertical o cuadrada. Tener ambo y una buena iluminación transmite más confianza a los tutores y colegas." />
                           </h3>
                           <p className="text-xs text-gray-500 mb-4 leading-relaxed">Sube una imagen profesional. Formatos PNG o JPG. Máx 2MB.</p>
@@ -1450,31 +1717,80 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
 <InputGroup label="Apellido" id="apellido" value={formData.apellido || ''} onChange={handleChange} required />
 <InputGroup label="Especialidad Principal" id="especialidad" value={formData.especialidad} onChange={handleChange} required tooltip="Tu título principal. Es lo primero que verán los usuarios bajo tu nombre." />
                         <div className="mb-6 w-full">
-                          <label className="flex items-center text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">
-                            Matrícula <span className="text-red-400 ml-1">*</span>
-                            <Tooltip text="Ingresá únicamente los números de tu matrícula profesional." />
-                          </label>
-                          <div className="flex gap-0 rounded-2xl overflow-hidden border border-gray-200 bg-gray-50/50 focus-within:border-[#2D6A6A] transition-colors">
-                            <select
-                              id="tipoMatricula"
-                              value={formData.tipoMatricula || 'MP'}
-                              onChange={handleChange}
-                              className="bg-transparent border-none border-r border-gray-200 px-4 py-3.5 text-base font-black focus:outline-none text-[#1A3D3D] shrink-0 w-[85px] cursor-pointer"
-                            >
-                              <option value="MP">MP</option>
-                              <option value="MN">MN</option>
-                            </select>
-                            <div className="w-px bg-gray-200 shrink-0"></div>
-                            <input
-                              id="matricula"
-                              type="text"
-                              value={formData.matricula}
-                              onChange={handleChange}
-                              placeholder="Ej: 12345"
-                              className="flex-1 bg-transparent border-none px-5 py-3.5 text-base font-medium focus:outline-none text-[#1A3D3D]"
-                            />
-                          </div>
-                        </div>
+  <label className="flex items-center text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">
+    Matrícula <span className="text-red-400 ml-1">*</span>
+    <Tooltip text="Ingresá únicamente los números de tu matrícula profesional." />
+  </label>
+  <div className="flex gap-0 rounded-2xl overflow-hidden border border-gray-200 bg-gray-50/50 focus-within:border-[#2D6A6A] transition-colors">
+    <select
+      id="tipoMatricula"
+      value={formData.tipoMatricula || 'MP'}
+      onChange={handleChange}
+      className="bg-transparent border-none border-r border-gray-200 px-4 py-3.5 text-base font-black focus:outline-none text-[#1A3D3D] shrink-0 w-[85px] cursor-pointer"
+    >
+      <option value="MP">MP</option>
+      <option value="MN">MN</option>
+    </select>
+    <div className="w-px bg-gray-200 shrink-0"></div>
+    <input
+      id="matricula"
+      type="text"
+      value={formData.matricula}
+      onChange={handleChange}
+      placeholder="Ej: 12345"
+      className="flex-1 bg-transparent border-none px-5 py-3.5 text-base font-medium focus:outline-none text-[#1A3D3D]"
+    />
+  </div>
+
+  {/* SEGUNDA MATRÍCULA */}
+<div className="mt-3">
+  {formData.matricula2 !== undefined ? (
+    <div className="flex gap-0 rounded-2xl overflow-hidden border border-gray-200 bg-gray-50/50 focus-within:border-[#2D6A6A] transition-colors">
+      <select
+        id="tipoMatricula2"
+        value={formData.tipoMatricula2 || 'MN'}
+        onChange={handleChange}
+        className="bg-transparent border-none border-r border-gray-200 px-4 py-3.5 text-base font-black focus:outline-none text-[#1A3D3D] shrink-0 w-[85px] cursor-pointer"
+      >
+        {/* Si la primera es MP, la segunda solo puede ser MN y viceversa */}
+        {(formData.tipoMatricula || 'MP') === 'MP'
+          ? <option value="MN">MN</option>
+          : <option value="MP">MP</option>
+        }
+      </select>
+      <div className="w-px bg-gray-200 shrink-0"></div>
+      <input
+        id="matricula2"
+        type="text"
+        value={formData.matricula2 || ''}
+        onChange={handleChange}
+        placeholder="Tu segunda matrícula (opcional)"
+        className="flex-1 bg-transparent border-none px-5 py-3.5 text-base font-medium focus:outline-none text-[#1A3D3D]"
+      />
+      <button
+        type="button"
+        onClick={() => setFormData(p => ({ ...p, matricula2: undefined, tipoMatricula2: undefined }))}
+        className="px-4 text-gray-300 hover:text-red-400 transition-colors"
+        title="Quitar segunda matrícula"
+      >
+        <X className="w-4 h-4" />
+      </button>
+    </div>
+  ) : (
+    <button
+      type="button"
+      onClick={() => setFormData(p => ({
+        ...p,
+        matricula2: '',
+        tipoMatricula2: (p.tipoMatricula || 'MP') === 'MP' ? 'MN' : 'MP'
+      }))}
+      className="text-[11px] font-bold text-[#2D6A6A] hover:text-[#1A3D3D] transition-colors uppercase tracking-widest flex items-center gap-1.5 mt-2 ml-1"
+    >
+      <Plus className="w-3.5 h-3.5" /> Agregar segunda matrícula
+    </button>
+  )}
+</div>
+</div>
                         <div className="mb-6 text-left">
                           <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 block ml-1">Provincia Base</label>
                           <select id="provincia" value={formData.provincia} onChange={handleChange} className="w-full bg-gray-50/50 border border-gray-200 rounded-2xl px-5 py-3.5 text-base font-medium focus:outline-none focus:border-[#2D6A6A] text-[#1A3D3D] shadow-sm transition-colors">
@@ -1485,13 +1801,146 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
                     </Accordion>
 
                     {/* SOBRE MI / BIO */}
-                    <Accordion title="Sobre Mí" icon={Sparkles} isOpen={openSection === 'bio'} onToggle={() => setOpenSection(openSection === 'bio' ? null : 'bio')} bioLength={formData.bio.length} tooltip="Resume tu experiencia y pasión. Tienes 350 caracteres para contar qué te hace especial.">
+                    <Accordion
+  title="Sobre Mí"
+  icon={Sparkles}
+  isOpen={openSection === 'bio'}
+  onToggle={() => setOpenSection(openSection === 'bio' ? null : 'bio')}
+  bioLength={formData.bio.length}
+  tooltip="Resume tu experiencia y pasión. Tienes 350 caracteres para contar qué te hace especial."
+  alerta={(mostrarErroresSecciones || savedData === null) && seccionesIncompletas().has('bio')}
+>
                       <InputGroup type="textarea" label="Resumen Profesional" id="bio" value={formData.bio} onChange={handleChange} maxLength={350} placeholder="Cuenta brevemente tu experiencia profesional..." />
                     </Accordion>
 
+                                        {/* SERVICIOS MÉDICOS */}
+                    {isPro && (
+                      <Accordion
+                        title="Servicios Médicos"
+                        icon={Stethoscope}
+                        isOpen={openSection === 'servicios'}
+                        onToggle={() => setOpenSection(openSection === 'servicios' ? null : 'servicios')}
+                        tooltip="Indicá las especialidades y servicios que ofrecés en tu práctica."
+                        alerta={(mostrarErroresSecciones || savedData === null) && !Object.values(formData.servicios || {}).some(s => s.activo)}
+                      >
+                        <BuscadorEspecialidades
+                          formData={formData}
+                          setFormData={setFormData}
+                          especialidadesData={especialidadesData}
+                        />
+                        <div className="flex flex-col gap-3">
+                          {especialidadesData.map(grupo => {
+                            const grupoActual = formData.servicios[grupo.id] || { activo: false, subOpcionesSeleccionadas: [], desc: '', serviciosPersonalizados: [] };
+                            const isActive = grupoActual.activo;
+                            const seleccionadas = grupoActual.subOpcionesSeleccionadas || [];
+                            const personalizados = grupoActual.serviciosPersonalizados || [];
+                            const totalSeleccionadas = seleccionadas.length + personalizados.length;
+                            const expandido = gruposExpandidos[grupo.id] || false;
+                            const setExpandido = (val) => setGruposExpandidos(prev => ({ ...prev, [grupo.id]: typeof val === 'function' ? val(prev[grupo.id] || false) : val }));
+                            const nuevoServicio = nuevosServicios[grupo.id] || '';
+                            const setNuevoServicio = (val) => setNuevosServicios(prev => ({ ...prev, [grupo.id]: val }));
+
+                            const toggleGrupo = () => {
+                              if (!isActive) {
+                                setFormData(prev => ({ ...prev, servicios: { ...prev.servicios, [grupo.id]: { ...grupoActual, activo: true } } }));
+                                setExpandido(true);
+                              } else {
+                                const sinSeleccion = totalSeleccionadas === 0;
+                                if (expandido && sinSeleccion) {
+                                  setFormData(prev => ({ ...prev, servicios: { ...prev.servicios, [grupo.id]: { ...grupoActual, activo: false } } }));
+                                }
+                                setExpandido(e => !e);
+                              }
+                            };
+
+                            const agregarPersonalizado = () => {
+                              const texto = nuevoServicio.trim();
+                              if (!texto) return;
+                              const capitalizado = texto.charAt(0).toUpperCase() + texto.slice(1);
+                              if (personalizados.includes(capitalizado)) return;
+                              setFormData(prev => ({ ...prev, servicios: { ...prev.servicios, [grupo.id]: { ...grupoActual, serviciosPersonalizados: [...personalizados, capitalizado] } } }));
+                              setNuevoServicio('');
+                            };
+
+                            const quitarPersonalizado = (srv) => {
+                              setFormData(prev => ({ ...prev, servicios: { ...prev.servicios, [grupo.id]: { ...grupoActual, serviciosPersonalizados: personalizados.filter(p => p !== srv) } } }));
+                            };
+
+                            const iconosGrupo = { consulta_general: Stethoscope, especialidades_medicas: Activity, quirurgico_critico: IconoBisturi, imagenes: Microscope, laboratorio: FileText, atencion_por_especie: Heart, bienestar_comportamiento: Brain, terapias_holisticas: Sparkles };
+                            const IconoGrupo = iconosGrupo[grupo.id] || Stethoscope;
+
+                            return (
+                              <div key={grupo.id} className={`rounded-[20px] border transition-all duration-300 overflow-hidden ${isActive ? 'border-[#2D6A6A] bg-white shadow-sm' : 'border-gray-200 bg-gray-50/50'}`}>
+                                <div className="p-4 flex items-center gap-3 cursor-pointer select-none" onClick={toggleGrupo}>
+                                  <IconoGrupo className={`w-5 h-5 shrink-0 transition-colors duration-300 ${isActive ? 'text-[#2D6A6A]' : 'text-gray-500'}`} />
+                                  <span className={`flex-1 text-sm font-black ${isActive ? 'text-[#1A3D3D]' : 'text-gray-500'}`}>{grupo.grupo}</span>
+                                  {isActive && !expandido && totalSeleccionadas > 0 && (
+                                    <span className="text-[11px] font-bold text-[#2D6A6A] bg-[#2D6A6A]/10 px-2.5 py-1 rounded-full shrink-0">{totalSeleccionadas} seleccionada{totalSeleccionadas !== 1 ? 's' : ''}</span>
+                                  )}
+                                  <ChevronDown strokeWidth={2.5} className={`w-5 h-5 transition-transform duration-300 shrink-0 ${expandido && isActive ? 'rotate-180 text-[#2D6A6A]' : 'text-gray-500'}`} />
+                                </div>
+                                {isActive && !expandido && totalSeleccionadas > 0 && (
+                                  <div className="px-4 pb-3 flex flex-wrap gap-1.5">
+                                    {seleccionadas.map(s => <span key={s} className="text-[11px] font-medium bg-[#F4F7F7] text-[#2D6A6A] border border-[#2D6A6A]/20 px-2.5 py-1 rounded-full">{s}</span>)}
+                                    {personalizados.map(s => <span key={s} className="text-[11px] font-medium bg-[#F4F7F7] text-[#666666] border border-gray-200 px-2.5 py-1 rounded-full">{s}</span>)}
+                                  </div>
+                                )}
+                                {expandido && (
+                                  <div className="px-4 pb-5 border-t border-gray-100 pt-4 animate-in fade-in slide-in-from-top-2 duration-200">
+                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Especialidades</p>
+                                    <div className="flex flex-col gap-2 mb-4">
+                                      {grupo.opciones.map(opcion => {
+                                        const isChecked = seleccionadas.includes(opcion);
+                                        return (
+                                          <button key={opcion} type="button" onClick={() => { const nuevas = isChecked ? seleccionadas.filter(o => o !== opcion) : [...seleccionadas, opcion]; setFormData(prev => ({ ...prev, servicios: { ...prev.servicios, [grupo.id]: { ...grupoActual, subOpcionesSeleccionadas: nuevas } } })); }} className={`w-full justify-start px-4 py-2.5 rounded-xl text-[13px] font-bold border transition-colors flex items-center gap-3 ${isChecked ? 'bg-[#1A3D3D] text-white border-[#1A3D3D]' : 'bg-white text-gray-600 border-gray-200 hover:border-[#2D6A6A]'}`}>
+                                            <div className={`w-4 h-4 rounded-[4px] border flex items-center justify-center shrink-0 ${isChecked ? 'bg-white border-white' : 'border-gray-300'}`}>{isChecked && <Check className="w-3 h-3 text-[#1A3D3D]" />}</div>
+                                            <span className="text-left">{opcion}</span>
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                    {personalizados.length > 0 && (
+                                      <div className="flex flex-col gap-2 mb-4">
+                                        {personalizados.map(srv => (
+                                          <div key={srv} className="w-full justify-start px-4 py-2.5 rounded-xl text-[13px] font-bold border bg-[#1A3D3D] text-white border-[#1A3D3D] flex items-center gap-3">
+                                            <div className="w-4 h-4 rounded-[4px] bg-white border-white border flex items-center justify-center shrink-0"><Check className="w-3 h-3 text-[#1A3D3D]" /></div>
+                                            <span className="flex-1 text-left">{srv}</span>
+                                            <button type="button" onClick={() => quitarPersonalizado(srv)} className="shrink-0 opacity-60 hover:opacity-100 transition-opacity"><X className="w-3.5 h-3.5" /></button>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+                                    <div className="border-t border-gray-100 pt-4 mt-2">
+                                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">¿No encontrás lo que buscás? Agregá uno propio</p>
+                                      <div className="flex gap-2">
+                                        <input type="text" value={nuevoServicio} onChange={(e) => setNuevoServicio(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); agregarPersonalizado(); } }} className="flex-1 bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:border-[#2D6A6A] outline-none text-[#1A3D3D]" />
+                                        <button type="button" onClick={agregarPersonalizado} className="bg-[#2D6A6A] text-white p-2.5 rounded-xl hover:bg-[#1A3D3D] transition-colors shrink-0"><Plus className="w-4 h-4" /></button>
+                                      </div>
+                                    </div>
+                                    <div className="mt-4">
+                                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 block">Descripción opcional del grupo</label>
+                                      <textarea placeholder="Contá brevemente cómo trabajás en esta área..." value={grupoActual.desc || ''} maxLength={200} rows={2} onChange={(e) => { setFormData(prev => ({ ...prev, servicios: { ...prev.servicios, [grupo.id]: { ...grupoActual, desc: e.target.value } } })); }} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm resize-none focus:border-[#2D6A6A] outline-none text-[#1A3D3D] font-medium" />
+                                      <p className={`text-right text-[10px] font-bold mt-1 ${(grupoActual.desc?.length || 0) >= 180 ? 'text-red-400' : 'text-gray-300'}`}>{grupoActual.desc?.length || 0} / 200</p>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </Accordion>
+                    )}
+
                     {/* TRAYECTORIA ACADÉMICA (Solo visible para PRO en el editor) */}
                     {isPro && (
-                      <Accordion title="Títulos y Trayectoria" icon={Award} isOpen={openSection === 'trayectoria'} onToggle={() => setOpenSection(openSection === 'trayectoria' ? null : 'trayectoria')} tooltip="Los títulos se mostrarán en formato de línea de tiempo en tu perfil público.">
+                      <Accordion
+  title="Títulos y Trayectoria"
+  icon={Award}
+  isOpen={openSection === 'trayectoria'}
+  onToggle={() => setOpenSection(openSection === 'trayectoria' ? null : 'trayectoria')}
+  tooltip="Los títulos se mostrarán en formato de línea de tiempo en tu perfil público."
+  alerta={(mostrarErroresSecciones || savedData === null) && seccionesIncompletas().has('trayectoria')}
+>
                         <div className="space-y-4">
                           {formData.trayectoria.map((item, index) => (
                             <div key={item.id} className="bg-gray-50/50 p-5 rounded-2xl border border-gray-100 flex gap-4 text-left">
@@ -1645,20 +2094,13 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
                     placeholder="Dirección (buscá con Google)"
                     value={c.direccion || ''}
                     onChange={(e) => updateClinica(z.id, c.id, 'direccion', e.target.value)}
-                    ref={(el) => {
-                      if (!el || !window.google || el._autocompleteInit) return;
-                      el._autocompleteInit = true;
-                      const autocomplete = new window.google.maps.places.Autocomplete(el, {
-                        componentRestrictions: { country: 'ar' },
-                        fields: ['name', 'formatted_address', 'place_id']
-                      });
-                      autocomplete.addListener('place_changed', () => {
-                        const place = autocomplete.getPlace();
-                        if (!place.place_id) return;
-                        updateClinica(z.id, c.id, 'direccion', place.formatted_address || '');
-                        updateClinica(z.id, c.id, 'placeId', place.place_id || '');
-                      });
-                    }}
+                   id={`autocomplete-${c.id}`}
+ref={(el) => {
+  if (!el) return;
+  // Guardamos referencia al DOM para el useEffect
+  el.dataset.zonaId = z.id;
+  el.dataset.clinicaId = c.id;
+}}
                     className="flex-1 text-sm text-gray-500 outline-none placeholder:text-gray-300"
                   />
                   {(c.placeId || c.direccion) && (
@@ -1856,8 +2298,52 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
 
 
                     {/* CONTACTO (Redes sociales en 3 Columnas) */}
-                    <Accordion title="Contacto y Canales" icon={Smartphone} isOpen={openSection === 'contacto'} onToggle={() => setOpenSection(openSection === 'contacto' ? null : 'contacto')}>
+                    <Accordion
+  title="Contacto y Canales"
+  icon={Smartphone}
+  isOpen={openSection === 'contacto'}
+  onToggle={() => setOpenSection(openSection === 'contacto' ? null : 'contacto')}
+  alerta={(mostrarErroresSecciones || savedData === null) && seccionesIncompletas().has('contacto')}
+>
                       <InputGroup label="Email Público" id="emailContacto" type="email" value={formData.emailContacto} onChange={handleChange} required tooltip="Este es el email que verán las personas en tu perfil público, sirve para que te contacten directamente." />
+
+{/* VISIBILIDAD DEL EMAIL */}
+{formData.emailContacto && (
+  <div className="bg-gray-50 border border-gray-100 rounded-2xl p-4 -mt-2 mb-6">
+    <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3">¿Quién puede ver tu email?</p>
+    <div className="flex flex-col gap-2">
+      <label className="flex items-center gap-3 cursor-pointer group">
+        <input
+          type="radio"
+          name="emailVisibilidad"
+          value="todos"
+          checked={formData.emailVisibilidad === 'todos' || !formData.emailVisibilidad}
+          onChange={() => setFormData(p => ({...p, emailVisibilidad: 'todos'}))}
+          className="accent-[#2D6A6A] w-4 h-4"
+        />
+        <div>
+          <p className="text-sm font-bold text-[#1A3D3D] group-hover:text-[#2D6A6A] transition-colors">Todo público</p>
+          <p className="text-xs text-gray-400 font-medium">Cualquier visitante puede ver tu email de contacto.</p>
+        </div>
+      </label>
+      <div className="w-full h-px bg-gray-200 my-1"></div>
+      <label className="flex items-center gap-3 cursor-pointer group">
+        <input
+          type="radio"
+          name="emailVisibilidad"
+          value="registrados"
+          checked={formData.emailVisibilidad === 'registrados'}
+          onChange={() => setFormData(p => ({...p, emailVisibilidad: 'registrados'}))}
+          className="accent-[#2D6A6A] w-4 h-4"
+        />
+        <div>
+          <p className="text-sm font-bold text-[#1A3D3D] group-hover:text-[#2D6A6A] transition-colors">Solo colegas registrados</p>
+          <p className="text-xs text-gray-400 font-medium">El email solo es visible para profesionales y proveedores con cuenta en la plataforma.</p>
+        </div>
+      </label>
+    </div>
+  </div>
+)}
                       <div className="mt-6">
   {formData.atiendeDomicilio ? (
     <div className="flex items-start gap-3 bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3.5">
@@ -1873,7 +2359,7 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
     <div className="mt-4 space-y-4 animate-in slide-in-from-top-2 duration-300">
       <div className="mb-6 w-full">
         <label className="flex items-center text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">
-          Tu número de WhatsApp <span className="text-red-400 ml-1">*</span>
+          Tu número de WhatsApp
         </label>
         <div className="flex items-center border border-gray-200 rounded-2xl bg-gray-50/50 focus-within:border-[#2D6A6A] transition-all overflow-hidden">
           <span className="px-4 py-3.5 text-base font-black text-[#1A3D3D] bg-gray-100 border-r border-gray-200 shrink-0 select-none">+54</span>
@@ -1965,262 +2451,15 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
   <InputGroup label="Facebook" id="facebook" value={formData.facebook} onChange={handleChange} placeholder="Link completo de tu perfil" canTest />
 </div>
                     </Accordion>
-                  </div>
+                 
                 </div>
               </div>
-            )}
+    </>}
 
-            {activeTab === 'servicios' && isPro && (
-  <div className="w-full bg-white rounded-[32px] shadow-sm border border-gray-100 p-6 md:p-10 relative animate-in fade-in duration-300 min-h-[500px]">
-    <div className="mb-8">
-      <h3 className="text-2xl font-black text-[#1A3D3D] font-['Montserrat']">Servicios Médicos</h3>
-      <p className="text-sm text-gray-500 mt-1">Seleccioná las áreas en las que trabajás. Podés agregar una descripción opcional por grupo.</p>
-    </div>
-
-    <div className="flex flex-col gap-3">
-      {especialidadesData.map(grupo => {
-        const grupoActual = formData.servicios[grupo.id] || { activo: false, subOpcionesSeleccionadas: [], desc: '', serviciosPersonalizados: [] };
-        const isActive = grupoActual.activo;
-        const seleccionadas = grupoActual.subOpcionesSeleccionadas || [];
-        const personalizados = grupoActual.serviciosPersonalizados || [];
-        const totalSeleccionadas = seleccionadas.length + personalizados.length;
-        const expandido = gruposExpandidos[grupo.id] || false;
-        const setExpandido = (val) => setGruposExpandidos(prev => ({ ...prev, [grupo.id]: typeof val === 'function' ? val(prev[grupo.id] || false) : val }));
-        const nuevoServicio = nuevosServicios[grupo.id] || '';
-        const setNuevoServicio = (val) => setNuevosServicios(prev => ({ ...prev, [grupo.id]: val }));
-
-        const toggleGrupo = () => {
-          if (!isActive) {
-            // Activar y abrir
-            setFormData(prev => ({
-              ...prev,
-              servicios: {
-                ...prev.servicios,
-                [grupo.id]: { ...grupoActual, activo: true }
-              }
-            }));
-            setExpandido(true);
-          } else {
-            // Si está expandido y no tiene nada seleccionado, desactivar al cerrar
-            const sinSeleccion = totalSeleccionadas === 0;
-            if (expandido && sinSeleccion) {
-              setFormData(prev => ({
-                ...prev,
-                servicios: {
-                  ...prev.servicios,
-                  [grupo.id]: { ...grupoActual, activo: false }
-                }
-              }));
-            }
-            setExpandido(e => !e);
-          }
-        };
-
-        const desactivarGrupo = (e) => {
-          e.stopPropagation();
-          setFormData(prev => ({
-            ...prev,
-            servicios: {
-              ...prev.servicios,
-              [grupo.id]: { ...grupoActual, activo: false, subOpcionesSeleccionadas: [], serviciosPersonalizados: [] }
-            }
-          }));
-          setExpandido(false);
-        };
-
-        const agregarPersonalizado = () => {
-          const texto = nuevoServicio.trim();
-          if (!texto) return;
-          const capitalizado = texto.charAt(0).toUpperCase() + texto.slice(1);
-          if (personalizados.includes(capitalizado)) return;
-          setFormData(prev => ({
-            ...prev,
-            servicios: {
-              ...prev.servicios,
-              [grupo.id]: { ...grupoActual, serviciosPersonalizados: [...personalizados, capitalizado] }
-            }
-          }));
-          setNuevoServicio('');
-        };
-
-        const quitarPersonalizado = (srv) => {
-          setFormData(prev => ({
-            ...prev,
-            servicios: {
-              ...prev.servicios,
-              [grupo.id]: { ...grupoActual, serviciosPersonalizados: personalizados.filter(p => p !== srv) }
-            }
-          }));
-        };
-
-        return (
-          <div key={grupo.id} className={`rounded-[20px] border transition-all duration-300 overflow-hidden ${isActive ? 'border-[#2D6A6A] bg-white shadow-sm' : 'border-gray-200 bg-gray-50/50'}`}>
-
-            {/* HEADER — siempre visible */}
-            {(() => {
-              const iconosGrupo = {
-                consulta_general: Stethoscope,
-                especialidades_medicas: Activity,
-                quirurgico_critico: IconoBisturi,
-                imagenes: Microscope,
-                laboratorio: FileText,
-                atencion_por_especie: Heart,
-                bienestar_comportamiento: Brain,
-                terapias_holisticas: Sparkles,
-              };
-              const IconoGrupo = iconosGrupo[grupo.id] || Stethoscope;
-              return (
-                <div
-                  className="p-4 flex items-center gap-3 cursor-pointer select-none"
-                  onClick={toggleGrupo}
-                >
-                  <IconoGrupo
-                    onClick={isActive ? desactivarGrupo : undefined}
-                    className={`w-5 h-5 shrink-0 transition-colors duration-300 ${isActive ? 'text-[#2D6A6A]' : 'text-gray-500'}`}
-                  />
-                  <span className={`flex-1 text-sm font-black ${isActive ? 'text-[#1A3D3D]' : 'text-gray-500'}`}>
-                    {grupo.grupo}
-                  </span>
-
-              {/* Pills de seleccionadas (cuando está cerrado y activo) */}
-              {isActive && !expandido && totalSeleccionadas > 0 && (
-                <span className="text-[11px] font-bold text-[#2D6A6A] bg-[#2D6A6A]/10 px-2.5 py-1 rounded-full shrink-0">
-                  {totalSeleccionadas} seleccionada{totalSeleccionadas !== 1 ? 's' : ''}
-                </span>
-              )}
-
-              <ChevronDown strokeWidth={2.5} className={`w-5 h-5 transition-transform duration-300 shrink-0 ${expandido && isActive ? 'rotate-180 text-[#2D6A6A]' : 'text-gray-500'}`} />
-                </div>
-              );
-            })()}
-
-            {/* RESUMEN DE SELECCIONADAS — visible cuando cerrado y activo */}
-            {isActive && !expandido && totalSeleccionadas > 0 && (
-              <div className="px-4 pb-3 flex flex-wrap gap-1.5">
-                {seleccionadas.map(s => (
-                  <span key={s} className="text-[11px] font-medium bg-[#F4F7F7] text-[#2D6A6A] border border-[#2D6A6A]/20 px-2.5 py-1 rounded-full">{s}</span>
-                ))}
-                {personalizados.map(s => (
-                  <span key={s} className="text-[11px] font-medium bg-[#F4F7F7] text-[#666666] border border-gray-200 px-2.5 py-1 rounded-full">{s}</span>
-                ))}
-              </div>
-            )}
-
-            {/* CONTENIDO EXPANDIDO */}
-            {expandido && (
-              <div className="px-4 pb-5 border-t border-gray-100 pt-4 animate-in fade-in slide-in-from-top-2 duration-200">
-
-                {/* SUB-OPCIONES */}
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Especialidades</p>
-                <div className="flex flex-col gap-2 mb-4">
-                  {grupo.opciones.map(opcion => {
-                    const isChecked = seleccionadas.includes(opcion);
-                    return (
-                      <button
-                        key={opcion}
-                        type="button"
-                        onClick={() => {
-                          const nuevas = isChecked
-                            ? seleccionadas.filter(o => o !== opcion)
-                            : [...seleccionadas, opcion];
-                          setFormData(prev => ({
-                            ...prev,
-                            servicios: {
-                              ...prev.servicios,
-                              [grupo.id]: { ...grupoActual, subOpcionesSeleccionadas: nuevas }
-                            }
-                          }));
-                        }}
-                        className={`w-full justify-start px-4 py-2.5 rounded-xl text-[13px] font-bold border transition-colors flex items-center gap-3 ${isChecked ? 'bg-[#1A3D3D] text-white border-[#1A3D3D]' : 'bg-white text-gray-600 border-gray-200 hover:border-[#2D6A6A]'}`}
-                      >
-                        <div className={`w-4 h-4 rounded-[4px] border flex items-center justify-center shrink-0 ${isChecked ? 'bg-white border-white' : 'border-gray-300'}`}>
-                          {isChecked && <Check className="w-3 h-3 text-[#1A3D3D]" />}
-                        </div>
-                        <span className="text-left">{opcion}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* SERVICIOS PERSONALIZADOS YA AGREGADOS */}
-                {personalizados.length > 0 && (
-                  <div className="flex flex-col gap-2 mb-4">
-                    {personalizados.map(srv => (
-                      <div key={srv} className="w-full justify-start px-4 py-2.5 rounded-xl text-[13px] font-bold border bg-[#1A3D3D] text-white border-[#1A3D3D] flex items-center gap-3">
-                        <div className="w-4 h-4 rounded-[4px] bg-white border-white border flex items-center justify-center shrink-0">
-                          <Check className="w-3 h-3 text-[#1A3D3D]" />
-                        </div>
-                        <span className="flex-1 text-left">{srv}</span>
-                        <button
-                          type="button"
-                          onClick={() => quitarPersonalizado(srv)}
-                          className="shrink-0 opacity-60 hover:opacity-100 transition-opacity"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* AGREGAR SERVICIO PERSONALIZADO */}
-                <div className="border-t border-gray-100 pt-4 mt-2">
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">¿No encontrás lo que buscás? Agregá uno propio</p>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={nuevoServicio}
-                      onChange={(e) => setNuevoServicio(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); agregarPersonalizado(); } }}
-                     
-                      className="flex-1 bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:border-[#2D6A6A] outline-none text-[#1A3D3D]"
-                    />
-                    <button
-                      type="button"
-                      onClick={agregarPersonalizado}
-                      className="bg-[#2D6A6A] text-white p-2.5 rounded-xl hover:bg-[#1A3D3D] transition-colors shrink-0"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-
-                {/* DESCRIPCIÓN OPCIONAL */}
-                <div className="mt-4">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 block">
-                    Descripción opcional del grupo
-                  </label>
-                  <textarea
-                    placeholder="Contá brevemente cómo trabajás en esta área..."
-                    value={grupoActual.desc || ''}
-                    maxLength={200}
-                    rows={2}
-                    onChange={(e) => {
-                      setFormData(prev => ({
-                        ...prev,
-                        servicios: {
-                          ...prev.servicios,
-                          [grupo.id]: { ...grupoActual, desc: e.target.value }
-                        }
-                      }));
-                    }}
-                    className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm resize-none focus:border-[#2D6A6A] outline-none text-[#1A3D3D] font-medium"
-                  />
-                  <p className={`text-right text-[10px] font-bold mt-1 ${(grupoActual.desc?.length || 0) >= 180 ? 'text-red-400' : 'text-gray-300'}`}>
-                    {grupoActual.desc?.length || 0} / 200
-                  </p>
-                </div>
-
-              </div>
-            )}
-          </div>
-        );
-      })}
-    </div>
   </div>
 )}
-        
-            {activeTab === 'casos' && isPro && (
+
+{activeTab === 'casos' && isPro && (
               <div className="w-full bg-white rounded-[32px] shadow-sm border border-gray-100 p-6 md:p-10 relative animate-in fade-in duration-300 min-h-[500px]">
                 <div className="mb-8 flex justify-between items-end">
                    <div>

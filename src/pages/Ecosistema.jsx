@@ -574,12 +574,29 @@ export default function Ecosistema() {
                 <DashboardCard titulo="Mi catálogo" descripcion="Gestioná tus productos y servicios veterinarios" icon={Store} customBg="bg-white/80" onClick={() => navigate('/editor-proveedores', { state: { tab: 'productos' } })} />
               )}
 
+              {activeRole !== 'proveedor' && (
+                <div id="tour-colegas" className="h-full">
+                  <button 
+                    onClick={() => navigate('/cartilla')}
+                    type="button"
+                    className="bg-white/80 backdrop-blur-xl border border-white/60 p-5 md:p-6 rounded-[24px] md:rounded-[32px] shadow-[0_8px_32px_rgba(0,0,0,0.04)] hover:bg-white/90 hover:shadow-[0_20px_40px_rgba(26,61,61,0.12)] transition-all duration-300 transform hover:-translate-y-1 active:scale-[0.97] active:translate-y-0 min-h-[180px] md:min-h-[210px] h-full flex flex-col justify-center items-center text-center group cursor-pointer w-full outline-none focus:ring-4 focus:ring-[#FF9800]/10"
+                  >
+                    <Users strokeWidth={1.5} className="w-8 h-8 md:w-10 md:h-10 text-[#2D6A6A] mb-3 group-hover:scale-110 group-hover:-translate-y-1 group-hover:text-[#e68900] transition-all duration-300" />
+                    <h2 className="text-[17px] md:text-[21px] font-black text-[#1A3D3D] font-['Montserrat'] mb-1 leading-tight">Cartilla de colegas</h2>
+                    <p className="text-[#333333]/70 font-medium text-[14px] md:text-[15px] px-2 mb-3 leading-normal">Tené los contactos siempre a mano de tus colegas para derivaciones o trabajos en equipo. Esta pantalla es para <span className="group-hover:text-[#e68900] transition-colors duration-300">todo público.</span></p>
+                    <span className="text-[13px] font-bold text-[#2D6A6A] group-hover:text-[#e68900] flex items-center gap-1 transition-colors mt-auto">
+                      Ingresar <ChevronRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
+                    </span>
+                  </button>
+                </div>
+              )}
+
               {/* Card Cursos */}
               <div id="tour-cursos" className="bg-white/80 backdrop-blur-xl border border-white/60 rounded-[24px] md:rounded-[32px] shadow-[0_8px_32px_rgba(0,0,0,0.04)] flex flex-col overflow-hidden min-h-[180px] md:min-h-[210px] group hover:bg-white/90 hover:shadow-[0_20px_40px_rgba(26,61,61,0.12)] transition-all duration-300">
                 <button onClick={() => navigate('/capacitaciones')} className="flex-1 flex flex-col justify-center items-center text-center p-5 transition-all">
-                                    <BookOpen strokeWidth={1.5} className="w-8 h-8 md:w-10 md:h-10 text-[#2D6A6A] mb-2 group-hover:scale-110 group-hover:text-[#4DB6AC] transition-all duration-300" />
+                  <BookOpen strokeWidth={1.5} className="w-8 h-8 md:w-10 md:h-10 text-[#2D6A6A] mb-2 group-hover:scale-110 group-hover:text-[#4DB6AC] transition-all duration-300" />
                   <h2 className="text-[17px] md:text-[19px] font-black text-[#1A3D3D] font-['Montserrat'] mb-1 leading-tight">Cursos</h2>
-                  <p className="text-[#333333]/70 font-medium text-[16px] px-2 leading-normal">Encontra todas las especializaciones y capacitaciones. Publicar es gratis. </p>
+                  <p className="text-[#333333]/70 font-medium text-[16px] px-2 leading-normal">Encontra todas las especializaciones y capacitaciones. Publicar es gratis.</p>
                 </button>
                 <div className="border-t border-gray-100 px-4 py-3">
                   <button onClick={() => navigate('/capacitaciones', { state: { vista: 'miscursos' } })} className="w-full text-[11px] font-bold text-[#2D6A6A] uppercase tracking-widest hover:bg-[#2D6A6A]/10 hover:text-[#1A3D3D] rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 py-2">
@@ -592,23 +609,6 @@ export default function Ecosistema() {
                 <div id="tour-empleos" className="h-full">
                   <DashboardCard titulo="Bolsa de trabajo" descripcion="Acá podrás encontrar ofertas de clinicas que buscan personal y marcarte como disponible para nuevas oportunidades." icon={Briefcase} onClick={() => navigate('/bolsa-de-trabajo')} />
                 </div>
-              )}
-
-              {activeRole !== 'proveedor' && (
-                <div id="tour-colegas" className="h-full">
-                <button 
-                  onClick={() => navigate('/cartilla')}
-                  type="button"
-                  className="bg-white/80 backdrop-blur-xl border border-white/60 p-5 md:p-6 rounded-[24px] md:rounded-[32px] shadow-[0_8px_32px_rgba(0,0,0,0.04)] hover:bg-white/90 hover:shadow-[0_20px_40px_rgba(26,61,61,0.12)] transition-all duration-300 transform hover:-translate-y-1 active:scale-[0.97] active:translate-y-0 min-h-[180px] md:min-h-[210px] h-full flex flex-col justify-center items-center text-center group cursor-pointer w-full outline-none focus:ring-4 focus:ring-[#FF9800]/10"
-                >
-                  <Users strokeWidth={1.5} className="w-8 h-8 md:w-10 md:h-10 text-[#2D6A6A] mb-3 group-hover:scale-110 group-hover:-translate-y-1 group-hover:text-[#e68900] transition-all duration-300" />
-                  <h2 className="text-[17px] md:text-[21px] font-black text-[#1A3D3D] font-['Montserrat'] mb-1 leading-tight">Cartilla de colegas</h2>
-                  <p className="text-[#333333]/70 font-medium text-[14px] md:text-[15px] px-2 mb-3 leading-normal">Tené los contactos siempre a mano de tus colegas para derivaciones o trabajos en equipo. Esta pantalla es para <span className="group-hover:text-[#e68900] transition-colors duration-300">todo público.</span></p>
-                  <span className="text-[13px] font-bold text-[#2D6A6A] group-hover:text-[#e68900] flex items-center gap-1 transition-colors mt-auto">
-                    Ingresar <ChevronRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
-                  </span>
-                </button>
-              </div>
               )}
 
               <div id="tour-proveedores" className="h-full">

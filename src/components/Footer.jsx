@@ -59,14 +59,16 @@ export default function Footer() {
             <h4 className="text-white font-bold text-[11px] md:text-[10px] uppercase tracking-[0.3em] mb-4 font-['Montserrat']">Soporte</h4>
             <ul className="space-y-3 text-white/40 text-sm leading-none">
               <li>
-                <a href="mailto:portalveterinario.ar@gmail.com" className="flex items-start gap-3 hover:text-white transition-colors max-w-full">
+                <a href="mailto:portalveterinario.ar@gmail.com" className="flex items-start gap-3 hover:text-white transition-colors">
                   <Mail className="w-4 h-4 shrink-0 mt-0.5" /> 
-                  <span className="break-all leading-snug">portalveterinario.ar@gmail.com</span>
+                  <span className="break-all leading-snug text-[13px]">portalveterinario.ar@gmail.com</span>
                 </a>
               </li>
-              <li className="flex items-center gap-3 hover:text-white transition-colors cursor-pointer">
-                <Globe className="w-4 h-4 shrink-0" /> 
-                <span>portalveterinario.ar</span>
+              <li>
+                <a href="https://www.portalveterinario.ar" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 hover:text-white transition-colors">
+                  <Globe className="w-4 h-4 shrink-0" />
+                  <span>portalveterinario.ar</span>
+                </a>
               </li>
             </ul>
           </div>
@@ -77,20 +79,14 @@ export default function Footer() {
           
           {/* Iconos Redes compactados */}
           <div className="flex gap-2.5">
-            <a href="#" aria-label="Facebook" className="w-7 h-7 bg-white/5 rounded-lg flex items-center justify-center text-white/70 hover:bg-white hover:text-[#1A3D3D] transition-all">
-              <Facebook className="w-3.5 h-3.5" />
-            </a>
             <a 
-              href="https://www.instagram.com/portalveterinario.arg/" 
+              href="https://www.instagram.com/portalveterinario.ar/" 
               target="_blank" 
               rel="noopener noreferrer" 
               aria-label="Instagram" 
               className="w-7 h-7 bg-white/5 rounded-lg flex items-center justify-center text-white/70 hover:bg-white hover:text-[#1A3D3D] transition-all"
             >
               <Instagram className="w-3.5 h-3.5" />
-            </a>
-            <a href="#" aria-label="Linkedin" className="w-7 h-7 bg-white/5 rounded-lg flex items-center justify-center text-white/70 hover:bg-white hover:text-[#1A3D3D] transition-all">
-              <Linkedin className="w-3.5 h-3.5" />
             </a>
           </div>
           
