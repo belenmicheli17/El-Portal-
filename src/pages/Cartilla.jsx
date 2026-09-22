@@ -96,9 +96,9 @@ const PASOS_CARTILLA = [
       if (!meta) { meta = document.createElement('meta'); meta.name = 'description'; document.head.appendChild(meta); }
       meta.content = 'Encontrá clínicas veterinarias con guardia 24 horas cerca tuyo. Atención de urgencias para tu mascota en cualquier momento.';
     } else {
-      document.title = 'Cartilla Veterinaria | El Portal Veterinario';
+      document.title = 'Veterinarios Especialistas y Clínicas | Portal Veterinario Argentina';
       let meta = document.querySelector('meta[name="description"]');
-      if (meta) meta.content = 'La primera cartilla veterinaria de Argentina. Encontrá especialistas, clínicas y centros de alta complejidad para tu mascota.';
+      if (meta) meta.content = 'Encontrá veterinarios especialistas y clínicas de alta complejidad en Argentina. Buscá por zona, especialidad o servicio para tu mascota.';
     }
   }, [searchParams]);
 
@@ -394,11 +394,10 @@ const PASOS_CARTILLA = [
               <Cat className="w-10 h-10 text-[#FF9800]" strokeWidth={2.5} />
             </div>
             <h1 className="text-[32px] md:text-[42px] lg:text-[48px] font-black font-['Montserrat'] text-[#1A3D3D] tracking-tighter leading-none mb-3">
-              El equipo de salud ideal para tu mascota
+              Encontrá veterinarios especialistas y clínicas cerca tuyo
             </h1>
             <p className="text-[#666666] text-[14px] md:text-[16px] font-medium mb-0 max-w-lg mx-auto leading-relaxed font-['Inter']">
-              La primer cartilla dedicada especialmente para nuestros amigos peludos.
-              Toda la red de bienestar en un solo lugar.
+              Buscá por especialidad, zona o servicio. Profesionales verificados y clínicas de alta complejidad en toda Argentina.
             </p>
           </div>
         </section>

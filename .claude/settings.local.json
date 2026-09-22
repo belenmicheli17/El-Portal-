@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Move-Item -Path \"c:\\\\Proyectos Portal\\\\el portal\\\\portal-estilo.md\" -Destination \"c:\\\\Proyectos Portal\\\\el portal\\\\docs\\\\portal-estilo.md\")",
+      "PowerShell(Remove-Item -Path \"c:\\\\Proyectos Portal\\\\el portal\\\\plan-pagos.md\" -Confirm:$false)"
+    ]
+  }
+}
