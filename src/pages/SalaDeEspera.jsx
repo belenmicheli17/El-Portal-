@@ -273,7 +273,26 @@ if (rolDrawer === 'profesional') {
         console.warn('No se pudo enviar el mail de bienvenida:', mailErr);
       }
 
-      setPasoDrawer('exito');
+      // Enviamos el email de bienvenida por Brevo
+try {
+  await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'api-key': import.meta.env.VITE_BREVO_API_KEY
+    },
+    body: JSON.stringify({
+      sender: { name: 'Portal Veterinario', email: 'portalveterinario.ar@gmail.com' },
+      to: [{ email: formDrawer.email.toLowerCase().trim(), name: formDrawer.nombre.trim() }],
+      templateId: 1,
+      params: { nombre: formDrawer.nombre.trim() }
+    })
+  });
+} catch (err) {
+  console.error('Error enviando email de bienvenida:', err);
+}
+
+setPasoDrawer('exito');
     } catch (err) {
       setErrorDrawer(traducirError(err.code));
     } finally {
