@@ -535,7 +535,7 @@ export default function EditorProfesional() {
   const { currentUser, refreshUser } = useAuth();
   const navigate = useNavigate(); 
   const location = useLocation(); // <-- Inicializamos useLocation
-  const [activeTab, setActiveTab] = useState('cuenta'); 
+  const [activeTab, setActiveTab] = useState('perfil'); 
 
   // <-- NUEVO: Si la URL trae un pedido de pestaña, la activamos
   useEffect(() => {
@@ -665,9 +665,7 @@ instagram: '',
 papers: [],
   galeria: []
 });
-  const [past, setPast] = useState([]);
-  const [future, setFuture] = useState([]);
-  const isUndoRedAction = useRef(false);
+ 
 
   const [savedData, setSavedData] = useState(null);
   const [exitModalOpen, setExitModalOpen] = useState(false);
@@ -679,14 +677,6 @@ papers: [],
   const setFormData = (action) => {
     _setFormData((prev) => {
       const nextState = typeof action === 'function' ? action(prev) : action;
-      if (!isUndoRedAction.current && JSON.stringify(prev) !== JSON.stringify(nextState)) {
-         setPast(p => {
-           const nuevoHistorial = [...p, prev];
-           return nuevoHistorial.length > 15 ? nuevoHistorial.slice(nuevoHistorial.length - 15) : nuevoHistorial;
-         });
-         setFuture([]); 
-      }
-      isUndoRedAction.current = false;
       return nextState;
     });
   };
@@ -734,24 +724,6 @@ const seccionesIncompletas = () => {
   };
 
   const progress = calculateProgress();
-
-  const undo = () => {
-    if (past.length === 0) return;
-    isUndoRedAction.current = true;
-    const previous = past[past.length - 1];
-    setPast(past.slice(0, past.length - 1));
-    setFuture([_formData, ...future]);
-    _setFormData(previous);
-  };
-
-  const redo = () => {
-    if (future.length === 0) return;
-    isUndoRedAction.current = true;
-    const next = future[0];
-    setFuture(future.slice(1));
-    setPast([...past, _formData]);
-    _setFormData(next);
-  };
 
   const handleChange = (e) => {
     const { id, value } = e.target;
@@ -1093,15 +1065,21 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
         
         const zonaId = el.dataset.zonaId;
         const clinicaId = el.dataset.clinicaId;
+        const tipo = el.dataset.tipo || 'direccion'; // 'nombre' = busca negocios, 'direccion' = busca direcciones
         
         const autocomplete = new window.google.maps.places.Autocomplete(el, {
           componentRestrictions: { country: 'ar' },
-          fields: ['name', 'formatted_address', 'place_id']
+          fields: ['name', 'formatted_address', 'place_id'],
+          types: tipo === 'nombre' ? ['establishment'] : undefined
         });
         
         autocomplete.addListener('place_changed', () => {
           const place = autocomplete.getPlace();
           if (!place.place_id) return;
+          // Si eligió desde el campo de NOMBRE, también le completamos el nombre propio
+          if (tipo === 'nombre') {
+            updateClinica(zonaId, clinicaId, 'nombrePropio', place.name || '');
+          }
           updateClinica(zonaId, clinicaId, 'direccion', place.formatted_address || '');
           updateClinica(zonaId, clinicaId, 'placeId', place.place_id || '');
         });
@@ -1358,8 +1336,18 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
               <ArrowLeft className="w-4 h-4" /> <span className="text-xs font-bold hidden sm:block">Volver al Ecosistema</span>
             </button>
             <div className="w-px h-6 bg-gray-200 hidden sm:block"></div>
-            <div className="text-[#1A3D3D] font-['Montserrat'] font-extrabold text-xl tracking-tight cursor-pointer">
-               El Portal<span className="text-[#2D6A6A]">.</span>
+            <div
+              onClick={() => {
+                if (haycambiosSinGuardar) {
+                  setPendingNavigation('/ecosistema');
+                  setExitModalOpen(true);
+                } else {
+                  navigate('/ecosistema');
+                }
+              }}
+              className="text-[#1A3D3D] font-['Montserrat'] font-extrabold text-xl tracking-tight cursor-pointer"
+            >
+               Portal Veterinario<span className="text-[#2D6A6A]">.</span>
             </div>
           </div>
 
@@ -1469,12 +1457,8 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
           <div className="flex-1 w-full flex flex-col min-w-0">
             
             {/* BARRA DE ACCIÓN SUPERIOR ALINEADA (Alto 52px) */}
-            <div className="flex justify-between items-center mb-6 md:h-[52px] w-full">
-               <div className="flex items-center gap-2 shrink-0">
-                  <button onClick={undo} disabled={past.length === 0} className={`p-2.5 rounded-xl transition-all border ${past.length > 0 ? 'bg-white border-gray-200 text-[#1A3D3D] hover:border-[#4DB6AC] hover:text-[#4DB6AC] shadow-sm' : 'bg-transparent border-transparent text-gray-300'}`} title="Deshacer"><Undo2 className="w-5 h-5" /></button>
-                  <button onClick={redo} disabled={future.length === 0} className={`p-2.5 rounded-xl transition-all border ${future.length > 0 ? 'bg-white border-gray-200 text-[#1A3D3D] hover:border-[#4DB6AC] hover:text-[#4DB6AC] shadow-sm' : 'bg-transparent border-transparent text-gray-300'}`} title="Rehacer"><Redo2 className="w-5 h-5" /></button>
-               </div>
-
+            <div className="flex justify-end items-center mb-6 md:h-[52px] w-full">
+              
                <button 
                  onClick={handleSaveData} disabled={saveStatus === 'saving' || saveStatus === 'saved'} 
                  className={`px-6 md:px-8 py-3 rounded-xl font-bold text-[11px] md:text-[12px] uppercase tracking-[0.15em] shadow-md transition-all flex items-center justify-center gap-2
@@ -2074,6 +2058,14 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
                       placeholder="Nombre de la clínica"
                       value={c.nombrePropio || ''}
                       onChange={(e) => updateClinica(z.id, c.id, 'nombrePropio', e.target.value)}
+                      id={`autocomplete-nombre-${c.id}`}
+                      ref={(el) => {
+                        if (!el) return;
+                        // Guardamos referencia al DOM para el useEffect (autocompletado por nombre de negocio)
+                        el.dataset.zonaId = z.id;
+                        el.dataset.clinicaId = c.id;
+                        el.dataset.tipo = 'nombre';
+                      }}
                       className="flex-1 text-sm font-bold text-[#1A3D3D] outline-none placeholder:font-medium placeholder:text-gray-300 min-w-0"
                     />
                     <button

@@ -963,7 +963,7 @@ Creá tu perfil, aparecé en búsquedas y conectate con colegas, clínicas y pro
 
               {/* — Subtexto — */}
               <p className="text-[#666666] text-[16px] md:text-[17px] leading-relaxed max-w-sm">
-                Estamos construyendo algo grande para el sector veterinario argentino. Seguinos y sé el primero en enterarte cuando todas las novedades.
+                Estamos construyendo algo grande para el sector veterinario argentino. Seguinos y sé el primero en enterarte todas las novedades.
               </p>
 
               {/* — Botón Instagram — */}

@@ -21,14 +21,18 @@ const IconoPildora = ({ className }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/></svg>
 );
 
-const IconoBisturi = ({ className }) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M14 22 18.5 7.5L22 11l-6 11Z"/><path d="M12 5 8 9"/><path d="m11 8 4 4"/><path d="m5 12 7 7"/></svg>
+const IconoWhatsApp = ({ className }) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <path d="M12.004 2.003c-5.514 0-9.997 4.483-9.997 9.997 0 1.762.464 3.479 1.345 4.984L2 22l5.184-1.36a9.955 9.955 0 0 0 4.82 1.23h.005c5.514 0 9.997-4.483 9.997-9.997 0-2.669-1.04-5.176-2.929-7.064a9.935 9.935 0 0 0-7.073-2.926zm5.859 14.856c-.248.694-1.435 1.328-2.006 1.413-.512.077-1.16.109-1.872-.118-.432-.136-.985-.319-1.694-.625-2.981-1.287-4.928-4.289-5.077-4.487-.148-.199-1.213-1.612-1.213-3.074 0-1.463.768-2.182 1.04-2.479.272-.298.594-.372.792-.372.199 0 .397.002.57.01.182.01.427-.069.669.51.247.595.841 2.058.916 2.207.075.149.124.322.025.52-.1.199-.149.323-.298.497-.148.173-.312.387-.446.52-.148.148-.303.309-.13.606.173.298.77 1.271 1.653 2.059 1.135 1.012 2.093 1.325 2.39 1.475.297.148.471.124.644-.075.173-.198.743-.867.94-1.164.199-.298.397-.249.67-.15.272.1 1.733.818 2.03.967.298.149.496.223.57.347.075.124.075.719-.173 1.413z"/>
+  </svg>
 );
 
 const ContactoEmail = ({ email, nombre, whatsappActivo, whatsappNum, mostrarWhatsapp }) => {
   const [copiado, setCopiado] = useState(false);
+  const mostrarWp = mostrarWhatsapp && whatsappNum;
 
   const handleCopiar = () => {
+    if (!email) return;
     navigator.clipboard.writeText(email).then(() => {
       setCopiado(true);
       setTimeout(() => setCopiado(false), 2500);
@@ -38,48 +42,53 @@ const ContactoEmail = ({ email, nombre, whatsappActivo, whatsappNum, mostrarWhat
   return (
     <div className="bg-gray-50 border border-gray-100 rounded-[28px] p-6 flex flex-col gap-4">
 
-      {/* AVISO + EMAIL */}
-      <div className="flex items-start gap-3">
-        <Mail className="w-4 h-4 text-[#2D6A6A] shrink-0 mt-0.5" />
-        <p className="text-[14px] text-[#1A3D3D] font-medium leading-relaxed">
-          Para contactar a <span className="font-bold">{nombre}</span> por correo electrónico, podés copiar su dirección y escribirle desde el correo que uses habitualmente.
-        </p>
-      </div>
-
-      {/* EMAIL */}
-      <div className="bg-white border border-gray-100 rounded-2xl px-5 py-4">
-        <p className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.3em] mb-1">Dirección de correo</p>
-        <p className="text-[17px] font-bold text-[#1A3D3D] break-all leading-snug">{email}</p>
-      </div>
-
-      {/* BOTÓN COPIAR EMAIL */}
-      <button
-        onClick={handleCopiar}
-        className={`w-full py-4 rounded-2xl font-bold text-[12px] uppercase tracking-[0.2em] flex items-center justify-center gap-2.5 transition-all duration-300 shadow-sm
-          ${copiado
-            ? 'bg-[#4DB6AC] text-white shadow-md'
-            : 'bg-white border border-gray-200 text-[#1A3D3D] hover:border-[#2D6A6A] hover:text-[#2D6A6A] hover:-translate-y-0.5 hover:shadow-md'
-          }`}
-      >
-        {copiado
-          ? <><Check className="w-4 h-4" /> ¡Copiado!</>
-          : <><Mail className="w-4 h-4" /> Copiar dirección</>
-        }
-      </button>
-
-      {/* DIVISOR + WHATSAPP */}
-      {mostrarWhatsapp && whatsappNum && (
+      {email && (
         <>
-          <div className="flex items-center gap-3">
-            <div className="flex-1 h-[1px] bg-gray-200"></div>
-            <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">o también</span>
-            <div className="flex-1 h-[1px] bg-gray-200"></div>
+          <div className="flex items-start gap-3">
+            <Mail className="w-4 h-4 text-[#2D6A6A] shrink-0 mt-0.5" />
+            <p className="text-[14px] text-[#1A3D3D] font-medium leading-relaxed">
+              Para contactar a <span className="font-bold">{nombre}</span> por correo electrónico, podés copiar su dirección y escribirle desde el correo que uses habitualmente.
+            </p>
           </div>
 
+          <div className="bg-white border border-gray-100 rounded-2xl px-5 py-4">
+            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.3em] mb-1">Dirección de correo</p>
+            <p className="text-[17px] font-bold text-[#1A3D3D] break-all leading-snug">{email}</p>
+          </div>
+
+          <button
+            onClick={handleCopiar}
+            className={`w-full py-4 rounded-2xl font-bold text-[12px] uppercase tracking-[0.2em] flex items-center justify-center gap-2.5 transition-all duration-300 shadow-sm
+              ${copiado
+                ? 'bg-[#4DB6AC] text-white shadow-md'
+                : 'bg-white border border-gray-200 text-[#1A3D3D] hover:border-[#2D6A6A] hover:text-[#2D6A6A] hover:-translate-y-0.5 hover:shadow-md'
+              }`}
+          >
+            {copiado
+              ? <><Check className="w-4 h-4" /> ¡Copiado!</>
+              : <><Mail className="w-4 h-4" /> Copiar dirección</>
+            }
+          </button>
+        </>
+      )}
+
+      {email && mostrarWp && (
+        <div className="flex items-center gap-3">
+          <div className="flex-1 h-[1px] bg-gray-200"></div>
+          <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">o también</span>
+          <div className="flex-1 h-[1px] bg-gray-200"></div>
+        </div>
+      )}
+
+      {mostrarWp && (
+        <>
           <div className="flex items-start gap-3">
             <Phone className="w-4 h-4 text-[#25D366] shrink-0 mt-0.5" />
             <p className="text-[14px] text-[#1A3D3D] font-medium leading-relaxed">
-              También podés hablarle directamente a su número.
+              {email
+                ? 'También podés hablarle directamente a su número.'
+                : <>Para contactar a <span className="font-bold">{nombre}</span>, escribile directamente por WhatsApp.</>
+              }
             </p>
           </div>
 
@@ -93,11 +102,9 @@ const ContactoEmail = ({ email, nombre, whatsappActivo, whatsappNum, mostrarWhat
           </a>
         </>
       )}
-
     </div>
   );
 };
-
 function PerfilPublico() {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
@@ -560,8 +567,11 @@ const mobileTabs = [
     <span className="text-white/20 font-bold text-[11px] uppercase tracking-[0.3em]">{data.tipoMatricula2 || 'MP'}: {data.matricula2}</span>
   )}
 </div>
-              {(data.instagram || data.linkedin || data.facebook) && (
+              {(data.instagram || data.linkedin || data.facebook || (data.whatsappActivo && data.whatsappNum && (data.whatsappVisibilidad === 'todos' || !data.whatsappVisibilidad || currentUser))) && (
                 <div className="flex items-center justify-center gap-3 mt-3">
+                  {data.whatsappActivo && data.whatsappNum && (data.whatsappVisibilidad === 'todos' || !data.whatsappVisibilidad || currentUser) && (
+                    <a href={`https://wa.me/${data.whatsappNum}`} target="_blank" rel="noreferrer" className="text-white bg-[#25D366] hover:bg-[#20b858] p-2 rounded-xl border border-white/20 transition-all shadow-md"><IconoWhatsApp className="w-4 h-4" /></a>
+                  )}
                   {data.instagram && <a href={data.instagram} target="_blank" rel="noreferrer" className="text-white/50 hover:text-white p-2 bg-white/10 rounded-xl border border-white/20 transition-all"><Instagram className="w-4 h-4" /></a>}
                   {data.linkedin && <a href={data.linkedin} target="_blank" rel="noreferrer" className="text-white/50 hover:text-white p-2 bg-white/10 rounded-xl border border-white/20 transition-all"><Linkedin className="w-4 h-4" /></a>}
                   {data.facebook && <a href={data.facebook} target="_blank" rel="noreferrer" className="text-white/50 hover:text-white p-2 bg-white/10 rounded-xl border border-white/20 transition-all"><Facebook className="w-4 h-4" /></a>}
@@ -605,12 +615,12 @@ const mobileTabs = [
     <p className="font-bold text-[#1A3D3D] text-[11px] uppercase tracking-wide text-center">Destacada</p>
   </div>
   {data.atiendeDomicilio && (
-    <div className="flex flex-col items-center gap-1.5 w-[80px]">
+    <button type="button" onClick={scrollToContacto} className="flex flex-col items-center gap-1.5 w-[80px] active:scale-95 transition-transform">
       <div className="w-8 h-8 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 border border-blue-100">
         <Home className="w-4 h-4" />
       </div>
       <p className="font-bold text-[#1A3D3D] text-[11px] uppercase tracking-wide text-center">Domicilio</p>
-    </div>
+    </button>
   )}
 </div>
               </div>
@@ -623,13 +633,16 @@ const mobileTabs = [
                     </h3>
                     <p className="text-[#4DB6AC] font-bold text-[11px] pl-2 mb-3 uppercase tracking-widest text-left">Actualmente en {data.provincia}</p>
                   </div>
-                  {data.zonas.map((zona) => (
+                  {data.zonas.map((zona) => {
+                    const clinicasValidas = (zona.clinicas || []).filter(c => (c.nombrePropio || c.nombre || '').trim() || (c.direccion || '').trim());
+                    if (clinicasValidas.length === 0) return null;
+                    return (
                     <div key={zona.id} className="bg-white p-5 rounded-[24px] border border-gray-100 shadow-sm text-left">
                       <h4 className="font-bold text-[14px] text-[#1A3D3D] font-['Montserrat'] uppercase tracking-wider mb-5 text-center max-w-[180px] mx-auto leading-snug">
                         {zona.nombre}
                       </h4>
                       <ul className="space-y-0 px-2">
-                        {zona.clinicas.map((c) => {
+                        {clinicasValidas.map((c) => {
                           const mapsUrl = c.placeId
                             ? `https://www.google.com/maps/place/?q=place_id:${c.placeId}`
                             : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${c.direccion || ''}, ${data.provincia || ''}`)}`;
@@ -669,7 +682,8 @@ const mobileTabs = [
                         })}
                       </ul>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -972,6 +986,9 @@ return (
             
             {/* REDES SOCIALES */}
             <div className="absolute right-6 top-[104px] -translate-y-1/2 md:top-[168px] md:translate-y-0 z-20 flex flex-col gap-3">
+              {data.whatsappActivo && data.whatsappNum && (data.whatsappVisibilidad === 'todos' || !data.whatsappVisibilidad || currentUser) && (
+                <a href={`https://wa.me/${data.whatsappNum}`} target="_blank" rel="noreferrer" className="text-white bg-[#25D366] hover:bg-[#20b858] p-2.5 rounded-xl border border-white/20 hover:scale-110 transition-all shadow-md"><IconoWhatsApp className="w-5 h-5" /></a>
+              )}
               {data.instagram && <a href={data.instagram} target="_blank" rel="noreferrer" className="text-white/40 hover:text-white p-2.5 bg-white/5 rounded-xl border border-white/20 hover:scale-110 transition-all"><Instagram className="w-5 h-5" /></a>}
               {data.linkedin && <a href={data.linkedin} target="_blank" rel="noreferrer" className="text-white/40 hover:text-white p-2.5 bg-white/5 rounded-xl border border-white/20 hover:scale-110 transition-all"><Linkedin className="w-5 h-5" /></a>}
               {data.facebook && <a href={data.facebook} target="_blank" rel="noreferrer" className="text-white/40 hover:text-white p-2.5 bg-white/5 rounded-xl border border-white/20 hover:scale-110 transition-all"><Facebook className="w-5 h-5" /></a>}
@@ -1036,13 +1053,13 @@ return (
                   </div>
                 </div>
                 {data.atiendeDomicilio && (
-                  <div className="flex flex-col items-center gap-3">
+                  <button type="button" onClick={scrollToContacto} className="flex flex-col items-center gap-3 hover:-translate-y-1 transition-transform cursor-pointer">
                     <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 border border-blue-100"><Home className="w-5 h-5" /></div>
                     <div>
                       <p className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.3em] mb-2 leading-none">Modalidad</p>
                       <p className="font-bold text-[#1A3D3D] text-[15px] uppercase tracking-wide">Voy a domicilio</p>
                     </div>
-                  </div>
+                  </button>
                 )}
               </div>
             </div>
@@ -1251,7 +1268,10 @@ return (
                     </div>
                     
                     <div className={`grid grid-cols-1 ${data.zonas.length > 1 ? 'md:grid-cols-2' : 'md:max-w-xl mx-auto'} gap-8`}>
-                      {data.zonas.map((zona) => (
+                      {data.zonas.map((zona) => {
+                        const clinicasValidas = (zona.clinicas || []).filter(clinica => (clinica.nombrePropio || clinica.nombre || '').trim() || (clinica.direccion || '').trim());
+                        if (clinicasValidas.length === 0) return null;
+                        return (
                         <div key={zona.id} className="bg-[#F4F7F7] p-8 rounded-[32px] border border-gray-100 hover:border-[#2D6A6A]/30 transition-colors">
                           <div className="flex items-center gap-3 mb-6">
                             <Building2 className="text-[#2D6A6A] w-6 h-6" />
@@ -1259,7 +1279,7 @@ return (
                           </div>
                           
                           <ul className="space-y-5">
-                            {zona.clinicas && zona.clinicas.map((clinica) => {
+                            {clinicasValidas.map((clinica) => {
                               const mapsUrl = clinica.placeId
                                 ? `https://www.google.com/maps/place/?q=place_id:${clinica.placeId}`
                                 : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${clinica.direccion || ''}, ${data.provincia || ''}`)}`;
@@ -1300,7 +1320,8 @@ return (
                             })}
                           </ul>
                         </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 )}
