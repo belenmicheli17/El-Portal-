@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { 
   Search, MapPin, ChevronDown, Filter,
   Dog, Cat, Stethoscope, Layers,
-  Bird, PawPrint, TreeDeciduous,
+  PawPrint, TreeDeciduous,
   Calendar, BookMarked, // <-- NUEVOS ÍCONOS PARA PAPERS
   Home, Siren // <-- NUEVOS ÍCONOS PARA MODALIDAD
 } from 'lucide-react';
@@ -11,13 +11,12 @@ import {
 // Importamos los datos centralizados
 import especialidadesData from '../data/especialidades.json';
 import filtrosConfig from '../data/filtrosConfig.json';
-// FALTA IMPORTAR LAS PROVINCIAS 
-// Mapeo de íconos para las mascotas
-const iconMap = {
-  'perros_gatos': Cat,
-  'grandes_animales': TreeDeciduous,
-  'aves': Bird,
-  'exoticos': PawPrint
+import provincias from '../data/provincias.js'; 
+// Mapeo de íconos para "Atención por Especie" (por nombre exacto de la opción real)
+const iconoEspecieMap = {
+  'Medicina Felina Especializada': Cat,
+  'Animales Exóticos': PawPrint,
+  'Grandes Animales y Medicina Rural': TreeDeciduous
 };
 
 // (Borramos el array estático de aniosDisponibles de acá arriba)
@@ -40,6 +39,10 @@ const BarraFiltros = ({
   const [openSection, setOpenSection] = useState(null);
   const filtrosRef = useRef(null);
   const [showProvincia, setShowProvincia] = useState(false);
+
+  // Grupo real "Atención por Especie", cargado por el veterinario en su editor de perfil
+  const grupoEspecie = especialidadesData.find(g => g.id === 'atencion_por_especie');
+  const opcionesEspecie = grupoEspecie ? grupoEspecie.opciones : [];
   
 
   // Funciones de lectura de URL
@@ -73,18 +76,7 @@ const BarraFiltros = ({
     setSearchParams(params);
   };
 
-  const limpiarFiltros = () => {
-    const params = new URLSearchParams(searchParams);
-    params.delete('zonas');
-    params.delete('especialidades');
-    params.delete('mascotas');
-    params.delete('domicilio');
-    params.delete('guardia24hs');
-    params.delete('categorias_papers');
-    params.delete('anios');
-    setSearchParams(params);
-    setSearchTerm('');
-  };
+
 
   // Manejo de scroll dinámico
   const toggleModal = () => {
@@ -180,7 +172,7 @@ const BarraFiltros = ({
         
         {/* BUSCADOR + PROVINCIA/LOCALIDAD + BOTÓN BUSCAR */}
         <div className="flex flex-col md:flex-row gap-2 flex-1 w-full">
-          <div className="md:w-[500px] md:flex-none w-full relative flex items-center bg-[#F4F7F7] border border-transparent focus-within:border-[#2D6A6A] rounded-[20px] md:rounded-full px-4 py-3 md:py-2.5 transition-all">
+          <div className="md:w-[400px] md:flex-none w-full relative flex items-center bg-[#F4F7F7] border border-transparent focus-within:border-[#2D6A6A] rounded-[20px] md:rounded-full px-4 py-3 md:py-2.5 transition-all">
             <Search className="text-[#666666] w-4 h-4 shrink-0" />
             <input 
               type="search" 
@@ -222,7 +214,7 @@ const BarraFiltros = ({
                     >
                       Todas las provincias
                     </button>
-                    {filtrosConfig.provincias
+                    {provincias
                       .filter(p => Object.keys(provinciasDisponibles).length === 0 || provinciasDisponibles[p])
                       .map(p => {
                         const isActive = filtros.zonas[0] === p;
@@ -299,7 +291,7 @@ const BarraFiltros = ({
                   <div className="border-b border-gray-100 lg:border-none">
                     <h3 
                       onClick={() => setOpenSection(openSection === 'especialidad' ? null : 'especialidad')}
-                      className="font-montserrat font-black text-[#1A3D3D] text-[11px] lg:text-[12px] uppercase tracking-[0.2em] py-4 lg:py-0 lg:mb-4 flex items-center justify-between cursor-pointer lg:cursor-default transition-opacity hover:opacity-80 lg:hover:opacity-100 select-none"
+                      className="font-montserrat font-black text-[#1A3D3D] text-[12px] lg:text-[13px] uppercase tracking-[0.2em] py-4 lg:py-0 lg:mb-4 flex items-center justify-between cursor-pointer lg:cursor-default transition-opacity hover:opacity-80 lg:hover:opacity-100 select-none"
                     >
                       <span className="flex items-center gap-2"><Stethoscope className="w-4 h-4 lg:w-3.5 lg:h-3.5 text-[#2D6A6A]" /> Especialidad Médica
                       {openSection !== 'especialidad' && filtros.especialidades.length > 0 && (
@@ -319,7 +311,7 @@ const BarraFiltros = ({
                             <span 
                               key={e.id} 
                               onClick={() => toggleFiltro('especialidades', e.nombre_mostrar)}
-                              className={`px-3 py-1.5 text-[12px] font-medium rounded-xl cursor-pointer transition-colors ${isActive ? 'bg-[#2D6A6A] text-white shadow-sm' : 'bg-[#F4F7F7] text-[#666666] hover:bg-gray-200'}`}
+                              className={`px-3 py-1.5 text-[13px] font-medium rounded-xl cursor-pointer transition-colors ${isActive ? 'bg-[#2D6A6A] text-white shadow-sm' : 'bg-[#F4F7F7] text-[#666666] hover:bg-gray-200'}`}
                             >
                               {e.nombre_mostrar}
                             </span>
@@ -333,7 +325,7 @@ const BarraFiltros = ({
                   <div className="border-b border-gray-100 lg:border-none lg:pl-10">
                     <h3 
                       onClick={() => setOpenSection(openSection === 'categoria' ? null : 'categoria')}
-                      className="font-montserrat font-black text-[#1A3D3D] text-[11px] lg:text-[12px] uppercase tracking-[0.2em] py-4 lg:py-0 lg:mb-4 flex items-center justify-between cursor-pointer lg:cursor-default transition-opacity hover:opacity-80 lg:hover:opacity-100 select-none"
+                      className="font-montserrat font-black text-[#1A3D3D] text-[12px] lg:text-[13px] uppercase tracking-[0.2em] py-4 lg:py-0 lg:mb-4 flex items-center justify-between cursor-pointer lg:cursor-default transition-opacity hover:opacity-80 lg:hover:opacity-100 select-none"
                     >
                       <span className="flex items-center gap-2"><BookMarked className="w-4 h-4 lg:w-3.5 lg:h-3.5 text-[#2D6A6A]" /> Tipo de Paper
                       {openSection !== 'categoria' && filtros.categorias_papers.length > 0 && (
@@ -353,7 +345,7 @@ const BarraFiltros = ({
                             <button 
                               key={cat} 
                               onClick={() => toggleFiltro('categorias_papers', cat)} 
-                              className={`text-[12px] px-3 py-2 rounded-lg text-left transition-colors font-medium ${isActive ? 'bg-[#2D6A6A] text-white' : 'hover:bg-[#F4F7F7] text-[#666666]'}`}
+                              className={`text-[13px] px-3 py-2 rounded-lg text-left transition-colors font-medium ${isActive ? 'bg-[#2D6A6A] text-white' : 'hover:bg-[#F4F7F7] text-[#666666]'}`}
                             >
                               {cat}
                             </button>
@@ -367,7 +359,7 @@ const BarraFiltros = ({
                   <div className="border-none lg:pl-10">
                     <h3 
                       onClick={() => setOpenSection(openSection === 'anio' ? null : 'anio')}
-                      className="font-montserrat font-black text-[#1A3D3D] text-[11px] lg:text-[12px] uppercase tracking-[0.2em] py-4 lg:py-0 lg:mb-4 flex items-center justify-between cursor-pointer lg:cursor-default transition-opacity hover:opacity-80 lg:hover:opacity-100 select-none"
+                      className="font-montserrat font-black text-[#1A3D3D] text-[12px] lg:text-[13px] uppercase tracking-[0.2em] py-4 lg:py-0 lg:mb-4 flex items-center justify-between cursor-pointer lg:cursor-default transition-opacity hover:opacity-80 lg:hover:opacity-100 select-none"
                     >
                       <span className="flex items-center gap-2"><Calendar className="w-4 h-4 lg:w-3.5 lg:h-3.5 text-[#2D6A6A]" /> Año de Publicación</span>
                       <ChevronDown className={`w-5 h-5 text-[#2D6A6A] lg:hidden transition-transform duration-300 ${openSection === 'anio' ? 'rotate-180' : ''}`} />
@@ -381,7 +373,7 @@ const BarraFiltros = ({
                             <span 
                               key={anio} 
                               onClick={() => toggleFiltro('anios', anio)} 
-                              className={`px-4 py-2 text-[12px] font-medium rounded-xl cursor-pointer transition-colors border ${isActive ? 'bg-[#2D6A6A] text-white border-[#2D6A6A] shadow-sm' : 'bg-white text-[#666666] border-gray-200 hover:border-[#2D6A6A]/50 hover:bg-gray-50'}`}
+                              className={`px-4 py-2 text-[13px] font-medium rounded-xl cursor-pointer transition-colors border ${isActive ? 'bg-[#2D6A6A] text-white border-[#2D6A6A] shadow-sm' : 'bg-white text-[#666666] border-gray-200 hover:border-[#2D6A6A]/50 hover:bg-gray-50'}`}
                             >
                               {anio}
                             </span>
@@ -400,7 +392,7 @@ const BarraFiltros = ({
                   <div className="border-b border-gray-100 lg:border-none">
                     <h3 
                       onClick={() => setOpenSection(openSection === 'especialidad' ? null : 'especialidad')}
-                      className="font-montserrat font-black text-[#1A3D3D] text-[11px] lg:text-[12px] uppercase tracking-[0.2em] py-4 lg:py-0 lg:mb-4 flex items-center justify-between cursor-pointer lg:cursor-default transition-opacity hover:opacity-80 lg:hover:opacity-100 select-none"
+                      className="font-montserrat font-black text-[#1A3D3D] text-[12px] lg:text-[13px] uppercase tracking-[0.2em] py-4 lg:py-0 lg:mb-4 flex items-center justify-between cursor-pointer lg:cursor-default transition-opacity hover:opacity-80 lg:hover:opacity-100 select-none"
                     >
                       <span className="flex items-center gap-2"><Stethoscope className="w-4 h-4 lg:w-3.5 lg:h-3.5 text-[#2D6A6A]" /> Especialidad
                       {openSection !== 'especialidad' && filtros.especialidades.length > 0 && (
@@ -414,14 +406,14 @@ const BarraFiltros = ({
 
                     <div className={`overflow-hidden transition-all duration-300 ease-in-out lg:max-h-none lg:opacity-100 ${openSection === 'especialidad' ? 'max-h-[800px] opacity-100 pb-4 lg:pb-0' : 'max-h-0 opacity-0'}`}>
                       <div className="flex flex-col gap-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                        {especialidadesData.map(grupo => {
+                        {especialidadesData.filter(grupo => grupo.id !== 'atencion_por_especie').map(grupo => {
                           const opcionesFiltradas = grupo.opciones.filter(
                             opcion => Object.keys(especialidadesDisponibles).length === 0 || especialidadesDisponibles[opcion]
                           );
                           if (opcionesFiltradas.length === 0) return null;
                           return (
                             <div key={grupo.id}>
-                              <p className="text-[10px] font-black text-[#1A3D3D] uppercase tracking-[0.15em] mb-2 opacity-50">
+                              <p className="text-[11px] font-black text-[#1A3D3D] uppercase tracking-[0.15em] mb-2 opacity-50">
                                 {grupo.grupo}
                               </p>
                               <div className="flex flex-wrap gap-2">
@@ -432,11 +424,11 @@ const BarraFiltros = ({
                                     <span
                                       key={opcion}
                                       onClick={() => toggleFiltro('especialidades', opcion)}
-                                      className={`px-3 py-1.5 text-[12px] font-medium rounded-xl cursor-pointer transition-colors flex items-center gap-1.5 ${isActive ? 'bg-[#2D6A6A] text-white shadow-sm' : 'bg-[#F4F7F7] text-[#666666] hover:bg-gray-200'}`}
+                                      className={`px-3 py-1.5 text-[13px] font-medium rounded-xl cursor-pointer transition-colors flex items-center gap-1.5 ${isActive ? 'bg-[#2D6A6A] text-white shadow-sm' : 'bg-[#F4F7F7] text-[#666666] hover:bg-gray-200'}`}
                                     >
                                       {opcion}
                                       {cantidad > 0 && (
-                                        <span className={`text-[10px] font-bold ${isActive ? 'text-white/70' : 'text-gray-400'}`}>
+                                        <span className={`text-[11px] font-bold ${isActive ? 'text-white/70' : 'text-gray-400'}`}>
                                           ({cantidad})
                                         </span>
                                       )}
@@ -459,7 +451,7 @@ const BarraFiltros = ({
                       <div className="border-b border-gray-100 lg:border-none">
                         <h3 
                           onClick={() => setOpenSection(openSection === 'modalidad' ? null : 'modalidad')}
-                          className="font-montserrat font-black text-[#1A3D3D] text-[11px] lg:text-[12px] uppercase tracking-[0.2em] py-4 lg:py-0 lg:mb-4 flex items-center justify-between cursor-pointer lg:cursor-default transition-opacity hover:opacity-80 lg:hover:opacity-100 select-none"
+                          className="font-montserrat font-black text-[#1A3D3D] text-[12px] lg:text-[13px] uppercase tracking-[0.2em] py-4 lg:py-0 lg:mb-4 flex items-center justify-between cursor-pointer lg:cursor-default transition-opacity hover:opacity-80 lg:hover:opacity-100 select-none"
                         >
                           <span className="flex items-center gap-2">
                             <Layers className="w-4 h-4 lg:w-3.5 lg:h-3.5 text-[#2D6A6A]" /> Modalidad
@@ -487,7 +479,7 @@ const BarraFiltros = ({
                               <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${filtros.domicilio ? 'bg-white/20 text-white' : 'bg-white text-blue-600 border border-blue-100'}`}>
                                 <Home className="w-5 h-5" />
                               </div>
-                              <span className={`text-[12px] font-bold leading-tight ${filtros.domicilio ? 'text-white' : 'text-blue-700'}`}>
+                              <span className={`text-[13px] font-bold leading-tight ${filtros.domicilio ? 'text-white' : 'text-blue-700'}`}>
                                 Atiende a domicilio
                               </span>
                             </button>
@@ -514,7 +506,7 @@ const BarraFiltros = ({
                               <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${filtros.guardia24hs ? 'bg-white/20 text-white' : 'bg-white text-red-600 border border-red-100'}`}>
                                 <Siren className="w-5 h-5" />
                               </div>
-                              <span className={`text-[12px] font-bold leading-tight ${filtros.guardia24hs ? 'text-white' : 'text-red-700'}`}>
+                              <span className={`text-[13px] font-bold leading-tight ${filtros.guardia24hs ? 'text-white' : 'text-red-700'}`}>
                                 Guardia 24hs
                               </span>
                             </button>
@@ -523,33 +515,33 @@ const BarraFiltros = ({
                       </div>
                     )}
 
-                    {/* Mascotas */}
+                    {/* Atención por Especie (datos reales cargados por el veterinario en su editor) */}
                     <div className="border-none">
                       <h3 
                         onClick={() => setOpenSection(openSection === 'mascotas' ? null : 'mascotas')}
-                        className="font-montserrat font-black text-[#1A3D3D] text-[11px] lg:text-[12px] uppercase tracking-[0.2em] py-4 lg:py-0 lg:mb-4 flex items-center justify-between cursor-pointer lg:cursor-default transition-opacity hover:opacity-80 lg:hover:opacity-100 select-none"
+                        className="font-montserrat font-black text-[#1A3D3D] text-[12px] lg:text-[13px] uppercase tracking-[0.2em] py-4 lg:py-0 lg:mb-4 flex items-center justify-between cursor-pointer lg:cursor-default transition-opacity hover:opacity-80 lg:hover:opacity-100 select-none"
                       >
                         <span className="flex items-center gap-2">
-                          <Dog className="w-4 h-4 lg:w-3.5 lg:h-3.5 text-[#2D6A6A]" /> Mascotas
+                          <Dog className="w-4 h-4 lg:w-3.5 lg:h-3.5 text-[#2D6A6A]" /> Atención por Especie
                         </span>
                         <ChevronDown className={`w-5 h-5 text-[#2D6A6A] lg:hidden transition-transform duration-300 ${openSection === 'mascotas' ? 'rotate-180' : ''}`} />
                       </h3>
 
                       <div className={`overflow-hidden transition-all duration-300 ease-in-out lg:max-h-none lg:opacity-100 ${openSection === 'mascotas' ? 'max-h-[400px] opacity-100 pb-4 lg:pb-0' : 'max-h-0 opacity-0'}`}>
                         <div className="flex flex-wrap gap-2">
-                          {filtrosConfig.mascotas.map(mascota => {
-                            const isActive = filtros.mascotas.includes(mascota.nombre);
-                            const IconComponent = iconMap[mascota.id] || Dog; 
+                          {opcionesEspecie.map(opcion => {
+                            const isActive = filtros.especialidades.includes(opcion);
+                            const IconComponent = iconoEspecieMap[opcion] || PawPrint; 
                             return (
                               <span 
-                                key={mascota.id} 
-                                onClick={() => toggleFiltro('mascotas', mascota.nombre)}
-                                className={`px-3 py-2 text-[12px] font-medium rounded-xl cursor-pointer transition-colors flex items-center gap-1.5 border ${
+                                key={opcion} 
+                                onClick={() => toggleFiltro('especialidades', opcion)}
+                                className={`px-3 py-2 text-[13px] font-medium rounded-xl cursor-pointer transition-colors flex items-center gap-1.5 border ${
                                   isActive ? 'bg-[#2D6A6A] text-white border-[#2D6A6A] shadow-sm' : 'bg-white text-[#666666] border-gray-200 hover:border-[#2D6A6A]/50 hover:bg-gray-50'
                                 }`}
                               >
                                 <IconComponent className="w-3.5 h-3.5" />
-                                {mascota.nombre}
+                                {opcion}
                               </span>
                             )
                           })}
@@ -561,15 +553,6 @@ const BarraFiltros = ({
               )}
             </div>
             
-            {/* BOTONERA INFERIOR */}
-            <div className="flex items-center justify-start mt-6 pt-6 border-t border-gray-100">
-              <button 
-                onClick={limpiarFiltros}
-                className="text-[#666666] text-[13px] font-medium hover:text-[#1A3D3D] hover:underline transition-all px-4 py-2"
-              >
-                Limpiar filtros
-              </button>
-            </div>
           </div>
         )}
       </div>

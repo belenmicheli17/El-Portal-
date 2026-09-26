@@ -19,14 +19,6 @@ const HuellaPremium = ({ className }) => (
   </svg>
 );
 
-// Array con el orden de prioridad de las provincias
-const provinciasOrdenadas = [
-  'Buenos Aires', 'CABA', 'Córdoba', 'Santa Fe', 'Mendoza', 'Tucumán', 'Salta', 
-  'Entre Ríos', 'San Juan', 'Neuquén', 'Río Negro', 'Corrientes', 'Jujuy', 
-  'Chubut', 'San Luis', 'La Pampa', 'Misiones', 'Santiago del Estero', 
-  'La Rioja', 'Catamarca', 'Chaco', 'Formosa', 'Santa Cruz', 'Tierra del Fuego'
-];
-
 const Cartilla = () => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
@@ -381,43 +373,60 @@ const PASOS_CARTILLA = [
 
       <main className="min-h-screen bg-[#F9F5F0] pb-24 relative flex flex-col gap-4 sm:gap-6 animate-in fade-in duration-500 overflow-hidden">
         {/* BURBUJAS DE FONDO LIBRES */}
-        <div className="absolute top-[-10%] left-[-15%] w-[600px] h-[600px] bg-[#4DB6AC]/20 rounded-full blur-[120px] pointer-events-none z-0"></div>
-        <div className="absolute top-[10%] right-[-10%] w-[700px] h-[700px] bg-[#FF9800]/30 rounded-full blur-[150px] pointer-events-none z-0"></div>
+        <div className="absolute top-[-10%] left-[-15%] w-[600px] h-[600px] bg-[#FF9800]/20 rounded-full blur-[120px] pointer-events-none z-0"></div>
+        <div className="absolute top-[10%] right-[-10%] w-[700px] h-[700px] bg-[#4DB6AC]/30 rounded-full blur-[150px] pointer-events-none z-0"></div>
         <div className="absolute bottom-[0%] left-[-10%] w-[500px] h-[500px] bg-[#4DB6AC]/15 rounded-full blur-[130px] pointer-events-none z-0"></div>
 
-        {/* HEADER B2C */}
-        <section className="relative pt-9 pb-2 z-10 text-center">
-          <div className="relative z-10 max-w-3xl mx-auto flex flex-col items-center px-4">
-            <div className="flex items-center gap-3 mb-5">
-              <Dog className="w-10 h-10 text-[#FF9800]" strokeWidth={2.5} />
-              <Heart className="w-9 h-9 text-[#FF9800]" strokeWidth={2.5} />
-              <Cat className="w-10 h-10 text-[#FF9800]" strokeWidth={2.5} />
-            </div>
-            <h1 className="text-[32px] md:text-[42px] lg:text-[48px] font-black font-['Montserrat'] text-[#1A3D3D] tracking-tighter leading-none mb-3">
-              Encontrá veterinarios especialistas y clínicas cerca tuyo
-            </h1>
-            <p className="text-[#666666] text-[14px] md:text-[16px] font-medium mb-0 max-w-lg mx-auto leading-relaxed font-['Inter']">
-              Buscá por especialidad, zona o servicio. Profesionales verificados y clínicas de alta complejidad en toda Argentina.
-            </p>
-          </div>
-        </section>
+        {/* HEADER B2C + ILUSTRACIÓN (dos columnas en PC) */}
+        <div className="relative z-20 max-w-6xl mx-auto w-full px-4 lg:flex lg:items-center lg:gap-10">
 
-        {/* BARRA DE BÚSQUEDA GLOBAL COMPONENTIZADA */}
-        <BarraFiltros
-          tabs={[
-            { id: 'todos', label: 'Todos', icon: Layers },
-            { id: 'especialistas', label: 'Especialistas', icon: Stethoscope, tourId: 'tour-tab-especialistas' },
-            { id: 'clinicas', label: 'Clínicas', icon: Hospital }
-          ]}
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          searchPlaceholder="Ej: Dermatólogo, San Isidro, Vacunación..."
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          showModalidad={true}
-          provinciasDisponibles={provinciasDisponibles}
-          especialidadesDisponibles={especialidadesDisponibles}
-        />
+          {/* COLUMNA IZQUIERDA: título + subtítulo + barra de búsqueda */}
+          <div className="lg:w-[55%]">
+            <section className="relative pt-9 lg:pt-20 pb-2 text-center">
+              <div className="flex flex-col items-center lg:items-start">
+                <div className="flex items-center gap-3 mb-5 lg:hidden">
+                  <Dog className="w-10 h-10 text-[#FF9800]" strokeWidth={2.5} />
+                  <Heart className="w-9 h-9 text-[#FF9800]" strokeWidth={2.5} />
+                  <Cat className="w-10 h-10 text-[#FF9800]" strokeWidth={2.5} />
+                </div>
+                <h1 className="text-[32px] md:text-[42px] lg:text-[48px] lg:text-left font-black font-['Montserrat'] text-[#1A3D3D] tracking-tighter leading-none mb-5">
+                  Encontrá especialistas<br className="hidden lg:block" /> y clínicas veterinarias cerca tuyo
+                </h1>
+                <p className="text-[#666666] text-[14px] md:text-[16px] lg:text-[18px] font-medium mb-6 max-w-lg mx-auto lg:mx-0 lg:text-left leading-relaxed font-['Inter']">
+                  Buscá por especialidad, zona o servicio. Profesionales verificados y clínicas de alta complejidad en toda Argentina.
+                </p>
+              </div>
+            </section>
+
+            {/* BARRA DE BÚSQUEDA GLOBAL COMPONENTIZADA — envuelta para compensar su padding interno y alinearla con el título */}
+            <div className="lg:-ml-3 lg:mt-0">
+              <BarraFiltros
+                tabs={[
+                  { id: 'todos', label: 'Todos', icon: Layers },
+                  { id: 'especialistas', label: 'Especialistas', icon: Stethoscope, tourId: 'tour-tab-especialistas' },
+                  { id: 'clinicas', label: 'Clínicas', icon: Hospital }
+                ]}
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                searchPlaceholder="Ej: Dermatólogo, San Isidro, Vacunación..."
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+                showModalidad={true}
+                provinciasDisponibles={provinciasDisponibles}
+                especialidadesDisponibles={especialidadesDisponibles}
+              />
+            </div>
+          </div>
+
+          {/* COLUMNA DERECHA: ilustración del hero (solo PC) */}
+                    <div className="hidden lg:flex lg:w-[45%] items-center justify-center">
+            <img
+              src="/cartilla-hero-ilustracion.svg"
+              alt=""
+              className="w-full max-w-[500px] h-auto lg:translate-x-8"
+            />
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 max-w-6xl mx-auto w-full px-4 mt-2 sm:mt-2 mb-4 relative z-10 font-['Inter'] min-h-[80vh]">
           {loading && (
