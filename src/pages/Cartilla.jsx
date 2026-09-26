@@ -80,17 +80,16 @@ const PASOS_CARTILLA = [
 
   // SEO dinámico: cuando el filtro de guardia está activo, cambiamos el título y meta descripción
   useEffect(() => {
-    
+    let meta = document.querySelector('meta[name="description"]');
+    if (!meta) { meta = document.createElement('meta'); meta.name = 'description'; document.head.appendChild(meta); }
+
     const esUrgencia = searchParams.get('guardia24hs') === 'true';
     if (esUrgencia) {
       document.title = 'Guardia veterinaria 24hs cerca tuyo | El Portal Veterinario';
-      let meta = document.querySelector('meta[name="description"]');
-      if (!meta) { meta = document.createElement('meta'); meta.name = 'description'; document.head.appendChild(meta); }
       meta.content = 'Encontrá clínicas veterinarias con guardia 24 horas cerca tuyo. Atención de urgencias para tu mascota en cualquier momento.';
     } else {
-      document.title = 'Veterinarios Especialistas y Clínicas | Portal Veterinario Argentina';
-      let meta = document.querySelector('meta[name="description"]');
-      if (meta) meta.content = 'Encontrá veterinarios especialistas y clínicas de alta complejidad en Argentina. Buscá por zona, especialidad o servicio para tu mascota.';
+      document.title = 'Cartilla de Veterinarios: Especialistas y Clínicas cerca tuyo | El Portal Veterinario';
+      meta.content = 'Encontrá todos los especialistas veterinarios y clínicas cerca tuyo: guardias 24 horas, atención a domicilio y profesionales verificados en toda Argentina.';
     }
   }, [searchParams]);
 
