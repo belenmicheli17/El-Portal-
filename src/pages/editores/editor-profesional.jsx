@@ -193,7 +193,7 @@ const ToggleSwitch = ({ label, checked, onChange, tooltip, className = "" }) => 
   </div>
 );
 
-const Accordion = ({ title, icon: Icon, children, isOpen, onToggle, tooltip, isBioWarning, bioLength, alerta }) => {
+const Accordion = ({ title, icon: Icon, children, isOpen, onToggle, tooltip, isBioWarning, bioLength, alerta, avisoTexto }) => {
   return (
     <div className="border-b border-gray-100 last:border-0 group relative z-[1]">
       <button 
@@ -213,6 +213,11 @@ const Accordion = ({ title, icon: Icon, children, isOpen, onToggle, tooltip, isB
             <div className="block animate-in fade-in zoom-in duration-300">
               <Tooltip text={tooltip} isSection />
             </div>
+          )}
+          {avisoTexto && isOpen && (
+            <span className="inline text-[13px] font-bold text-[#FF9800] normal-case tracking-normal animate-in fade-in duration-300">
+              {avisoTexto}
+            </span>
           )}
         </div>
         <div className="flex items-center gap-4">
@@ -918,16 +923,27 @@ const generarSlug = (texto) => {
   const handleSaveData = async () => {
     const trayectoriaIncompleta = formData.trayectoria.some(t => !t.titulo.trim());
 const whatsappInvalido = formData.atiendeDomicilio && !formData.whatsappNum.replace(/^\+?54/, '').trim();
-if (!formData.nombre.trim() || !formData.especialidad.trim() || trayectoriaIncompleta || whatsappInvalido) {
+// Detectamos clínicas cargadas pero sin dirección confirmada con Google:
+// ya sea porque escribieron la dirección a mano sin elegir la sugerencia,
+// o porque directamente dejaron el campo de dirección vacío
+const direccionSinVerificar = formData.zonas.some(z =>
+  z.clinicas.some(c => {
+    const tieneAlgunDato = (c.nombrePropio || '').trim() || (c.direccion || '').trim();
+    return tieneAlgunDato && !c.placeId;
+  })
+);
+if (!formData.nombre.trim() || !formData.especialidad.trim() || trayectoriaIncompleta || whatsappInvalido || direccionSinVerificar) {
   setMostrarErroresSecciones(true);
       setModalConfig({ 
         isOpen: true, 
-        title: 'Faltan datos requeridos', 
-        message: 'Asegúrate de haber ingresado tu Foto, Nombre, Especialidad, y el Título de cada logro en Trayectoria.', 
+        title: direccionSinVerificar ? 'Dirección sin confirmar' : 'Faltan datos requeridos', 
+        message: direccionSinVerificar 
+          ? 'En "Zonas de Atención" hay una dirección escrita que no fue elegida de la lista de sugerencias de Google. Borrala y volvé a escribirla, eligiendo una opción del desplegable que aparece.'
+          : 'Asegúrate de haber ingresado tu Foto, Nombre, Especialidad, y el Título de cada logro en Trayectoria.', 
         type: 'error' 
       });
       setActiveTab('perfil');
-      setOpenSection('identidad'); 
+      setOpenSection(direccionSinVerificar ? 'zonas' : 'identidad'); 
       return;
     }
 
@@ -2057,7 +2073,12 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
                       type="text"
                       placeholder="Nombre de la clínica"
                       value={c.nombrePropio || ''}
-                      onChange={(e) => updateClinica(z.id, c.id, 'nombrePropio', e.target.value)}
+                      onChange={(e) => {
+                        // Si edita el nombre a mano, invalidamos el placeId anterior:
+                        // ya no podemos garantizar que siga correspondiendo a lo escrito
+                        updateClinica(z.id, c.id, 'nombrePropio', e.target.value);
+                        if (c.placeId) updateClinica(z.id, c.id, 'placeId', '');
+                      }}
                       id={`autocomplete-nombre-${c.id}`}
                       ref={(el) => {
                         if (!el) return;
@@ -2088,26 +2109,37 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
                       className="flex-1 text-xs text-gray-400 outline-none placeholder:text-gray-300 min-w-0"
                     />
                   </div>
+                  {(c.nombrePropio || '').trim() && !c.placeId && (
+                    <p className="px-4 pb-3 -mt-1 text-[11px] font-bold text-[#FF9800] flex items-center gap-1.5">
+                      <AlertTriangle className="w-3 h-3 shrink-0" /> Elegí una sugerencia de Google al escribir el nombre
+                    </p>
+                  )}
                 </div>
 
                 {/* FILA 2: DIRECCIÓN CON GOOGLE */}
-                <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-50">
-                  <MapPin className="w-3.5 h-3.5 text-gray-300 shrink-0" />
-                  <input
-                    type="text"
-                    placeholder="Dirección (buscá con Google)"
-                    value={c.direccion || ''}
-                    onChange={(e) => updateClinica(z.id, c.id, 'direccion', e.target.value)}
-                   id={`autocomplete-${c.id}`}
+                <div className="flex flex-col border-b border-gray-50">
+                  <div className="flex items-center gap-3 px-4 py-3">
+                    <MapPin className="w-3.5 h-3.5 text-gray-300 shrink-0" />
+                    <input
+                      type="text"
+                      placeholder="Dirección (buscá con Google)"
+                      value={c.direccion || ''}
+                      onChange={(e) => {
+                        // Si edita el texto a mano, invalidamos el placeId anterior:
+                        // ya no podemos garantizar que siga correspondiendo a lo escrito
+                        updateClinica(z.id, c.id, 'direccion', e.target.value);
+                        if (c.placeId) updateClinica(z.id, c.id, 'placeId', '');
+                      }}
+                     id={`autocomplete-${c.id}`}
 ref={(el) => {
   if (!el) return;
   // Guardamos referencia al DOM para el useEffect
   el.dataset.zonaId = z.id;
   el.dataset.clinicaId = c.id;
 }}
-                    className="flex-1 text-sm text-gray-500 outline-none placeholder:text-gray-300"
-                  />
-                  {(c.placeId || c.direccion) && (
+                      className="flex-1 text-sm text-gray-500 outline-none placeholder:text-gray-300"
+                    />
+                    {(c.placeId || c.direccion) && (
   <a 
     href={c.placeId 
       ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(c.direccion || '')}&query_place_id=${c.placeId}`
@@ -2120,6 +2152,13 @@ ref={(el) => {
     Ver
   </a>
 )}
+                  </div>
+                  {!c.placeId && ((c.nombrePropio || '').trim() || (c.direccion || '').trim()) && (
+                    <p className="px-4 pb-3 -mt-1 text-[11px] font-bold text-[#FF9800] flex items-center gap-1.5">
+                      <AlertTriangle className="w-3 h-3 shrink-0" />
+                      {c.direccion?.trim() ? 'Elegí una opción de la lista que aparece al escribir' : 'Falta cargar y confirmar la dirección'}
+                    </p>
+                  )}
                 </div>
 
                 {/* FILA 3: TELÉFONO OPCIONAL */}
@@ -2166,6 +2205,7 @@ ref={(el) => {
                       isOpen={openSection === 'galeria'}
                       onToggle={() => setOpenSection(openSection === 'galeria' ? null : 'galeria')}
                       tooltip="Subí fotos de congresos, participaciones, equipamiento o cualquier momento de tu carrera. Se mostrarán en tu perfil público."
+                      avisoTexto={<>Marcá con <AlertTriangle className="inline w-3.5 h-3.5 -mt-0.5" /> si tu imagen muestra contenido sensible</>}
                     >
                       {/* LÍMITE SEGÚN PLAN */}
                       {(() => {
@@ -2193,13 +2233,37 @@ ref={(el) => {
                                   <div key={item.id} className="group relative bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 shadow-sm">
 
                                     {/* FOTO */}
-                                    <div className="aspect-square overflow-hidden bg-gray-100">
+                                    <div className="aspect-square overflow-hidden bg-gray-100 relative">
                                       <img
                                         src={item.url}
                                         alt={item.epigrafe || `Foto ${index + 1}`}
                                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                       />
+                                      {item.esSensible && (
+                                        <div className="absolute inset-0 bg-[#1A3D3D]/70 flex items-center justify-center pointer-events-none">
+                                          <span className="flex items-center gap-1.5 bg-white/90 text-[#1A3D3D] text-[9px] font-black uppercase tracking-widest px-2.5 py-1.5 rounded-full">
+                                            <AlertTriangle className="w-3 h-3" /> Sensible
+                                          </span>
+                                        </div>
+                                      )}
                                     </div>
+
+                                    {/* BOTÓN MARCAR COMO SENSIBLE */}
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setFormData(prev => ({
+                                          ...prev,
+                                          galeria: prev.galeria.map(g =>
+                                            g.id === item.id ? { ...g, esSensible: !g.esSensible } : g
+                                          )
+                                        }));
+                                      }}
+                                      className={`absolute top-2 left-2 p-1.5 rounded-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity shadow-md z-10 ${item.esSensible ? 'bg-[#FF9800] text-white' : 'bg-white/90 text-gray-500 hover:bg-yellow-50'}`}
+                                      title={item.esSensible ? 'Quitar aviso de contenido sensible' : 'Marcar como contenido sensible'}
+                                    >
+                                      <AlertTriangle className="w-3.5 h-3.5" strokeWidth={2.5} />
+                                    </button>
 
                                     {/* BOTÓN ELIMINAR */}
                                     <button
@@ -2275,7 +2339,7 @@ ref={(el) => {
                                             ...prev,
                                             galeria: [
                                               ...prev.galeria,
-                                              { id: Date.now() + index, url: base64, epigrafe: '', storagePath: '' }
+                                              { id: Date.now() + index, url: base64, epigrafe: '', storagePath: '', esSensible: false }
                                             ]
                                           }));
                                         };

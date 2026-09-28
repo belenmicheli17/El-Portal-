@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { collection, addDoc, serverTimestamp, query, where, getDocs } from "firebase/firestore";
-import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+import { getAuth, createUserWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import {
    Lock, Eye, EyeOff,
@@ -183,6 +183,8 @@ const [showLogin, setShowLogin] = useState(false);
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [loginView, setLoginView] = useState('login'); // 'login' | 'forgot' | 'sent'
+  const [recuperando, setRecuperando] = useState(false);
   const loginEmailRef = useRef(null);
   const loginPasswordRef = useRef(null);
 
@@ -338,6 +340,24 @@ const handleLogin = async () => {
     }
   };
 
+  const handleForgotPassword = async () => {
+    if (!loginEmail) {
+      setLoginError('Ingresá tu email para recuperar la contraseña.');
+      return;
+    }
+    setRecuperando(true);
+    setLoginError('');
+    try {
+      const auth = getAuth();
+      await sendPasswordResetEmail(auth, loginEmail);
+      setLoginView('sent');
+    } catch (error) {
+      setLoginError('No pudimos enviar el correo. Revisá que el email esté bien escrito.');
+    } finally {
+      setRecuperando(false);
+    }
+  };
+
   // — Animación de entrada de la tarjeta al hacer scroll —
   const tarjetaRef = useRef(null);
   const [tarjetaVisible, setTarjetaVisible] = useState(false);
@@ -479,6 +499,7 @@ const handleLogin = async () => {
               setLoginError(''); 
               setLoginEmail(''); 
               setLoginPassword(''); 
+              setLoginView('login');
             }}
               className={`flex items-center gap-2 font-bold text-[13px] transition-colors border px-4 py-2 rounded-xl ${
                 showLogin
@@ -497,15 +518,19 @@ const handleLogin = async () => {
                 <div
                   className="fixed inset-0 z-[100]"
                   style={{ backgroundColor: 'transparent' }}
-                  onClick={() => { setShowLogin(false); setLoginError(''); loginEmail && setLoginEmail(''); setLoginPassword(''); }}
+                  onClick={() => { setShowLogin(false); setLoginError(''); loginEmail && setLoginEmail(''); setLoginPassword(''); setLoginView('login'); }}
                 />
 
                 <div className="fixed right-4 top-[70px] md:absolute md:right-0 md:top-full md:mt-3 w-[calc(100vw-32px)] md:w-[300px] bg-white rounded-[24px] shadow-[0_20px_60px_rgba(26,61,61,0.15)] border border-gray-100 p-6 z-[101] animate-in fade-in slide-in-from-top-2 duration-200 flex flex-col gap-4">
 
                   {/* HEADER */}
                   <div>
-                    <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[16px] leading-tight">Bienvenido/a de vuelta</h3>
-                    <p className="text-gray-400 text-[12px] font-medium mt-0.5">Ingresá con tu cuenta</p>
+                    <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[16px] leading-tight">
+                      {loginView === 'login' ? 'Bienvenido/a de vuelta' : loginView === 'forgot' ? 'Recuperar contraseña' : '¡Listo!'}
+                    </h3>
+                    <p className="text-gray-400 text-[12px] font-medium mt-0.5">
+                      {loginView === 'login' ? 'Ingresá con tu cuenta' : loginView === 'forgot' ? 'Te mandamos un link a tu correo' : 'Revisá tu bandeja de entrada'}
+                    </p>
                   </div>
 
                   {/* ERROR */}
@@ -516,58 +541,95 @@ const handleLogin = async () => {
                     </div>
                   )}
 
-                  {/* FORMULARIO */}
-                  <div className="flex flex-col gap-2.5">
-                    <div className="flex flex-col gap-1">
-                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-0.5">Email</label>
-                      <input
-                          ref={loginEmailRef}
-                          type="email"
-                          value={loginEmail}
-                          onChange={(e) => setLoginEmail(e.target.value)}
-                          onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-                          placeholder="tu@email.com"
-                          autoComplete="username"
-                          name="login-email"
-                          className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-[14px] font-medium text-[#1A3D3D] focus:outline-none focus:border-[#2D6A6A] focus:bg-white transition-colors"
-                        />
+                  {loginView === 'sent' ? (
+                    <div className="flex flex-col items-center text-center gap-3 py-2">
+                      <CheckCircle className="w-10 h-10 text-[#2D6A6A]" strokeWidth={2} />
+                      <p className="text-[#555555] text-[13px] leading-relaxed">
+                        Te enviamos un link a<br />
+                        <span className="font-bold text-[#1A3D3D]">{loginEmail}</span>
+                      </p>
+                      <button
+                        onClick={() => { setLoginView('login'); setLoginError(''); }}
+                        className="mt-1 text-[#2D6A6A] text-[12px] font-bold hover:text-[#1A3D3D] transition-colors underline underline-offset-2"
+                      >
+                        Volver a iniciar sesión
+                      </button>
                     </div>
-                    <div className="flex flex-col gap-1">
-                      <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-0.5">Contraseña</label>
-                      <div className="relative">
-                        <input
-                          ref={loginPasswordRef}
-                          type={showLoginPassword ? 'text' : 'password'}
-                          value={loginPassword}
-                          onChange={(e) => setLoginPassword(e.target.value)}
-                          onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-                          placeholder="••••••••"
-                          autoComplete="current-password"
-                          name="login-password"
-                          className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 pr-11 text-[14px] font-medium text-[#1A3D3D] focus:outline-none focus:border-[#2D6A6A] focus:bg-white transition-colors"
-                        />
+                  ) : (
+                    <>
+                      {/* FORMULARIO */}
+                      <div className="flex flex-col gap-2.5">
+                        <div className="flex flex-col gap-1">
+                          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-0.5">Email</label>
+                          <input
+                              ref={loginEmailRef}
+                              type="email"
+                              value={loginEmail}
+                              onChange={(e) => setLoginEmail(e.target.value)}
+                              onKeyDown={(e) => e.key === 'Enter' && (loginView === 'forgot' ? handleForgotPassword() : handleLogin())}
+                              placeholder="tu@email.com"
+                              autoComplete="username"
+                              name="login-email"
+                              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-[14px] font-medium text-[#1A3D3D] focus:outline-none focus:border-[#2D6A6A] focus:bg-white transition-colors"
+                            />
+                        </div>
+                        {loginView === 'login' && (
+                          <div className="flex flex-col gap-1">
+                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-0.5">Contraseña</label>
+                            <div className="relative">
+                              <input
+                                ref={loginPasswordRef}
+                                type={showLoginPassword ? 'text' : 'password'}
+                                value={loginPassword}
+                                onChange={(e) => setLoginPassword(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+                                placeholder="••••••••"
+                                autoComplete="current-password"
+                                name="login-password"
+                                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 pr-11 text-[14px] font-medium text-[#1A3D3D] focus:outline-none focus:border-[#2D6A6A] focus:bg-white transition-colors"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowLoginPassword(v => !v)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#2D6A6A] transition-colors p-1"
+                              >
+                                {showLoginPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                              </button>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => { setLoginView('forgot'); setLoginError(''); }}
+                              className="self-end mt-1 text-[11px] font-semibold text-[#2D6A6A] hover:text-[#1A3D3D] transition-colors"
+                            >
+                              ¿Olvidaste tu contraseña?
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* BOTÓN */}
+                      <button
+                        onClick={loginView === 'forgot' ? handleForgotPassword : handleLogin}
+                        disabled={loginView === 'forgot' ? recuperando : loginLoading}
+                        className="w-full bg-[#1A3D3D] text-white font-bold text-[12px] uppercase tracking-widest py-3.5 rounded-xl hover:bg-[#2D6A6A] transition-colors shadow-md flex items-center justify-center gap-2 disabled:opacity-70"
+                      >
+                        {loginView === 'forgot'
+                          ? (recuperando ? <><Loader className="w-4 h-4 animate-spin" /> Enviando...</> : 'Enviar link')
+                          : (loginLoading ? <><Loader className="w-4 h-4 animate-spin" /> Ingresando...</> : 'Ingresar')
+                        }
+                      </button>
+
+                      {loginView === 'forgot' && (
                         <button
                           type="button"
-                          onClick={() => setShowLoginPassword(v => !v)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#2D6A6A] transition-colors p-1"
+                          onClick={() => { setLoginView('login'); setLoginError(''); }}
+                          className="text-center text-[11px] font-semibold text-gray-400 hover:text-[#1A3D3D] transition-colors"
                         >
-                          {showLoginPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          Volver a iniciar sesión
                         </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* BOTÓN */}
-                  <button
-                    onClick={handleLogin}
-                    disabled={loginLoading}
-                    className="w-full bg-[#1A3D3D] text-white font-bold text-[12px] uppercase tracking-widest py-3.5 rounded-xl hover:bg-[#2D6A6A] transition-colors shadow-md flex items-center justify-center gap-2 disabled:opacity-70"
-                  >
-                    {loginLoading
-                      ? <><Loader className="w-4 h-4 animate-spin" /> Ingresando...</>
-                      : 'Ingresar'
-                    }
-                  </button>
+                      )}
+                    </>
+                  )}
                 </div>
               </>
             )}

@@ -8,8 +8,7 @@ import {
   ShieldCheck, MessageCircle, Star, Award, MapPin, Images, GalleryHorizontal, 
   ChevronRight, ChevronLeft, GraduationCap, Briefcase, Stethoscope, 
   Syringe, Send, Phone, Building2, Home, ChevronDown, 
-  Instagram, Linkedin, Facebook, Mail, User, X, PawPrint,
-  Activity, Microscope, Heart, Brain, Turtle, Camera,
+  Instagram, Linkedin, Facebook, Mail, User, X, PawPrint,   Activity, Microscope, Heart, Brain, Turtle, Camera,
   Clock, Eye, FileText, Sparkles, Globe, BookOpen, FileDown, Download, Check
 } from 'lucide-react';
 
@@ -19,6 +18,14 @@ const IconoHueso = ({ className }) => (
 
 const IconoPildora = ({ className }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/></svg>
+);
+
+const IconoBisturi = ({ className }) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M4 20 15.5 8.5" />
+    <path d="M14.5 5.5 20.5 11.5c.4.4.4 1 0 1.4l-.6.6c-1.7 1.7-4.4 1.7-6.1 0L11.5 11.2c-1.7-1.7-1.7-4.4 0-6.1l.6-.6c.4-.4 1-.4 1.4 0Z" />
+    <path d="m3 21 1-1" />
+  </svg>
 );
 
 const IconoWhatsApp = ({ className }) => (

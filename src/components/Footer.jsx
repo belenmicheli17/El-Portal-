@@ -1,9 +1,10 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Mail, Globe, Facebook, Instagram, Linkedin, Heart, ShieldCheck } from 'lucide-react';
 
 export default function Footer() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Función auxiliar para unificar la navegación y subir el scroll
   const handleNavClick = (path) => {
@@ -93,6 +94,11 @@ export default function Footer() {
           {/* Copyright */}
           <div className="text-white/40 text-[11px] md:text-xs font-medium leading-relaxed text-center">
             <p>&copy; {new Date().getFullYear()} El Portal. Todos los derechos reservados.</p>
+            {location.pathname.toLowerCase() === '/cartilla' && (
+              <p className="text-white/25 text-[9px] mt-1">
+                Ilustración de <a href="https://www.freepik.com" target="_blank" rel="noopener noreferrer" className="underline hover:text-white/40">Magnific</a>
+              </p>
+            )}
           </div>
 
           {/* Legales */}
