@@ -3,10 +3,11 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { db } from '../firebase';
 import { doc, getDoc } from 'firebase/firestore';
+import LoginDropdown from './LoginDropdown';
 import {
   Menu, X, Search, User, ChevronRight,
   Briefcase, BookOpen, Package, FileText,
-  LogOut, Home
+  LogOut, Home, Stethoscope
 } from 'lucide-react';
 
 // ─── Links del menú hamburguesa según rol ───────────────────────────────────
@@ -54,8 +55,12 @@ export default function Navbar() {
   const [isNavbarScrolled, setIsNavbarScrolled] = useState(false);
   const [banner, setBanner] = useState({ mostrar: false, texto: '' });
   const menuRef = useRef(null);
+  // Cartelito de login (visitantes): abierto/cerrado y referencia para detectar clics afuera
+  const [showLogin, setShowLogin] = useState(false);
+  const loginRef = useRef(null);
 
   const esPerfil = esRutaDePerfil(location.pathname);
+  const enCartilla = location.pathname.toLowerCase() === '/cartilla';
   const rol = currentUser?.rol || null;
   const linksMenu = rol ? MENU_POR_ROL[rol] || [] : [];
 
@@ -99,6 +104,18 @@ export default function Navbar() {
   useEffect(() => {
     setIsMenuOpen(false);
   }, [location.pathname]);
+
+  // ── Cierra el cartelito de login al hacer click afuera ─────────────────────
+  useEffect(() => {
+    if (!showLogin) return;
+    const handleClickOutsideLogin = (e) => {
+      if (loginRef.current && !loginRef.current.contains(e.target)) {
+        setShowLogin(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutsideLogin);
+    return () => document.removeEventListener('mousedown', handleClickOutsideLogin);
+  }, [showLogin]);
 
   // ── Botón "Contactar": scroll al section #contacto del perfil ──────────────
   const handleContactar = () => {
@@ -149,13 +166,27 @@ export default function Navbar() {
           {/* Derecha */}
           <div className="flex items-center gap-3">
 
-            {/* Buscar Profesionales — siempre visible en desktop */}
-            <button
-              onClick={() => navigate('/Cartilla')}
-              className="hidden md:flex items-center gap-2 bg-white text-[#1A3D3D] border border-[#1A3D3D]/10 rounded-2xl px-5 py-2.5 text-[13px] font-bold shadow-sm hover:bg-[#F4F7F7] hover:border-[#2D6A6A] transition-all"
-            >
-              <Search className="w-4 h-4" /> Buscar Profesionales
-            </button>
+            {/* Buscar Profesionales — desktop. En la propia Cartilla no hace falta (ya estás ahí) */}
+            {!enCartilla && (
+              <button
+                onClick={() => navigate('/Cartilla')}
+                className="hidden md:flex items-center gap-2 bg-white text-[#1A3D3D] border border-[#1A3D3D]/10 rounded-2xl px-5 py-2.5 text-[13px] font-bold shadow-sm hover:bg-[#F4F7F7] hover:border-[#2D6A6A] transition-all"
+              >
+                <Search className="w-4 h-4" /> Buscar Profesionales
+              </button>
+            )}
+
+            {/* ¿Sos veterinario? Registrate — solo para visitantes (sin sesión iniciada) */}
+            {!currentUser && (
+              <button
+                onClick={() => navigate('/login', { state: { registro: 'profesional' } })}
+                className="flex items-center gap-2 bg-[#2D6A6A] text-white rounded-2xl px-4 md:px-5 py-2.5 text-[12px] md:text-[13px] font-['Montserrat'] font-extrabold tracking-wide shadow-[0_4px_15px_rgba(45,106,106,0.25)] hover:bg-[#1A3D3D] hover:-translate-y-0.5 transition-all"
+              >
+                <Stethoscope className="w-4 h-4 hidden md:block" />
+                <span className="md:hidden">Registrate</span>
+                <span className="hidden md:inline">¿Sos veterinario? Registrate</span>
+              </button>
+            )}
 
             {/* Botón Contactar — solo en perfiles, desktop */}
             {esPerfil && (
@@ -177,13 +208,16 @@ export default function Navbar() {
                 <User className="w-5 h-5" />
               </button>
             ) : (
-              <button
-                onClick={() => navigate('/Login')}
-                className="bg-white text-[#1A3D3D] border border-[#1A3D3D]/10 w-10 h-10 md:w-11 md:h-11 rounded-2xl flex items-center justify-center hover:bg-[#F4F7F7] hover:border-[#2D6A6A] transition-all shadow-sm"
-                aria-label="Iniciar sesión"
-              >
-                <User className="w-5 h-5" />
-              </button>
+              <div className="relative" ref={loginRef}>
+                <button
+                  onClick={() => setShowLogin(v => !v)}
+                  className="bg-white text-[#1A3D3D] border border-[#1A3D3D]/10 w-10 h-10 md:w-11 md:h-11 rounded-2xl flex items-center justify-center hover:bg-[#F4F7F7] hover:border-[#2D6A6A] transition-all shadow-sm"
+                  aria-label="Iniciar sesión"
+                >
+                  <User className="w-5 h-5" />
+                </button>
+                {showLogin && <LoginDropdown onClose={() => setShowLogin(false)} />}
+              </div>
             )}
 
             {/* Hamburguesa — SOLO para usuarios logueados */}

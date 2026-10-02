@@ -6,7 +6,7 @@ import {
   Search, MapPin, Home, 
   ChevronRight, Award, Dog, Cat, Filter, 
   Heart, Stethoscope, Layers, ChevronDown,
-  Bird, Rabbit, PawPrint, Hospital, TreeDeciduous 
+  Bird, Rabbit, PawPrint, Hospital, TreeDeciduous, X 
 } from 'lucide-react';
 import { db } from '../firebase'; 
 import { collection, getDocs } from 'firebase/firestore';
@@ -38,6 +38,8 @@ const Cartilla = () => {
   const [searchTerm, setSearchTerm] = useState('');
 
   const hayClinicas = veterinarios.some(v => v.tipo === 'clinica');
+  // ¿Hay al menos una clínica con guardia 24hs cargada? Si no hay ninguna, ocultamos los botones de guardia
+  const hayGuardia24hs = veterinarios.some(v => v.tipo === 'clinica' && v.guardia24hs) || true; // TEMPORAL: forzado para probar el diseño, SACAR antes de subir
 
 useEffect(() => {
   if (!currentUser) return;
@@ -161,6 +163,9 @@ const PASOS_CARTILLA = [
         const profesionalesData = [];
         snapProfesionales.forEach((doc) => {
           const data = doc.data();
+          // Perfiles pendientes de verificación (visible en false) no aparecen en la cartilla.
+          // Los perfiles que no tienen el campo "visible" se siguen mostrando como siempre.
+          if (data.visible === false) return;
           const opcionesProfesional = data.servicios
             ? Array.isArray(data.servicios)
               ? data.servicios.map(s => s.titulo)
@@ -287,16 +292,37 @@ const PASOS_CARTILLA = [
     return conteo;
   }, [veterinarios]);
 
+  // Saca un filtro de la URL. Si le pasás un valor (ej: una provincia) saca solo ese;
+  // si no, saca el filtro entero (ej: "domicilio").
+  const quitarFiltro = (clave, valor) => {
+    setSearchParams(prev => {
+      const p = new URLSearchParams(prev);
+      if (valor === undefined) {
+        p.delete(clave);
+      } else {
+        const resto = (p.get(clave) || '').split(',').filter(x => x && x !== valor);
+        if (resto.length) p.set(clave, resto.join(','));
+        else p.delete(clave);
+      }
+      return p;
+    });
+  };
+
   const veterinariosFiltrados = veterinarios.filter(v => {
-    // Buscador de texto libre
+    //     // Buscador de texto libre: busca en nombre, apellido, especialidad, servicios,
+    // provincia, dirección, zonas y barrios. Cada palabra tiene que aparecer en algún lado.
     if (searchTerm) {
-      const term = normalizar(searchTerm);
-      const matchNombre = normalizar(v.nombre || "").includes(term);
-      const matchEspecialidad = normalizar(v.especialidad || "").includes(term);
-      const matchServicios = v.servicios?.some(s => normalizar(s).includes(term));
-      
-      // Si el término de búsqueda no coincide en ninguna de estas categorías, se descarta
-      if (!matchNombre && !matchEspecialidad && !matchServicios) return false;
+      const textoDelItem = normalizar([
+        v.nombre, v.apellido, v.especialidad, v.provincia, v.direccion,
+        ...(Array.isArray(v.servicios) ? v.servicios : []),
+        ...(Array.isArray(v.zonas) ? v.zonas.flatMap(z => [
+          z.nombre,
+          ...(Array.isArray(z.clinicas) ? z.clinicas.flatMap(c => [c.nombrePropio, c.barrio, c.direccion]) : [])
+        ]) : [])
+      ].filter(Boolean).join(' '));
+
+      const palabras = normalizar(searchTerm).split(/[\s,]+/).filter(Boolean);
+      if (!palabras.every(p => textoDelItem.includes(p))) return false;
     }
     
     // Filtros de Botones (esto se mantiene igual)
@@ -324,51 +350,6 @@ const PASOS_CARTILLA = [
   
  return (
     <>
-      {/* CARTELITO DE URGENCIA — Portal al body para evitar overflow-hidden del main */}
-      {showUrgenciaBox && createPortal(
-        <div className="fixed top-24 right-8 w-[280px] bg-white border border-red-200 p-5 rounded-2xl shadow-2xl z-[200] animate-in fade-in slide-in-from-right-8 hidden md:block">
-          <div className="flex items-center justify-between mb-2">
-            <h4 className="text-red-600 font-bold uppercase tracking-widest text-[11px] flex items-center gap-2">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-              </span>
-              ¿Urgencia veterinaria?
-            </h4>
-            <button onClick={() => setShowUrgenciaBox(false)} className="text-gray-400 hover:text-gray-600 font-bold p-1">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-            </button>
-          </div>
-          <p className="text-gray-500 text-[12px] font-medium leading-relaxed mb-3 md:mb-4">
-            Encontrá la guardia veterinaria más cercana a tu ubicación ahora mismo.
-          </p>
-          <div className="flex flex-col gap-2">
-            <button
-              onClick={handleBuscarCercana}
-              disabled={buscandoUbicacion}
-              className="w-full bg-red-600 text-white hover:bg-red-700 transition-colors py-2 md:py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-70"
-            >
-              {buscandoUbicacion ? (
-                <>
-                  <svg className="animate-spin w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
-                  Buscando...
-                </>
-              ) : (
-                <>
-                  <MapPin className="w-3 h-3" /> Guardia más cercana
-                </>
-              )}
-            </button>
-            <button
-              onClick={() => setShowUrgenciaBox(false)}
-              className="hidden md:block w-full bg-[#F4F7F7] text-[#1A3D3D] hover:bg-gray-200 transition-colors py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest"
-            >
-              Cerrar
-            </button>
-          </div>
-        </div>,
-        document.body
-      )}
 
       <main className="min-h-screen bg-[#F9F5F0] pb-24 relative flex flex-col gap-4 sm:gap-6 animate-in fade-in duration-500 overflow-hidden">
         {/* BURBUJAS DE FONDO LIBRES */}
@@ -413,6 +394,9 @@ const PASOS_CARTILLA = [
                 showModalidad={true}
                 provinciasDisponibles={provinciasDisponibles}
                 especialidadesDisponibles={especialidadesDisponibles}
+                hayGuardia24hs={hayGuardia24hs}
+                onUrgencia={handleBuscarCercana}
+                buscandoUbicacion={buscandoUbicacion}
               />
             </div>
           </div>
@@ -426,6 +410,51 @@ const PASOS_CARTILLA = [
             />
           </div>
         </div>
+
+        {/* FILTROS ACTIVOS: entre el hero y las tarjetas. Al tocar un chip, se saca ese filtro. */}
+        {(searchTerm.trim() || filtros.zonas.length > 0 || filtros.especialidades.length > 0 || filtros.domicilio || filtros.guardia24hs) && (() => {
+          const claseChip = "inline-flex items-center gap-1.5 bg-white border border-[#2D6A6A]/20 text-[#1A3D3D] rounded-full pl-3.5 pr-3 py-1.5 text-[13px] font-semibold shadow-sm transition-all duration-300 hover:border-[#2D6A6A] hover:bg-[#2D6A6A]/5";
+          return (
+            <div className="max-w-6xl mx-auto w-full px-4 relative z-10 font-['Inter']">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-[14px] font-bold text-[#1A3D3D]">
+                  {activeTab === 'todos' ? 'Todos' : activeTab === 'especialistas' ? 'Especialistas' : 'Clínicas'}
+                </span>
+                <ChevronRight className="w-4 h-4 text-gray-300" />
+
+                {searchTerm.trim() && (
+                  <button type="button" onClick={() => setSearchTerm('')} className={claseChip} title="Sacar esta búsqueda">
+                    <Search className="w-3.5 h-3.5 text-[#2D6A6A]" /> {searchTerm.trim()} <X className="w-3.5 h-3.5 text-gray-400" />
+                  </button>
+                )}
+                {filtros.zonas.map(z => (
+                  <button key={`z-${z}`} type="button" onClick={() => quitarFiltro('zonas', z)} className={claseChip} title="Sacar este filtro">
+                    <MapPin className="w-3.5 h-3.5 text-[#2D6A6A]" /> {z} <X className="w-3.5 h-3.5 text-gray-400" />
+                  </button>
+                ))}
+                {filtros.especialidades.map(e => (
+                  <button key={`e-${e}`} type="button" onClick={() => quitarFiltro('especialidades', e)} className={claseChip} title="Sacar este filtro">
+                    <Stethoscope className="w-3.5 h-3.5 text-[#2D6A6A]" /> {e} <X className="w-3.5 h-3.5 text-gray-400" />
+                  </button>
+                ))}
+                {filtros.domicilio && (
+                  <button type="button" onClick={() => quitarFiltro('domicilio')} className={claseChip} title="Sacar este filtro">
+                    <Home className="w-3.5 h-3.5 text-blue-600" /> Atiende a domicilio <X className="w-3.5 h-3.5 text-gray-400" />
+                  </button>
+                )}
+                {filtros.guardia24hs && (
+                  <button type="button" onClick={() => quitarFiltro('guardia24hs')} className={claseChip} title="Sacar este filtro">
+                    <Hospital className="w-3.5 h-3.5 text-red-500" /> Guardia 24hs <X className="w-3.5 h-3.5 text-gray-400" />
+                  </button>
+                )}
+
+                <button type="button" onClick={limpiarFiltros} className="text-[13px] font-semibold text-[#2D6A6A] underline underline-offset-2 hover:text-[#1A3D3D] px-1">
+                  Limpiar todo
+                </button>
+              </div>
+            </div>
+          );
+        })()}
 
         <div className="grid grid-cols-1 max-w-6xl mx-auto w-full px-4 mt-2 sm:mt-2 mb-4 relative z-10 font-['Inter'] min-h-[80vh]">
           {loading && (

@@ -32,7 +32,10 @@ const BarraFiltros = ({
   modo = 'default',
   aniosDisponibles = [],
   provinciasDisponibles = {},
-  especialidadesDisponibles = {}
+  especialidadesDisponibles = {},
+  hayGuardia24hs = true,
+  onUrgencia,
+  buscandoUbicacion = false
 }) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [showFilters, setShowFilters] = useState(false);
@@ -484,7 +487,8 @@ const BarraFiltros = ({
                               </span>
                             </button>
 
-                            {/* BOTÓN: GUARDIA 24HS */}
+                            {/* BOTÓN: GUARDIA 24HS (solo aparece si hay alguna clínica con guardia cargada) */}
+                            {hayGuardia24hs && (
                             <button
                               type="button"
                               onClick={() => {
@@ -510,6 +514,7 @@ const BarraFiltros = ({
                                 Guardia 24hs
                               </span>
                             </button>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -556,6 +561,36 @@ const BarraFiltros = ({
           </div>
         )}
       </div>
+
+      {/* EXTENSIÓN DE URGENCIA — solapa que cuelga debajo de la barra (solo PC, solo si hay clínicas con guardia 24hs y la pantalla pasó la función onUrgencia) */}
+      {modo === 'default' && hayGuardia24hs && onUrgencia && (
+        <div className="block relative z-20 -mt-5">
+          <button
+            type="button"
+            onClick={onUrgencia}
+            disabled={buscandoUbicacion}
+            className="inline-flex items-center gap-2 pt-6.5 pb-3 px-6 bg-red-600 hover:bg-red-700 text-white rounded-b-[16px] text-[13px] md:text-[14px] font-semibold shadow-md transition-all duration-300 ease-in-out disabled:opacity-70"
+          >
+            {buscandoUbicacion ? (
+              <>
+                <svg className="animate-spin w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                </svg>
+                <span>Buscando guardia cerca tuyo...</span>
+              </>
+            ) : (
+              <>
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                </span>
+                <span>Necesito atención de urgencia</span>
+              </>
+            )}
+          </button>
+        </div>
+      )}
     </div>
   );
 };

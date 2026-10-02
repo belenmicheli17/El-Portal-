@@ -2422,7 +2422,7 @@ ref={(el) => {
     </div>
   ) : (
     <>
-      <ToggleSwitch label="Botón de WhatsApp" checked={formData.whatsappActivo} onChange={(v) => setFormData(p => ({...p, whatsappActivo: v}))} tooltip="Aparecerá un botón verde en tu perfil para chats." />
+      <ToggleSwitch label="Botón de WhatsApp (opcional)" checked={formData.whatsappActivo} onChange={(v) => setFormData(p => ({...p, whatsappActivo: v}))} tooltip="Aparecerá un botón verde en tu perfil para chats." />
       {formData.whatsappActivo && (
     <div className="mt-4 space-y-4 animate-in slide-in-from-top-2 duration-300">
       <div className="mb-6 w-full">
@@ -2508,7 +2508,7 @@ ref={(el) => {
       <input
         id="instagram"
         type="text"
-        value={formData.instagram.startsWith('http') ? '' : formData.instagram.replace('@', '')}
+        value={formData.instagram.startsWith('http') ? formData.instagram.split('?')[0].replace(/\/+$/, '').split('/').pop().replace('@', '') : formData.instagram.replace('@', '')}
         onChange={(e) => setFormData(prev => ({ ...prev, instagram: e.target.value.replace('@', '') }))}
         placeholder="tu_usuario"
         className="flex-1 bg-transparent text-base font-medium text-[#1A3D3D] focus:outline-none placeholder:text-gray-400"

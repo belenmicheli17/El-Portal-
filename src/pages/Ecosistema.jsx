@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { db, storage } from '../firebase';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
@@ -447,6 +447,12 @@ export default function Ecosistema() {
 
   if (loading) return <PantallaCarga />;
   if (!currentUser) return null;
+
+  // Profesionales nuevos: primero completan el cuestionario de alta.
+  // Los usuarios que ya existían no tienen este campo, así que pasan directo.
+  if (currentUser.rol === 'profesional' && currentUser.onboardingCompleto === false) {
+    return <Navigate to="/onboarding" replace />;
+  }
 
   // Pantalla para usuarios dados de baja
   if (currentUser.estado === 'baja') {

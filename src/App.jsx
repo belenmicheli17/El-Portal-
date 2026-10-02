@@ -27,6 +27,7 @@ import Capacitaciones from './pages/Capacitaciones';
 import CartillaProveedores from './pages/CartillaProveedores';
 import Ecosistema from './pages/Ecosistema';
 import SalaDeEspera from './pages/SalaDeEspera';
+import Onboarding from './pages/Onboarding';
 // Panel Admin
 import RutaProtegidaAdmin from './components/admin/RutaProtegidaAdmin';
 import RutaProtegida from './components/admin/RutaProtegida';
@@ -137,6 +138,7 @@ export default function App() {
   <Route path="/ecosistema" element={<Ecosistema />} />
 </Route>
 <Route element={<RutaProtegida />}>
+  <Route path="/onboarding" element={<Onboarding />} />
   <Route path="/editor-profesional" element={<Editor />} />
   <Route path="/editor-clinica" element={<EditorClinica />} />
   <Route path="/editor-proveedores" element={<EditorProveedor />} />

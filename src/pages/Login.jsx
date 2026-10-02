@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   Mail, Lock, Eye, EyeOff, ShieldCheck, ChevronLeft,
   ArrowRight, KeyRound, CheckCircle2, Stethoscope,
@@ -8,6 +8,7 @@ import {
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
+import { useAuth } from '../context/AuthContext';
 
 const traducirErrorFirebase = (errorCode) => {
   switch (errorCode) {
@@ -34,6 +35,16 @@ export default function Login() {
 
   const [formData, setFormData] = useState({ nombre: '', email: '', password: '' });
   const navigate = useNavigate();
+  const location = useLocation();
+  const { refreshUser } = useAuth();
+
+  // Si llegan desde el botón "¿Sos veterinario? Registrate" de la navbar, abrimos el registro mostrando las opciones de tipo de cuenta
+  useEffect(() => {
+    if (location.state?.registro) {
+      setView('register');
+      setAccountType(null);
+    }
+  }, [location.state]);
 
   useEffect(() => {
     const link = document.createElement('link');
@@ -85,18 +96,22 @@ export default function Login() {
         const auth = getAuth();
         const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
         const user = userCredential.user;
-        const slugGenerado = formData.nombre.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
         const userDocRef = doc(db, 'usuarios', user.uid);
-        const necesitaValidacion = accountType === 'profesional' || accountType === 'clinica';
+        // Por ahora el registro abierto es solo para profesionales. El nombre, la matrícula y el resto
+        // se piden después, en el cuestionario de alta (/onboarding).
         await setDoc(userDocRef, {
-          nombre: formData.nombre,
+          nombre: '',
           email: formData.email,
-          rol: accountType,
-          slug: slugGenerado,
+          rol: 'profesional',
+          slug: '',
           fechaRegistro: new Date().toISOString(),
-          estado: necesitaValidacion ? 'pendiente' : 'activo'
+          estado: 'pendiente',
+          onboardingCompleto: false,
+          onboardingPaso: 0
         });
-        navigate('/ecosistema');
+        // Releemos los datos del usuario para que la app sepa que es profesional y debe pasar por el cuestionario
+        await refreshUser();
+        navigate('/onboarding');
       } catch (error) {
         setErrorMsg(traducirErrorFirebase(error.code));
       } finally {
@@ -120,7 +135,7 @@ export default function Login() {
 
   const renderHeader = () => {
     if (view === 'forgot_password' || view === 'recovery_sent') return 'Recuperar Clave';
-    if (view === 'register') return accountType ? 'Completar Datos' : '¿Qué tipo de cuenta?';
+    if (view === 'register') return accountType ? 'Crear mi cuenta' : '¿Qué tipo de cuenta?';
     return 'Iniciar Sesión';
   };
 
@@ -217,22 +232,42 @@ export default function Login() {
                 {renderHeader()}
               </h2>
 
-              {view === 'register' && !accountType ? (
-                <div className="space-y-4 md:space-y-3">
-                  <button onClick={() => setAccountType('profesional')} className="w-full text-left p-4 md:p-3.5 rounded-2xl border-2 border-gray-100 hover:border-[#2D6A6A] hover:bg-[#F4F7F7] transition-all group flex items-center gap-4">
-                    <div className="bg-blue-50 p-3 md:p-2.5 rounded-full text-blue-600 group-hover:scale-110 transition-transform"><Stethoscope size={20} /></div>
-                    <div><h3 className="font-bold text-[#1A3D3D] text-[15px] md:text-[14px]">Soy Profesional</h3><p className="text-gray-500 text-[11px] leading-tight mt-1">Veterinario/a, busco conectar y acceder a recursos.</p></div>
-                  </button>
-                  <button onClick={() => setAccountType('clinica')} className="w-full text-left p-4 md:p-3.5 rounded-2xl border-2 border-gray-100 hover:border-[#2D6A6A] hover:bg-[#F4F7F7] transition-all group flex items-center gap-4">
-                    <div className="bg-emerald-50 p-3 md:p-2.5 rounded-full text-emerald-600 group-hover:scale-110 transition-transform"><Hospital size={20} /></div>
-                    <div><h3 className="font-bold text-[#1A3D3D] text-[15px] md:text-[14px]">Soy una Clínica</h3><p className="text-gray-500 text-[11px] leading-tight mt-1">Busco publicar ofertas de empleo y derivaciones.</p></div>
-                  </button>
-                  <button onClick={() => setAccountType('proveedor')} className="w-full text-left p-4 md:p-3.5 rounded-2xl border-2 border-gray-100 hover:border-[#2D6A6A] hover:bg-[#F4F7F7] transition-all group flex items-center gap-4">
-                    <div className="bg-purple-50 p-3 md:p-2.5 rounded-full text-purple-600 group-hover:scale-110 transition-transform"><Store size={20} /></div>
-                    <div><h3 className="font-bold text-[#1A3D3D] text-[15px] md:text-[14px]">Proveedor</h3><p className="text-gray-500 text-[11px] leading-tight mt-1">Ofrezco insumos, equipamiento o servicios.</p></div>
-                  </button>
+                                   {view === 'register' && !accountType ? (
+                <div className="space-y-3">
+                  {[
+                    { valor: 'profesional', label: 'Soy Profesional', sub: 'Veterinario/a que busca conectar y crecer.', Icono: Stethoscope, proximamente: false },
+                    { valor: 'clinica', label: 'Soy una Clínica', sub: 'Institución que busca talento y visibilidad.', Icono: Hospital, proximamente: true },
+                    { valor: 'proveedor', label: 'Proveedor o empresa', sub: 'Ofrezco insumos mayoristas, equipamiento o servicios para los usuarios mencionados anteriormente.', Icono: Store, proximamente: true },
+                  ].map(({ valor, label, sub, Icono, proximamente }) => (
+                    <div key={valor} className="relative mt-4 first:mt-0">
+                      {proximamente && (
+                        <div className="absolute -top-2.5 right-2 flex items-center gap-1.5 bg-gray-400 text-white text-[10px] font-bold uppercase tracking-[0.15em] px-2.5 py-1 rounded-full z-10">
+                          <span className="w-1 h-1 rounded-full bg-white animate-pulse shrink-0"></span>
+                          Próximamente
+                        </div>
+                      )}
+                      <button
+                        type="button"
+                        disabled={proximamente}
+                        onClick={() => { if (proximamente) return; setAccountType(valor); setErrorMsg(''); }}
+                        className={`w-full text-left p-4 rounded-2xl border-2 transition-all flex items-center gap-4 ${
+                          proximamente
+                            ? 'border-gray-100 bg-gray-50 cursor-not-allowed opacity-60'
+                            : 'border-[#2D6A6A]/40 hover:border-[#2D6A6A] hover:bg-[#F4F7F7] group active:scale-[0.98]'
+                        }`}
+                      >
+                        <div className={`p-2.5 rounded-full transition-transform ${proximamente ? 'bg-gray-100 text-gray-400' : 'bg-blue-50 text-blue-600 group-hover:scale-110'}`}>
+                          <Icono size={18} />
+                        </div>
+                        <div>
+                          <h4 className={`font-bold text-[14px] ${proximamente ? 'text-gray-400' : 'text-[#1A3D3D]'}`}>{label}</h4>
+                          <p className="text-gray-400 text-[13px] leading-tight mt-0.5">{sub}</p>
+                        </div>
+                      </button>
+                    </div>
+                  ))}
                 </div>
-              ) : view === 'recovery_sent' ? (
+                              ) : view === 'recovery_sent' ? (
                 <div className="flex flex-col items-center text-center space-y-4 py-6">
                   <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mb-2">
                     <CheckCircle2 className="w-8 h-8 text-green-500" />
@@ -255,16 +290,7 @@ export default function Login() {
                   )}
 
                   <form onSubmit={handleSubmit} className="space-y-4 md:space-y-3">
-                    {view === 'register' && accountType && (
-                      <div className="relative group">
-                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-[#2D6A6A] transition-colors">
-                          {accountType === 'profesional' ? <Stethoscope size={18} /> : accountType === 'clinica' ? <Hospital size={18} /> : <Store size={18} />}
-                        </div>
-                        <input type="text" name="nombre" value={formData.nombre} onChange={handleChange}
-                          placeholder={accountType === 'profesional' ? 'Tu Matrícula Profesional' : accountType === 'clinica' ? 'Nombre de la Clínica' : 'Nombre de Proveedor'}
-                          className="w-full pl-11 pr-4 py-3.5 md:py-3 bg-[#F4F7F7] border border-transparent rounded-xl text-[13px] text-[#1A3D3D] placeholder-gray-400 focus:bg-white focus:border-[#2D6A6A] focus:ring-2 focus:ring-[#2D6A6A]/20 transition-all outline-none" required />
-                      </div>
-                    )}
+
                     <div className="relative group">
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-[#2D6A6A] transition-colors"><Mail size={18} /></div>
                       <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="Correo electrónico"
@@ -309,15 +335,12 @@ export default function Login() {
                   {view === 'login' ? '¿Aún no eres parte de la red?' : '¿Ya tienes una cuenta?'}
                 </p>
                 {view === 'login' ? (
-                  <div className="mt-2 inline-flex items-center gap-1.5">
-                    <span className="text-[12px] font-bold uppercase tracking-widest text-gray-300 cursor-not-allowed">
-                      Solicitar Registro
-                    </span>
-                    <span className="inline-flex items-center gap-1 bg-[#4DB6AC] text-white text-[9px] font-bold uppercase tracking-[0.15em] px-2 py-0.5 rounded-full">
-                      <span className="w-1 h-1 rounded-full bg-white animate-pulse shrink-0"></span>
-                      Próximamente
-                    </span>
-                  </div>
+                  <button
+                    onClick={() => { setView('register'); setAccountType(null); setErrorMsg(''); }}
+                    className="mt-2 text-[12px] font-bold uppercase tracking-widest text-[#1A3D3D] hover:text-[#2D6A6A] transition-colors"
+                  >
+                    Solicitar Registro
+                  </button>
                 ) : (
                   <button
                     onClick={() => { setView('login'); setAccountType(null); setErrorMsg(''); }}
