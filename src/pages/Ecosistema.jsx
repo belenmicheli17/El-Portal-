@@ -375,12 +375,147 @@ const PantallaEstado = ({ tipo, currentUser, handleLogout }) => {
   );
 };
 
+// ── Pantalla de espera (profesional que ya envió sus datos) ────────────────
+const PantallaEspera = ({ verificacion, handleLogout }) => {
+  const navigate = useNavigate();
+  const fechaEnvio = verificacion?.enviadoEn?.toDate
+    ? verificacion.enviadoEn.toDate().toLocaleDateString('es-AR')
+    : '';
+
+  return (
+    <div className="min-h-screen bg-[#F4F7F7] font-['Inter'] flex items-center justify-center p-6">
+      <div className="max-w-lg w-full bg-white rounded-[32px] shadow-sm border border-gray-100 p-8 md:p-12 text-center">
+
+        <div className="w-20 h-20 bg-[#2D6A6A]/10 rounded-full flex items-center justify-center mx-auto mb-6">
+          <ShieldCheck className="w-10 h-10 text-[#2D6A6A]" strokeWidth={1.5} />
+        </div>
+
+        <h1 className="text-2xl md:text-[28px] font-black text-[#1A3D3D] font-['Montserrat'] mb-3 leading-tight">
+          Tu cuenta está siendo verificada
+        </h1>
+
+        <p className="text-[#666666] text-[16px] md:text-[17px] font-medium mb-6 leading-relaxed">
+          Estamos revisando tu matrícula y tu título. Tarda menos de 48 horas hábiles y te avisamos por mail apenas esté listo.
+        </p>
+
+        {/* Estado de la solicitud */}
+        <div className="bg-[#F4F7F7] rounded-2xl p-5 mb-6 text-left flex items-center gap-4">
+          <div className="w-10 h-10 rounded-xl bg-white text-[#2D6A6A] flex items-center justify-center shrink-0">
+            <Check className="w-5 h-5" strokeWidth={3} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-[#1A3D3D] font-bold text-[15px]">Recibimos tu solicitud</p>
+            {fechaEnvio && <p className="text-[#666666] text-[14px] font-medium">Enviada el {fechaEnvio}</p>}
+          </div>
+          <span className="ml-auto shrink-0 inline-flex items-center gap-2 text-[11px] md:text-[12px] font-bold uppercase tracking-[0.2em] text-[#2D6A6A]">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#2D6A6A] animate-pulse"></span>
+            En revisión
+          </span>
+        </div>
+
+        <p className="text-[#666666] text-[15px] font-medium mb-5 leading-relaxed">
+          Mientras esperás, podés sumar tu trayectoria y tus fotos. Apenas te verifiquemos, tu perfil sale publicado.
+        </p>
+
+        <button
+          type="button"
+          onClick={() => navigate('/editor-profesional')}
+          className="w-full bg-[#2D6A6A] text-white rounded-xl px-7 py-4 text-[13px] font-bold uppercase tracking-[0.15em] shadow-md transition-all duration-300 ease-in-out hover:bg-[#1A3D3D] hover:-translate-y-1 hover:shadow-xl flex items-center justify-center gap-2 mb-6"
+        >
+          <User className="w-4 h-4" /> Completar mi perfil
+        </button>
+
+        <button onClick={handleLogout} className="text-[#666666] text-sm font-bold hover:text-red-500 transition-colors flex items-center gap-2 mx-auto">
+          <LogOut className="w-4 h-4" /> Cerrar sesión por ahora
+        </button>
+
+      </div>
+    </div>
+  );
+};
+
+// ── Pantalla de rechazo (profesional al que no pudimos verificar) ──────────
+const PantallaRechazo = ({ verificacion, handleLogout }) => {
+  const navigate = useNavigate();
+  const motivo = (verificacion?.motivoRechazo || '').trim();
+
+  return (
+    <div className="min-h-screen bg-[#F4F7F7] font-['Inter'] flex items-center justify-center p-6">
+      <div className="max-w-lg w-full bg-white rounded-[32px] shadow-sm border border-gray-100 p-8 md:p-12 text-center">
+
+        <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
+          <AlertCircle className="w-10 h-10 text-red-400" strokeWidth={1.5} />
+        </div>
+
+        <h1 className="text-2xl md:text-[28px] font-black text-[#1A3D3D] font-['Montserrat'] mb-3 leading-tight">
+          Tu acceso fue denegado
+        </h1>
+
+        <p className="text-[#666666] text-[16px] md:text-[17px] font-medium mb-6 leading-relaxed">
+          Revisamos tu solicitud y por ahora no pudimos verificarte. Tus datos están guardados: podés corregirlos y volver a enviarlos.
+        </p>
+
+        {/* Motivo escrito por el equipo */}
+        <div className="bg-[#F4F7F7] rounded-2xl p-5 mb-6 text-left">
+          <p className="text-[#1A3D3D] font-bold text-[15px] mb-2">Motivo</p>
+          <p className="text-[#333333] text-[16px] font-medium leading-relaxed whitespace-pre-line">
+            {motivo || 'No dejamos un motivo escrito. Escribinos y te contamos el detalle.'}
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => navigate('/onboarding', { state: { correccion: true } })}
+          className="w-full bg-[#2D6A6A] text-white rounded-xl px-7 py-4 text-[13px] font-bold uppercase tracking-[0.15em] shadow-md transition-all duration-300 ease-in-out hover:bg-[#1A3D3D] hover:-translate-y-1 hover:shadow-xl flex items-center justify-center gap-2 mb-4"
+        >
+          Corregir mis datos y volver a enviar
+        </button>
+
+        <p className="text-[#666666] text-[14px] font-medium mb-6">
+          ¿Dudas? Escribinos a{' '}
+          <a href="mailto:soporte@elportalvet.com" className="text-[#2D6A6A] font-bold hover:underline">soporte@elportalvet.com</a>
+        </p>
+
+        <button onClick={handleLogout} className="text-[#666666] text-sm font-bold hover:text-red-500 transition-colors flex items-center gap-2 mx-auto">
+          <LogOut className="w-4 h-4" /> Cerrar sesión por ahora
+        </button>
+
+      </div>
+    </div>
+  );
+};
 export default function Ecosistema() {
   const navigate = useNavigate();
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const { currentUser, loading, logout } = useAuth();
   const activeRole = currentUser?.rol || 'visitante';
   const [mostrarTour, setMostrarTour] = useState(false);
+
+  // Estado de la solicitud de verificación (solo lo necesitan los profesionales sin aprobar)
+  const [verificacion, setVerificacion] = useState(null);
+  const [cargandoVerificacion, setCargandoVerificacion] = useState(true);
+
+  useEffect(() => {
+    if (!currentUser) return;
+    // Si ya está aprobado (o no es profesional) no hace falta buscar nada
+    if (currentUser.rol !== 'profesional' || currentUser.estado === 'activo') {
+      setCargandoVerificacion(false);
+      return;
+    }
+    let cancelado = false;
+    const cargarVerificacion = async () => {
+      try {
+        const snap = await getDoc(doc(db, 'verificaciones', currentUser.uid));
+        if (!cancelado) setVerificacion(snap.exists() ? snap.data() : null);
+      } catch (e) {
+        console.error('Error leyendo la verificación:', e);
+      } finally {
+        if (!cancelado) setCargandoVerificacion(false);
+      }
+    };
+    cargarVerificacion();
+    return () => { cancelado = true; };
+  }, [currentUser?.uid, currentUser?.rol, currentUser?.estado]);
 
   useEffect(() => {
     if (!currentUser) return;
@@ -485,6 +620,13 @@ export default function Ecosistema() {
   // Pantallas de estado (pendiente / rechazado)
   const necesitaValidacion = currentUser.rol === 'profesional' || currentUser.rol === 'clinica';
   if (necesitaValidacion && currentUser.estado !== 'activo') {
+    // Profesionales del flujo nuevo: manda lo que dice su solicitud de verificación
+    if (currentUser.rol === 'profesional') {
+      if (cargandoVerificacion) return <PantallaCarga />;
+      if (verificacion?.estado === 'rechazado') return <PantallaRechazo verificacion={verificacion} handleLogout={handleLogout} />;
+      if (verificacion?.estado === 'pendiente') return <PantallaEspera verificacion={verificacion} handleLogout={handleLogout} />;
+    }
+    // Clínicas (y cuentas viejas sin solicitud): queda la pantalla de antes
     return <PantallaEstado tipo={currentUser.estado} currentUser={currentUser} handleLogout={handleLogout} />;
   }
 

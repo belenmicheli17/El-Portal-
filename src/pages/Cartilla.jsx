@@ -39,7 +39,7 @@ const Cartilla = () => {
 
   const hayClinicas = veterinarios.some(v => v.tipo === 'clinica');
   // ¿Hay al menos una clínica con guardia 24hs cargada? Si no hay ninguna, ocultamos los botones de guardia
-  const hayGuardia24hs = veterinarios.some(v => v.tipo === 'clinica' && v.guardia24hs) || true; // TEMPORAL: forzado para probar el diseño, SACAR antes de subir
+  const hayGuardia24hs = veterinarios.some(v => v.tipo === 'clinica' && v.guardia24hs)
 
 useEffect(() => {
   if (!currentUser) return;

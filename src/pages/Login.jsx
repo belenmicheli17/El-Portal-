@@ -150,7 +150,13 @@ export default function Login() {
   };
 
   return (
-    <div className={`min-h-screen bg-[#E8EFEF] flex font-['Inter'] antialiased relative transition-opacity duration-500 ease-out ${visible ? 'opacity-100' : 'opacity-0'}`}>
+    <div className={`min-h-screen md:h-screen md:overflow-hidden bg-[#E8EFEF] flex font-['Inter'] antialiased relative transition-opacity duration-500 ease-out ${visible ? 'opacity-100' : 'opacity-0'}`}>
+
+      {/* En PC la pantalla no tiene scroll: si la ventana es baja, la tarjeta se achica un poco para entrar entera */}
+      <style>{`
+        @media (min-width: 768px) and (max-height: 640px) { .login-tarjeta { zoom: 0.9; } }
+        @media (min-width: 768px) and (max-height: 560px) { .login-tarjeta { zoom: 0.78; } }
+      `}</style>
 
       {/* NAVBAR */}
       <nav className="absolute top-0 left-0 w-full z-[100] h-[72px] flex items-center px-8 md:px-10 pointer-events-none">
@@ -176,12 +182,7 @@ export default function Login() {
               </div>
             </div>
           </div>
-          {(view !== 'login' || accountType) && (
-            <button onClick={handleBack} className="text-[#1A3D3D] bg-white/70 backdrop-blur-md p-2.5 md:p-2 rounded-full hover:bg-white hover:scale-105 transition-all shadow-sm border border-gray-200/50">
-              <ChevronLeft size={20} />
-            </button>
-          )}
-        </div>
+               </div>
       </nav>
 
       {/* PANEL PROMOCIONAL (PC) */}
@@ -204,12 +205,22 @@ export default function Login() {
       </div>
 
       {/* FORMULARIO — con transición de entrada */}
-      <div className="w-full md:w-[55%] lg:w-[50%] flex justify-center items-center md:p-6 relative pt-20 md:pt-6">
+      <div className="w-full md:w-[55%] lg:w-[50%] flex justify-center items-center md:p-3 relative pt-20 md:pt-3">
         <div
-          className={`w-full max-w-[412px] md:max-w-[440px] bg-[#F4F7F7] min-h-[calc(100vh-80px)] md:min-h-[auto] md:h-auto relative shadow-2xl flex flex-col md:rounded-[40px] overflow-hidden
+          className={`w-full max-w-[412px] md:max-w-[440px] bg-[#F4F7F7] min-h-[calc(100vh-80px)] md:min-h-[auto] md:h-auto relative shadow-2xl flex flex-col md:rounded-[40px] overflow-hidden md:max-h-[calc(100vh-24px)] md:overflow-y-auto login-tarjeta
            transition-none`}>
 
-          <div className="bg-[#1A3D3D] pt-8 pb-14 px-8 md:pt-10 md:pb-12 rounded-b-[40px] md:rounded-t-[40px] relative overflow-hidden shrink-0 shadow-lg">
+          <div className="bg-[#1A3D3D] pt-8 pb-14 px-8 md:pt-6 md:pb-11 rounded-b-[40px] md:rounded-t-[40px] relative overflow-hidden shrink-0 shadow-lg">
+            {/* Flecha de volver: esquina superior izquierda de la tarjeta (celular y PC) */}
+            {(view !== 'login' || accountType) && (
+              <button
+                onClick={handleBack}
+                aria-label="Volver"
+                className="absolute top-4 left-4 z-30 text-white bg-white/15 hover:bg-white/25 border border-white/20 backdrop-blur-md p-2 rounded-full hover:scale-105 transition-all"
+              >
+                <ChevronLeft size={20} />
+              </button>
+            )}
             <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-white via-transparent to-transparent"></div>
             <div className="relative z-10 flex flex-col items-center text-center">
               <div className="bg-[#2D6A6A] p-3 md:p-2.5 rounded-2xl mb-2 shadow-inner border border-white/10">
@@ -225,7 +236,7 @@ export default function Login() {
             </div>
           </div>
 
-          <div className="flex-1 px-6 md:px-8 -mt-10 md:-mt-8 relative z-20 pb-8 flex flex-col">
+          <div className="flex-1 px-6 md:px-8 -mt-10 md:-mt-8 relative z-20 pb-8 md:pb-4 flex flex-col">
             <div className="bg-white rounded-[32px] shadow-[0_15px_40px_rgba(0,0,0,0.08)] p-6 md:p-6 border border-gray-50 flex-1 flex flex-col">
 
               <h2 className="text-[#1A3D3D] font-['Montserrat'] font-bold text-lg md:text-base text-center mb-6 md:mb-4 uppercase tracking-wider">
@@ -239,7 +250,7 @@ export default function Login() {
                     { valor: 'clinica', label: 'Soy una Clínica', sub: 'Institución que busca talento y visibilidad.', Icono: Hospital, proximamente: true },
                     { valor: 'proveedor', label: 'Proveedor o empresa', sub: 'Ofrezco insumos mayoristas, equipamiento o servicios para los usuarios mencionados anteriormente.', Icono: Store, proximamente: true },
                   ].map(({ valor, label, sub, Icono, proximamente }) => (
-                    <div key={valor} className="relative mt-4 first:mt-0">
+                    <div key={valor} className="relative mt-4 md:mt-3 first:mt-0">
                       {proximamente && (
                         <div className="absolute -top-2.5 right-2 flex items-center gap-1.5 bg-gray-400 text-white text-[10px] font-bold uppercase tracking-[0.15em] px-2.5 py-1 rounded-full z-10">
                           <span className="w-1 h-1 rounded-full bg-white animate-pulse shrink-0"></span>
@@ -250,7 +261,7 @@ export default function Login() {
                         type="button"
                         disabled={proximamente}
                         onClick={() => { if (proximamente) return; setAccountType(valor); setErrorMsg(''); }}
-                        className={`w-full text-left p-4 rounded-2xl border-2 transition-all flex items-center gap-4 ${
+                        className={`w-full text-left p-4 md:p-3 rounded-2xl border-2 transition-all flex items-center gap-4 ${
                           proximamente
                             ? 'border-gray-100 bg-gray-50 cursor-not-allowed opacity-60'
                             : 'border-[#2D6A6A]/40 hover:border-[#2D6A6A] hover:bg-[#F4F7F7] group active:scale-[0.98]'
@@ -330,7 +341,7 @@ export default function Login() {
             </div>
 
             {(view === 'login' || view === 'register') && (
-              <div className="mt-8 md:mt-6 text-center shrink-0">
+              <div className="mt-8 md:mt-4 text-center shrink-0">
                 <p className="text-[12px] text-gray-500 font-medium">
                   {view === 'login' ? '¿Aún no eres parte de la red?' : '¿Ya tienes una cuenta?'}
                 </p>

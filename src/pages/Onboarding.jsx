@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { db, storage } from '../firebase';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
@@ -7,7 +7,7 @@ import { ref, uploadBytesResumable, uploadString, getDownloadURL, deleteObject }
 import {
   Camera, Check, Loader2, Search, MapPin, Trash2, X, Plus, Clock,
   Stethoscope, Home, Crop, ChevronRight, FileCheck, Upload, CheckCircle2,
-  Building2, MessageCircle, LogOut
+  Building2, MessageCircle, LogOut, AlertCircle
 } from 'lucide-react';
 import especialidadesData from '../data/especialidades.json';
 import provincias from '../data/provincias.js';
@@ -630,7 +630,11 @@ function RecortadorFoto({ imagen, onAplicar, onCancelar }) {
 // ==========================================
 export default function Onboarding() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { currentUser, refreshUser, logout } = useAuth();
+
+  // Si viene desde la pantalla de rechazo, es un reenvío para corregir datos
+  const esCorreccion = location.state?.correccion === true;
 
   const [cargando, setCargando] = useState(true);
   const [paso, setPaso] = useState(0);
@@ -641,7 +645,11 @@ export default function Onboarding() {
   const [subiendoFoto, setSubiendoFoto] = useState(false);
   const [subiendoTitulo, setSubiendoTitulo] = useState(false);
   const [progresoTitulo, setProgresoTitulo] = useState(0);
-  const [recorte, setRecorte] = useState({ abierto: false, imagen: null });
+      // (En modo corrección también se puede entrar aunque ya lo haya completado antes)
+    if (currentUser.rol !== 'profesional' || (currentUser.onboardingCompleto !== false && !esCorreccion)) {
+      navigate('/ecosistema', { replace: true });
+      return;
+    }
 
   // Guarda las descripciones de grupos de servicios que ya tenía la persona (para no perderlas)
   const descripcionesServicios = useRef({});
@@ -682,6 +690,13 @@ export default function Onboarding() {
         const perfil = snapPerfil.exists() ? snapPerfil.data() : {};
         const verificacion = snapVerificacion && snapVerificacion.exists() ? snapVerificacion.data() : {};
 
+        // Modo corrección: solo se puede entrar si la solicitud fue rechazada
+        if (esCorreccion && verificacion.estado !== 'rechazado') {
+          navigate('/ecosistema', { replace: true });
+          return;
+        }
+        if (esCorreccion) setMotivoRechazo(verificacion.motivoRechazo || '');
+
         // Servicios: del objeto del editor a la lista simple del cuestionario
         const servicios = [];
         if (perfil.servicios && !Array.isArray(perfil.servicios)) {
@@ -717,8 +732,8 @@ export default function Onboarding() {
           bio: perfil.bio || ''
         });
 
-        // Retomamos donde había dejado
-        setPaso(Math.min(currentUser.onboardingPaso || 0, TOTAL_PASOS - 1));
+        // En corrección arranca desde el principio para revisar todo; si no, retoma donde dejó
+        setPaso(esCorreccion ? 0 : Math.min(currentUser.onboardingPaso || 0, TOTAL_PASOS - 1));
       } catch (e) {
         console.error('Error cargando el cuestionario:', e);
       } finally {
@@ -939,6 +954,8 @@ export default function Onboarding() {
     await guardarCampos('verificaciones', uid, {
       estado: 'pendiente',
       enviadoEn: serverTimestamp(),
+      // Si es un reenvío tras un rechazo, borramos el motivo anterior
+      ...(esCorreccion ? { motivoRechazo: '' } : {}),
       datosEnviados: {
         nombreCompleto: `${d.nombre.trim()} ${d.apellido.trim()}`.trim(),
         matricula: d.mat, tipoMatricula: d.tipo,
@@ -1266,6 +1283,18 @@ export default function Onboarding() {
 
         {/* Cuestionario */}
         <main className="bg-white rounded-[32px] border border-gray-100 shadow-sm p-6 md:p-10 max-w-[640px] w-full flex-1 min-w-0">
+          {/* Aviso al corregir: recuerda el motivo del rechazo mientras edita */}
+          {esCorreccion && paso < TOTAL_PASOS && (
+            <div className="bg-red-50 border border-red-100 rounded-2xl px-4 py-3.5 mb-6 flex gap-3">
+              <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-[15px] font-bold text-[#1A3D3D]">Estás corrigiendo tu solicitud</p>
+                <p className="text-[14px] font-medium text-[#666666] leading-relaxed mt-1 whitespace-pre-line">
+                  {motivoRechazo ? `Motivo: ${motivoRechazo}` : 'Revisá tus datos y volvé a enviarlos.'}
+                </p>
+              </div>
+            </div>
+          )}
           <BarraPasos paso={paso} />
 
           {paso < TOTAL_PASOS ? (
