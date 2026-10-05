@@ -1,42 +1,23 @@
 import { useState, useEffect, useRef } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { collection, addDoc, serverTimestamp, query, where, getDocs } from "firebase/firestore";
-import { getAuth, createUserWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
-import {
-   Lock, Eye, EyeOff,
-  Loader2, AlertCircle, X, Hospital, Store, LogIn, Loader
-} from "lucide-react";
-import { db } from "../firebase";
 import {
   BookOpen,
   Briefcase,
   Package,
   FlaskConical,
-  CheckCircle,
   ArrowRight,
   Stethoscope,
   PawPrint,
   Users,
-  Mail,
-  ArrowDown
+  ArrowDown,
+  Hospital,
+  Store,
+  LogIn
 } from "lucide-react";
-
-// Código de acceso beta — cambialo cuando quieras
-const CODIGO_BETA = "beta";
-
-// ── Cajita zona pública ────────────────────────────────────────────────────
-// ── Traducción de errores Firebase ────────────────────────────────────────
-const traducirError = (code) => {
-  switch (code) {
-    case 'auth/email-already-in-use': return 'Este correo ya está registrado. ¿Intentaste iniciar sesión?';
-    case 'auth/invalid-email': return 'El formato del correo no es válido.';
-    case 'auth/weak-password': return 'La contraseña debe tener al menos 6 caracteres.';
-    case 'auth/network-request-failed': return 'Error de conexión. Revisá tu internet.';
-    default: return 'Ocurrió un error inesperado. Intentá de nuevo.';
-  }
-};
-
+import { db } from "../firebase";
+// Cartelito de inicio de sesión (el mismo que se usa en el resto del sitio, con el mail de recuperar contraseña por Brevo)
+import LoginDropdown from "../components/LoginDropdown";
 
 // ── Cajita zona pública ────────────────────────────────────────────────────
 const CardPublica = ({ icono: Icono, titulo, descripcion, highlight }) => (
@@ -200,11 +181,7 @@ function QuienesSomos() {
 
 // ── Componente principal ───────────────────────────────────────────────────
 export default function SalaDeEspera() {
-  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-
-  // Detecta acceso beta por URL
-  const esBeta = searchParams.get("acceso") === CODIGO_BETA;
 
   // Estados formulario lista de espera
   const [email, setEmail] = useState("");
@@ -214,181 +191,8 @@ export default function SalaDeEspera() {
   // Estado para destello visual al hacer scroll al CTA
   const [destelloCTA, setDestelloCTA] = useState(false);
 
-  // — Estados del drawer de registro —
-  const [drawerAbierto, setDrawerAbierto] = useState(false);
-  const [pasoDrawer, setPasoDrawer] = useState('rol');
-  const [rolDrawer, setRolDrawer] = useState(null);
-  const [formDrawer, setFormDrawer] = useState({ nombre: '', email: '', password: '' });
-  const [showPassword, setShowPassword] = useState(false);
-  const [cargando, setCargando] = useState(false);
-  const [errorDrawer, setErrorDrawer] = useState('');
-const [linkCopiado, setLinkCopiado] = useState(false);
-const [showLogin, setShowLogin] = useState(false);
-  const [loginEmail, setLoginEmail] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
-  const [loginLoading, setLoginLoading] = useState(false);
-  const [loginError, setLoginError] = useState('');
-  const [showLoginPassword, setShowLoginPassword] = useState(false);
-  const [loginView, setLoginView] = useState('login'); // 'login' | 'forgot' | 'sent'
-  const [recuperando, setRecuperando] = useState(false);
-  const loginEmailRef = useRef(null);
-  const loginPasswordRef = useRef(null);
-
-  // — Lógica de registro del drawer —
-  const handleRegistroDrawer = async () => {
-    if (!formDrawer.nombre.trim() || (rolDrawer === 'profesional' && !formDrawer.apellido?.trim()) || !formDrawer.email.trim() || !formDrawer.password.trim()) {
-      setErrorDrawer('Completá todos los campos para continuar.');
-      return;
-    }
-    setCargando(true);
-    setErrorDrawer('');
-    try {
-      const auth = getAuth();
-      const userCredential = await createUserWithEmailAndPassword(auth, formDrawer.email, formDrawer.password);
-      const user = userCredential.user;
-      const nombreCompleto = rolDrawer === 'profesional'
-  ? `${formDrawer.nombre.trim()} ${formDrawer.apellido?.trim() || ''}`.trim()
-  : formDrawer.nombre.trim();
-
-const slugGenerado = nombreCompleto.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
-
-await setDoc(doc(db, 'usuarios', user.uid), {
-  nombre: formDrawer.nombre.trim(),
-  apellido: rolDrawer === 'profesional' ? formDrawer.apellido?.trim() || '' : '',
-  nombreCompleto,
-  email: formDrawer.email.toLowerCase().trim(),
-  rol: rolDrawer,
-  slug: slugGenerado,
-  fechaRegistro: new Date().toISOString(),
-  estado: 'activo',
-  esBeta: true,
-  socioVitalicio: true,
-});
-
-// Creamos también el documento base en 'profesionales' para que el editor lo encuentre
-if (rolDrawer === 'profesional') {
-  await setDoc(doc(db, 'profesionales', user.uid), {
-    nombre: formDrawer.nombre.trim(),
-    apellido: formDrawer.apellido?.trim() || '',
-    nombreCompleto,
-    slug: slugGenerado,
-    cuentaEmail: formDrawer.email.toLowerCase().trim(),
-    emailContacto: formDrawer.email.toLowerCase().trim(),
-    especialidad: '',
-    matricula: '',
-    tipoMatricula: 'MP',
-    matricula2: '',
-    tipoMatricula2: 'MP',
-    provincia: 'Buenos Aires',
-    bio: '',
-    foto: '',
-    fotosPerfil: [],
-    trayectoria: [],
-    servicios: [],
-    casos: [],
-    zonas: [],
-    papers: [],
-    galeria: [],
-    visible: true,
-    planActual: 'pro',
-    atiendeDomicilio: false,
-    whatsappActivo: false,
-    whatsappNum: '',
-    instagram: '',
-    linkedin: '',
-    facebook: '',
-  });
-}
-      // — Mail de bienvenida: se lo pedimos a la función de Vercel (la clave de Brevo vive solo en el servidor) —
-      try {
-        // Le mostramos a la función quién es esta persona (su "carnet" de sesión)
-        const idToken = await user.getIdToken();
-        const respuesta = await fetch('/api/enviar-mail', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${idToken}`,
-          },
-          body: JSON.stringify({
-            tipo: 'bienvenida',
-            nombre: formDrawer.nombre.trim(),
-          }),
-        });
-        if (!respuesta.ok) {
-          console.warn('La función no pudo mandar la bienvenida:', respuesta.status);
-        }
-      } catch (mailErr) {
-        // El mail falló pero el registro fue exitoso — no bloqueamos al usuario
-        console.warn('No se pudo enviar el mail de bienvenida:', mailErr);
-      }
-
-setPasoDrawer('exito');
-    } catch (err) {
-      setErrorDrawer(traducirError(err.code));
-    } finally {
-      setCargando(false);
-    }
-  };
-const handleLogin = async () => {
-    const emailVal = loginEmailRef.current?.value || loginEmail;
-    const passVal = loginPasswordRef.current?.value || loginPassword;
-
-    console.log('🔐 handleLogin llamado');
-    console.log('📧 emailVal (ref):', loginEmailRef.current?.value);
-    console.log('📧 loginEmail (state):', loginEmail);
-    console.log('🔑 passVal (ref):', loginPasswordRef.current?.value ? '***tiene valor***' : 'VACÍO');
-    console.log('🔑 loginPassword (state):', loginPassword ? '***tiene valor***' : 'VACÍO');
-
-    if (!emailVal || !passVal) {
-      setLoginError('Completá los dos campos para continuar.');
-      return;
-    }
-    setLoginLoading(true);
-    setLoginError('');
-    try {
-      const auth = getAuth();
-      const { signInWithEmailAndPassword } = await import('firebase/auth');
-      const userCredential = await signInWithEmailAndPassword(auth, emailVal, passVal);
-      const uid = userCredential.user.uid;
-      const { doc, getDoc } = await import('firebase/firestore');
-      const { db } = await import('../firebase');
-      const snap = await getDoc(doc(db, 'usuarios', uid));
-      const rol = snap.data()?.rol;
-      setShowLogin(false);
-      if (rol === 'admin') {
-        navigate('/admin');
-      } else {
-        navigate('/ecosistema');
-      }
-    } catch (error) {
-      console.error(error.code);
-      setLoginError('Email o contraseña incorrectos. Intentá de nuevo.');
-    } finally {
-      setLoginLoading(false);
-    }
-  };
-
-  const handleForgotPassword = async () => {
-    if (!loginEmail) {
-      setLoginError('Ingresá tu email para recuperar la contraseña.');
-      return;
-    }
-    setRecuperando(true);
-    setLoginError('');
-    try {
-      const auth = getAuth();
-      await sendPasswordResetEmail(auth, loginEmail);
-      setLoginView('sent');
-    } catch (error) {
-      setLoginError('No pudimos enviar el correo. Revisá que el email esté bien escrito.');
-    } finally {
-      setRecuperando(false);
-    }
-  };
-
-  // — Animación de entrada de la tarjeta al hacer scroll —
-  const tarjetaRef = useRef(null);
-  const [tarjetaVisible, setTarjetaVisible] = useState(false);
+  // Abre y cierra el cartelito de inicio de sesión (LoginDropdown)
+  const [showLogin, setShowLogin] = useState(false);
 
   // — Refs y estados para animaciones de scroll en cards —
   const cardPublicaRef = useRef(null);
@@ -402,20 +206,6 @@ const handleLogin = async () => {
   const [fila2Highlight, setFila2Highlight] = useState(false);
 
   useEffect(() => {
-    // — Observer para la tarjeta de registro beta —
-    const observerTarjeta = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setTarjetaVisible(true); },
-      { threshold: 0, rootMargin: '0px 0px -50px 0px' }
-    );
-    if (tarjetaRef.current) {
-      const rect = tarjetaRef.current.getBoundingClientRect();
-      if (rect.top < window.innerHeight) {
-        setTimeout(() => setTarjetaVisible(true), 200);
-      } else {
-        observerTarjeta.observe(tarjetaRef.current);
-      }
-    }
-
     // — Observer genérico reutilizable para cards —
     // — Enciende el highlight temporalmente al entrar en pantalla —
     const crearObserver = (setterVisible, setterHighlight) =>
@@ -439,7 +229,6 @@ const handleLogin = async () => {
     if (fila2Ref.current) obsFila2.observe(fila2Ref.current);
 
     return () => {
-      observerTarjeta.disconnect();
       obsPublica.disconnect();
       obsFila1.disconnect();
       obsFila2.disconnect();
@@ -522,13 +311,7 @@ const handleLogin = async () => {
           {/* BOTÓN INICIAR SESIÓN + DROPDOWN */}
           <div className="relative">
             <button
-              onClick={() => { 
-              setShowLogin(v => !v); 
-              setLoginError(''); 
-              setLoginEmail(''); 
-              setLoginPassword(''); 
-              setLoginView('login');
-            }}
+              onClick={() => setShowLogin(v => !v)}
               className={`flex items-center gap-2 font-bold text-[13px] transition-colors border px-4 py-2 rounded-xl ${
                 showLogin
                   ? 'bg-[#1A3D3D] text-white border-[#1A3D3D]'
@@ -539,144 +322,24 @@ const handleLogin = async () => {
               <span>Iniciar sesión</span>
             </button>
 
-            {/* DROPDOWN */}
+            {/* DROPDOWN: el cartelito compartido de inicio de sesión */}
             {showLogin && (
               <>
                 {/* Capa invisible para cerrar al hacer click afuera */}
                 <div
                   className="fixed inset-0 z-[100]"
                   style={{ backgroundColor: 'transparent' }}
-                  onClick={() => { setShowLogin(false); setLoginError(''); loginEmail && setLoginEmail(''); setLoginPassword(''); setLoginView('login'); }}
+                  onClick={() => setShowLogin(false)}
                 />
-
-                <div className="fixed right-4 top-[70px] md:absolute md:right-0 md:top-full md:mt-3 w-[calc(100vw-32px)] md:w-[300px] bg-white rounded-[24px] shadow-[0_20px_60px_rgba(26,61,61,0.15)] border border-gray-100 p-6 z-[101] animate-in fade-in slide-in-from-top-2 duration-200 flex flex-col gap-4">
-
-                  {/* HEADER */}
-                  <div>
-                    <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[16px] leading-tight">
-                      {loginView === 'login' ? 'Bienvenido/a de vuelta' : loginView === 'forgot' ? 'Recuperar contraseña' : '¡Listo!'}
-                    </h3>
-                    <p className="text-gray-400 text-[12px] font-medium mt-0.5">
-                      {loginView === 'login' ? 'Ingresá con tu cuenta' : loginView === 'forgot' ? 'Te mandamos un link a tu correo' : 'Revisá tu bandeja de entrada'}
-                    </p>
-                  </div>
-
-                  {/* ERROR */}
-                  {loginError && (
-                    <div className="bg-red-50 border border-red-100 rounded-xl px-3 py-2.5 flex items-center gap-2">
-                      <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
-                      <p className="text-red-600 text-[12px] font-medium">{loginError}</p>
-                    </div>
-                  )}
-
-                  {loginView === 'sent' ? (
-                    <div className="flex flex-col items-center text-center gap-3 py-2">
-                      <CheckCircle className="w-10 h-10 text-[#2D6A6A]" strokeWidth={2} />
-                      <p className="text-[#555555] text-[13px] leading-relaxed">
-                        Te enviamos un link a<br />
-                        <span className="font-bold text-[#1A3D3D]">{loginEmail}</span>
-                      </p>
-                      <button
-                        onClick={() => { setLoginView('login'); setLoginError(''); }}
-                        className="mt-1 text-[#2D6A6A] text-[12px] font-bold hover:text-[#1A3D3D] transition-colors underline underline-offset-2"
-                      >
-                        Volver a iniciar sesión
-                      </button>
-                    </div>
-                  ) : (
-                    <>
-                      {/* FORMULARIO */}
-                      <div className="flex flex-col gap-2.5">
-                        <div className="flex flex-col gap-1">
-                          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-0.5">Email</label>
-                          <input
-                              ref={loginEmailRef}
-                              type="email"
-                              value={loginEmail}
-                              onChange={(e) => setLoginEmail(e.target.value)}
-                              onKeyDown={(e) => e.key === 'Enter' && (loginView === 'forgot' ? handleForgotPassword() : handleLogin())}
-                              placeholder="tu@email.com"
-                              autoComplete="username"
-                              name="login-email"
-                              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-[14px] font-medium text-[#1A3D3D] focus:outline-none focus:border-[#2D6A6A] focus:bg-white transition-colors"
-                            />
-                        </div>
-                        {loginView === 'login' && (
-                          <div className="flex flex-col gap-1">
-                            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-0.5">Contraseña</label>
-                            <div className="relative">
-                              <input
-                                ref={loginPasswordRef}
-                                type={showLoginPassword ? 'text' : 'password'}
-                                value={loginPassword}
-                                onChange={(e) => setLoginPassword(e.target.value)}
-                                onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-                                placeholder="••••••••"
-                                autoComplete="current-password"
-                                name="login-password"
-                                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 pr-11 text-[14px] font-medium text-[#1A3D3D] focus:outline-none focus:border-[#2D6A6A] focus:bg-white transition-colors"
-                              />
-                              <button
-                                type="button"
-                                onClick={() => setShowLoginPassword(v => !v)}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#2D6A6A] transition-colors p-1"
-                              >
-                                {showLoginPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                              </button>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => { setLoginView('forgot'); setLoginError(''); }}
-                              className="self-end mt-1 text-[11px] font-semibold text-[#2D6A6A] hover:text-[#1A3D3D] transition-colors"
-                            >
-                              ¿Olvidaste tu contraseña?
-                            </button>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* BOTÓN */}
-                      <button
-                        onClick={loginView === 'forgot' ? handleForgotPassword : handleLogin}
-                        disabled={loginView === 'forgot' ? recuperando : loginLoading}
-                        className="w-full bg-[#1A3D3D] text-white font-bold text-[12px] uppercase tracking-widest py-3.5 rounded-xl hover:bg-[#2D6A6A] transition-colors shadow-md flex items-center justify-center gap-2 disabled:opacity-70"
-                      >
-                        {loginView === 'forgot'
-                          ? (recuperando ? <><Loader className="w-4 h-4 animate-spin" /> Enviando...</> : 'Enviar link')
-                          : (loginLoading ? <><Loader className="w-4 h-4 animate-spin" /> Ingresando...</> : 'Ingresar')
-                        }
-                      </button>
-
-                      {loginView === 'forgot' && (
-                        <button
-                          type="button"
-                          onClick={() => { setLoginView('login'); setLoginError(''); }}
-                          className="text-center text-[11px] font-semibold text-gray-400 hover:text-[#1A3D3D] transition-colors"
-                        >
-                          Volver a iniciar sesión
-                        </button>
-                      )}
-                    </>
-                  )}
-                </div>
+                <LoginDropdown onClose={() => setShowLogin(false)} />
               </>
             )}
           </div>
         </div>
       </nav>
 
-      {/* ── BANNER BETA (solo para usuarios invitados) ────────────────────── */}
-      {esBeta && (
-        <div className="w-full bg-[#1A3D3D]/90 backdrop-blur-sm border-b border-[#4DB6AC]/20 px-6 py-2.5 flex items-center justify-center gap-3 sticky top-0 z-50">
-          <span className="w-2 h-2 rounded-full bg-[#4DB6AC] animate-pulse shrink-0"></span>
-          <p className="text-white/90 text-[13px] font-medium text-center">
-            Esta página es exclusiva para <span className="text-[#4DB6AC] font-bold">usuarios invitados de prueba</span>.
-          </p>
-        </div>
-      )}
-
       {/* ── HERO ──────────────────────────────────────────────────────────── */}
-    <section className={`snap-start pt-10 md:pt-15 md:pb-48 relative z-10 overflow-hidden ${esBeta ? 'pb-59' : 'pb-55'}`}>
+    <section className="snap-start pt-10 md:pt-15 md:pb-48 pb-55 relative z-10 overflow-hidden">
   {/* Burbuja naranja */}
   <div className="bubble-orange absolute top-[-80px] right-[-120px] md:top-[-60px] md:right-[-80px] w-[420px] h-[420px] bg-[#FF9800]/40 rounded-full blur-[90px] pointer-events-none z-[-1]" />
 
@@ -693,43 +356,19 @@ const handleLogin = async () => {
 Creá tu perfil, aparecé en búsquedas y conectate con colegas, clínicas y proveedores de todo el país. 
       </p>
       <div className="mt-6 flex items-center gap-2 flex-wrap">
-        {!esBeta && (
-          <a
-            href="/cartilla"
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-2 bg-[#FF9800] text-white font-bold text-[16px] md:text-[15px] px-5 py-3 rounded-2xl hover:bg-[#e68900] transition-all duration-200 shadow-md hover:-translate-y-0.5 group"
-          >
-            <PawPrint className="w-5 h-5" />
-            Ya podés ver la Cartilla
-            <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform duration-200" />
-          </a>
-        )}
-        
+        <a
+          href="/cartilla"
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-2 bg-[#FF9800] text-white font-bold text-[16px] md:text-[15px] px-5 py-3 rounded-2xl hover:bg-[#e68900] transition-all duration-200 shadow-md hover:-translate-y-0.5 group"
+        >
+          <PawPrint className="w-5 h-5" />
+          Ya podés ver la Cartilla
+          <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform duration-200" />
+        </a>
       </div>
     </div>
   </div>
-
-  {/* — Texto scroll hacia abajo — solo para beta — */}
-  {esBeta && (
-    <div
-      className="absolute bottom-30 md:bottom-22 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5 text-[#2D6A6A] opacity-60 hover:opacity-100 transition-opacity duration-300 cursor-pointer whitespace-nowrap"
-      onClick={() => {
-      const sections = document.querySelectorAll('section');
-      const el = sections[1];
-      if (!el) return;
-      const top = el.getBoundingClientRect().top + window.scrollY - 20;
-      window.scrollTo({ top, behavior: 'smooth' });
-    }}
-    >
-      <span className="text-[14px] md:text-[14px] font-bold uppercase tracking-[0.15em] font-['Montserrat']">
-        Conocé más de lo que está llegando
-      </span>
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M6 9l6 6 6-6" />
-      </svg>
-    </div>
-  )}
 
 </section>
 
@@ -828,289 +467,80 @@ Creá tu perfil, aparecé en búsquedas y conectate con colegas, clínicas y pro
         <div className="absolute inset-x-5 md:inset-x-28 inset-y-6 rounded-[40px] bg-[#FF9800]/60 shadow-[0_8px_32px_rgba(26,61,61,0.08)] pointer-events-none" />
 
         <div className="relative z-10 max-w-5xl mx-auto px-6 md:px-6 flex justify-center md:block">
-          {esBeta ? (
 
-            /* ── Vista beta ── */
-            <div className="flex flex-col lg:flex-row items-start gap-10 lg:gap-16 lg:w-full w-[90%] sm:w-[70%] mx-auto">
+          {/* ── Vista pública ── */}
+          <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12 w-full py-4">
 
-              {/* — Columna izquierda: textos — */}
-             <div className="flex flex-col items-start gap-6 flex-1 max-w-[260px] md:max-w-none">
-              <span className="hidden md:inline-flex items-center gap-2 bg-[#1A3D3D] border border-[#4DB6AC]/30 text-[#4DB6AC] text-[11px] font-bold uppercase tracking-[0.2em] px-4 py-2 rounded-full">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#4DB6AC] animate-pulse" />
-                  Acceso anticipado
-                </span>
-                <h2 className="font-['Montserrat'] font-bold text-[#1A3D3D] text-3xl md:text-[42px] max-w-[260px] md:max-w-lg leading-snug">
-  Ya podés registrarte y ser el primero en explorar la plataforma.
-</h2>
-                <div className="flex flex-col gap-1 max-w-[260px] md:max-w-sm">
-                  <p className="text-[#1A3D3D] font-bold text-[1px] md:text-[18px]">Los que llegan primero, construyen la plataforma.</p>
-                  <p className="text-[#666666] text-[18px] md:text-[17px] leading-relaxed">
-                    Como beta tester vas a ser parte del grupo que le da forma a lo que viene. Tu perfil estará listo y activo desde el día del lanzamiento — solo necesitamos tu compromiso de completarlo y probarlo con nosotros.
-                  </p>
-                </div>
+            {/* — Registro: arriba en móvil, derecha en PC — */}
+            <div className="order-1 lg:order-2 w-full lg:w-[360px] shrink-0 flex flex-col items-center">
+
+              {/* Móvil: caja con el botón "Soy Profesional" (igual al de Login) */}
+              <div className="lg:hidden w-[88%] max-w-[300px] bg-white rounded-[24px] shadow-[0_8px_24px_rgba(26,61,61,0.12)] p-4">
+                <p className="font-['Montserrat'] font-bold text-[#1A3D3D] text-[15px] text-center leading-tight mb-3">
+                  ¿Sos veterinario/a? Registrate acá
+                </p>
+                <button
+                  type="button"
+                  onClick={() => navigate('/login', { state: { registro: 'profesional' } })}
+                  className="w-full text-left p-3 rounded-2xl bg-[#F4F7F7] border border-transparent hover:border-[#2D6A6A]/40 active:scale-[0.98] transition-all flex items-center gap-3 group"
+                >
+                  <div className="p-2 rounded-full bg-blue-50 text-blue-600 group-hover:scale-110 transition-transform shrink-0">
+                    <Stethoscope size={18} />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-bold text-[14px] text-[#1A3D3D]">Soy Profesional</h4>
+                    <p className="text-[#666666] text-[13px] leading-tight mt-0.5">Veterinario/a que busca conectar y crecer.</p>
+                  </div>
+                  <ArrowRight size={16} className="text-[#2D6A6A] shrink-0" />
+                </button>
               </div>
 
-              {/* — Tarjeta de registro — */}
-              <div ref={tarjetaRef} className="w-full md:w-[360px] shrink-0">
-                <div
-                  className={`transition-all duration-700 ease-out ${
-                    tarjetaVisible
-                      ? 'opacity-100 translate-y-0'
-                      : 'opacity-0 translate-y-16'
-                  }`}
-                >
-                  <div className="bg-white rounded-[28px] shadow-[0_8px_32px_rgba(26,61,61,0.08)] border border-gray-100 overflow-hidden">
-                    {/* Cabecera */}
-                    <div className="px-6 py-5 border-b border-gray-100">
-                      <p className="text-[#2D6A6A] text-[11px] font-bold uppercase tracking-[0.2em] mb-1">Registrate</p>
-                      <h3 className="text-[#1A3D3D] font-['Montserrat'] font-bold text-[18px] leading-tight">
-                        {pasoDrawer === 'rol' ? '¿Con qué perfil ingresás?' : pasoDrawer === 'datos' ? 'Completá tus datos' : '¡Bienvenido/a!'}
-                      </h3>
-                    </div>
-
-                    <div className="p-6">
-                   
-
-                      {/* Error */}
-                      {errorDrawer && (
-                        <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-xl flex items-center gap-2">
-                          <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
-                          <p className="text-red-600 text-[12px] font-semibold">{errorDrawer}</p>
-                        </div>
-                      )}
-
-                      {/* Paso 1: rol */}
-                      {pasoDrawer === 'rol' && (
-                        <div className="space-y-3">
-                          {[
-                            { valor: 'profesional', label: 'Soy Profesional', sub: 'Veterinario/a que busca conectar y crecer.', Icono: Stethoscope, color: 'blue', proximamente: false },
-                            { valor: 'clinica', label: 'Soy una Clínica', sub: 'Institución que busca talento y visibilidad.', Icono: Hospital, color: 'emerald', proximamente: true },
-                            { valor: 'proveedor', label: 'Proveedor o empresa', sub: 'Ofrezco insumos mayoristas, equipamiento o servicios para los usuarios mencionados anteriormente.', Icono: Store, color: 'purple', proximamente: true },
-                          ].map(({ valor, label, sub, Icono, proximamente }) => (
-                            <div key={valor} className="relative mt-4 first:mt-0">
-                              {proximamente && (
-                                <div className="absolute -top-2.5 right-2 flex items-center gap-1.5 bg-gray-400 text-white text-[10px] font-bold uppercase tracking-[0.15em] px-2.5 py-1 rounded-full z-10">
-                                  <span className="w-1 h-1 rounded-full bg-white animate-pulse shrink-0"></span>
-                                  Próximamente
-                                </div>
-                              )}
-                              <button
-                                key={valor}
-                                onClick={() => { if (proximamente) return; setRolDrawer(valor); setPasoDrawer('datos'); setErrorDrawer(''); }}
-                                className={`w-full text-left p-4 rounded-2xl border-2 transition-all flex items-center gap-4 ${
-                                  proximamente
-                                    ? 'border-gray-100 bg-gray-50 cursor-not-allowed opacity-60'
-                                    : rolDrawer === valor
-                                      ? 'border-[#2D6A6A] bg-[#F4F7F7]'
-                                      : 'border-[#2D6A6A]/40 hover:border-[#2D6A6A] hover:bg-[#F4F7F7] group active:scale-[0.98]'
-                                }`}
-                              >
-                                <div className={`p-2.5 rounded-full transition-transform ${proximamente ? 'bg-gray-100 text-gray-400' : 'bg-blue-50 text-blue-600 group-hover:scale-110'}`}>
-                                  <Icono size={18} />
-                                </div>
-                                <div>
-                                  <h4 className={`font-bold text-[14px] ${proximamente ? 'text-gray-400' : 'text-[#1A3D3D]'}`}>{label}</h4>
-                                  <p className="text-gray-400 text-[13px] leading-tight mt-0.5">{sub}</p>
-                                </div>
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Paso 2: datos */}
-                      {pasoDrawer === 'datos' && (
-                        <div className="space-y-3">
-                          <div>
-                           <label className="text-[#1A3D3D] text-[12px] font-bold uppercase tracking-widest block mb-1.5">
-  {rolDrawer === 'profesional' ? 'Tu nombre' : rolDrawer === 'clinica' ? 'Nombre de la clínica' : 'Nombre de la empresa'}
-</label>
-<input
-  type="text"
-  value={formDrawer.nombre}
-  onChange={(e) => { setFormDrawer({ ...formDrawer, nombre: e.target.value }); setErrorDrawer(''); }}
-  placeholder={rolDrawer === 'profesional' ? 'Ej: María' : rolDrawer === 'clinica' ? 'Ej: Clínica Veterinaria Sur' : 'Ej: Laboratorio XYZ'}
-  className="w-full px-4 py-3 bg-[#F4F7F7] border border-transparent rounded-xl text-[13px] text-[#1A3D3D] placeholder-gray-400 focus:bg-white focus:border-[#2D6A6A] focus:ring-2 focus:ring-[#2D6A6A]/20 outline-none transition-all"
-/>
-{rolDrawer === 'profesional' && (
-  <div className="mt-2">
-    <label className="text-[#1A3D3D] text-[12px] font-bold uppercase tracking-widest block mb-1.5">Tu apellido</label>
-    <input
-      type="text"
-      value={formDrawer.apellido || ''}
-      onChange={(e) => { setFormDrawer({ ...formDrawer, apellido: e.target.value }); setErrorDrawer(''); }}
-      placeholder="Ej: González"
-      className="w-full px-4 py-3 bg-[#F4F7F7] border border-transparent rounded-xl text-[13px] text-[#1A3D3D] placeholder-gray-400 focus:bg-white focus:border-[#2D6A6A] focus:ring-2 focus:ring-[#2D6A6A]/20 outline-none transition-all"
-    />
-  </div>
-)}
-                          </div>
-                          <div>
-                            <label className="text-[#1A3D3D] text-[12px] font-bold uppercase tracking-widest block mb-1.5">Correo electrónico</label>
-                            <input
-                              type="email"
-                              value={formDrawer.email}
-                              onChange={(e) => { setFormDrawer({ ...formDrawer, email: e.target.value }); setErrorDrawer(''); }}
-                              placeholder="tu@email.com"
-                              className="w-full px-4 py-3 bg-[#F4F7F7] border border-transparent rounded-xl text-[13px] text-[#1A3D3D] placeholder-gray-400 focus:bg-white focus:border-[#2D6A6A] focus:ring-2 focus:ring-[#2D6A6A]/20 outline-none transition-all"
-                            />
-                          </div>
-                          <div>
-                            <label className="text-[#1A3D3D] text-[11px] font-bold uppercase tracking-widest block mb-1.5">Contraseña</label>
-                            <div className="relative">
-                              <input
-                                type={showPassword ? 'text' : 'password'}
-                                value={formDrawer.password}
-                                onChange={(e) => { setFormDrawer({ ...formDrawer, password: e.target.value }); setErrorDrawer(''); }}
-                                placeholder="Mínimo 6 caracteres"
-                                className="w-full px-4 py-3 pr-11 bg-[#F4F7F7] border border-transparent rounded-xl text-[13px] text-[#1A3D3D] placeholder-gray-400 focus:bg-white focus:border-[#2D6A6A] focus:ring-2 focus:ring-[#2D6A6A]/20 outline-none transition-all"
-                              />
-                              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-[#2D6A6A] transition-colors">
-                                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                              </button>
-                            </div>
-                          </div>
-                          <div className="flex gap-2 pt-1">
-                            <button
-                              onClick={() => { setPasoDrawer('rol'); setErrorDrawer(''); }}
-                              className="px-4 py-3 rounded-xl border border-gray-200 text-[#666666] text-[12px] font-bold hover:border-[#2D6A6A] transition-all"
-                            >
-                              Volver
-                            </button>
-                            <button
-                              onClick={handleRegistroDrawer}
-                              disabled={cargando}
-                              className="flex-1 bg-[#2D6A6A] text-white font-bold py-3 rounded-xl text-[12px] uppercase tracking-widest hover:bg-[#1A3D3D] transition-all flex items-center justify-center gap-2 disabled:opacity-60"
-                            >
-                              {cargando ? <><Loader2 className="w-4 h-4 animate-spin" /> Creando...</> : 'Registrarme'}
-                            </button>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Paso 3: éxito */}
-                      {pasoDrawer === 'exito' && (
-                        <div className="flex flex-col items-center gap-4 text-center py-2">
-                          <div className="w-14 h-14 rounded-full bg-[#F4F7F7] flex items-center justify-center">
-                            <CheckCircle className="w-7 h-7 text-[#2D6A6A]" strokeWidth={2} />
-                          </div>
-                          <div>
-                            <h3 className="font-['Montserrat'] font-bold text-[#1A3D3D] text-[17px] mb-2">¡Listo!</h3>
-                            <p className="text-[#555555] text-[14px] leading-relaxed">
-                              Pronto esto va a cambiar la forma en que el sector se conecta.<br />
-                              <span className="font-semibold text-[#1A3D3D]">Compartíselo a quien creás que le puede interesar.</span>
-                            </p>
-                          </div>
-                          <button
-                            onClick={() => {
-                              const url = window.location.origin + '/sala-de-espera';
-                              if (navigator.share) {
-                                navigator.share({ title: 'Portal Veterinario', url });
-                              } else {
-                                navigator.clipboard.writeText(url);
-                                setLinkCopiado(true);
-                                setTimeout(() => setLinkCopiado(false), 2000);
-                              }
-                            }}
-                            className={`w-full font-bold py-3 rounded-xl text-[12px] uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 ${
-                              linkCopiado
-                                ? 'bg-[#1A3D3D] text-[#4DB6AC]'
-                                : 'bg-[#2D6A6A] text-white hover:bg-[#1A3D3D]'
-                            }`}
-                          >
-                            <ArrowRight size={16} />
-                            {linkCopiado ? '¡Link copiado!' : 'Compartir Portal Veterinario'}
-                          </button>
-                          <button
-                            onClick={() => setTimeout(() => navigate('/ecosistema'), 300)}
-                            className="text-[#2D6A6A] text-[13px] font-semibold hover:text-[#1A3D3D] transition-colors underline underline-offset-2"
-                          >
-                            Ir a mi perfil →
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
+              {/* PC: título + flecha + selector de cuenta */}
+              <div className="hidden lg:flex flex-col items-center gap-2 w-full">
+                <p className="font-['Montserrat'] font-extrabold text-[#1A3D3D] text-[19px] text-center">
+                  ¿Sos veterinario/a? Registrate acá
+                </p>
+                <ArrowDown className="w-6 h-6 text-[#1A3D3D] animate-bounce mb-1" strokeWidth={2.5} />
+                <SelectorTipoCuenta
+                  onElegir={(valor) => navigate('/login', { state: { registro: valor } })}
+                />
               </div>
             </div>
 
-          ) : (
+            {/* — Instagram: abajo en móvil, izquierda en PC — */}
+            <div className="order-3 lg:order-1 flex flex-col items-center lg:items-start text-center lg:text-left gap-6 flex-1">
 
-           /* ── Vista pública ── */
-<div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12 w-full py-4">
+              <span className="hidden lg:inline-flex items-center gap-2 bg-[#1A3D3D] border border-[#4DB6AC]/30 text-[#4DB6AC] text-[11px] font-bold uppercase tracking-[0.2em] px-4 py-2 rounded-full">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#4DB6AC] animate-pulse" />
+                Seguinos en Instagram
+              </span>
 
-  {/* — Registro: arriba en móvil, derecha en PC — */}
-  <div className="order-1 lg:order-2 w-full lg:w-[360px] shrink-0 flex flex-col items-center">
+              <h2 className="font-['Montserrat'] font-bold text-[#1A3D3D] text-3xl md:text-4xl max-w-lg leading-snug">
+                Mantenete al tanto de todas las novedades
+              </h2>
 
-    {/* Móvil: caja con el botón "Soy Profesional" (igual al de Login) */}
-<div className="lg:hidden w-[88%] max-w-[300px] bg-white rounded-[24px] shadow-[0_8px_24px_rgba(26,61,61,0.12)] p-4">
-  <p className="font-['Montserrat'] font-bold text-[#1A3D3D] text-[15px] text-center leading-tight mb-3">
-    ¿Sos veterinario/a? Registrate acá
-  </p>
-  <button
-    type="button"
-    onClick={() => navigate('/login', { state: { registro: 'profesional' } })}
-    className="w-full text-left p-3 rounded-2xl bg-[#F4F7F7] border border-transparent hover:border-[#2D6A6A]/40 active:scale-[0.98] transition-all flex items-center gap-3 group"
-  >
-    <div className="p-2 rounded-full bg-blue-50 text-blue-600 group-hover:scale-110 transition-transform shrink-0">
-      <Stethoscope size={18} />
-    </div>
-    <div className="flex-1">
-      <h4 className="font-bold text-[14px] text-[#1A3D3D]">Soy Profesional</h4>
-      <p className="text-[#666666] text-[13px] leading-tight mt-0.5">Veterinario/a que busca conectar y crecer.</p>
-    </div>
-    <ArrowRight size={16} className="text-[#2D6A6A] shrink-0" />
-  </button>
-</div>
+              <p className="text-[#666666] text-[16px] md:text-[17px] leading-relaxed max-w-sm">
+                Estamos construyendo algo grande para el sector veterinario argentino. Seguinos y sé el primero en enterarte todas las novedades.
+              </p>
 
-    {/* PC: título + flecha + selector de cuenta */}
-    <div className="hidden lg:flex flex-col items-center gap-2 w-full">
-      <p className="font-['Montserrat'] font-extrabold text-[#1A3D3D] text-[19px] text-center">
-        ¿Sos veterinario/a? Registrate acá
-      </p>
-      <ArrowDown className="w-6 h-6 text-[#1A3D3D] animate-bounce mb-1" strokeWidth={2.5} />
-      <SelectorTipoCuenta
-        onElegir={(valor) => navigate('/login', { state: { registro: valor } })}
-      />
-    </div>
-  </div>
+              <a
+                href="https://www.instagram.com/portalveterinario.ar"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-3 bg-[#FF9800] text-white font-bold text-[15px] px-7 py-4 rounded-2xl hover:bg-[#e68900] transition-all duration-200 shadow-md hover:-translate-y-0.5 group"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/>
+                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                  <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
+                </svg>
+                @portalveterinario.ar
+                <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-200" />
+              </a>
+            </div>
 
-{/* — Instagram: abajo en móvil, izquierda en PC — */}
-  <div className="order-3 lg:order-1 flex flex-col items-center lg:items-start text-center lg:text-left gap-6 flex-1">
+          </div>
 
-    <span className="hidden lg:inline-flex items-center gap-2 bg-[#1A3D3D] border border-[#4DB6AC]/30 text-[#4DB6AC] text-[11px] font-bold uppercase tracking-[0.2em] px-4 py-2 rounded-full">
-  <span className="w-1.5 h-1.5 rounded-full bg-[#4DB6AC] animate-pulse" />
-  Seguinos en Instagram
-</span>
-
-    <h2 className="font-['Montserrat'] font-bold text-[#1A3D3D] text-3xl md:text-4xl max-w-lg leading-snug">
-      Mantenete al tanto de todas las novedades
-    </h2>
-
-    <p className="text-[#666666] text-[16px] md:text-[17px] leading-relaxed max-w-sm">
-      Estamos construyendo algo grande para el sector veterinario argentino. Seguinos y sé el primero en enterarte todas las novedades.
-    </p>
-
-    <a
-      href="https://www.instagram.com/portalveterinario.ar"
-      target="_blank"
-      rel="noreferrer"
-      className="inline-flex items-center gap-3 bg-[#FF9800] text-white font-bold text-[15px] px-7 py-4 rounded-2xl hover:bg-[#e68900] transition-all duration-200 shadow-md hover:-translate-y-0.5 group"
-    >
-      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/>
-        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
-        <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
-      </svg>
-      @portalveterinario.ar
-      <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-200" />
-    </a>
-  </div>
-
-</div>
-
-          )}
         </div>
       </section>
 
