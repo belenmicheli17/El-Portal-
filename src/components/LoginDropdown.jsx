@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
+import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
+import { pedirRecuperacionClave } from '../utils/recuperarClave';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { AlertCircle, CheckCircle, Eye, EyeOff, Loader } from 'lucide-react';
@@ -62,8 +63,8 @@ export default function LoginDropdown({ onClose }) {
     setRecuperando(true);
     setLoginError('');
     try {
-      const auth = getAuth();
-      await sendPasswordResetEmail(auth, emailVal);
+      // El mail sale por Brevo desde nuestra función de Vercel (con el diseño del Portal)
+      await pedirRecuperacionClave(emailVal.trim());
       setLoginView('sent');
     } catch (error) {
       setLoginError('No pudimos enviar el correo. Revisá que el email esté bien escrito.');

@@ -5,7 +5,8 @@ import {
   ArrowRight, KeyRound, CheckCircle2, Stethoscope,
   Hospital, Store, Loader2, AlertCircle
 } from 'lucide-react';
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { pedirRecuperacionClave } from '../utils/recuperarClave';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
@@ -20,6 +21,7 @@ const traducirErrorFirebase = (errorCode) => {
     case 'auth/invalid-credential': return 'El correo o la contraseña son incorrectos.';
     case 'auth/too-many-requests': return 'Demasiados intentos. Por seguridad, intentá de nuevo más tarde.';
     case 'auth/network-request-failed': return 'Error de conexión. Revisá tu internet y volvé a intentar.';
+    case 'recuperacion/fallo': return 'No pudimos enviar el correo. Intentá de nuevo en unos minutos.';
     default: return `Ocurrió un error inesperado (${errorCode || 'Desconocido'}). Intentá de nuevo.`;
   }
 };
@@ -134,8 +136,8 @@ export default function Login() {
       setIsLoading(true);
       setErrorMsg('');
       try {
-        const auth = getAuth();
-        await sendPasswordResetEmail(auth, formData.email);
+        // El mail sale por Brevo desde nuestra función de Vercel (con el diseño del Portal)
+        await pedirRecuperacionClave(formData.email.trim());
         setView('recovery_sent');
       } catch (error) {
         setErrorMsg(traducirErrorFirebase(error.code));

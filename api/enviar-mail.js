@@ -96,7 +96,8 @@ export default async function handler(req, res) {
     return enviarPorBrevo(res, {
       to: [{ email: sesion.email }],
       templateId: ID_PLANTILLA_BIENVENIDA,
-      params: { nombre: 'colega' }
+      // Usamos el nombre que mandó la persona (recortado por seguridad); si no vino, "colega"
+      params: { nombre: String(nombre || 'colega').trim().slice(0, 60) || 'colega' }
     });
   }
 

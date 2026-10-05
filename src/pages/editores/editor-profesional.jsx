@@ -567,8 +567,10 @@ const [tooltipHintVisto, setTooltipHintVisto] = useState(true);
   const [planType, setPlanType] = useState('pro');
   const [tempSelectedPlan, setTempSelectedPlan] = useState('pro'); 
   const [isSubscriptionActive, setIsSubscriptionActive] = useState(true);
+  // Avisa cuando ya sabemos el plan real (así no mostramos un plan equivocado mientras carga)
+  const [planCargado, setPlanCargado] = useState(false);
 
-  const isPro = planType === 'pro';
+  // (isPro y esSocioVitalicio se calculan más abajo, después de crear formData)
   // Carga inicial de datos desde Firebase
   useEffect(() => {
     const fetchUserData = async () => {
@@ -603,6 +605,8 @@ const [tooltipHintVisto, setTooltipHintVisto] = useState(true);
           dbData.cuentaEmail = auth.currentUser?.email || '';
           // Inyectamos socioVitalicio desde 'usuarios'
           dbData.socioVitalicio = datosUsuario.socioVitalicio || false;
+          // Leemos el plan real guardado: socio vitalicio siempre es PRO; si no, usamos el que tenga ('gratis' o 'pro'; si falta, 'pro' como hasta ahora)
+          setPlanType(datosUsuario.socioVitalicio ? 'pro' : (dbData.planActual === 'gratis' ? 'gratis' : 'pro'));
           if (userDocSnap.exists()) {
             dbData.socioVitalicio = userDocSnap.data().socioVitalicio || false;
             setTooltipHintVisto(userDocSnap.data().tooltipHintVisto ?? false);
@@ -626,6 +630,9 @@ console.log("🔍 TRAYECTORIA CRUDA:", JSON.stringify(dataCompleta.trayectoria, 
         }
       } catch (error) {
         console.error("Error al cargar los datos desde Firebase:", error);
+      } finally {
+        // Ya sabemos (o falló y no podemos saber) el plan: dejamos de mostrar "cargando"
+        if (currentUser?.uid) setPlanCargado(true);
       }
     };
 
@@ -678,6 +685,10 @@ papers: [],
   const haycambiosSinGuardar = savedData !== null && JSON.stringify(_formData) !== JSON.stringify(savedData);
 
   const formData = _formData;
+
+  // Un socio vitalicio tiene todo habilitado, sin importar el plan que tenga guardado
+  const esSocioVitalicio = formData.socioVitalicio === true;
+  const isPro = esSocioVitalicio || planType === 'pro';
   
   const setFormData = (action) => {
     _setFormData((prev) => {
@@ -1202,7 +1213,7 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
       )}
 
       {/* MODAL CAMBIO DE PLANES */}
-      {isPlanModalOpen && (
+      {isPlanModalOpen && !esSocioVitalicio && (
         <div className="fixed inset-0 bg-[#1A3D3D]/40 backdrop-blur-md z-[300] overflow-y-auto">
           <div className="flex min-h-full items-center justify-center p-4 sm:p-6">
             <div className="bg-white rounded-[32px] w-full max-w-3xl flex flex-col overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-200">
@@ -1276,7 +1287,7 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
       )}
 
       {/* MODAL DE PAGO (FACTURACIÓN) */}
-      {isSubModalOpen && (
+      {isSubModalOpen && !esSocioVitalicio && (
         <div className="fixed inset-0 bg-[#1A3D3D]/40 backdrop-blur-md z-[300] overflow-y-auto">
           <div className="flex min-h-full items-center justify-center p-4 sm:p-6">
             <div className="bg-white rounded-[32px] w-full max-w-md flex flex-col overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-200">
@@ -1384,7 +1395,7 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
       <div className="pt-[76px] max-w-[1100px] mx-auto px-4 md:px-8 flex flex-col gap-6 w-full pb-10">
         
         {/* BANNER DE SUSCRIPCIÓN INACTIVA */}
-        {(isPro && !isSubscriptionActive) && (
+        {(isPro && !isSubscriptionActive && !esSocioVitalicio) && (
           <div className="w-full bg-red-50 border border-red-200 rounded-[24px] p-5 md:p-6 flex flex-col md:flex-row items-center justify-between gap-5 shadow-sm animate-in fade-in slide-in-from-top-4 z-10">
             <div className="flex items-center gap-4 text-left w-full md:w-auto">
               <div className="w-12 h-12 bg-red-100/50 rounded-full flex items-center justify-center shrink-0 border border-red-200">
@@ -1509,8 +1520,13 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
                        <CreditCard className="w-5 h-5 text-[#2D6A6A]" /> Estado de la suscripción
                      </h4>
 
-                     {/* SOCIO VITALICIO: reemplaza toda la sección si aplica */}
-                     {formData.socioVitalicio ? (
+                     {/* Mientras carga no mostramos ningún plan; después, socio vitalicio reemplaza toda la sección si aplica */}
+                     {!planCargado ? (
+                       <div className="bg-gray-50 border border-gray-100 rounded-2xl p-6 flex items-center gap-3 text-gray-400">
+                         <Loader2 className="w-5 h-5 animate-spin" />
+                         <p className="text-sm font-medium">Cargando tu información...</p>
+                       </div>
+                     ) : formData.socioVitalicio ? (
                        <div className="bg-gradient-to-br from-yellow-50 to-amber-50 border border-yellow-200 rounded-2xl p-6 flex items-center gap-5">
                          <div className="w-14 h-14 bg-yellow-100 rounded-2xl flex items-center justify-center shrink-0">
                            <Crown className="w-7 h-7 text-yellow-500" />

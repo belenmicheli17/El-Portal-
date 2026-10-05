@@ -299,46 +299,28 @@ if (rolDrawer === 'profesional') {
     facebook: '',
   });
 }
-      // — Envío de mail de bienvenida vía Brevo —
+      // — Mail de bienvenida: se lo pedimos a la función de Vercel (la clave de Brevo vive solo en el servidor) —
       try {
-        const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
+        // Le mostramos a la función quién es esta persona (su "carnet" de sesión)
+        const idToken = await user.getIdToken();
+        const respuesta = await fetch('/api/enviar-mail', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'api-key': import.meta.env.VITE_BREVO_API_KEY,
+            Authorization: `Bearer ${idToken}`,
           },
           body: JSON.stringify({
-            to: [{ email: formDrawer.email.toLowerCase().trim(), name: nombreCompleto }],
-            templateId: 1,
-            params: { nombre: formDrawer.nombre.trim() },
+            tipo: 'bienvenida',
+            nombre: formDrawer.nombre.trim(),
           }),
         });
-        const brevoData = await brevoRes.json();
-        console.log('Brevo status:', brevoRes.status);
-        console.log('Brevo respuesta:', brevoData);
+        if (!respuesta.ok) {
+          console.warn('La función no pudo mandar la bienvenida:', respuesta.status);
+        }
       } catch (mailErr) {
         // El mail falló pero el registro fue exitoso — no bloqueamos al usuario
         console.warn('No se pudo enviar el mail de bienvenida:', mailErr);
       }
-
-      // Enviamos el email de bienvenida por Brevo
-try {
-  await fetch('https://api.brevo.com/v3/smtp/email', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'api-key': import.meta.env.VITE_BREVO_API_KEY
-    },
-    body: JSON.stringify({
-      sender: { name: 'Portal Veterinario', email: 'portalveterinario.ar@gmail.com' },
-      to: [{ email: formDrawer.email.toLowerCase().trim(), name: formDrawer.nombre.trim() }],
-      templateId: 1,
-      params: { nombre: formDrawer.nombre.trim() }
-    })
-  });
-} catch (err) {
-  console.error('Error enviando email de bienvenida:', err);
-}
 
 setPasoDrawer('exito');
     } catch (err) {
