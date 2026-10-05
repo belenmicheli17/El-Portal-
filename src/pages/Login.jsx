@@ -255,7 +255,7 @@ export default function Login() {
             <div className="bg-white rounded-[32px] shadow-[0_15px_40px_rgba(0,0,0,0.08)] p-6 md:p-6 border border-gray-50 flex-1 flex flex-col">
 
               <h2 className="text-[#1A3D3D] font-['Montserrat'] font-bold text-lg md:text-base text-center mb-6 md:mb-4 uppercase tracking-wider">
-                {renderHeader()}
+                {renderHeader()} 
               </h2>
 
               {/* Barra de cupos de socios vitalicios (solo en la pantalla de registro) */}
