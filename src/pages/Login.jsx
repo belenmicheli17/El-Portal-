@@ -10,6 +10,7 @@ import { pedirRecuperacionClave } from '../utils/recuperarClave';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
+import BarraCupos from '../components/BarraCupos';
 
 const traducirErrorFirebase = (errorCode) => {
   switch (errorCode) {
@@ -256,6 +257,9 @@ export default function Login() {
               <h2 className="text-[#1A3D3D] font-['Montserrat'] font-bold text-lg md:text-base text-center mb-6 md:mb-4 uppercase tracking-wider">
                 {renderHeader()}
               </h2>
+
+              {/* Barra de cupos de socios vitalicios (solo en la pantalla de registro) */}
+              {view === 'register' && <BarraCupos />}
 
                                    {view === 'register' && !accountType ? (
                 <div className="space-y-3">

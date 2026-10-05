@@ -18,6 +18,7 @@ import {
 import { db } from "../firebase";
 // Cartelito de inicio de sesión (el mismo que se usa en el resto del sitio, con el mail de recuperar contraseña por Brevo)
 import LoginDropdown from "../components/LoginDropdown";
+import BarraCupos from "../components/BarraCupos";
 
 // ── Cajita zona pública ────────────────────────────────────────────────────
 const CardPublica = ({ icono: Icono, titulo, descripcion, highlight }) => (
@@ -473,6 +474,11 @@ Creá tu perfil, aparecé en búsquedas y conectate con colegas, clínicas y pro
 
             {/* — Registro: arriba en móvil, derecha en PC — */}
             <div className="order-1 lg:order-2 w-full lg:w-[360px] shrink-0 flex flex-col items-center">
+
+              {/* Barra de cupos de socios vitalicios */}
+              <div className="w-[88%] max-w-[300px] lg:w-full lg:max-w-none">
+                <BarraCupos />
+              </div>
 
               {/* Móvil: caja con el botón "Soy Profesional" (igual al de Login) */}
               <div className="lg:hidden w-[88%] max-w-[300px] bg-white rounded-[24px] shadow-[0_8px_24px_rgba(26,61,61,0.12)] p-4">
