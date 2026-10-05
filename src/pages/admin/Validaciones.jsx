@@ -6,7 +6,7 @@ import {
 import { db, storage, auth } from '../../firebase';
 import { collection, getDocs, getDoc, getCountFromServer, doc, query, where, writeBatch, serverTimestamp } from 'firebase/firestore';
 import { ref, getDownloadURL } from 'firebase/storage';
-import emailjs from '@emailjs/browser';
+
 
 // Motivos frecuentes: al tocarlos se completan solos en el cuadro de texto (después se pueden editar)
 const MOTIVOS_RAPIDOS = [
@@ -122,12 +122,17 @@ export default function Validaciones() {
 
     // Mail de aviso (si falla, la aprobación igual queda hecha)
     try {
-      await emailjs.send(
-        'service_5flv9gx',
-        'template_stfs1uh',
-        { nombre: req.nombrePila || req.nombre, email: req.email },
-        'awqjrLv96HD2QZx1C'
-      );
+      const token = await auth.currentUser.getIdToken();
+      const respuesta = await fetch('/api/enviar-mail', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          tipo: 'aprobacion',
+          email: req.email,
+          nombre: req.nombrePila || req.nombre
+        })
+      });
+      if (!respuesta.ok) throw new Error(`Respuesta ${respuesta.status}`);
     } catch (error) {
       console.error('Error enviando el mail de aprobación:', error);
       alert('La persona quedó aprobada, pero el mail de aviso no salió.');

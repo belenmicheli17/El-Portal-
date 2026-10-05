@@ -42,7 +42,10 @@ export default function Login() {
   useEffect(() => {
     if (location.state?.registro) {
       setView('register');
-      setAccountType(null);
+      // Si ya eligieron el tipo de cuenta antes (ej. desde la sala de espera), lo saltamos
+      // y vamos directo al formulario. Si no vino un tipo válido, mostramos las opciones.
+      const tiposValidos = ['profesional', 'clinica', 'proveedor'];
+      setAccountType(tiposValidos.includes(location.state.registro) ? location.state.registro : null);
     }
   }, [location.state]);
 

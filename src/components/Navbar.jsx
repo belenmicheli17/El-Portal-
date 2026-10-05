@@ -178,16 +178,15 @@ export default function Navbar() {
 
             {/* ¿Sos veterinario? Registrate — solo para visitantes (sin sesión iniciada) */}
             {!currentUser && (
-              <button
-                onClick={() => navigate('/login', { state: { registro: 'profesional' } })}
-                className="flex items-center gap-2 bg-[#2D6A6A] text-white rounded-2xl px-4 md:px-5 py-2.5 text-[12px] md:text-[13px] font-['Montserrat'] font-extrabold tracking-wide shadow-[0_4px_15px_rgba(45,106,106,0.25)] hover:bg-[#1A3D3D] hover:-translate-y-0.5 transition-all"
-              >
-                <Stethoscope className="w-4 h-4 hidden md:block" />
-                <span className="md:hidden">Registrate</span>
-                <span className="hidden md:inline">¿Sos veterinario? Registrate</span>
-              </button>
-            )}
-
+  <button
+    onClick={() => navigate('/login', { state: { registro: 'profesional' } })}
+    className="flex items-center gap-2 bg-[#2D6A6A] text-white rounded-2xl px-4 md:px-5 py-2.5 text-[12px] md:text-[13px] font-['Montserrat'] font-bold tracking-wide shadow-[0_4px_15px_rgba(45,106,106,0.25)] hover:bg-[#1A3D3D] hover:-translate-y-0.5 transition-all"
+  >
+    <Stethoscope className="w-4 h-4 hidden md:block" strokeWidth={2.3} />
+    <span className="md:hidden">Registrate</span>
+    <span className="hidden md:inline">¿Sos veterinario? Registrate</span>
+  </button>
+)}
             {/* Botón Contactar — solo en perfiles, desktop */}
             {esPerfil && (
               <button

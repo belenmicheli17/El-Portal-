@@ -18,7 +18,8 @@ import {
   Stethoscope,
   PawPrint,
   Users,
-  Mail
+  Mail,
+  ArrowDown
 } from "lucide-react";
 
 // Código de acceso beta — cambialo cuando quieras
@@ -96,6 +97,51 @@ const CardExclusiva = ({ icono: Icono, titulo, descripcion, highlight }) => (
        <h3 className="font-['Montserrat'] font-bold text-[#1A3D3D] text-[19px] md:text-[17px] mb-1 sm:mb-2">{titulo}</h3>
 <p className="text-[#333333] text-[17px] md:text-[16px] font-medium leading-relaxed">{descripcion}</p>
       </div>
+    </div>
+  </div>
+);
+
+// ── Selector de tipo de cuenta (igual al de Login) ─────────────────────────
+const OPCIONES_CUENTA = [
+  { valor: 'profesional', label: 'Soy Profesional', sub: 'Veterinario/a que busca conectar y crecer.', Icono: Stethoscope, proximamente: false },
+  { valor: 'clinica', label: 'Soy una Clínica', sub: 'Institución que busca talento y visibilidad.', Icono: Hospital, proximamente: true },
+  { valor: 'proveedor', label: 'Proveedor o empresa', sub: 'Ofrezco insumos mayoristas, equipamiento o servicios para los usuarios mencionados anteriormente.', Icono: Store, proximamente: true },
+];
+
+const SelectorTipoCuenta = ({ onElegir }) => (
+  <div className="w-full bg-white rounded-[28px] shadow-[0_8px_32px_rgba(26,61,61,0.08)] border border-gray-100 p-6">
+    <h3 className="text-[#1A3D3D] font-['Montserrat'] font-bold text-base text-center mb-5 uppercase tracking-wider">
+      ¿Qué tipo de cuenta?
+    </h3>
+    <div className="space-y-3">
+      {OPCIONES_CUENTA.map(({ valor, label, sub, Icono, proximamente }) => (
+        <div key={valor} className="relative mt-4 first:mt-0 text-left">
+          {proximamente && (
+            <div className="absolute -top-2.5 right-2 flex items-center gap-1.5 bg-gray-400 text-white text-[10px] font-bold uppercase tracking-[0.15em] px-2.5 py-1 rounded-full z-10">
+              <span className="w-1 h-1 rounded-full bg-white animate-pulse shrink-0"></span>
+              Próximamente
+            </div>
+          )}
+          <button
+            type="button"
+            disabled={proximamente}
+            onClick={() => { if (!proximamente) onElegir(valor); }}
+            className={`w-full text-left p-4 rounded-2xl border-2 transition-all flex items-center gap-4 ${
+              proximamente
+                ? 'border-gray-100 bg-gray-50 cursor-not-allowed opacity-60'
+                : 'border-[#2D6A6A]/40 hover:border-[#2D6A6A] hover:bg-[#F4F7F7] group active:scale-[0.98]'
+            }`}
+          >
+            <div className={`p-2.5 rounded-full transition-transform ${proximamente ? 'bg-gray-100 text-gray-400' : 'bg-blue-50 text-blue-600 group-hover:scale-110'}`}>
+              <Icono size={18} />
+            </div>
+            <div>
+              <h4 className={`font-bold text-[14px] ${proximamente ? 'text-gray-400' : 'text-[#1A3D3D]'}`}>{label}</h4>
+              <p className="text-gray-400 text-[13px] leading-tight mt-0.5">{sub}</p>
+            </div>
+          </button>
+        </div>
+      ))}
     </div>
   </div>
 );
@@ -1009,43 +1055,78 @@ Creá tu perfil, aparecé en búsquedas y conectate con colegas, clínicas y pro
 
           ) : (
 
-            /* ── Vista pública ── */
-            <div className="flex flex-col items-center text-center gap-6 w-full py-4">
+           /* ── Vista pública ── */
+<div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12 w-full py-4">
 
-              {/* — Etiqueta — */}
-              <span className="inline-flex items-center gap-2 bg-[#1A3D3D] border border-[#4DB6AC]/30 text-[#4DB6AC] text-[11px] font-bold uppercase tracking-[0.2em] px-4 py-2 rounded-full">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#4DB6AC] animate-pulse" />
-                Seguinos en Instagram
-              </span>
+  {/* — Registro: arriba en móvil, derecha en PC — */}
+  <div className="order-1 lg:order-2 w-full lg:w-[360px] shrink-0 flex flex-col items-center">
 
-              {/* — Título — */}
-              <h2 className="font-['Montserrat'] font-bold text-[#1A3D3D] text-3xl md:text-4xl max-w-lg leading-snug">
-                Mantenete al tanto de todas las novedades
-              </h2>
+    {/* Móvil: caja con el botón "Soy Profesional" (igual al de Login) */}
+<div className="lg:hidden w-[88%] max-w-[300px] bg-white rounded-[24px] shadow-[0_8px_24px_rgba(26,61,61,0.12)] p-4">
+  <p className="font-['Montserrat'] font-bold text-[#1A3D3D] text-[15px] text-center leading-tight mb-3">
+    ¿Sos veterinario/a? Registrate acá
+  </p>
+  <button
+    type="button"
+    onClick={() => navigate('/login', { state: { registro: 'profesional' } })}
+    className="w-full text-left p-3 rounded-2xl bg-[#F4F7F7] border border-transparent hover:border-[#2D6A6A]/40 active:scale-[0.98] transition-all flex items-center gap-3 group"
+  >
+    <div className="p-2 rounded-full bg-blue-50 text-blue-600 group-hover:scale-110 transition-transform shrink-0">
+      <Stethoscope size={18} />
+    </div>
+    <div className="flex-1">
+      <h4 className="font-bold text-[14px] text-[#1A3D3D]">Soy Profesional</h4>
+      <p className="text-[#666666] text-[13px] leading-tight mt-0.5">Veterinario/a que busca conectar y crecer.</p>
+    </div>
+    <ArrowRight size={16} className="text-[#2D6A6A] shrink-0" />
+  </button>
+</div>
 
-              {/* — Subtexto — */}
-              <p className="text-[#666666] text-[16px] md:text-[17px] leading-relaxed max-w-sm">
-                Estamos construyendo algo grande para el sector veterinario argentino. Seguinos y sé el primero en enterarte todas las novedades.
-              </p>
+    {/* PC: título + flecha + selector de cuenta */}
+    <div className="hidden lg:flex flex-col items-center gap-2 w-full">
+      <p className="font-['Montserrat'] font-extrabold text-[#1A3D3D] text-[19px] text-center">
+        ¿Sos veterinario/a? Registrate acá
+      </p>
+      <ArrowDown className="w-6 h-6 text-[#1A3D3D] animate-bounce mb-1" strokeWidth={2.5} />
+      <SelectorTipoCuenta
+        onElegir={(valor) => navigate('/login', { state: { registro: valor } })}
+      />
+    </div>
+  </div>
 
-              {/* — Botón Instagram — */}
-              <a
-                href="https://www.instagram.com/portalveterinario.ar"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-3 bg-[#FF9800] text-white font-bold text-[15px] px-7 py-4 rounded-2xl hover:bg-[#e68900] transition-all duration-200 shadow-md hover:-translate-y-0.5 group"
-              >
-                {/* Ícono Instagram SVG inline */}
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/>
-                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
-                  <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
-                </svg>
-                @portalveterinario.ar
-                <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-200" />
-              </a>
+{/* — Instagram: abajo en móvil, izquierda en PC — */}
+  <div className="order-3 lg:order-1 flex flex-col items-center lg:items-start text-center lg:text-left gap-6 flex-1">
 
-            </div>
+    <span className="hidden lg:inline-flex items-center gap-2 bg-[#1A3D3D] border border-[#4DB6AC]/30 text-[#4DB6AC] text-[11px] font-bold uppercase tracking-[0.2em] px-4 py-2 rounded-full">
+  <span className="w-1.5 h-1.5 rounded-full bg-[#4DB6AC] animate-pulse" />
+  Seguinos en Instagram
+</span>
+
+    <h2 className="font-['Montserrat'] font-bold text-[#1A3D3D] text-3xl md:text-4xl max-w-lg leading-snug">
+      Mantenete al tanto de todas las novedades
+    </h2>
+
+    <p className="text-[#666666] text-[16px] md:text-[17px] leading-relaxed max-w-sm">
+      Estamos construyendo algo grande para el sector veterinario argentino. Seguinos y sé el primero en enterarte todas las novedades.
+    </p>
+
+    <a
+      href="https://www.instagram.com/portalveterinario.ar"
+      target="_blank"
+      rel="noreferrer"
+      className="inline-flex items-center gap-3 bg-[#FF9800] text-white font-bold text-[15px] px-7 py-4 rounded-2xl hover:bg-[#e68900] transition-all duration-200 shadow-md hover:-translate-y-0.5 group"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/>
+        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+        <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
+      </svg>
+      @portalveterinario.ar
+      <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-200" />
+    </a>
+  </div>
+
+</div>
 
           )}
         </div>
