@@ -109,6 +109,15 @@ export default function Login() {
           onboardingCompleto: false,
           onboardingPaso: 0
         });
+        // Mail de bienvenida (si falla, no frena el registro)
+        user.getIdToken()
+          .then((token) => fetch('/api/enviar-mail', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ tipo: 'bienvenida' })
+          }))
+          .catch((errorMail) => console.error('Error enviando el mail de bienvenida:', errorMail));
+
         // Releemos los datos del usuario para que la app sepa que es profesional y debe pasar por el cuestionario
         await refreshUser();
         navigate('/onboarding');

@@ -4,7 +4,7 @@ import {
   Hash, MapPin, FileText, ExternalLink, X
 } from 'lucide-react';
 import { db, storage, auth } from '../../firebase';
-import { collection, getDocs, getDoc, doc, query, where, writeBatch, serverTimestamp } from 'firebase/firestore';
+import { collection, getDocs, getDoc, getCountFromServer, doc, query, where, writeBatch, serverTimestamp } from 'firebase/firestore';
 import { ref, getDownloadURL } from 'firebase/storage';
 import emailjs from '@emailjs/browser';
 
@@ -14,6 +14,9 @@ const MOTIVOS_RAPIDOS = [
   'La foto de tu título o carnet no se lee bien. Subila de nuevo con mejor luz.',
   'Los datos que cargaste no coinciden con tu título.'
 ];
+
+// Cuántos socios vitalicios hay como máximo (cuenta a todos los que ya lo son)
+const LIMITE_SOCIOS_VITALICIOS = 60;
 
 // Convierte la fecha que guarda Firestore en un texto legible
 const formatearFecha = (marca) => {
@@ -97,10 +100,18 @@ export default function Validaciones() {
     if (!window.confirm(`¿Aprobar a ${req.nombre}? Su perfil va a quedar visible en la cartilla.`)) return;
     setProcesando(req.uid);
     try {
+      // ¿Todavía hay lugar entre los primeros socios vitalicios?
+      const cuentaSocios = await getCountFromServer(query(collection(db, 'usuarios'), where('socioVitalicio', '==', true)));
+      const esSocio = cuentaSocios.data().count < LIMITE_SOCIOS_VITALICIOS;
+
       const lote = writeBatch(db);
       lote.update(doc(db, 'verificaciones', req.uid), { estado: 'verificado', motivoRechazo: '', revisadoEn: serverTimestamp() });
-      lote.update(doc(db, 'usuarios', req.uid), { estado: 'activo' });
-      lote.set(doc(db, 'profesionales', req.uid), { visible: true }, { merge: true });
+      lote.update(doc(db, 'usuarios', req.uid), { estado: 'activo', ...(esSocio ? { socioVitalicio: true } : {}) });
+      lote.set(
+        doc(db, 'profesionales', req.uid),
+        { visible: true, ...(esSocio ? { socioVitalicio: true, planActual: 'pro' } : {}) },
+        { merge: true }
+      );
       await lote.commit();
     } catch (error) {
       console.error('Error aprobando:', error);

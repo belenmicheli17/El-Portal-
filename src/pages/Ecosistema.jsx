@@ -281,7 +281,7 @@ const PantallaEstado = ({ tipo, currentUser, handleLogout }) => {
         {/* Descripción */}
         <p className="text-[#666666] text-[15px] font-medium mb-8 leading-relaxed">
           {esRechazo
-            ? 'Tu solicitud de ingreso no fue aprobada. Si creés que es un error, podés reenviarla o escribirnos a soporte@elportalvet.com.'
+            ? 'Tu solicitud de ingreso no fue aprobada. Si creés que es un error, podés reenviarla o escribirnos a portalveterinario.ar@gmail.com.'
             : 'Verificamos la identidad de cada profesional y clínica antes de darles acceso completo. Este proceso tarda menos de 48 horas hábiles.'}
         </p>
 
@@ -473,7 +473,7 @@ const PantallaRechazo = ({ verificacion, handleLogout }) => {
 
         <p className="text-[#666666] text-[14px] font-medium mb-6">
           ¿Dudas? Escribinos a{' '}
-          <a href="mailto:soporte@elportalvet.com" className="text-[#2D6A6A] font-bold hover:underline">soporte@elportalvet.com</a>
+          <a href="mailto:portalveterinario.ar@gmail.com" className="text-[#2D6A6A] font-bold hover:underline">portalveterinario.ar@gmail.com</a>
         </p>
 
         <button onClick={handleLogout} className="text-[#666666] text-sm font-bold hover:text-red-500 transition-colors flex items-center gap-2 mx-auto">
@@ -602,8 +602,8 @@ export default function Ecosistema() {
           </h1>
           <p className="text-[#666666] text-[15px] font-medium mb-8 leading-relaxed">
             Tu cuenta fue desactivada. Si creés que es un error escribinos a{' '}
-            <a href="mailto:soporte@elportalvet.com" className="text-[#2D6A6A] font-bold hover:underline">
-              soporte@elportalvet.com
+            <a href="mailto:portalveterinario.ar@gmail.com" className="text-[#2D6A6A] font-bold hover:underline">
+              portalveterinario.ar@gmail.com
             </a>
           </p>
           <button
