@@ -645,11 +645,8 @@ export default function Onboarding() {
   const [subiendoFoto, setSubiendoFoto] = useState(false);
   const [subiendoTitulo, setSubiendoTitulo] = useState(false);
   const [progresoTitulo, setProgresoTitulo] = useState(0);
-      // (En modo corrección también se puede entrar aunque ya lo haya completado antes)
-    if (currentUser.rol !== 'profesional' || (currentUser.onboardingCompleto !== false && !esCorreccion)) {
-      navigate('/ecosistema', { replace: true });
-      return;
-    }
+  const [recorte, setRecorte] = useState({ abierto: false, imagen: null });
+  const [motivoRechazo, setMotivoRechazo] = useState('');
 
   // Guarda las descripciones de grupos de servicios que ya tenía la persona (para no perderlas)
   const descripcionesServicios = useRef({});
@@ -672,7 +669,8 @@ export default function Onboarding() {
 
     // Solo entra al cuestionario un profesional con onboardingCompleto en false.
     // Los usuarios que ya existían (sin ese campo) pasan directo al ecosistema.
-    if (currentUser.rol !== 'profesional' || currentUser.onboardingCompleto !== false) {
+    // (En modo corrección también se puede entrar aunque ya lo haya completado antes)
+    if (currentUser.rol !== 'profesional' || (currentUser.onboardingCompleto !== false && !esCorreccion)) {
       navigate('/ecosistema', { replace: true });
       return;
     }
@@ -873,7 +871,7 @@ export default function Onboarding() {
     if (p === 1) {
       if (contarDigitos(datos.mat) < 3) return 'La matrícula debe tener al menos 3 números.';
       if (datos.m2 && contarDigitos(datos.mat2) < 3) return 'Completá tu segunda matrícula (mínimo 3 números) o quitala.';
-      if (!datos.tituloPath) return 'Sumá la foto de tu título o carnet para poder verificarte.';
+      if (!datos.tituloPath) return 'Sumá la foto de tu título o carnet para poder verificarte (obligatorio).';
     }
     if (p === 2 && !datos.esp.trim()) return 'Escribí tu especialidad principal.';
     if (p === 3) {
@@ -1096,7 +1094,7 @@ export default function Onboarding() {
             {provincias.map((p) => <option key={p} value={p}>{p}</option>)}
           </select>
 
-          <span className={CLASE_LABEL}>Foto de tu título o carnet</span>
+          <span className={CLASE_LABEL}>Foto de tu título o carnet para verificarte (obligatorio).</span>
           {datos.tituloPath ? (
             <div className="flex items-center gap-3 bg-[#4DB6AC]/10 border border-[#4DB6AC] rounded-2xl px-4 py-3.5">
               <FileCheck className="w-7 h-7 text-[#2D6A6A] shrink-0" strokeWidth={1.5} />
@@ -1110,7 +1108,7 @@ export default function Onboarding() {
             <label className={`w-full border-2 border-dashed border-[#2D6A6A]/40 rounded-2xl px-4 py-6 text-[#2D6A6A] text-[15px] font-semibold flex items-center justify-center gap-2.5 transition-all duration-300 ${subiendoTitulo ? 'bg-[#2D6A6A]/5 cursor-not-allowed' : 'cursor-pointer hover:bg-[#2D6A6A]/5 hover:border-[#2D6A6A]'}`}>
               {subiendoTitulo
                 ? <><Loader2 className="w-5 h-5 animate-spin" /> Subiendo… {progresoTitulo}%</>
-                : <><Upload className="w-5 h-5" /> Subir foto de tu título o carnet</>}
+                : <><Upload className="w-5 h-5" /> Subir foto de tu título o carnet para validarte (obligatorio)</>}
               <input type="file" accept="image/*,application/pdf" className="hidden" onChange={manejarTitulo} disabled={subiendoTitulo} />
             </label>
           )}
