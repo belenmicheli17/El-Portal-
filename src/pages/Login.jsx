@@ -138,7 +138,7 @@ export default function Login() {
       try {
         // El mail sale por Brevo desde nuestra función de Vercel (con el diseño del Portal)
         await pedirRecuperacionClave(formData.email.trim());
-        setView('recovery_sent');
+        setView('recovery_sent'); 
       } catch (error) {
         setErrorMsg(traducirErrorFirebase(error.code));
       } finally {
