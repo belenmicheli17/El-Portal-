@@ -28,6 +28,7 @@ import CartillaProveedores from './pages/CartillaProveedores';
 import Ecosistema from './pages/Ecosistema';
 import SalaDeEspera from './pages/SalaDeEspera';
 import Onboarding from './pages/Onboarding';
+import RestablecerClave from './pages/restablecer-clave';
 // Panel Admin
 import RutaProtegidaAdmin from './components/admin/RutaProtegidaAdmin';
 import RutaProtegida from './components/admin/RutaProtegida';
@@ -134,6 +135,7 @@ export default function App() {
           {/* Cada página maneja su propio layout              */}
           {/* ================================================ */}
           <Route path="/Login" element={<Login />} />
+          <Route path="/restablecer-clave" element={<RestablecerClave />} />
           <Route element={<RutaProtegida useLayout />}>
   <Route path="/ecosistema" element={<Ecosistema />} />
 </Route>

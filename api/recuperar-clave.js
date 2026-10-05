@@ -50,7 +50,15 @@ export default async function handler(req, res) {
     iniciarFirebaseAdmin();
 
     // Firebase crea el link seguro para cambiar la contraseña
-    const link = await getAuth().generatePasswordResetLink(email);
+    const linkFirebase = await getAuth().generatePasswordResetLink(email);
+
+    // Armamos el link del Portal: tomamos el código secreto del link de Firebase
+    // y se lo mandamos a nuestra propia página de "Nueva contraseña"
+    const codigo = new URL(linkFirebase).searchParams.get('oobCode');
+    if (!codigo) {
+      throw new Error('Firebase no devolvió el código de recuperación');
+    }
+    const linkPortal = `https://www.portalveterinario.ar/restablecer-clave?mode=resetPassword&oobCode=${encodeURIComponent(codigo)}`;
 
     // Brevo manda la plantilla con el link adentro
     const respuesta = await fetch('https://api.brevo.com/v3/smtp/email', {
@@ -63,7 +71,7 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         to: [{ email }],
         templateId: ID_PLANTILLA_RECUPERAR,
-        params: { link }
+        params: { link: linkPortal }
       })
     });
 
