@@ -6,10 +6,11 @@ import { useState, useEffect } from 'react';
 export default function BarraCupos({
   endpoint = '/api/cupos-vitalicios',
   limite = 60,
-  textoQuedan = 'para acceso vitalicio.',
+  textoQuedan = 'para ser socio vitalicio.',
   textoAgotado = 'lugares vitalicios ya fueron ocupados.',
-  pie = 'Después del límite, el acceso será por suscripción.',
+  pie = <>Después del límite, el acceso será por suscripción. <strong className="text-white font-black">¡Registrate ahora!</strong></>,
   integrada = false, // true = sin caja propia, para usarla adentro de otra caja
+  ancha = false, // true = versión grande, para usarla a lo ancho en PC
 }) {
   const [total, setTotal] = useState(null);
 
@@ -36,9 +37,9 @@ export default function BarraCupos({
   const porcentaje = Math.min((total / limite) * 100, 100);
 
   return (
-    <div className={integrada ? 'mb-4' : 'mb-5 bg-[#1A3D3D] rounded-2xl p-5 border border-[#1A3D3D]'}>
+    <div className={integrada ? 'mb-4' : `mb-5 bg-[#1A3D3D] rounded-2xl border border-[#1A3D3D] ${ancha ? 'p-6 md:p-7' : 'p-5'}`}>
       <div className="flex items-center justify-between mb-3">
-        <p className="text-[13px] font-black text-white leading-snug font-['Montserrat']">
+        <p className={`${ancha ? 'text-[18px]' : 'text-[13px]'} font-black text-white leading-snug font-['Montserrat']`}>
           {quedan > 0
             ? <>Quedan <span className="text-[#4DB6AC]">{quedan} lugares</span> de {limite} {textoQuedan}</>
             : <>Los {limite} {textoAgotado}</>
@@ -51,7 +52,7 @@ export default function BarraCupos({
           style={{ width: `${porcentaje === 0 ? 2 : porcentaje}%` }}
         />
       </div>
-      <p className="text-[11px] md:text-[13px] text-white/50 font-medium">
+      <p className={`${ancha ? 'text-[14px]' : 'text-[11px] md:text-[13px]'} text-white/50 font-medium`}>
         {pie}
       </p>
     </div>

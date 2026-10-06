@@ -469,17 +469,18 @@ Creá tu perfil, aparecé en búsquedas y conectate con colegas, clínicas y pro
 
         <div className="relative z-10 max-w-5xl mx-auto px-6 md:px-6 flex justify-center md:block">
 
+          {/* En PC: barra de cupos a lo ancho, arriba de las dos columnas */}
+          <div className="hidden lg:block w-full pt-4">
+            <BarraCupos ancha />
+          </div>
+
           {/* ── Vista pública ── */}
           <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12 w-full py-4">
 
             {/* — Registro: arriba en móvil, derecha en PC — */}
             <div className="order-1 lg:order-2 w-full lg:w-[360px] shrink-0 flex flex-col items-center">
 
-              {/* Barra de cupos de socios vitalicios */}
-              {/* En PC: la barra va suelta arriba del selector */}
-              <div className="hidden lg:block w-full">
-                <BarraCupos />
-              </div>
+              
 
               {/* Móvil: una sola caja Petróleo con la barra de cupos y el botón "Soy Profesional" */}
               <div className="lg:hidden w-[88%] max-w-[300px] bg-[#1A3D3D] rounded-[24px] shadow-[0_8px_24px_rgba(26,61,61,0.25)] p-5">
