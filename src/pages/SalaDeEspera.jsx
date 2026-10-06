@@ -476,19 +476,18 @@ Creá tu perfil, aparecé en búsquedas y conectate con colegas, clínicas y pro
             <div className="order-1 lg:order-2 w-full lg:w-[360px] shrink-0 flex flex-col items-center">
 
               {/* Barra de cupos de socios vitalicios */}
-              <div className="w-[88%] max-w-[300px] lg:w-full lg:max-w-none">
+              {/* En PC: la barra va suelta arriba del selector */}
+              <div className="hidden lg:block w-full">
                 <BarraCupos />
               </div>
 
-              {/* Móvil: caja con el botón "Soy Profesional" (igual al de Login) */}
-              <div className="lg:hidden w-[88%] max-w-[300px] bg-white rounded-[24px] shadow-[0_8px_24px_rgba(26,61,61,0.12)] p-4">
-                <p className="font-['Montserrat'] font-bold text-[#1A3D3D] text-[15px] text-center leading-tight mb-3">
-                  ¿Sos veterinario/a? Registrate acá
-                </p>
+              {/* Móvil: una sola caja Petróleo con la barra de cupos y el botón "Soy Profesional" */}
+              <div className="lg:hidden w-[88%] max-w-[300px] bg-[#1A3D3D] rounded-[24px] shadow-[0_8px_24px_rgba(26,61,61,0.25)] p-5">
+                <BarraCupos integrada />
                 <button
                   type="button"
                   onClick={() => navigate('/login', { state: { registro: 'profesional' } })}
-                  className="w-full text-left p-3 rounded-2xl bg-[#F4F7F7] border border-transparent hover:border-[#2D6A6A]/40 active:scale-[0.98] transition-all flex items-center gap-3 group"
+                  className="w-full text-left p-3 rounded-2xl bg-white border border-transparent hover:bg-[#F4F7F7] active:scale-[0.98] transition-all flex items-center gap-3 group"
                 >
                   <div className="p-2 rounded-full bg-blue-50 text-blue-600 group-hover:scale-110 transition-transform shrink-0">
                     <Stethoscope size={18} />

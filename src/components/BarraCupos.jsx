@@ -9,6 +9,7 @@ export default function BarraCupos({
   textoQuedan = 'para acceso vitalicio.',
   textoAgotado = 'lugares vitalicios ya fueron ocupados.',
   pie = 'Después del límite, el acceso será por suscripción.',
+  integrada = false, // true = sin caja propia, para usarla adentro de otra caja
 }) {
   const [total, setTotal] = useState(null);
 
@@ -35,7 +36,7 @@ export default function BarraCupos({
   const porcentaje = Math.min((total / limite) * 100, 100);
 
   return (
-    <div className="mb-5 bg-[#1A3D3D] rounded-2xl p-5 border border-[#1A3D3D]">
+    <div className={integrada ? 'mb-4' : 'mb-5 bg-[#1A3D3D] rounded-2xl p-5 border border-[#1A3D3D]'}>
       <div className="flex items-center justify-between mb-3">
         <p className="text-[13px] font-black text-white leading-snug font-['Montserrat']">
           {quedan > 0
