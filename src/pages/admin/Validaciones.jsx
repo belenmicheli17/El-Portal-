@@ -17,6 +17,8 @@ const MOTIVOS_RAPIDOS = [
 
 // Cuántos socios vitalicios hay como máximo (cuenta a todos los que ya lo son)
 const LIMITE_SOCIOS_VITALICIOS = 60;
+// Las primeras 30 clínicas que se aprueben entran como socias vitalicias
+const LIMITE_SOCIAS_CLINICAS = 30;
 
 // Convierte la fecha que guarda Firestore en un texto legible
 const formatearFecha = (marca) => {
@@ -101,14 +103,21 @@ export default function Validaciones() {
     setProcesando(req.uid);
     try {
       // ¿Todavía hay lugar entre los primeros socios vitalicios?
-      const cuentaSocios = await getCountFromServer(query(collection(db, 'usuarios'), where('socioVitalicio', '==', true)));
-      const esSocio = cuentaSocios.data().count < LIMITE_SOCIOS_VITALICIOS;
+      // Profesionales y clínicas tienen cupos separados
+      const esClinica = req.tipo === 'clinica';
+      const limiteSocios = esClinica ? LIMITE_SOCIAS_CLINICAS : LIMITE_SOCIOS_VITALICIOS;
+      const cuentaSocios = await getCountFromServer(query(
+        collection(db, 'usuarios'),
+        where('socioVitalicio', '==', true),
+        where('rol', '==', esClinica ? 'clinica' : 'profesional')
+      ));
+      const esSocio = cuentaSocios.data().count < limiteSocios;
 
       const lote = writeBatch(db);
       lote.update(doc(db, 'verificaciones', req.uid), { estado: 'verificado', motivoRechazo: '', revisadoEn: serverTimestamp() });
       lote.update(doc(db, 'usuarios', req.uid), { estado: 'activo', ...(esSocio ? { socioVitalicio: true } : {}) });
       lote.set(
-        doc(db, 'profesionales', req.uid),
+                doc(db, esClinica ? 'clinicas' : 'profesionales', req.uid),
         { visible: true, ...(esSocio ? { socioVitalicio: true, planActual: 'pro' } : {}) },
         { merge: true }
       );
@@ -309,7 +318,7 @@ export default function Validaciones() {
                           {req.nombre}
                         </h3>
                         <span className="inline-block bg-[#F4F7F7] text-[#666666] text-[11px] md:text-[12px] font-bold px-2.5 py-1 rounded-lg uppercase tracking-widest">
-                          Nuevo profesional
+                          {req.tipo === 'clinica' ? 'Nueva clínica' : 'Nuevo profesional'}
                         </span>
                       </div>
                     </div>
@@ -327,6 +336,13 @@ export default function Validaciones() {
 
                   {/* Datos que mandó (para chequear en el colegio profesional) */}
                   <div className="space-y-2 bg-[#F4F7F7] rounded-2xl p-4">
+                    {req.tipo === 'clinica' && (
+                      <div className="flex items-center gap-3 bg-white rounded-xl px-4 py-3">
+                        <User className="w-4 h-4 text-[#2D6A6A] shrink-0" />
+                        <span className="text-[#666666] text-[12px] font-medium w-24 shrink-0">Director/a:</span>
+                        <span className="text-[#1A3D3D] text-[13px] font-bold">{datos.directorNombre || '—'}</span>
+                      </div>
+                    )}
                     <div className="flex items-center gap-3 bg-white rounded-xl px-4 py-3">
                       <Hash className="w-4 h-4 text-[#2D6A6A] shrink-0" />
                       <span className="text-[#666666] text-[12px] font-medium w-24 shrink-0">Matrícula:</span>
@@ -374,7 +390,7 @@ export default function Validaciones() {
                     {/* Perfil que armó mientras espera */}
                     {req.slug && (
                       <a
-                        href={`/profesional/${req.slug}`}
+                        href={`/${req.tipo === 'clinica' ? 'clinica' : 'profesional'}/${req.slug}`}
                         target="_blank"
                         rel="noreferrer"
                         className="w-full bg-white border border-gray-200 text-[#1A3D3D] py-3 rounded-xl font-bold text-[12px] uppercase tracking-widest hover:border-[#2D6A6A] transition-all flex items-center justify-center gap-2"

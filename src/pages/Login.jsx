@@ -108,7 +108,7 @@ export default function Login() {
         await setDoc(userDocRef, {
           nombre: '',
           email: formData.email,
-          rol: 'profesional',
+          rol: accountType === 'clinica' ? 'clinica' : 'profesional',
           slug: '',
           fechaRegistro: new Date().toISOString(),
           estado: 'pendiente',
@@ -126,7 +126,7 @@ export default function Login() {
 
         // Releemos los datos del usuario para que la app sepa que es profesional y debe pasar por el cuestionario
         await refreshUser();
-        navigate('/onboarding');
+        navigate(accountType === 'clinica' ? '/onboarding-clinica' : '/onboarding');
       } catch (error) {
         setErrorMsg(traducirErrorFirebase(error.code));
       } finally {
@@ -265,7 +265,7 @@ export default function Login() {
                 <div className="space-y-3">
                   {[
                     { valor: 'profesional', label: 'Soy Profesional', sub: 'Veterinario/a que busca conectar y crecer.', Icono: Stethoscope, proximamente: false },
-                    { valor: 'clinica', label: 'Soy una Clínica', sub: 'Institución que busca talento y visibilidad.', Icono: Hospital, proximamente: true },
+                    { valor: 'clinica', label: 'Soy una Clínica', sub: 'Institución que busca talento y visibilidad.', Icono: Hospital, proximamente: !import.meta.env.DEV },
                     { valor: 'proveedor', label: 'Proveedor o empresa', sub: 'Ofrezco insumos mayoristas, equipamiento o servicios para los usuarios mencionados anteriormente.', Icono: Store, proximamente: true },
                   ].map(({ valor, label, sub, Icono, proximamente }) => (
                     <div key={valor} className="relative mt-4 md:mt-3 first:mt-0">

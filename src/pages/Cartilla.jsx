@@ -190,7 +190,9 @@ const PASOS_CARTILLA = [
         const clinicasData = [];
         snapClinicas.forEach((doc) => {
           const data = doc.data();
-          // Solo mostramos clínicas que tengan nombre y dirección cargados
+          // Clínicas pendientes de verificación (visible en false) no aparecen en la cartilla.
+          if (data.visible === false) return;
+          // Solo mostramos clínicas que tengan nombre cargado
           if (!data.nombre?.trim()) return;
 
           // Extraemos las sub-opciones seleccionadas para que el filtro de especialidades funcione
@@ -217,7 +219,14 @@ const PASOS_CARTILLA = [
                       guardia: 'Guardia e Internación', consulta: 'Clínica Médica',
                       especialidades: 'Especialidades', cirugia: 'Quirófano',
                       imagenes: 'Diagnóstico por Imágenes', laboratorio: 'Laboratorio',
-                      odontologia: 'Odontología', rehabilitacion: 'Fisiatría'
+                      odontologia: 'Odontología', rehabilitacion: 'Fisiatría',
+                      consulta_general: 'Consulta y Medicina General',
+                      especialidades_medicas: 'Especialidades Médicas',
+                      quirurgico_critico: 'Quirúrgico',
+                      atencion_por_especie: 'Atención por Especie',
+                      bienestar_comportamiento: 'Bienestar y Comportamiento',
+                      terapias_holisticas: 'Terapias Holísticas',
+                      equipamiento_infraestructura: 'Equipamiento e Infraestructura'
                     };
                     return infoBase[_] || _;
                   })

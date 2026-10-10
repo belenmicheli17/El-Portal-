@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { db } from '../../firebase'; 
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 
 import { 
   ChevronRight, ChevronLeft, ChevronDown, MapPin, Phone, Mail, Globe, 
@@ -19,6 +19,7 @@ const INFO_SERVICIOS = {
   'atencion_por_especie':    { icono: Heart,       titulo: 'Atención por Especie' },
   'bienestar_comportamiento':{ icono: Sparkles,    titulo: 'Bienestar y Comportamiento' },
   'terapias_holisticas':     { icono: Brain,       titulo: 'Terapias Holísticas' },
+  'equipamiento_infraestructura': { icono: Building2, titulo: 'Equipamiento e Infraestructura' },
 };
 
 // Urgencias de fallback completas para cuando la clínica activa la guardia
@@ -228,24 +229,17 @@ export default function PerfilClinica() {
       try {
         if (!slug) return;
 
-        const docRef = doc(db, 'clinicas', slug);
-        const docSnap = await getDoc(docRef);
+        // Las clínicas se guardan con el uid como nombre del documento,
+        // así que las buscamos por su campo "slug". Si no aparece, probamos el formato viejo.
+        const consulta = await getDocs(query(collection(db, 'clinicas'), where('slug', '==', slug)));
+        const docSnap = consulta.docs[0] || await getDoc(doc(db, 'clinicas', slug));
 
         if (docSnap.exists()) {
           const firebaseData = docSnap.data();
 
-          // Buscamos el doc de usuarios para leer socioVitalicio
-          // El uid del usuario está guardado en el doc de la clínica
-          let esSocioVitalicio = false;
-          if (firebaseData.uid) {
-            const userSnap = await getDoc(doc(db, 'usuarios', firebaseData.uid));
-            if (userSnap.exists()) {
-              esSocioVitalicio = userSnap.data().socioVitalicio || false;
-            }
-          }
-
-          // Si es socio vitalicio o tiene plan pro, consideramos planActual como 'pro'
-          const planFinal = esSocioVitalicio || firebaseData.planActual === 'pro' ? 'pro' : 'gratis';
+          // El plan vive en el propio documento de la clínica (que es público).
+          // No leemos "usuarios" porque es privado y rompería el perfil para cualquier visitante.
+          const planFinal = firebaseData.socioVitalicio === true || firebaseData.planActual === 'pro' ? 'pro' : 'gratis';
 
           const mergedData = {
             ...firebaseData,
@@ -367,10 +361,10 @@ export default function PerfilClinica() {
       {/* HERO */}
       <main className="relative w-full bg-white overflow-hidden pt-[18px] md:pt-[45px]">
         {/* BURBUJAS DECORATIVAS DE FONDO */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+              <div className="absolute inset-0 pointer-events-none overflow-hidden">
           {/* PATRÓN HEXAGONAL — connotación médica/científica */}
           <svg
-            className="absolute inset-0 w-full h-full opacity-[0.12]"
+            className="absolute inset-0 w-full h-full opacity-[0.06]"
             xmlns="http://www.w3.org/2000/svg"
           >
             <defs>
@@ -574,7 +568,7 @@ export default function PerfilClinica() {
               Cuidamos a cada mascota <br className="hidden md:block" /> como si fuera nuestra.
             </h2>
             <p className="text-gray-600 text-[15px] leading-relaxed font-medium">
-              {data.historia}
+              {data.historia || data.descripcion}
             </p>
             
             <div className="mt-8 flex flex-wrap gap-4">
@@ -622,8 +616,8 @@ export default function PerfilClinica() {
                       </div>
                       
                       <div className="flex flex-wrap gap-1.5 md:gap-2.5">
-                        {serv.subOpcionesSeleccionadas && serv.subOpcionesSeleccionadas.length > 0 ? (
-                          serv.subOpcionesSeleccionadas.map((opcion, i) => (
+                        {[...(serv.subOpcionesSeleccionadas || []), ...(serv.serviciosPersonalizados || [])].length > 0 ? (
+                          [...(serv.subOpcionesSeleccionadas || []), ...(serv.serviciosPersonalizados || [])].map((opcion, i) => (
                             <span key={i} className="px-2 md:px-3 py-1 md:py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-[10px] md:text-xs font-bold shadow-sm">
                               {opcion}
                             </span>

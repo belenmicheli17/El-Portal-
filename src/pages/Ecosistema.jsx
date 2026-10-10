@@ -193,7 +193,7 @@ function FormDirectorTecnico({ currentUser, onGuardado }) {
     <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-xl p-4">
       <Check className="w-5 h-5 text-green-500 shrink-0" />
       <div>
-        <p className="text-green-700 font-bold text-sm">Datos del director técnico recibidos</p>
+        <p className="text-green-700 font-bold text-sm">Datos de director/a técnico/a recibidos</p>
         <p className="text-green-600 text-xs font-medium">Te avisaremos cuando sea aprobado.</p>
       </div>
     </div>
@@ -203,7 +203,7 @@ function FormDirectorTecnico({ currentUser, onGuardado }) {
     <div className="space-y-3">
       {error && <p className="text-red-500 text-xs font-bold">{error}</p>}
       <div>
-        <label className="text-[#1A3D3D] text-xs font-bold uppercase tracking-widest block mb-1.5">Nombre completo del director técnico</label>
+        <label className="text-[#1A3D3D] text-xs font-bold uppercase tracking-widest block mb-1.5">Nombre completo de director/a técnico/a</label>
         <input
           type="text"
           value={nombre}
@@ -213,7 +213,7 @@ function FormDirectorTecnico({ currentUser, onGuardado }) {
         />
       </div>
       <div>
-        <label className="text-[#1A3D3D] text-xs font-bold uppercase tracking-widest block mb-1.5">Matrícula del director técnico</label>
+        <label className="text-[#1A3D3D] text-xs font-bold uppercase tracking-widest block mb-1.5">Matrícula del director/a técnico/a</label>
         <input
           type="text"
           value={matricula}
@@ -326,10 +326,10 @@ const PantallaEstado = ({ tipo, currentUser, handleLogout }) => {
             {currentUser.rol === 'clinica' && (
               <>
                 <h3 className="font-bold text-[#1A3D3D] text-sm uppercase tracking-widest mb-3">
-                  🏥 Datos del director técnico
+                  🏥 Datos de director/a técnico/a
                 </h3>
                 <p className="text-[#666666] text-sm font-medium mb-4 leading-relaxed">
-                  Para verificar tu clínica necesitamos los datos del director técnico responsable.
+                  Para verificar tu clínica necesitamos los datos de la persona a cargo del establecimiento.
                 </p>
                 <FormDirectorTecnico currentUser={currentUser} />
               </>
@@ -376,7 +376,7 @@ const PantallaEstado = ({ tipo, currentUser, handleLogout }) => {
 };
 
 // ── Pantalla de espera (profesional que ya envió sus datos) ────────────────
-const PantallaEspera = ({ verificacion, handleLogout }) => {
+const PantallaEspera = ({ verificacion, handleLogout, rol }) => {
   const navigate = useNavigate();
   const fechaEnvio = verificacion?.enviadoEn?.toDate
     ? verificacion.enviadoEn.toDate().toLocaleDateString('es-AR')
@@ -419,7 +419,7 @@ const PantallaEspera = ({ verificacion, handleLogout }) => {
 
         <button
           type="button"
-          onClick={() => navigate('/editor-profesional')}
+          onClick={() => navigate(rol === 'clinica' ? '/editor-clinica' : '/editor-profesional')}
           className="w-full bg-[#2D6A6A] text-white rounded-xl px-7 py-4 text-[13px] font-bold uppercase tracking-[0.15em] shadow-md transition-all duration-300 ease-in-out hover:bg-[#1A3D3D] hover:-translate-y-1 hover:shadow-xl flex items-center justify-center gap-2 mb-6"
         >
           <User className="w-4 h-4" /> Completar mi perfil
@@ -435,7 +435,7 @@ const PantallaEspera = ({ verificacion, handleLogout }) => {
 };
 
 // ── Pantalla de rechazo (profesional al que no pudimos verificar) ──────────
-const PantallaRechazo = ({ verificacion, handleLogout }) => {
+const PantallaRechazo = ({ verificacion, handleLogout, rol }) => {
   const navigate = useNavigate();
   const motivo = (verificacion?.motivoRechazo || '').trim();
 
@@ -465,7 +465,7 @@ const PantallaRechazo = ({ verificacion, handleLogout }) => {
 
         <button
           type="button"
-          onClick={() => navigate('/onboarding', { state: { correccion: true } })}
+          onClick={() => navigate(rol === 'clinica' ? '/onboarding-clinica' : '/onboarding', { state: { correccion: true } })}
           className="w-full bg-[#2D6A6A] text-white rounded-xl px-7 py-4 text-[13px] font-bold uppercase tracking-[0.15em] shadow-md transition-all duration-300 ease-in-out hover:bg-[#1A3D3D] hover:-translate-y-1 hover:shadow-xl flex items-center justify-center gap-2 mb-4"
         >
           Corregir mis datos y volver a enviar
@@ -498,7 +498,7 @@ export default function Ecosistema() {
   useEffect(() => {
     if (!currentUser) return;
     // Si ya está aprobado (o no es profesional) no hace falta buscar nada
-    if (currentUser.rol !== 'profesional' || currentUser.estado === 'activo') {
+    if ((currentUser.rol !== 'profesional' && currentUser.rol !== 'clinica') || currentUser.estado === 'activo') {
       setCargandoVerificacion(false);
       return;
     }
@@ -585,8 +585,8 @@ export default function Ecosistema() {
 
   // Profesionales nuevos: primero completan el cuestionario de alta.
   // Los usuarios que ya existían no tienen este campo, así que pasan directo.
-  if (currentUser.rol === 'profesional' && currentUser.onboardingCompleto === false) {
-    return <Navigate to="/onboarding" replace />;
+  if ((currentUser.rol === 'profesional' || currentUser.rol === 'clinica') && currentUser.onboardingCompleto === false) {
+    return <Navigate to={currentUser.rol === 'clinica' ? '/onboarding-clinica' : '/onboarding'} replace />;
   }
 
   // Pantalla para usuarios dados de baja
@@ -621,10 +621,10 @@ export default function Ecosistema() {
   const necesitaValidacion = currentUser.rol === 'profesional' || currentUser.rol === 'clinica';
   if (necesitaValidacion && currentUser.estado !== 'activo') {
     // Profesionales del flujo nuevo: manda lo que dice su solicitud de verificación
-    if (currentUser.rol === 'profesional') {
+    if (currentUser.rol === 'profesional' || currentUser.rol === 'clinica') {
       if (cargandoVerificacion) return <PantallaCarga />;
-      if (verificacion?.estado === 'rechazado') return <PantallaRechazo verificacion={verificacion} handleLogout={handleLogout} />;
-      if (verificacion?.estado === 'pendiente') return <PantallaEspera verificacion={verificacion} handleLogout={handleLogout} />;
+      if (verificacion?.estado === 'rechazado') return <PantallaRechazo verificacion={verificacion} handleLogout={handleLogout} rol={currentUser.rol} />;
+      if (verificacion?.estado === 'pendiente') return <PantallaEspera verificacion={verificacion} handleLogout={handleLogout} rol={currentUser.rol} />;
     }
     // Clínicas (y cuentas viejas sin solicitud): queda la pantalla de antes
     return <PantallaEstado tipo={currentUser.estado} currentUser={currentUser} handleLogout={handleLogout} />;

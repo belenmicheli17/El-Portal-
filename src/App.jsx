@@ -29,6 +29,8 @@ import Ecosistema from './pages/Ecosistema';
 import SalaDeEspera from './pages/SalaDeEspera';
 import Onboarding from './pages/Onboarding';
 import RestablecerClave from './pages/restablecer-clave';
+import OnboardingClinica from './pages/OnboardingClinica';
+
 // Panel Admin
 import RutaProtegidaAdmin from './components/admin/RutaProtegidaAdmin';
 import RutaProtegida from './components/admin/RutaProtegida';
@@ -141,6 +143,7 @@ export default function App() {
 </Route>
 <Route element={<RutaProtegida />}>
   <Route path="/onboarding" element={<Onboarding />} />
+  <Route path="/onboarding-clinica" element={<OnboardingClinica />} />
   <Route path="/editor-profesional" element={<Editor />} />
   <Route path="/editor-clinica" element={<EditorClinica />} />
   <Route path="/editor-proveedores" element={<EditorProveedor />} />

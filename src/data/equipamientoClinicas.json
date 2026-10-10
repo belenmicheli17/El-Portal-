@@ -1,0 +1,16 @@
+[
+  {
+    "id": "equipamiento_infraestructura",
+    "grupo": "Equipamiento e Infraestructura",
+    "soloClinicas": true,
+    "opciones": [
+      "Quirófano",
+      "Internación",
+      "Sala de aislamiento",
+      "Laboratorio propio",
+      "Farmacia y vacunatorio",
+      "Banco de sangre",
+      "Ambulancia o traslado"
+    ]
+  }
+]
