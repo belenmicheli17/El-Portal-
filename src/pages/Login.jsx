@@ -222,7 +222,7 @@ export default function Login() {
       {/* FORMULARIO — con transición de entrada */}
       <div className="w-full md:w-[55%] lg:w-[50%] flex justify-center items-center md:p-3 relative pt-20 md:pt-3">
         <div
-          className={`w-full max-w-[412px] md:max-w-[440px] bg-[#F4F7F7] min-h-[calc(100vh-80px)] md:min-h-[auto] md:h-auto relative shadow-2xl flex flex-col md:rounded-[40px] overflow-hidden md:max-h-[calc(100vh-24px)] md:overflow-y-auto login-tarjeta
+          className={`w-full max-w-[412px] md:max-w-[540px] bg-[#F4F7F7] min-h-[calc(100vh-80px)] md:min-h-[auto] md:h-auto relative shadow-2xl flex flex-col md:rounded-[40px] overflow-hidden md:max-h-[calc(100vh-24px)] md:overflow-y-auto login-tarjeta
            transition-none`}>
 
           <div className="bg-[#1A3D3D] pt-8 pb-14 px-8 md:pt-6 md:pb-11 rounded-b-[40px] md:rounded-t-[40px] relative overflow-hidden shrink-0 shadow-lg">
@@ -259,15 +259,32 @@ export default function Login() {
               </h2>
 
               {/* Barra de cupos de socios vitalicios (solo en la pantalla de registro) */}
-              {view === 'register' && <BarraCupos />}
+              {view === 'register' && (
+                <div className="mb-5 bg-[#1A3D3D] rounded-2xl border border-[#1A3D3D] p-5">
+                  <BarraCupos integrada etiqueta="Profesionales" color="#60A5FA" pie={null} />
+                  <BarraCupos
+                    integrada
+                    etiqueta="Clínicas"
+                    endpoint="/api/cupos-clinicas"
+                    limite={30}
+                    color="#A78BFA"
+                    textoQuedan="para ser clínica vitalicia."
+                    textoAgotado="lugares vitalicios para clínicas ya fueron ocupados."
+                    pie={null}
+                  />
+                  <p className="text-[11px] md:text-[13px] text-white/50 font-medium">
+                    Después del límite, el acceso será por suscripción. <strong className="text-white font-black">¡Registrate ahora!</strong>
+                  </p>
+                </div>
+              )}
 
                                    {view === 'register' && !accountType ? (
                 <div className="space-y-3">
                   {[
-                    { valor: 'profesional', label: 'Soy Profesional', sub: 'Veterinario/a que busca conectar y crecer.', Icono: Stethoscope, proximamente: false },
-                    { valor: 'clinica', label: 'Soy una Clínica', sub: 'Institución que busca talento y visibilidad.', Icono: Hospital, proximamente: !import.meta.env.DEV },
-                    { valor: 'proveedor', label: 'Proveedor o empresa', sub: 'Ofrezco insumos mayoristas, equipamiento o servicios para los usuarios mencionados anteriormente.', Icono: Store, proximamente: true },
-                  ].map(({ valor, label, sub, Icono, proximamente }) => (
+                    { valor: 'profesional', label: 'Soy Profesional', sub: 'Veterinario/a que busca conectar y crecer.', Icono: Stethoscope, acento: 'bg-blue-50 text-blue-600', proximamente: false },
+                    { valor: 'clinica', label: 'Soy una Clínica', sub: 'Institución que busca talento y visibilidad.', Icono: Hospital, acento: 'bg-violet-50 text-violet-600', proximamente: false },
+                    { valor: 'proveedor', label: 'Proveedor o empresa', sub: 'Ofrezco insumos mayoristas, equipamiento o servicios para los usuarios mencionados anteriormente.', Icono: Store, acento: 'bg-emerald-50 text-emerald-600', proximamente: true },
+                  ].map(({ valor, label, sub, Icono, acento, proximamente }) => (
                     <div key={valor} className="relative mt-4 md:mt-3 first:mt-0">
                       {proximamente && (
                         <div className="absolute -top-2.5 right-2 flex items-center gap-1.5 bg-gray-400 text-white text-[10px] font-bold uppercase tracking-[0.15em] px-2.5 py-1 rounded-full z-10">
@@ -285,7 +302,7 @@ export default function Login() {
                             : 'border-[#2D6A6A]/40 hover:border-[#2D6A6A] hover:bg-[#F4F7F7] group active:scale-[0.98]'
                         }`}
                       >
-                        <div className={`p-2.5 rounded-full transition-transform ${proximamente ? 'bg-gray-100 text-gray-400' : 'bg-blue-50 text-blue-600 group-hover:scale-110'}`}>
+                        <div className={`p-2.5 rounded-full transition-transform ${proximamente ? 'bg-gray-100 text-gray-400' : `${acento} group-hover:scale-110`}`}>
                           <Icono size={18} />
                         </div>
                         <div>
