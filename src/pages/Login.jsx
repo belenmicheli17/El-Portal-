@@ -225,7 +225,7 @@ export default function Login() {
           className={`w-full max-w-[412px] md:max-w-[540px] bg-[#F4F7F7] min-h-[calc(100vh-80px)] md:min-h-[auto] md:h-auto relative shadow-2xl flex flex-col md:rounded-[40px] overflow-hidden md:max-h-[calc(100vh-24px)] md:overflow-y-auto login-tarjeta
            transition-none`}>
 
-          <div className="bg-[#1A3D3D] pt-8 pb-14 px-8 md:pt-6 md:pb-11 rounded-b-[40px] md:rounded-t-[40px] relative overflow-hidden shrink-0 shadow-lg">
+          <div className="bg-[#1A3D3D] pt-8 pb-14 px-8 md:pt-3 md:pb-7 rounded-b-[40px] md:rounded-t-[40px] relative overflow-hidden shrink-0 shadow-lg">
             {/* Flecha de volver: esquina superior izquierda de la tarjeta (celular y PC) */}
             {(view !== 'login' || accountType) && (
               <button
@@ -238,12 +238,12 @@ export default function Login() {
             )}
             <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-white via-transparent to-transparent"></div>
             <div className="relative z-10 flex flex-col items-center text-center">
-              <div className="bg-[#2D6A6A] p-3 md:p-2.5 rounded-2xl mb-2 shadow-inner border border-white/10">
+              <div className="bg-[#2D6A6A] p-3 md:p-2 rounded-2xl mb-2 md:mb-0 shadow-inner border border-white/10">
                 {view === 'forgot_password' || view === 'recovery_sent'
                   ? <KeyRound className="text-white w-8 h-8 md:w-6 md:h-6" />
                   : <ShieldCheck className="text-white w-8 h-8 md:w-6 md:h-6" />}
               </div>
-              <p className="text-white/80 text-[13px] font-medium max-w-[250px] leading-tight mt-2">
+              <p className="md:hidden text-white/80 text-[13px] font-medium max-w-[250px] leading-tight mt-2">
                 {view === 'forgot_password' || view === 'recovery_sent'
                   ? 'Protegemos tu acceso profesional.'
                   : 'Bienvenido a tu espacio exclusivo.'}
@@ -251,16 +251,16 @@ export default function Login() {
             </div>
           </div>
 
-          <div className="flex-1 px-6 md:px-8 -mt-10 md:-mt-8 relative z-20 pb-8 md:pb-4 flex flex-col">
-            <div className="bg-white rounded-[32px] shadow-[0_15px_40px_rgba(0,0,0,0.08)] p-6 md:p-6 border border-gray-50 flex-1 flex flex-col">
+          <div className="flex-1 px-6 md:px-8 -mt-10 md:-mt-5 relative z-20 pb-8 md:pb-3 flex flex-col">
+            <div className="bg-white rounded-[32px] shadow-[0_15px_40px_rgba(0,0,0,0.08)] p-6 md:p-5 border border-gray-50 flex-1 flex flex-col">
 
-              <h2 className="text-[#1A3D3D] font-['Montserrat'] font-bold text-lg md:text-base text-center mb-6 md:mb-4 uppercase tracking-wider">
+              <h2 className="text-[#1A3D3D] font-['Montserrat'] font-bold text-lg md:text-base text-center mb-6 md:mb-3 uppercase tracking-wider">
                 {renderHeader()} 
               </h2>
 
               {/* Barra de cupos de socios vitalicios (solo en la pantalla de registro) */}
               {view === 'register' && (
-                <div className="mb-5 bg-[#1A3D3D] rounded-2xl border border-[#1A3D3D] p-5">
+                <div className="mb-5 md:mb-3 bg-[#1A3D3D] rounded-2xl border border-[#1A3D3D] p-5 md:px-4 md:py-3">
                   <BarraCupos integrada etiqueta="Profesionales" color="#60A5FA" pie={null} />
                   <BarraCupos
                     integrada
@@ -272,7 +272,7 @@ export default function Login() {
                     textoAgotado="lugares vitalicios para clínicas ya fueron ocupados."
                     pie={null}
                   />
-                  <p className="text-[11px] md:text-[13px] text-white/50 font-medium">
+                  <p className="text-[11px] md:text-[11px] text-white/50 font-medium">
                     Después del límite, el acceso será por suscripción. <strong className="text-white font-black">¡Registrate ahora!</strong>
                   </p>
                 </div>
@@ -283,9 +283,9 @@ export default function Login() {
                   {[
                     { valor: 'profesional', label: 'Soy Profesional', sub: 'Veterinario/a que busca conectar y crecer.', Icono: Stethoscope, acento: 'bg-blue-50 text-blue-600', proximamente: false },
                     { valor: 'clinica', label: 'Soy una Clínica', sub: 'Institución que busca talento y visibilidad.', Icono: Hospital, acento: 'bg-violet-50 text-violet-600', proximamente: false },
-                    { valor: 'proveedor', label: 'Proveedor o empresa', sub: 'Ofrezco insumos mayoristas, equipamiento o servicios para los usuarios mencionados anteriormente.', Icono: Store, acento: 'bg-emerald-50 text-emerald-600', proximamente: true },
+                    { valor: 'proveedor', label: 'Proveedor o empresa', sub: 'Insumos, equipamiento o servicios para el sector.', Icono: Store, acento: 'bg-emerald-50 text-emerald-600', proximamente: true },
                   ].map(({ valor, label, sub, Icono, acento, proximamente }) => (
-                    <div key={valor} className="relative mt-4 md:mt-3 first:mt-0">
+                    <div key={valor} className="relative mt-4 md:mt-2.5 first:mt-0">
                       {proximamente && (
                         <div className="absolute -top-2.5 right-2 flex items-center gap-1.5 bg-gray-400 text-white text-[10px] font-bold uppercase tracking-[0.15em] px-2.5 py-1 rounded-full z-10">
                           <span className="w-1 h-1 rounded-full bg-white animate-pulse shrink-0"></span>
@@ -376,7 +376,7 @@ export default function Login() {
             </div>
 
             {(view === 'login' || view === 'register') && (
-              <div className="mt-8 md:mt-4 text-center shrink-0">
+              <div className="mt-8 md:mt-2 text-center shrink-0">
                 <p className="text-[12px] text-gray-500 font-medium">
                   {view === 'login' ? '¿Aún no eres parte de la red?' : '¿Ya tienes una cuenta?'}
                 </p>
