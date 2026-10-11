@@ -111,14 +111,17 @@ export default function Validaciones() {
         where('socioVitalicio', '==', true),
         where('rol', '==', esClinica ? 'clinica' : 'profesional')
       ));
-      const esSocio = cuentaSocios.data().count < limiteSocios;
+      const totalSocios = cuentaSocios.data().count;
+      const esSocio = totalSocios < limiteSocios;
+      // El número de fundador/a es el que sigue en la fila (si ya hay 7, esta persona es la 8)
+      const numeroFundador = totalSocios + 1;
 
       const lote = writeBatch(db);
       lote.update(doc(db, 'verificaciones', req.uid), { estado: 'verificado', motivoRechazo: '', revisadoEn: serverTimestamp() });
       lote.update(doc(db, 'usuarios', req.uid), { estado: 'activo', ...(esSocio ? { socioVitalicio: true } : {}) });
       lote.set(
                 doc(db, esClinica ? 'clinicas' : 'profesionales', req.uid),
-        { visible: true, ...(esSocio ? { socioVitalicio: true, planActual: 'pro' } : {}) },
+        { visible: true, ...(esSocio ? { socioVitalicio: true, planActual: 'pro', numeroFundador } : {}) },
         { merge: true }
       );
       await lote.commit();

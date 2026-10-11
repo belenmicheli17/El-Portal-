@@ -568,6 +568,11 @@ const mobileTabs = [
             <div className="flex-1">
               <h1 className="text-[24px] font-extrabold font-['Montserrat'] text-white tracking-tight uppercase leading-tight mb-2">{data.nombre} {data.apellido}</h1>
               <h2 className="text-[14px] font-black text-[#F4F7F7] uppercase tracking-[0.1em] opacity-80">{data.especialidad}</h2>
+              {data.socioVitalicio === true && (
+                <span className="inline-flex items-center gap-1.5 mt-2 px-2.5 py-1.5 rounded-full bg-[#FFF6DD] text-[#8a6200] text-[10px] font-extrabold uppercase tracking-[0.08em]">
+                  <Star className="w-3 h-3 fill-current" /> {data.numeroFundador ? `Socio fundador n° ${data.numeroFundador}` : 'Socio fundador'}
+                </span>
+              )}
              <div className="mt-2 flex flex-col items-center gap-1">
   <span className="text-white/30 font-bold text-[11px] uppercase tracking-[0.3em]">{data.tipoMatricula || 'MP'}: {data.matricula}</span>
   {data.matricula2 && (
@@ -1020,6 +1025,11 @@ return (
               <div className="z-10 w-full flex flex-col items-center">
                 <h1 className="text-[24px] md:text-[30px] font-extrabold font-['Montserrat'] text-white tracking-tight mb-2 uppercase leading-tight">{data.nombre} {data.apellido}</h1>
                 <h2 className="text-[16px] md:text-[20px] font-black text-[#F4F7F7] mb-4 uppercase tracking-widest opacity-90">{data.especialidad}</h2>
+                {data.socioVitalicio === true && (
+                  <span className="inline-flex items-center gap-1.5 mb-4 px-3 py-1.5 rounded-full bg-[#FFF6DD] text-[#8a6200] text-[11px] font-extrabold uppercase tracking-[0.08em]">
+                    <Star className="w-3.5 h-3.5 fill-current" /> {data.numeroFundador ? `Socio fundador n° ${data.numeroFundador}` : 'Socio fundador'}
+                  </span>
+                )}
                 <div className="flex flex-col items-center gap-1 mb-10">
   <p className="text-white/30 font-semibold text-[12px] uppercase tracking-[0.5em]">{data.tipoMatricula || 'MP'}: {data.matricula}</p>
   {data.matricula2 && (
