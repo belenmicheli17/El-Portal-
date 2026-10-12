@@ -1,5 +1,8 @@
 {
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "crons": [
+    { "path": "/api/recordatorio-onboarding", "schedule": "0 13 * * *" }
   ]
 }
