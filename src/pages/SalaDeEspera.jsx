@@ -471,7 +471,24 @@ Creá tu perfil, aparecé en búsquedas y conectate con colegas, clínicas y pro
 
           {/* En PC: barra de cupos a lo ancho, arriba de las dos columnas */}
           <div className="hidden lg:block w-full pt-4">
-            <BarraCupos ancha />
+            {/* Una sola caja Petróleo con las dos barras: profesionales (azul) y clínicas (violeta) */}
+            <div className="mb-5 bg-[#1A3D3D] rounded-2xl border border-[#1A3D3D] p-6 md:p-7">
+              <BarraCupos integrada ancha etiqueta="Profesionales" color="#60A5FA" pie={null} />
+              <BarraCupos
+                integrada
+                ancha
+                etiqueta="Clínicas"
+                endpoint="/api/cupos-clinicas"
+                limite={30}
+                color="#A78BFA"
+                textoQuedan="para ser clínica vitalicia."
+                textoAgotado="lugares vitalicios para clínicas ya fueron ocupados."
+                pie={null}
+              />
+              <p className="text-[14px] text-white/50 font-medium">
+                Después del límite, el acceso será por suscripción. <strong className="text-white font-black">¡Registrate ahora!</strong>
+              </p>
+            </div>
           </div>
 
           {/* ── Vista pública ── */}
@@ -484,7 +501,16 @@ Creá tu perfil, aparecé en búsquedas y conectate con colegas, clínicas y pro
 
               {/* Móvil: una sola caja Petróleo con la barra de cupos y el botón "Soy Profesional" */}
               <div className="lg:hidden w-[88%] max-w-[300px] bg-[#1A3D3D] rounded-[24px] shadow-[0_8px_24px_rgba(26,61,61,0.25)] p-5">
-                <BarraCupos integrada />
+                <BarraCupos integrada etiqueta="Profesionales" color="#60A5FA" pie={null} />
+                <BarraCupos
+                  integrada
+                  etiqueta="Clínicas"
+                  endpoint="/api/cupos-clinicas"
+                  limite={30}
+                  color="#A78BFA"
+                  textoQuedan="para ser clínica vitalicia."
+                  textoAgotado="lugares vitalicios para clínicas ya fueron ocupados."
+                />
                 <button
                   type="button"
                   onClick={() => navigate('/login', { state: { registro: 'profesional' } })}
