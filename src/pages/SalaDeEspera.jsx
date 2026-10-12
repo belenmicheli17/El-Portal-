@@ -85,9 +85,9 @@ const CardExclusiva = ({ icono: Icono, titulo, descripcion, highlight }) => (
 
 // ── Selector de tipo de cuenta (igual al de Login) ─────────────────────────
 const OPCIONES_CUENTA = [
-  { valor: 'profesional', label: 'Soy Profesional', sub: 'Veterinario/a que busca conectar y crecer.', Icono: Stethoscope, proximamente: false },
-  { valor: 'clinica', label: 'Soy una Clínica', sub: 'Institución que busca talento y visibilidad.', Icono: Hospital, proximamente: true },
-  { valor: 'proveedor', label: 'Proveedor o empresa', sub: 'Ofrezco insumos mayoristas, equipamiento o servicios para los usuarios mencionados anteriormente.', Icono: Store, proximamente: true },
+  { valor: 'profesional', label: 'Soy Profesional', sub: 'Veterinario/a que busca conectar y crecer.', Icono: Stethoscope, acento: 'bg-blue-50 text-blue-600', proximamente: false },
+  { valor: 'clinica', label: 'Soy una Clínica', sub: 'Institución que busca talento y visibilidad.', Icono: Hospital, acento: 'bg-violet-50 text-violet-600', proximamente: false },
+  { valor: 'proveedor', label: 'Proveedor o empresa', sub: 'Ofrezco insumos mayoristas, equipamiento o servicios para los usuarios mencionados anteriormente.', Icono: Store, acento: 'bg-emerald-50 text-emerald-600', proximamente: true },
 ];
 
 const SelectorTipoCuenta = ({ onElegir }) => (
@@ -96,7 +96,7 @@ const SelectorTipoCuenta = ({ onElegir }) => (
       ¿Qué tipo de cuenta?
     </h3>
     <div className="space-y-3">
-      {OPCIONES_CUENTA.map(({ valor, label, sub, Icono, proximamente }) => (
+      {OPCIONES_CUENTA.map(({ valor, label, sub, Icono, acento, proximamente }) => (
         <div key={valor} className="relative mt-4 first:mt-0 text-left">
           {proximamente && (
             <div className="absolute -top-2.5 right-2 flex items-center gap-1.5 bg-gray-400 text-white text-[10px] font-bold uppercase tracking-[0.15em] px-2.5 py-1 rounded-full z-10">
@@ -114,7 +114,7 @@ const SelectorTipoCuenta = ({ onElegir }) => (
                 : 'border-[#2D6A6A]/40 hover:border-[#2D6A6A] hover:bg-[#F4F7F7] group active:scale-[0.98]'
             }`}
           >
-            <div className={`p-2.5 rounded-full transition-transform ${proximamente ? 'bg-gray-100 text-gray-400' : 'bg-blue-50 text-blue-600 group-hover:scale-110'}`}>
+            <div className={`p-2.5 rounded-full transition-transform ${proximamente ? 'bg-gray-100 text-gray-400' : `${acento} group-hover:scale-110`}`}>
               <Icono size={18} />
             </div>
             <div>
@@ -496,6 +496,22 @@ Creá tu perfil, aparecé en búsquedas y conectate con colegas, clínicas y pro
                   <div className="flex-1">
                     <h4 className="font-bold text-[14px] text-[#1A3D3D]">Soy Profesional</h4>
                     <p className="text-[#666666] text-[13px] leading-tight mt-0.5">Veterinario/a que busca conectar y crecer.</p>
+                  </div>
+                  <ArrowRight size={16} className="text-[#2D6A6A] shrink-0" />
+                </button>
+
+                {/* Botón "Soy una Clínica" (violeta, igual que en Login) */}
+                <button
+                  type="button"
+                  onClick={() => navigate('/login', { state: { registro: 'clinica' } })}
+                  className="w-full mt-3 text-left p-3 rounded-2xl bg-white border border-transparent hover:bg-[#F4F7F7] active:scale-[0.98] transition-all flex items-center gap-3 group"
+                >
+                  <div className="p-2 rounded-full bg-violet-50 text-violet-600 group-hover:scale-110 transition-transform shrink-0">
+                    <Hospital size={18} />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-bold text-[14px] text-[#1A3D3D]">Soy una Clínica</h4>
+                    <p className="text-[#666666] text-[13px] leading-tight mt-0.5">Institución que busca talento y visibilidad.</p>
                   </div>
                   <ArrowRight size={16} className="text-[#2D6A6A] shrink-0" />
                 </button>
