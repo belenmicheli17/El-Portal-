@@ -49,7 +49,8 @@ async function enviarRecordatorio(email) {
     body: JSON.stringify({
       to: [{ email }],
       templateId: ID_PLANTILLA_RECORDATORIO,
-      params: {}
+      // Brevo no acepta "params" vacío, así que mandamos un dato que la plantilla no usa
+      params: { tipo: 'recordatorio' }
     })
   });
   if (!respuesta.ok) {
