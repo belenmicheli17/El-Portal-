@@ -314,7 +314,7 @@ export default function SalaDeEspera() {
           <div className="relative">
             <BotonAcceso
               loginAbierto={showLogin}
-              onRegistro={() => navigate('/login', { state: { registro: 'profesional' } })}
+              onRegistro={() => navigate('/login', { state: { registro: true } })}
               onLogin={() => setShowLogin(v => !v)}
             />
 
