@@ -200,7 +200,7 @@ export default function Navbar() {
               <div className="relative" ref={loginRef}>
                 <BotonAcceso
                   loginAbierto={showLogin}
-                  onRegistro={() => navigate('/login', { state: { registro: 'profesional' } })}
+                  onRegistro={() => navigate('/login', { state: { registro: true } })}
                   onLogin={() => setShowLogin(v => !v)}
                 />
                 {showLogin && <LoginDropdown onClose={() => setShowLogin(false)} />}
