@@ -2,10 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Users, Building, Briefcase, FileCheck, 
-  Activity, ChevronRight, Clock, AlertCircle, Loader2
+  Activity, ChevronRight, Clock, AlertCircle, Loader2,
+  Repeat, ChevronDown, Stethoscope, Store
 } from 'lucide-react';
-import { db } from '../../firebase';
+import { db, auth, functions } from '../../firebase';
 import { collection, getDocs, query, where } from 'firebase/firestore';
+import { signInWithCustomToken } from 'firebase/auth';
+import { httpsCallable } from 'firebase/functions';
 
 export default function DashboardAdmin() {
   const navigate = useNavigate();
@@ -18,24 +21,39 @@ export default function DashboardAdmin() {
   });
   const [pendientes, setPendientes] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [menuCuentasAbierto, setMenuCuentasAbierto] = useState(false);
+  const [rolEntrando, setRolEntrando] = useState(null); // rol de la cuenta de prueba a la que se está entrando
+  const [errorCuenta, setErrorCuenta] = useState('');
 
   useEffect(() => {
     const fetchMetricas = async () => {
       try {
-        const usuariosSnap = await getDocs(collection(db, 'usuarios'));
+        const usuariosSnapCompleto = await getDocs(collection(db, 'usuarios'));
+        // Las cuentas de prueba no cuentan en ningún número del panel
+        const uidsPrueba = new Set(
+          usuariosSnapCompleto.docs.filter(d => d.data().esPrueba === true).map(d => d.id)
+        );
+        const usuariosSnap = { docs: usuariosSnapCompleto.docs.filter(d => d.data().esPrueba !== true) };
+// Perfiles que realmente se ven en la Cartilla (misma regla que usa Cartilla.jsx)
+const [profesionalesSnap, clinicasSnap] = await Promise.all([
+  getDocs(collection(db, 'profesionales')),
+  getDocs(collection(db, 'clinicas'))
+]);
+const profesionalesActivos = profesionalesSnap.docs.filter(d => d.data().visible !== false && !uidsPrueba.has(d.id)).length;
+const clinicasActivas = clinicasSnap.docs.filter(d => d.data().visible !== false && d.data().nombre?.trim() && !uidsPrueba.has(d.id) && !uidsPrueba.has(d.data().uid)).length;
         const usuarios = usuariosSnap.docs.map(d => d.data());
         
         const profesionales = usuarios.filter(u => u.rol === 'profesional').length;
         const clinicas = usuarios.filter(u => u.rol === 'clinica').length;
         const alumnos = usuarios.filter(u => u.rol === 'alumno').length;
         const proveedores = usuarios.filter(u => u.rol === 'proveedor').length;
-        const pendientesValidacion = usuarios.filter(u => u.estado === 'pendiente').length;
+        const pendientesValidacion = usuarios.filter(u => u.estado === 'pendiente' && u.onboardingCompleto !== false).length;
         const pendientesList = usuariosSnap.docs
-          .filter(d => d.data().estado === 'pendiente')
+          .filter(d => d.data().estado === 'pendiente' && d.data().onboardingCompleto !== false)
           .map(d => ({ uid: d.id, ...d.data() }))
           .slice(0, 3);
 
-               setMetricas({ profesionales, clinicas, alumnos, proveedores, pendientesValidacion });
+               setMetricas({ profesionales, clinicas, alumnos, proveedores, pendientesValidacion, profesionalesActivos, clinicasActivas });
         setPendientes(pendientesList);
       } catch (error) {
         console.error("Error cargando métricas:", error);
@@ -46,7 +64,25 @@ export default function DashboardAdmin() {
     fetchMetricas();
   }, []);
 
-  const StatCard = ({ titulo, valor, icono, color, alerta }) => (
+  // Entra a la cuenta de prueba del rol elegido, sin cerrar la sesión de la admin
+  const handleCambiarCuenta = async (rol) => {
+    setRolEntrando(rol);
+    setErrorCuenta('');
+    try {
+      // El servidor verifica que seas admin y busca la cuenta de prueba de ese rol
+      const entrarComoPrueba = httpsCallable(functions, 'entrarComoPrueba');
+      const respuesta = await entrarComoPrueba({ rolDestino: rol });
+      await signInWithCustomToken(auth, respuesta.data.token);
+      // Recarga completa para que toda la plataforma arranque con la cuenta nueva
+      window.location.assign('/ecosistema');
+    } catch (error) {
+      console.error("Error entrando a la cuenta de prueba:", error);
+      setErrorCuenta(`No encontramos una cuenta de prueba de ${rol} o no pudimos entrar. Revisá que tenga rol y esPrueba: true.`);
+      setRolEntrando(null);
+    }
+  };
+
+  const StatCard = ({ titulo, valor, icono, color, alerta, subtitulo }) => (
     <div className="bg-white p-6 rounded-[24px] border border-gray-100 shadow-sm flex items-start gap-4 transition-all hover:shadow-md">
       <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${color}`}>
         {icono}
@@ -65,27 +101,74 @@ export default function DashboardAdmin() {
             </span>
           )}
         </div>
+        {!isLoading && subtitulo && (
+          <p className="text-[#666666] text-[12px] md:text-[13px] font-medium mt-1.5">{subtitulo}</p>
+        )}
       </div>
     </div>
   );
 
   return (
     <div className="animate-in fade-in duration-500">
-      <div className="mb-8">
-        <h1 className="text-[28px] font-black font-['Montserrat'] text-[#1A3D3D] tracking-tight mb-2">
-          Resumen General
-        </h1>
-        <p className="text-[#666666] text-[15px] font-medium">
-          Monitoreá la actividad y el crecimiento de El Portal en tiempo real.
-        </p>
+      <div className="mb-8 flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-[28px] font-black font-['Montserrat'] text-[#1A3D3D] tracking-tight mb-2">
+            Resumen General
+          </h1>
+          <p className="text-[#666666] text-[15px] font-medium">
+            Monitoreá la actividad y el crecimiento de El Portal en tiempo real.
+          </p>
+        </div>
+
+        {/* Botón para entrar a las cuentas de prueba sin cerrar sesión */}
+        <div className="relative">
+          <button
+            onClick={() => setMenuCuentasAbierto(!menuCuentasAbierto)}
+            className="bg-[#2D6A6A] text-white hover:bg-[#1A3D3D] rounded-2xl px-5 py-3 text-[13px] font-bold flex items-center gap-2 transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-xl"
+          >
+            <Repeat className="w-4 h-4" />
+            Cambiar de cuenta
+            <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${menuCuentasAbierto ? 'rotate-180' : ''}`} />
+          </button>
+
+          {menuCuentasAbierto && (
+            <div className="absolute right-0 mt-3 w-72 bg-white rounded-[24px] border border-gray-100 shadow-xl p-2 z-30">
+              <p className="px-4 pt-3 pb-2 text-[11px] font-bold text-[#2D6A6A] uppercase tracking-[0.2em]">
+                Cuentas de prueba
+              </p>
+              {[
+                { rol: 'profesional', etiqueta: 'Profesional', Icono: Stethoscope },
+                { rol: 'clinica', etiqueta: 'Clínica', Icono: Building },
+                { rol: 'proveedor', etiqueta: 'Proveedor', Icono: Store },
+              ].map(({ rol, etiqueta, Icono }) => (
+                <button
+                  key={rol}
+                  onClick={() => handleCambiarCuenta(rol)}
+                  disabled={rolEntrando !== null}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-left text-[#1A3D3D] font-bold text-[14px] hover:bg-[#F4F7F7] transition-all duration-300 ease-in-out disabled:opacity-60"
+                >
+                  {rolEntrando === rol ? (
+                    <Loader2 className="w-5 h-5 text-[#2D6A6A] animate-spin" />
+                  ) : (
+                    <Icono className="w-5 h-5 text-[#2D6A6A]" strokeWidth={1.5} />
+                  )}
+                  {etiqueta}
+                </button>
+              ))}
+              {errorCuenta && (
+                <p className="px-4 pt-2 pb-3 text-[12px] text-red-500 font-medium">{errorCuenta}</p>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-        <StatCard titulo="Profesionales" valor={metricas.profesionales} icono={<Users className="w-6 h-6 text-[#2D6A6A]" />} color="bg-[#2D6A6A]/10 border border-[#2D6A6A]/20" />
-        <StatCard titulo="Clínicas" valor={metricas.clinicas} icono={<Building className="w-6 h-6 text-[#4DB6AC]" />} color="bg-[#4DB6AC]/10 border border-[#4DB6AC]/20" />
+        <StatCard titulo="Profesionales" valor={metricas.profesionalesActivos} subtitulo={`de ${metricas.profesionales} registrados`} icono={<Users className="w-6 h-6 text-[#2D6A6A]" />} color="bg-[#2D6A6A]/10 border border-[#2D6A6A]/20" />
+        <StatCard titulo="Clínicas" valor={metricas.clinicasActivas} subtitulo={`de ${metricas.clinicas} registradas`} icono={<Building className="w-6 h-6 text-[#4DB6AC]" />} color="bg-[#4DB6AC]/10 border border-[#4DB6AC]/20" />
         <StatCard titulo="Alumnos" valor={metricas.alumnos} icono={<Users className="w-6 h-6 text-blue-500" />} color="bg-blue-50 border border-blue-100" />
         <StatCard titulo="Proveedores" valor={metricas.proveedores} icono={<Briefcase className="w-6 h-6 text-purple-600" />} color="bg-purple-100 border border-purple-200" />
-        <StatCard titulo="Validaciones" valor={metricas.pendientesValidacion} alerta={metricas.pendientesValidacion} icono={<FileCheck className="w-6 h-6 text-orange-600" />} color="bg-orange-100 border border-orange-200" />
+        <StatCard titulo="Validaciones" valor={metricas.pendientesValidacion} icono={<FileCheck className="w-6 h-6 text-orange-600" />} color="bg-orange-100 border border-orange-200" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

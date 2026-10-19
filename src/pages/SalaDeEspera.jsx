@@ -19,6 +19,7 @@ import { db } from "../firebase";
 // Cartelito de inicio de sesión (el mismo que se usa en el resto del sitio, con el mail de recuperar contraseña por Brevo)
 import LoginDropdown from "../components/LoginDropdown";
 import BarraCupos from "../components/BarraCupos";
+import BotonAcceso from "../components/BotonAcceso";
 
 // ── Cajita zona pública ────────────────────────────────────────────────────
 const CardPublica = ({ icono: Icono, titulo, descripcion, highlight }) => (
@@ -309,19 +310,13 @@ export default function SalaDeEspera() {
             </div>
           </div>
 
-          {/* BOTÓN INICIAR SESIÓN + DROPDOWN */}
+          {/* BOTÓN COMPARTIDO (REGISTRATE + INICIAR SESIÓN) + DROPDOWN */}
           <div className="relative">
-            <button
-              onClick={() => setShowLogin(v => !v)}
-              className={`flex items-center gap-2 font-bold text-[13px] transition-colors border px-4 py-2 rounded-xl ${
-                showLogin
-                  ? 'bg-[#1A3D3D] text-white border-[#1A3D3D]'
-                  : 'text-[#1A3D3D] bg-gray-50 hover:bg-gray-100 border-gray-200'
-              }`}
-            >
-              <LogIn className="w-4 h-4" />
-              <span>Iniciar sesión</span>
-            </button>
+            <BotonAcceso
+              loginAbierto={showLogin}
+              onRegistro={() => navigate('/login', { state: { registro: 'profesional' } })}
+              onLogin={() => setShowLogin(v => !v)}
+            />
 
             {/* DROPDOWN: el cartelito compartido de inicio de sesión */}
             {showLogin && (
@@ -374,7 +369,7 @@ Creá tu perfil, aparecé en búsquedas y conectate con colegas, clínicas y pro
 </section>
 
 
-      {/* ── ZONA PÚBLICA ──────────────────────────────────────────────────── */}
+      {/* ── ZONA PÚBLICA ──────────────────────────────────────────────────── 
       <section id="seccion-publica" className="snap-start min-h-screen md:min-h-0 flex flex-col justify-center md:block pt-25 pb-16 md:pt-24 md:pb-28 relative z-10">
         <div className="max-w-5xl mx-auto px-6">
           <div className="mb-6 text-center">
@@ -400,12 +395,17 @@ Creá tu perfil, aparecé en búsquedas y conectate con colegas, clínicas y pro
             </div>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* ── ZONA EXCLUSIVA ────────────────────────────────────────────────── */}
       <section className="snap-start pt-16 pb-20 md:pt-28 md:pb-28 relative z-10">
         <div className="max-w-5xl mx-auto px-6">
           <div className="mb-8 text-center">
+            {/* Etiqueta "Próximamente": avisa que las herramientas de abajo se habilitan después */}
+            <span className="inline-flex items-center gap-2 bg-[#2D6A6A]/10 border border-[#2D6A6A]/30 text-[#2D6A6A] text-[14px] font-bold uppercase tracking-[0.2em] px-4 py-2 rounded-full mb-3">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#2D6A6A] animate-pulse shrink-0" />
+              Próximamente
+            </span>
             <h2 className="font-['Montserrat'] font-semibold text-[#2D6A6A] text-[23px] md:text-[19px] mt-2 mb-2 uppercase tracking-[0.08em]">
               Exclusivo para veterinarios registrados
             </h2>

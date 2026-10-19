@@ -1001,7 +1001,7 @@ const location = useLocation();
                 </div>
                 <div>
                   <h3 className="font-bold text-red-800 text-base md:text-lg">Cuenta suspendida por falta de pago</h3>
-                  <p className="text-sm text-red-700/90 font-medium mt-0.5 leading-snug">Tu perfil de proveedor no está visible en el Cartilla. Regularizá tu situación para volver a aparecer.</p>
+                  <p className="text-sm text-red-700/90 font-medium mt-0.5 leading-snug">Tu perfil de proveedor no está visible en la Cartilla. Regularizá tu situación para volver a aparecer.</p>
                 </div>
               </div>
               <button
@@ -1147,7 +1147,7 @@ const location = useLocation();
                   <div className="w-full bg-white rounded-[32px] shadow-sm border border-gray-100 mb-6">
                     <div className="pt-6 px-6 md:px-10 pb-4">
                       <h3 className="text-xl font-black text-[#1A3D3D] mb-1 font-['Montserrat']">Mi perfil público</h3>
-                      <p className="text-xs text-gray-500 mb-0">Toda la info que cargues aquí será la que las clínicas verán en el Cartilla.</p>
+                      <p className="text-xs text-gray-500 mb-0">Toda la info que cargues aquí será la que las clínicas verán en la Cartilla.</p>
                     </div>
 
                     <div className="border-t border-gray-100">

@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getAuth, signOut } from 'firebase/auth';
 import { 
   LayoutDashboard, Users, CheckSquare, Briefcase, 
-  Settings, LogOut, Menu, X, ShieldAlert, BookOpen, MessageCircle
+  Settings, LogOut, Menu, X, ShieldAlert, BookOpen, MessageCircle,
+  Home, MapPin, Store, FileText, Globe, ChevronDown
 } from 'lucide-react';
 
 export default function AdminLayout() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [portalAbierto, setPortalAbierto] = useState(false); // desplegable "Ir al portal"
   const navigate = useNavigate();
   const { currentUser } = useAuth();
 
@@ -24,12 +26,21 @@ export default function AdminLayout() {
   // Lista de rutas del panel
   const menuItems = [
     { path: '/admin', icon: <LayoutDashboard className="w-5 h-5" />, label: 'Dashboard', exact: true },
-    { path: '/admin/feedback', icon: <MessageCircle className="w-5 h-5" />, label: 'Comentarios' },
-    { path: '/admin/validaciones', icon: <CheckSquare className="w-5 h-5" />, label: 'Validaciones' },
+       { path: '/admin/validaciones', icon: <CheckSquare className="w-5 h-5" />, label: 'Validaciones' },
     { path: '/admin/usuarios', icon: <Users className="w-5 h-5" />, label: 'Gestión Usuarios' },
     { path: '/admin/bolsa', icon: <Briefcase className="w-5 h-5" />, label: 'Bolsa de Trabajo' },
     { path: '/admin/capacitaciones', icon: <BookOpen className="w-5 h-5" />, label: 'Capacitaciones' },
       { path: '/admin/configuracion', icon: <Settings className="w-5 h-5" />, label: 'Configuración' },
+  ];
+
+  // Accesos rápidos para moverte por el portal (las pantallas que ve cualquier usuario)
+  const linksPortal = [
+    { path: '/ecosistema', icon: <Home className="w-5 h-5" />, label: 'Ecosistema' },
+    { path: '/bolsa-de-trabajo', icon: <Briefcase className="w-5 h-5" />, label: 'Bolsa de trabajo' },
+    { path: '/Cartilla', icon: <MapPin className="w-5 h-5" />, label: 'Cartilla' },
+    { path: '/capacitaciones', icon: <BookOpen className="w-5 h-5" />, label: 'Capacitaciones' },
+    { path: '/cartilla-proveedores', icon: <Store className="w-5 h-5" />, label: 'Cartilla de proveedores' },
+    { path: '/papers', icon: <FileText className="w-5 h-5" />, label: 'Papers' },
   ];
 
   const handleLogout = async () => {
@@ -93,6 +104,36 @@ export default function AdminLayout() {
               {item.label}
             </NavLink>
           ))}
+
+          {/* Accesos rápidos al portal (desplegable) */}
+          <div className="pt-4 mt-4 border-t border-white/10">
+            <button
+              onClick={() => setPortalAbierto(!portalAbierto)}
+              className="w-full flex items-center justify-between gap-3 px-4 py-3.5 rounded-2xl font-bold text-[13px] text-white/60 hover:bg-white/5 hover:text-white transition-all duration-200"
+            >
+              <span className="flex items-center gap-3">
+                <Globe className="w-5 h-5" />
+                Ir al portal
+              </span>
+              <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${portalAbierto ? 'rotate-180' : ''}`} />
+            </button>
+
+            {portalAbierto && (
+              <div className="space-y-1 mt-2 pl-2">
+                {linksPortal.map((item) => (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 rounded-2xl font-bold text-[13px] text-white/60 hover:bg-white/5 hover:text-white transition-all duration-200"
+                  >
+                    {item.icon}
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
         </nav>
 
         {/* Footer del Sidebar (Botón Salir) */}

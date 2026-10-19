@@ -3,6 +3,7 @@ import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { getStorage } from "firebase/storage";
+import { getFunctions } from "firebase/functions";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA9DsYU4-LEelrXFIiPpk9_nYErpZSqYTM",
@@ -20,4 +21,6 @@ const app = initializeApp(firebaseConfig);
 // Exportamos "db" (Base de datos) y "auth" (Autenticación) para usarlos en el resto de tu web
 export const db = getFirestore(app);
 export const auth = getAuth(app);
-export const storage = getStorage(app);  
+export const storage = getStorage(app);
+// Conexión con las funciones en la nube (el "mini servidor" de Google)
+export const functions = getFunctions(app, 'us-central1');  

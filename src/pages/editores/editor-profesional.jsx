@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-
+import { generarSlugUnico } from '../../utils/slugUnico';
 // Si usas react-router-dom, descomenta la siguiente línea en tu entorno real:
 import { useNavigate, useLocation } from 'react-router-dom';
 import { db, storage } from '../../firebase'; // <-- Sumamos storage
@@ -577,14 +577,6 @@ const [tooltipHintVisto, setTooltipHintVisto] = useState(true);
       try {
         if (!currentUser?.uid) return;
 
-        // Revisamos el hint SIEMPRE, independientemente de si hay perfil cargado
-        const userDocSnapHint = await getDoc(doc(db, 'usuarios', currentUser.uid));
-        if (userDocSnapHint.exists()) {
-          setTooltipHintVisto(userDocSnapHint.data().tooltipHintVisto ?? false);
-        } else {
-          setTooltipHintVisto(false);
-        }
-        
         // Buscamos en la base de datos usando el UID real del profesional logueado
         const docRef = doc(db, 'profesionales', currentUser.uid);
         const docSnap = await getDoc(docRef);
@@ -733,7 +725,12 @@ const seccionesIncompletas = () => {
     if (formData.foto && formData.nombre && formData.especialidad && formData.matricula) score += weights.identidad;
     if (formData.bio.length > 50) score += weights.bio;
     if (formData.trayectoria.length > 0) score += weights.trayectoria;
-    if (formData.servicios.length > 0) score += weights.servicios;
+    // Los servicios se guardan como objeto (un grupo por clave), no como lista:
+    // revisamos si hay al menos un grupo activo
+    const serviciosActivos = formData.servicios && !Array.isArray(formData.servicios)
+      ? Object.values(formData.servicios).some(s => s.activo)
+      : false;
+    if (serviciosActivos) score += weights.servicios;
     if (formData.casos.length > 0) score += weights.casos;
     if (formData.emailContacto && (formData.whatsappNum || formData.instagram || formData.linkedin)) score += weights.contacto;
     return score;
@@ -766,10 +763,12 @@ const seccionesIncompletas = () => {
   };
 
   const updateClinica = (zonaId, clinicaId, field, value) => {
+    // Los ids que vienen del DOM (dataset) siempre son texto, pero los ids guardados
+    // en el formulario pueden ser números. Por eso comparamos ambos convertidos a texto.
     setFormData(prev => ({
       ...prev,
-      zonas: prev.zonas.map(z => z.id === zonaId ? {
-        ...z, clinicas: z.clinicas.map(c => c.id === clinicaId ? { ...c, [field]: value } : c)
+      zonas: prev.zonas.map(z => String(z.id) === String(zonaId) ? {
+        ...z, clinicas: z.clinicas.map(c => String(c.id) === String(clinicaId) ? { ...c, [field]: value } : c)
       } : z)
     }));
   };
@@ -987,6 +986,35 @@ setSaveStatus('saving');
         })
       );
       perfilDataToSave.galeria = galeriaSubida;
+
+      // Subimos a Storage la foto de perfil, el historial de fotos y las fotos de los casos clínicos
+      // que todavía son Base64 (texto muy pesado). Así el perfil no se acerca al tope de 1 MB de Firestore.
+      const urlsSubidas = {}; // recuerda qué imagen ya subimos para no subirla dos veces
+      const subirFoto = async (valor, carpeta) => {
+        if (typeof valor !== 'string' || !valor.startsWith('data:')) return valor; // ya es un link, no hay nada que subir
+        if (urlsSubidas[valor]) return urlsSubidas[valor];
+        try {
+          const nombreArchivo = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}.jpg`;
+          const fileRef = ref(storage, `profesionales/${currentUser.uid}/${carpeta}/${nombreArchivo}`);
+          await uploadString(fileRef, valor, 'data_url');
+          const url = await getDownloadURL(fileRef);
+          urlsSubidas[valor] = url;
+          return url;
+        } catch (err) {
+          console.error(`Error subiendo foto (${carpeta}):`, err);
+          return valor; // si falla, dejamos el Base64 para no perder la foto
+        }
+      };
+
+      const fotoSubida = await subirFoto(perfilDataToSave.foto, 'perfil');
+      const fotosPerfilSubidas = await Promise.all((perfilDataToSave.fotosPerfil || []).map(f => subirFoto(f, 'perfil')));
+      const casosSubidos = await Promise.all((perfilDataToSave.casos || []).map(async (caso) => ({
+        ...caso,
+        fotos: await Promise.all((caso.fotos || []).map(f => subirFoto(f, 'casos')))
+      })));
+      perfilDataToSave.foto = fotoSubida;
+      perfilDataToSave.fotosPerfil = fotosPerfilSubidas;
+      perfilDataToSave.casos = casosSubidos;
       perfilDataToSave.instagram = normalizarRedSocial(perfilDataToSave.instagram, 'instagram');
       perfilDataToSave.slug = currentUser.slug;
 
@@ -999,7 +1027,8 @@ if (perfilDataToSave.tipoMatricula2 === undefined) perfilDataToSave.tipoMatricul
 
 // Sincronizamos nombre y slug en la colección usuarios
 const nombreCompleto = `${formData.nombre.trim()} ${(formData.apellido || '').trim()}`.trim();
-const slugNuevo = generarSlug(nombreCompleto);
+
+const slugNuevo = currentUser.slug || await generarSlugUnico(nombreCompleto, currentUser.uid);
 const { updateDoc } = await import('firebase/firestore');
 await updateDoc(doc(db, 'usuarios', currentUser.uid), {
   nombre: formData.nombre.trim(),
@@ -1032,7 +1061,11 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
 
       // 4. --- ¡CERRANDO EL CICLO DEL BOTÓN! ---
       setSaveStatus('saved');
-      setSavedData(_formData);
+      // Reemplazamos en pantalla las fotos pesadas por sus links de Storage, para no volver a subirlas
+      // y para que el aviso de "cambios sin guardar" compare contra lo realmente guardado
+      const datosGuardados = { ...formData, galeria: galeriaSubida, foto: fotoSubida, fotosPerfil: fotosPerfilSubidas, casos: casosSubidos };
+      _setFormData(prev => ({ ...prev, galeria: galeriaSubida, foto: fotoSubida, fotosPerfil: fotosPerfilSubidas, casos: casosSubidos }));
+      setSavedData(datosGuardados);
       setTimeout(() => setSaveStatus('idle'), 2500);
       await refreshUser();
       return true;
@@ -1096,7 +1129,7 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
         
         const autocomplete = new window.google.maps.places.Autocomplete(el, {
           componentRestrictions: { country: 'ar' },
-          fields: ['name', 'formatted_address', 'place_id'],
+          fields: ['name', 'formatted_address', 'place_id', 'address_components', 'formatted_phone_number'],
           types: tipo === 'nombre' ? ['establishment'] : undefined
         });
         
@@ -1109,6 +1142,16 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
           }
           updateClinica(zonaId, clinicaId, 'direccion', place.formatted_address || '');
           updateClinica(zonaId, clinicaId, 'placeId', place.place_id || '');
+
+          // Barrio automático: primero el barrio propiamente dicho y, si Google no lo tiene,
+          // usamos la localidad (igual que en el cuestionario de alta)
+          const piezas = place.address_components || [];
+          const buscarPieza = (tipoPieza) => piezas.find(p => p.types.includes(tipoPieza))?.long_name || '';
+          const barrioAuto = buscarPieza('sublocality_level_1') || buscarPieza('neighborhood') || buscarPieza('sublocality') || buscarPieza('locality');
+          updateClinica(zonaId, clinicaId, 'barrio', barrioAuto);
+
+          // Teléfono automático: solo viene si el negocio lo tiene cargado en Google
+          updateClinica(zonaId, clinicaId, 'telefono', place.formatted_phone_number || '');
         });
       });
     };
@@ -1240,7 +1283,7 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
                       )}
                       <h4 className="text-xl font-black text-gray-800 font-['Montserrat'] mb-1">Plan Básico</h4>
                       <p className="text-3xl font-black text-[#1A3D3D] font-['Montserrat'] my-4">$0 <span className="text-sm text-gray-400 font-medium">/mes</span></p>
-                      <p className="text-sm text-gray-500 mb-6 flex-1">Ideal para tener presencia en el Cartilla y que te encuentren fácilmente.</p>
+                      <p className="text-sm text-gray-500 mb-6 flex-1">Ideal para tener presencia en la Cartilla y que te encuentren fácilmente.</p>
                       
                       <ul className="space-y-3 mb-6">
                         <li className="flex items-start gap-2 text-sm text-gray-600 font-medium"><Check className="w-4 h-4 text-[#2D6A6A] shrink-0 mt-0.5" /> Perfil profesional básico</li>
@@ -1287,7 +1330,8 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
       )}
 
       {/* MODAL DE PAGO (FACTURACIÓN) */}
-      {isSubModalOpen && !esSocioVitalicio && (
+      {/* Cartel de pago simulado oculto hasta tener pagos reales (el "false &&" lo apaga) */}
+      {false && isSubModalOpen && !esSocioVitalicio && (
         <div className="fixed inset-0 bg-[#1A3D3D]/40 backdrop-blur-md z-[300] overflow-y-auto">
           <div className="flex min-h-full items-center justify-center p-4 sm:p-6">
             <div className="bg-white rounded-[32px] w-full max-w-md flex flex-col overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-200">
@@ -1403,7 +1447,7 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
               </div>
               <div>
                 <h3 className="font-bold text-red-800 text-base md:text-lg">Cuenta suspendida por falta de pago</h3>
-                <p className="text-sm text-red-700/90 font-medium mt-0.5 leading-snug">Tu perfil profesional no está visible en el Cartilla. Regularizá tu situación para volver a aparecer.</p>
+                <p className="text-sm text-red-700/90 font-medium mt-0.5 leading-snug">Tu perfil profesional no está visible en la Cartilla. Regularizá tu situación para volver a aparecer.</p>
               </div>
             </div>
             <button onClick={() => setIsSubModalOpen(true)} className="shrink-0 w-full md:w-auto px-8 py-3.5 bg-red-600 hover:bg-red-700 text-white font-bold text-sm rounded-xl transition-colors shadow-md flex items-center justify-center gap-2">
@@ -1561,11 +1605,7 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
                          </div>
                          
                          <div className="flex flex-col sm:flex-row sm:items-center gap-3 shrink-0">
-                            {isPro && (
-                              <button onClick={() => setIsSubModalOpen(true)} className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm border w-full sm:w-auto text-center ${isSubscriptionActive ? 'bg-white border-gray-200 text-gray-700 hover:border-[#4DB6AC] hover:text-[#4DB6AC]' : 'bg-red-600 text-white border-red-600 hover:bg-red-700'}`}>
-                                {isSubscriptionActive ? 'Gestionar pagos' : 'Regularizar pago'}
-                              </button>
-                            )}
+                            {/* Botón de pagos oculto hasta tener pagos reales */}
                             <button onClick={openPlanModal} className="px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm border bg-white border-gray-200 text-gray-700 hover:border-[#4DB6AC] hover:text-[#4DB6AC] w-full sm:w-auto text-center">
                               Cambiar de plan
                             </button>
@@ -1635,7 +1675,7 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
                   
                   <div className="pt-6 px-6 md:px-10 pb-4">
                     <h3 className="text-xl font-black text-[#1A3D3D] mb-1 font-['Montserrat']">Mi perfil público</h3>
-                    <p className="text-xs text-gray-500 mb-0">Toda la info que cargues aquí será la que tus clientes verán en el Cartilla.</p>
+                    <p className="text-xs text-gray-500 mb-0">Toda la info que cargues aquí será la que tus clientes verán en la Cartilla.</p>
                   </div>
 
                   <div className="border-t border-gray-100">

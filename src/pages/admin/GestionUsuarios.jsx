@@ -13,6 +13,7 @@ export default function GestionUsuarios() {
   const [filtroRol, setFiltroRol] = useState('todos');
   const [usuarioEditando, setUsuarioEditando] = useState(null);
   const [guardando, setGuardando] = useState(false);
+ 
 
   // Cargar usuarios reales de Firestore
   useEffect(() => {
@@ -102,7 +103,7 @@ export default function GestionUsuarios() {
     }
   };
 
-  const iconoPorRol = (rol) => {
+    const iconoPorRol = (rol) => {
     if (rol === 'clinica') return <Building className="w-5 h-5 text-[#4DB6AC]" />;
     if (rol === 'proveedor') return <Store className="w-5 h-5 text-purple-400" />;
     return <User className="w-5 h-5 text-[#2D6A6A]" />;
@@ -195,6 +196,7 @@ export default function GestionUsuarios() {
                             Baja
                           </span>
                         )}
+                     
                         {/* Botón corona (socio vitalicio) */}
                         <button
                           onClick={() => handleToggleSocio(user.uid, user.nombre, !!user.socioVitalicio)}

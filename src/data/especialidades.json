@@ -34,7 +34,8 @@
       "Traumatología y Ortopedia",
       "Cirugía Neurológica",
       "Anestesiología y Manejo del Dolor",
-      "Cuidados Intensivos y Emergencias"
+      "Cuidados Intensivos y Emergencias",
+      "Limpieza Dental y Cirugía Odontológica"
     ]
   },
   {
@@ -78,7 +79,7 @@
   },
   {
     "id": "terapias_holisticas",
-    "grupo": "Terapias Holísticas",
+    "grupo": "Terapias Complementarias",
     "opciones": [
       "Acupuntura",
       "Cannabis Medicinal",
@@ -86,7 +87,22 @@
       "Flores de Bach",
       "Reiki",
       "Homeopatía",
-      "Magnetoterapia"
+      "Magnetoterapia",
+      "Electroacupuntura",
+      "Moxibustión",
+      "Medicina Tradicional China",
+      "Fitoterapia",
+      "Aromaterapia",
+      "Esencias Florales",
+      "Quiropraxia Veterinaria",
+      "Osteopatía",
+      "Masoterapia y Masajes Terapéuticos",
+      "Láserterapia",
+      "Terapia Neural",
+      "Medicina Ortomolecular",
+      "Medicina Regenerativa (PRP y Células Madre)",
+      "Medicina Antroposófica",
+      "Biorresonancia"
     ]
   }
 ]

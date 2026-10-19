@@ -33,6 +33,8 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  // Casilla de "Acepto los Términos y la Política de Privacidad" (obligatoria para registrarse)
+  const [aceptaTerminos, setAceptaTerminos] = useState(false);
   // ── Transición de entrada ──────────────────────────────────────────────────
   const [visible, setVisible] = useState(false);
 
@@ -96,6 +98,11 @@ export default function Login() {
       }
 
     } else if (view === 'register') {
+      // Sin aceptar los términos no se puede crear la cuenta
+      if (!aceptaTerminos) {
+        setErrorMsg('Para crear tu cuenta tenés que aceptar los Términos y Condiciones y la Política de Privacidad.');
+        return;
+      }
       setIsLoading(true);
       setErrorMsg('');
       try {
@@ -113,7 +120,10 @@ export default function Login() {
           fechaRegistro: new Date().toISOString(),
           estado: 'pendiente',
           onboardingCompleto: false,
-          onboardingPaso: 0
+          onboardingPaso: 0,
+          // Constancia de aceptación de términos (mismos nombres que en Capacitaciones)
+          aceptaTerminos: true,
+          fechaAceptacionTerminos: new Date().toISOString()
         });
         // Mail de bienvenida (si falla, no frena el registro)
         user.getIdToken()
@@ -351,6 +361,22 @@ export default function Login() {
                           {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                         </button>
                       </div>
+                    )}
+                    {view === 'register' && (
+                      <label className="flex items-start gap-3 cursor-pointer pt-1">
+                        <input
+                          type="checkbox"
+                          checked={aceptaTerminos}
+                          onChange={(e) => { setAceptaTerminos(e.target.checked); if (errorMsg) setErrorMsg(''); }}
+                          className="mt-0.5 w-4 h-4 shrink-0 accent-[#2D6A6A] cursor-pointer"
+                        />
+                        <span className="text-[12px] text-[#666666] leading-relaxed">
+                          Acepto los{' '}
+                          <a href="/terminos-y-condiciones" target="_blank" rel="noreferrer" className="font-bold text-[#2D6A6A] underline underline-offset-2 hover:text-[#1A3D3D]">Términos y Condiciones</a>
+                          {' '}y la{' '}
+                          <a href="/politica-de-privacidad" target="_blank" rel="noreferrer" className="font-bold text-[#2D6A6A] underline underline-offset-2 hover:text-[#1A3D3D]">Política de Privacidad</a>.
+                        </span>
+                      </label>
                     )}
                     {view === 'login' && (
                       <div className="flex justify-end pt-1">

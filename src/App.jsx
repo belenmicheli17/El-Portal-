@@ -34,6 +34,7 @@ import OnboardingClinica from './pages/OnboardingClinica';
 // Panel Admin
 import RutaProtegidaAdmin from './components/admin/RutaProtegidaAdmin';
 import RutaProtegida from './components/admin/RutaProtegida';
+import BannerModoPrueba from './components/admin/BannerModoPrueba';
 import AdminLayout from './pages/admin/AdminLayout';
 import DashboardAdmin from './pages/admin/DashboardAdmin';
 import GestionUsuarios from './pages/admin/GestionUsuarios';
@@ -41,7 +42,7 @@ import Validaciones from './pages/admin/Validaciones';
 import GestionBolsa from './pages/admin/GestionBolsa';
 import GestionCapacitaciones from './pages/admin/GestionCapacitaciones';
 import Configuracion from './pages/admin/Configuracion';
-import Feedback from './pages/admin/Feedback';
+
 
 // ==========================================
 // SCROLL TO TOP
@@ -103,6 +104,7 @@ export default function App() {
         `}} />
 
         <ScrollToTop />
+        <BannerModoPrueba />
         <AccessibilityWidget /> 
 
         <Routes>
@@ -158,8 +160,7 @@ export default function App() {
             </RutaProtegidaAdmin>
           }>
             <Route index element={<DashboardAdmin />} />
-            <Route path="feedback" element={<Feedback />} />
-            <Route path="validaciones" element={<Validaciones />} />
+                       <Route path="validaciones" element={<Validaciones />} />
             <Route path="usuarios" element={<GestionUsuarios />} />
             <Route path="bolsa" element={<GestionBolsa />} />
             <Route path="capacitaciones" element={<GestionCapacitaciones />} />
