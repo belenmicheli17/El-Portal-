@@ -1,0 +1,12 @@
+{
+  "exoticos": {
+    "padre": "Animales Exóticos",
+    "titulo": "¿Qué animales exóticos atendés?",
+    "opciones": ["Aves", "Reptiles", "Roedores", "Conejos", "Hurones", "Erizos", "Anfibios", "Peces"]
+  },
+  "campo": {
+    "padre": "Grandes Animales y Medicina Rural",
+    "titulo": "¿Qué animales de campo atendés?",
+    "opciones": ["Bovinos (vacas)", "Equinos (caballos)", "Ovinos (ovejas)", "Caprinos (cabras)", "Porcinos (cerdos)", "Camélidos (llamas y alpacas)", "Aves de corral", "Abejas"]
+  }
+}

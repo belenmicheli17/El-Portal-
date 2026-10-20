@@ -7,10 +7,11 @@ import { ref, uploadBytesResumable, uploadString, getDownloadURL, deleteObject }
 import {
   Camera, Check, Loader2, Search, MapPin, Trash2, X, Plus, Clock,
   Stethoscope, Home, Crop, ChevronRight, FileCheck, Upload, CheckCircle2,
-  Building2, MessageCircle, LogOut, AlertCircle
+  Building2, MessageCircle, LogOut, AlertCircle, ChevronDown
 } from 'lucide-react';
 import especialidadesData from '../data/especialidades.json';
 import provincias from '../data/provincias.js';
+import animalesData from '../data/animales.json';
 
 // ==========================================
 // CONSTANTES DEL CUESTIONARIO
@@ -60,7 +61,8 @@ const ESTADO_INICIAL = {
   dom: false, wa: '',        // wa: solo los dígitos, sin el 54
   zonas: [],                 // mismo formato que el editor: [{ id, nombre, clinicas: [...] }]
   email: '', emailV: 'todos', waV: 'todos',
-  ig: '', tiktok: '', bio: ''
+  ig: '', tiktok: '', bio: '',
+  animalesExoticos: [], animalesCampo: []
 };
 
 // ==========================================
@@ -370,6 +372,8 @@ function EtiquetaConVisibilidad({ id, texto, valor, onCambio }) {
 function BuscadorServicios({ seleccion, onAlternar, onAgregarPropio }) {
   const [busqueda, setBusqueda] = useState('');
   const [textoPropio, setTextoPropio] = useState('');
+  // Si el desplegable "Ver todos los servicios" está abierto
+  const [verTodos, setVerTodos] = useState(false);
 
   const todasLasOpciones = especialidadesData.flatMap((grupo) =>
     grupo.opciones.map((opcion) => ({ nombre: opcion, grupoId: grupo.id, grupoNombre: grupo.grupo }))
@@ -446,6 +450,41 @@ function BuscadorServicios({ seleccion, onAlternar, onAgregarPropio }) {
           >
             <Plus className="w-4 h-4" /> Agregar "{busqueda.trim()}" como servicio propio
           </button>
+        </div>
+      )}
+
+      {/* Desplegable con todos los servicios, agrupados como en el editor */}
+      <button
+        type="button"
+        onClick={() => setVerTodos(!verTodos)}
+        className="mt-3 flex items-center gap-1.5 text-[14px] font-semibold text-[#2D6A6A] hover:text-[#1A3D3D] transition-colors"
+      >
+        {verTodos ? 'Ocultar la lista' : 'Ver todos los servicios'}
+        <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${verTodos ? 'rotate-180' : ''}`} />
+      </button>
+
+      {verTodos && (
+        <div className="border border-gray-200 rounded-2xl p-4 mt-3 flex flex-col gap-5 max-h-[420px] overflow-y-auto">
+          {especialidadesData.map((grupo) => (
+            <div key={grupo.id}>
+              <p className="text-[12px] font-bold text-gray-400 uppercase tracking-widest mb-2">{grupo.grupo}</p>
+              <div className="flex flex-wrap gap-2">
+                {grupo.opciones.map((opcion) => {
+                  const elegido = estaElegido(opcion);
+                  return (
+                    <button
+                      key={opcion}
+                      type="button"
+                      onClick={() => onAlternar({ nombre: opcion, grupoId: grupo.id, grupoNombre: grupo.grupo })}
+                      className={`${CLASE_CHIP} ${elegido ? 'bg-[#2D6A6A] border-[#2D6A6A] text-white' : 'bg-white border-gray-200 text-[#555555] hover:border-[#2D6A6A]'}`}
+                    >
+                      {opcion}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
@@ -737,7 +776,9 @@ export default function Onboarding() {
           waV: visibilidadAPantalla(perfil.whatsappVisibilidad),
           ig: instagramAUsuario(perfil.instagram),
           tiktok: tiktokAUsuario(perfil.tiktok),
-          bio: perfil.bio || ''
+          bio: perfil.bio || '',
+          animalesExoticos: perfil.animalesExoticos || [],
+          animalesCampo: perfil.animalesCampo || []
         });
 
         // En corrección arranca desde el principio para revisar todo; si no, retoma donde dejó
@@ -919,7 +960,13 @@ export default function Onboarding() {
     }
     if (p === 2) {
       return {
-        perfil: { especialidad: d.esp.trim(), servicios: construirServicios(d.svc, descripcionesServicios.current) },
+        perfil: {
+          especialidad: d.esp.trim(),
+          servicios: construirServicios(d.svc, descripcionesServicios.current),
+          // Los animales solo se guardan si sigue elegida la especie correspondiente
+          animalesExoticos: d.svc.some((s) => s.nombre === animalesData.exoticos.padre) ? d.animalesExoticos : [],
+          animalesCampo: d.svc.some((s) => s.nombre === animalesData.campo.padre) ? d.animalesCampo : []
+        },
         usuario: {}
       };
     }
@@ -1123,6 +1170,32 @@ export default function Onboarding() {
           <span className={CLASE_LABEL}>Servicios que ofrecés<Obligatorio /></span>
           <p className={CLASE_AYUDA}>Elegí al menos uno de la lista. Los tutores filtran por estos servicios en la Cartilla: si no cargás ninguno, no aparecés en sus búsquedas.</p>
           <BuscadorServicios seleccion={datos.svc} onAlternar={alternarServicio} onAgregarPropio={agregarServicioPropio} />
+
+          {/* Animales que atiende (opcional): aparece solo si eligió la especie correspondiente */}
+          {Object.entries({ exoticos: 'animalesExoticos', campo: 'animalesCampo' }).map(([clave, campoDatos]) => {
+            const grupo = animalesData[clave];
+            if (!datos.svc.some((s) => s.nombre === grupo.padre)) return null;
+            return (
+              <div key={clave} className="mt-5 bg-[#F4F7F7] rounded-2xl px-5 py-4">
+                <p className="text-[15px] font-semibold text-[#1A3D3D]">{grupo.titulo} <span className="font-medium text-[#666666]">(opcional)</span></p>
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {grupo.opciones.map((animal) => {
+                    const elegido = datos[campoDatos].includes(animal);
+                    return (
+                      <button
+                        key={animal}
+                        type="button"
+                        onClick={() => cambiar(campoDatos, elegido ? datos[campoDatos].filter((a) => a !== animal) : [...datos[campoDatos], animal])}
+                        className={`${CLASE_CHIP} ${elegido ? 'bg-[#2D6A6A] border-[#2D6A6A] text-white' : 'bg-white border-gray-200 text-[#555555] hover:border-[#2D6A6A]'}`}
+                      >
+                        {animal}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
         </>
       );
     }

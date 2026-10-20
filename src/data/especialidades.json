@@ -45,7 +45,10 @@
       "Ecografía",
       "Radiología",
       "Tomografía (TAC)",
-      "Resonancia Magnética (RMN)"
+      "Resonancia Magnética (RMN)",
+      "Ecocardiograma Doppler",
+      "Electrocardiograma",
+      "Endoscopía"
     ]
   },
   {

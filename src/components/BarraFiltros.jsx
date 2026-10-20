@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { 
   Search, MapPin, ChevronDown, Filter,
@@ -11,6 +11,8 @@ import { Video as IconoVideo, Ambulance as IconoAmbulancia } from 'lucide-react'
 // Importamos los datos centralizados
 import especialidadesData from '../data/especialidades.json';
 import filtrosConfig from '../data/filtrosConfig.json';
+import animalesData from '../data/animales.json';
+import { coincideBusqueda } from '../utils/busquedaTolerante';
 import provincias from '../data/provincias.js'; 
 // Mapeo de íconos para "Atención por Especie" (por nombre exacto de la opción real)
 const iconoEspecieMap = {
@@ -34,6 +36,9 @@ const BarraFiltros = ({
   provinciasDisponibles = {},
   especialidadesDisponibles = {},
   hayGuardia24hs = true,
+  hayDomicilio = true,
+  hayVirtual = true,
+  hayUrgenciaDomicilio = true,
   onUrgencia,
   buscandoUbicacion = false
 }) => {
@@ -43,9 +48,37 @@ const BarraFiltros = ({
   const filtrosRef = useRef(null);
   const [showProvincia, setShowProvincia] = useState(false);
 
+  // Ancho del panel de filtros en PC: ocupa todo el ancho de la pantalla,
+  // con el mismo margen a la izquierda y a la derecha
+  const panelRef = useRef(null);
+  const [estiloPanelPC, setEstiloPanelPC] = useState(undefined);
+  useEffect(() => {
+    if (!showFilters) return;
+    const calcular = () => {
+      const barra = panelRef.current?.parentElement;
+      // En celular y tablet no se toca nada: queda como estaba
+      if (!barra || window.innerWidth < 1024) { setEstiloPanelPC(undefined); return; }
+      const margen = barra.getBoundingClientRect().left;
+      setEstiloPanelPC({ width: document.documentElement.clientWidth - margen * 2 });
+    };
+    calcular();
+    window.addEventListener('resize', calcular);
+    return () => window.removeEventListener('resize', calcular);
+  }, [showFilters]);
+
   // Grupo real "Atención por Especie", cargado por el veterinario en su editor de perfil
   const grupoEspecie = especialidadesData.find(g => g.id === 'atencion_por_especie');
   const opcionesEspecie = grupoEspecie ? grupoEspecie.opciones : [];
+
+  // Saca tildes y mayúsculas para comparar lo que escribe la persona con las opciones
+  const normalizarTexto = (t) => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+  const textoBusqueda = normalizarTexto(searchTerm);
+  // Con menos de 2 letras muestra todo; con 2 o más, solo lo que coincide con la opción o con el nombre del grupo
+  // Tolerante: perdona errores de ortografía y entiende sinónimos (ej: "hozonoterapia" encuentra Ozonoterapia)
+  const coincideConBusqueda = (opcion, grupoNombre) =>
+    textoBusqueda.length < 2 ||
+    coincideBusqueda(searchTerm, opcion) ||
+    coincideBusqueda(searchTerm, grupoNombre);
   
 
   // Funciones de lectura de URL
@@ -283,9 +316,9 @@ const BarraFiltros = ({
 
         {/* MODAL DESPLEGABLE DE FILTROS */}
         {showFilters && (
-          <div className="absolute top-full left-0 right-0 mt-0 bg-white rounded-t-none rounded-b-[32px] p-6 sm:p-8 border-x border-b border-gray-100 shadow-2xl z-40 animate-in fade-in slide-in-from-top-4 cursor-default">
+          <div ref={panelRef} style={estiloPanelPC} className="absolute top-full left-0 right-0 mt-0 bg-white rounded-t-none lg:rounded-tr-[32px] rounded-b-[32px] p-6 sm:p-8 border-x border-b border-gray-100 shadow-2xl z-40 animate-in fade-in slide-in-from-top-4 cursor-default">
             
-            <div className={`grid grid-cols-1 gap-0 lg:gap-10 lg:divide-x lg:divide-gray-100 mb-6 ${modo === 'papers' ? 'lg:grid-cols-3' : 'lg:grid-cols-2'}`}>
+            <div className={`grid grid-cols-1 gap-0 lg:gap-10 lg:divide-x lg:divide-gray-100 mb-6 ${modo === 'papers' ? 'lg:grid-cols-3' : 'lg:grid-cols-[minmax(0,1fr)_300px]'}`}>
               
               {modo === 'papers' ? (
                 /* ======================================================== */
@@ -413,7 +446,8 @@ const BarraFiltros = ({
                       <div className="flex flex-col gap-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                         {especialidadesData.filter(grupo => grupo.id !== 'atencion_por_especie').map(grupo => {
                           const opcionesFiltradas = grupo.opciones.filter(
-                            opcion => Object.keys(especialidadesDisponibles).length === 0 || especialidadesDisponibles[opcion]
+                            opcion => (Object.keys(especialidadesDisponibles).length === 0 || especialidadesDisponibles[opcion])
+                              && coincideConBusqueda(opcion, grupo.grupo)
                           );
                           if (opcionesFiltradas.length === 0) return null;
                           return (
@@ -465,8 +499,9 @@ const BarraFiltros = ({
                         </h3>
 
                         <div className={`overflow-hidden transition-all duration-300 ease-in-out lg:max-h-none lg:opacity-100 ${openSection === 'modalidad' ? 'max-h-[300px] opacity-100 pb-4 lg:pb-0' : 'max-h-0 opacity-0'}`}>
-                          <div className="grid grid-cols-2 gap-3">
-                            {/* BOTÓN: ATENCIÓN A DOMICILIO */}
+                          <div className="grid grid-cols-2 lg:grid-cols-1 gap-3 lg:gap-2 lg:[&>button]:p-2 lg:[&>button]:rounded-xl lg:[&>button]:border lg:[&>button>div]:w-8 lg:[&>button>div]:h-8">
+                            {/* BOTÓN: ATENCIÓN A DOMICILIO (solo si alguien la ofrece) */}
+                            {(hayDomicilio || filtros.domicilio) && (
                             <button
                               type="button"
                               onClick={() => {
@@ -489,8 +524,8 @@ const BarraFiltros = ({
                               </span>
                             </button>
 
-                            {/* BOTÓN: GUARDIA 24HS (solo aparece si hay alguna clínica con guardia cargada) */}
-                            {/* BOTÓN: URGENCIA A DOMICILIO */}
+                            )}
+                            {(hayUrgenciaDomicilio || filtros.urgenciaDomicilio) && (
                             <button
                               type="button"
                               onClick={() => {
@@ -513,7 +548,10 @@ const BarraFiltros = ({
                               </span>
                             </button>
 
-                            {/* BOTÓN: CONSULTA VIRTUAL */}
+                            )}
+
+                            {/* BOTÓN: CONSULTA VIRTUAL (solo si alguien la ofrece) */}
+                            {(hayVirtual || filtros.virtual) && (
                             <button
                               type="button"
                               onClick={() => {
@@ -535,6 +573,8 @@ const BarraFiltros = ({
                                 Consulta virtual
                               </span>
                             </button>
+
+                            )}
 
                             {hayGuardia24hs && (
                             <button
@@ -582,7 +622,32 @@ const BarraFiltros = ({
 
                       <div className={`overflow-hidden transition-all duration-300 ease-in-out lg:max-h-none lg:opacity-100 ${openSection === 'mascotas' ? 'max-h-[400px] opacity-100 pb-4 lg:pb-0' : 'max-h-0 opacity-0'}`}>
                         <div className="flex flex-wrap gap-2">
-                          {opcionesEspecie.map(opcion => {
+                          {/* Animales que atiende, se despliegan al elegir la especie. Solo aparecen los que atiende alguien */}
+                          {Object.values(animalesData).map(grupo => {
+                            if (!filtros.especialidades.includes(grupo.padre)) return null;
+                            const visibles = grupo.opciones.filter(a => especialidadesDisponibles[a] || filtros.especialidades.includes(a));
+                            if (visibles.length === 0) return null;
+                            return (
+                              <div key={grupo.padre} className="order-last basis-full w-full flex flex-wrap items-center gap-2 pl-3 border-l-2 border-[#2D6A6A]/20">
+                                <p className="w-full text-[11px] font-black text-[#1A3D3D] uppercase tracking-[0.15em] opacity-50">{grupo.padre}: ¿cuáles?</p>
+                                {visibles.map(animal => {
+                                  const isActive = filtros.especialidades.includes(animal);
+                                  const cantidad = especialidadesDisponibles[animal] || 0;
+                                  return (
+                                    <span
+                                      key={animal}
+                                      onClick={() => toggleFiltro('especialidades', animal)}
+                                      className={`px-3 py-1.5 text-[13px] font-medium rounded-xl cursor-pointer transition-colors flex items-center gap-1.5 ${isActive ? 'bg-[#2D6A6A] text-white shadow-sm' : 'bg-[#F4F7F7] text-[#666666] hover:bg-gray-200'}`}
+                                    >
+                                      {animal}
+                                      {cantidad > 0 && <span className={`text-[11px] font-bold ${isActive ? 'text-white/70' : 'text-gray-400'}`}>({cantidad})</span>}
+                                    </span>
+                                  );
+                                })}
+                              </div>
+                            );
+                          })}
+                          {opcionesEspecie.filter(opcion => Object.keys(especialidadesDisponibles).length === 0 || especialidadesDisponibles[opcion] || filtros.especialidades.includes(opcion)).map(opcion => {
                             const isActive = filtros.especialidades.includes(opcion);
                             const IconComponent = iconoEspecieMap[opcion] || PawPrint; 
                             return (

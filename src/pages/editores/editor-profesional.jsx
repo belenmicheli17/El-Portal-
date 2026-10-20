@@ -10,6 +10,7 @@ import { ref, uploadBytesResumable, getDownloadURL, deleteObject, uploadString }
 import FooterSimple from '../../components/FooterSimple';
 import { useAuth } from '../../context/AuthContext';
 import especialidadesData from '../../data/especialidades.json';
+import animalesData from '../../data/animales.json';
 import provincias from '../../data/provincias.js';
 import { 
   Camera, Info, AlertCircle, Save, X, Plus, Trash2, Crown,
@@ -714,6 +715,8 @@ tipoMatricula2: undefined,
 emailVisibilidad: 'todos',
 instagram: '',
   tiktok: '',
+  animalesExoticos: [],
+  animalesCampo: [],
   linkedin: '',
   facebook: '',
   whatsappActivo: false,
@@ -1076,6 +1079,10 @@ setSaveStatus('saving');
       perfilDataToSave.casos = casosSubidos;
       perfilDataToSave.instagram = normalizarRedSocial(perfilDataToSave.instagram, 'instagram');
       perfilDataToSave.tiktok = normalizarRedSocial(perfilDataToSave.tiktok, 'tiktok');
+      // Los animales solo se guardan si sigue elegida la especie correspondiente
+      const especiesElegidas = perfilDataToSave.servicios?.atencion_por_especie?.activo ? (perfilDataToSave.servicios.atencion_por_especie.subOpcionesSeleccionadas || []) : [];
+      perfilDataToSave.animalesExoticos = especiesElegidas.includes(animalesData.exoticos.padre) ? (perfilDataToSave.animalesExoticos || []) : [];
+      perfilDataToSave.animalesCampo = especiesElegidas.includes(animalesData.campo.padre) ? (perfilDataToSave.animalesCampo || []) : [];
       perfilDataToSave.slug = currentUser.slug;
 
       // 2. Guardamos el perfil "limpio" (Esto borrará los papers viejos del documento del profesional automáticamente)
@@ -2057,6 +2064,32 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
                                         );
                                       })}
                                     </div>
+                                    {/* Animales que atiende (opcional): aparece solo si marcó la especie correspondiente */}
+                                    {grupo.id === 'atencion_por_especie' && Object.entries({ exoticos: 'animalesExoticos', campo: 'animalesCampo' }).map(([clave, campoForm]) => {
+                                      const datosAnimales = animalesData[clave];
+                                      if (!seleccionadas.includes(datosAnimales.padre)) return null;
+                                      const elegidos = formData[campoForm] || [];
+                                      return (
+                                        <div key={clave} className="mb-4 bg-[#F4F7F7] rounded-xl px-4 py-3">
+                                          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">{datosAnimales.titulo} (opcional)</p>
+                                          <div className="flex flex-wrap gap-2">
+                                            {datosAnimales.opciones.map(animal => {
+                                              const activo = elegidos.includes(animal);
+                                              return (
+                                                <button
+                                                  key={animal}
+                                                  type="button"
+                                                  onClick={() => setFormData(prev => ({ ...prev, [campoForm]: activo ? (prev[campoForm] || []).filter(a => a !== animal) : [...(prev[campoForm] || []), animal] }))}
+                                                  className={`px-3 py-1.5 rounded-full text-[13px] font-medium border transition-colors ${activo ? 'bg-[#2D6A6A] text-white border-[#2D6A6A]' : 'bg-white text-gray-600 border-gray-200 hover:border-[#2D6A6A]'}`}
+                                                >
+                                                  {animal}
+                                                </button>
+                                              );
+                                            })}
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
                                     {personalizados.length > 0 && (
                                       <div className="flex flex-col gap-2 mb-4">
                                         {personalizados.map(srv => (

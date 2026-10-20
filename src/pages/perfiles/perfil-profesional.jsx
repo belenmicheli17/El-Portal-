@@ -12,6 +12,7 @@ import {
   Instagram, Linkedin, Facebook, Mail, User, X, PawPrint,   Activity, Microscope, Heart, Brain, Turtle, Camera,
   Clock, Eye, FileText, Sparkles, Globe, BookOpen, FileDown, Download, Check
 } from 'lucide-react';
+import { opcionesConAnimales } from '../../utils/animales';
 
 const IconoHueso = ({ className }) => (
    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`lucide lucide-bone-icon lucide-bone ${className}`}><path d="M17 10c.7-.7 1.69 0 2.5 0a2.5 2.5 0 1 0 0-5 .5.5 0 0 1-.5-.5 2.5 2.5 0 1 0-5 0c0 .81.7 1.8 0 2.5l-7 7c-.7.7-1.69 0-2.5 0a2.5 2.5 0 0 0 0 5c.28 0 .5.22.5.5a2.5 2.5 0 1 0 5 0c0-.81-.7-1.8 0-2.5Z"/></svg>
@@ -737,7 +738,7 @@ const mobileTabs = [
                           if (todasLasOpciones.length === 0) return [];
                           return [{
                             grupoId,
-                            opciones: todasLasOpciones,
+                            opciones: opcionesConAnimales(todasLasOpciones, data),
                             desc: s.desc || ''
                           }];
                         });
@@ -1134,7 +1135,7 @@ return (
                               ...(s.serviciosPersonalizados || [])
                             ];
                             if (todasLasOpciones.length === 0) return [];
-                            return [{ grupoId, opciones: todasLasOpciones, desc: s.desc || '' }];
+                            return [{ grupoId, opciones: opcionesConAnimales(todasLasOpciones, data), desc: s.desc || '' }];
                           });
 
                     if (serviciosNormalizados.length === 0) return null;

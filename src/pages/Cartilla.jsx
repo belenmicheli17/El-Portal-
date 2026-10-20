@@ -14,6 +14,7 @@ import { collection, getDocs } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 import TourGuia from '../components/TourGuia';
 import BarraFiltros from '../components/BarraFiltros';
+import { coincideBusqueda } from '../utils/busquedaTolerante';
 const HuellaPremium = ({ className }) => (
   <svg viewBox="0 0 24 24" fill="currentColor" className={className} xmlns="http://www.w3.org/2000/svg">
     <path d="M8.5 8c1.38 0 2.5-1.57 2.5-3.5S9.88 1 8.5 1 6 2.57 6 4.5 7.12 8 8.5 8zM15.5 8c1.38 0 2.5-1.57 2.5-3.5S16.88 1 15.5 1 13 2.57 13 4.5 14.12 8 15.5 8zM3.5 12C4.88 12 6 10.43 6 8.5S4.88 5 3.5 5 1 6.57 1 8.5 2.12 12 3.5 12zM20.5 12c1.38 0 2.5-1.57 2.5-3.5S21.88 5 20.5 5 18 6.57 18 8.5 19.12 12 20.5 12zM12 10.5c-3.5 0-6 2-6 4.5 0 1.5 1.5 3.5 3.5 4.5 1.5.7 2.5.5 2.5.5s1 .2 2.5-.5c2-1 3.5-3 3.5-4.5 0-2.5-2.5-4.5-6-4.5z"/>
@@ -40,6 +41,10 @@ const Cartilla = () => {
 
   const hayClinicas = veterinarios.some(v => v.tipo === 'clinica');
   // ¿Hay al menos una clínica con guardia 24hs cargada? Si no hay ninguna, ocultamos los botones de guardia
+  // ¿Hay al menos un profesional o clínica con cada modalidad? Si no hay nadie, se oculta el botón
+  const hayDomicilio = veterinarios.some(v => v.domicilio);
+  const hayVirtual = veterinarios.some(v => v.virtual);
+  const hayUrgenciaDomicilio = veterinarios.some(v => v.urgenciaDomicilio);
   const hayGuardia24hs = veterinarios.some(v => v.tipo === 'clinica' && v.guardia24hs)
 
 useEffect(() => {
@@ -186,7 +191,7 @@ const PASOS_CARTILLA = [
             virtual: data.atiendeVirtual || false,
             urgenciaDomicilio: data.urgenciasDomicilio || false,
             servicios: opcionesProfesional,
-            opcionesFiltro: opcionesProfesional
+            opcionesFiltro: [...opcionesProfesional, ...(data.animalesExoticos || []), ...(data.animalesCampo || [])]
           });
         });
 
@@ -329,14 +334,15 @@ const PASOS_CARTILLA = [
       const textoDelItem = normalizar([
         v.nombre, v.apellido, v.especialidad, v.provincia, v.direccion,
         ...(Array.isArray(v.servicios) ? v.servicios : []),
+        ...(Array.isArray(v.opcionesFiltro) ? v.opcionesFiltro : []),
         ...(Array.isArray(v.zonas) ? v.zonas.flatMap(z => [
           z.nombre,
           ...(Array.isArray(z.clinicas) ? z.clinicas.flatMap(c => [c.nombrePropio, c.barrio, c.direccion]) : [])
         ]) : [])
       ].filter(Boolean).join(' '));
 
-      const palabras = normalizar(searchTerm).split(/[\s,]+/).filter(Boolean);
-      if (!palabras.every(p => textoDelItem.includes(p))) return false;
+      // Búsqueda tolerante: perdona errores de ortografía y entiende sinónimos
+      if (!coincideBusqueda(searchTerm, textoDelItem)) return false;
     }
     
     // Filtros de Botones (esto se mantiene igual)
@@ -410,6 +416,9 @@ const PASOS_CARTILLA = [
                 provinciasDisponibles={provinciasDisponibles}
                 especialidadesDisponibles={especialidadesDisponibles}
                 hayGuardia24hs={hayGuardia24hs}
+                hayDomicilio={hayDomicilio}
+                hayVirtual={hayVirtual}
+                hayUrgenciaDomicilio={hayUrgenciaDomicilio}
                 onUrgencia={handleBuscarCercana}
                 buscandoUbicacion={buscandoUbicacion}
               />
