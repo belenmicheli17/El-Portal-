@@ -34,11 +34,21 @@ const CLASE_LABEL = "block text-[15px] font-semibold text-[#1A3D3D] mt-5 mb-2";
 // Igual que el input pero SIN ancho completo: para el selector corto de MP / MN
 const CLASE_SELECT_CORTO = "w-24 shrink-0 bg-[#F4F7F7] border border-transparent rounded-2xl px-4 py-4 text-[17px] font-bold text-[#1A3D3D] outline-none transition-all duration-300 ease-in-out focus:bg-white focus:border-[#2D6A6A] focus:ring-4 focus:ring-[#2D6A6A]/10";
 const CLASE_AYUDA = "text-sm text-[#666666] mt-2 leading-normal";
+// Asterisco rojo para marcar los campos obligatorios
+const Obligatorio = () => <span className="text-red-500" aria-hidden="true"> *</span>;
 const CLASE_BTN_PRIMARIO = "bg-[#2D6A6A] text-white rounded-xl px-7 py-4 text-[13px] font-bold uppercase tracking-[0.15em] shadow-md transition-all duration-300 ease-in-out hover:bg-[#1A3D3D] hover:-translate-y-1 hover:shadow-xl disabled:opacity-60 disabled:hover:translate-y-0 disabled:cursor-not-allowed flex items-center justify-center gap-2";
 const CLASE_BTN_VOLVER = "bg-white text-[#666666] border border-gray-200 rounded-xl px-5 py-4 text-[13px] font-bold uppercase tracking-[0.15em] transition-all duration-300 ease-in-out hover:border-[#2D6A6A] hover:text-[#1A3D3D] disabled:opacity-60";
 const CLASE_BTN_TEXTO = "text-[#2D6A6A] text-[12px] font-bold uppercase tracking-[0.12em] px-2 py-3 transition-all duration-300 ease-in-out hover:text-[#1A3D3D] disabled:opacity-60";
 const CLASE_BTN_SECUNDARIO = "bg-white text-[#1A3D3D] border border-gray-200 rounded-xl px-4 py-3 text-[12px] font-bold uppercase tracking-[0.12em] transition-all duration-300 ease-in-out hover:border-[#2D6A6A] disabled:opacity-60";
 const CLASE_CHIP = "border rounded-xl px-3.5 py-2.5 text-[15px] font-medium transition-all duration-300 ease-in-out";
+
+// TikTok: se guarda la URL completa, igual que Instagram
+const tiktokAURL = (usuario) => {
+  const limpio = String(usuario || '').trim().replace(/^@/, '').replace(/^https?:\/\/(www\.)?tiktok\.com\/@?/i, '').replace(/\/.*$/, '');
+  return limpio ? `https://www.tiktok.com/@${limpio}` : '';
+};
+// Y al revés: de la URL guardada vuelve a quedar solo el usuario
+const tiktokAUsuario = (valor) => String(valor || '').replace(/^https?:\/\/(www\.)?tiktok\.com\/@?/i, '').replace(/\/.*$/, '').replace(/^@/, '');
 
 // Estado inicial de todo lo que se carga en el cuestionario
 const ESTADO_INICIAL = {
@@ -50,7 +60,7 @@ const ESTADO_INICIAL = {
   dom: false, wa: '',        // wa: solo los dígitos, sin el 54
   zonas: [],                 // mismo formato que el editor: [{ id, nombre, clinicas: [...] }]
   email: '', emailV: 'todos', waV: 'todos',
-  ig: '', bio: ''
+  ig: '', tiktok: '', bio: ''
 };
 
 // ==========================================
@@ -226,7 +236,7 @@ function TarjetaViva({ datos, paso }) {
     datos.nombre.trim() && datos.apellido.trim(),
     contarDigitos(datos.mat) >= 3 && datos.tituloPath,
     datos.esp.trim(),
-    datos.dom || datos.zonas.length > 0,
+    datos.dom || datos.virtual || datos.zonas.length > 0,
     datos.email.trim() || datos.wa.trim() || datos.ig.trim(),
     datos.bio.trim().length >= 30
   ].filter(Boolean).length;
@@ -518,7 +528,7 @@ function BuscadorLugares({ onElegir, texto, setTexto }) {
         />
       </div>
       {estadoMapa === 'error' ? (
-        <p className="text-sm text-red-500 font-medium mt-2">No pudimos cargar Google Maps. Podés tocar "Completar después" y sumar tus lugares desde tu perfil.</p>
+        <p className="text-sm text-red-500 font-medium mt-2">No pudimos cargar Google Maps. Probá recargar la página; si seguís sin poder, escribinos a portalveterinario.ar@gmail.com y te ayudamos.</p>
       ) : (
         <p className={CLASE_AYUDA}>Elegí una opción de la lista para confirmar la dirección con Google.</p>
       )}
@@ -635,6 +645,8 @@ export default function Onboarding() {
 
   // Si viene desde la pantalla de rechazo, es un reenvío para corregir datos
   const esCorreccion = location.state?.correccion === true;
+  // La admin abre el cuestionario desde el banner de modo prueba solo para mirarlo
+  const esVistaPrueba = location.state?.vistaPrueba === true;
 
   const [cargando, setCargando] = useState(true);
   const [paso, setPaso] = useState(0);
@@ -660,12 +672,7 @@ export default function Onboarding() {
   useEffect(() => {
     if (!currentUser?.uid) return;
 
-    // TEMPORAL: para ver qué está leyendo la app (borrar cuando funcione)
-    console.log('Onboarding lee:', {
-      rol: currentUser.rol,
-      onboardingCompleto: currentUser.onboardingCompleto,
-      tipo: typeof currentUser.onboardingCompleto
-    });
+   
 
     // Solo entra al cuestionario un profesional con onboardingCompleto en false.
     // Los usuarios que ya existían (sin ese campo) pasan directo al ecosistema.
@@ -689,7 +696,7 @@ export default function Onboarding() {
         const verificacion = snapVerificacion && snapVerificacion.exists() ? snapVerificacion.data() : {};
 
         // Modo corrección: solo se puede entrar si la solicitud fue rechazada
-        if (esCorreccion && verificacion.estado !== 'rechazado') {
+        if (esCorreccion && !esVistaPrueba && verificacion.estado !== 'rechazado') {
           navigate('/ecosistema', { replace: true });
           return;
         }
@@ -721,12 +728,15 @@ export default function Onboarding() {
           esp: perfil.especialidad || '',
           svc: servicios,
           dom: !!perfil.atiendeDomicilio,
+          virtual: !!perfil.atiendeVirtual,
+          urg: !!perfil.urgenciasDomicilio,
           wa: (perfil.whatsappNum || '').replace(/^\+?54/, ''),
           zonas: Array.isArray(perfil.zonas) ? perfil.zonas : [],
           email: perfil.emailContacto || '',
           emailV: visibilidadAPantalla(perfil.emailVisibilidad),
           waV: visibilidadAPantalla(perfil.whatsappVisibilidad),
           ig: instagramAUsuario(perfil.instagram),
+          tiktok: tiktokAUsuario(perfil.tiktok),
           bio: perfil.bio || ''
         });
 
@@ -874,11 +884,16 @@ export default function Onboarding() {
       if (!datos.tituloPath) return 'Sumá la foto de tu título o carnet para poder verificarte (obligatorio).';
     }
     if (p === 2 && !datos.esp.trim()) return 'Escribí tu especialidad principal.';
+    // Los servicios propios no cuentan: no aparecen en los filtros de la Cartilla
+    if (p === 2 && datos.svc.filter((s) => !s.propio).length === 0) return 'Elegí al menos un servicio de la lista: con eso te encuentran los tutores en la Cartilla.';
     if (p === 3) {
       if (datos.dom && !datos.wa.trim()) return 'Si atendés a domicilio, tu WhatsApp es obligatorio.';
+      if (!(datos.dom || datos.virtual || datos.zonas.length > 0)) return 'Elegí al menos una forma de atención: consulta virtual, domicilio o consultorio / veterinaria.';
+      if (datos.virtual && !datos.wa.trim()) return 'Si hacés consultas virtuales, tu WhatsApp es obligatorio.';
       if (textoLugar.trim()) return 'Elegí una opción de la lista de Google para confirmar la dirección.';
     }
     if (p === 4 && datos.email.trim() && !/^\S+@\S+\.\S+$/.test(datos.email.trim())) return 'Revisá el email: parece que falta algo.';
+    if (p === TOTAL_PASOS - 1 && !datos.bio.trim()) return 'Escribí una breve presentación para poder terminar.';
     return '';
   };
 
@@ -909,8 +924,8 @@ export default function Onboarding() {
       };
     }
     if (p === 3) {
-      const perfil = { atiendeDomicilio: d.dom, zonas: d.zonas };
-      if (d.dom) {
+      const perfil = { atiendeDomicilio: d.dom, atiendeVirtual: !!d.virtual, urgenciasDomicilio: !!d.dom && !!d.urg, zonas: d.zonas };
+      if (d.dom || d.virtual) {
         // Igual que el editor: si atiende a domicilio, el WhatsApp es obligatorio y público
         perfil.whatsappActivo = true;
         perfil.whatsappNum = `54${d.wa}`;
@@ -922,9 +937,10 @@ export default function Onboarding() {
       const perfil = {
         emailContacto: d.email.trim(),
         emailVisibilidad: visibilidadADB(d.emailV),
-        instagram: instagramAURL(d.ig)
+        instagram: instagramAURL(d.ig),
+        tiktok: tiktokAURL(d.tiktok)
       };
-      if (!d.dom) {
+      if (!(d.dom || d.virtual)) {
         perfil.whatsappActivo = d.wa.length > 0;
         perfil.whatsappNum = d.wa ? `54${d.wa}` : '';
         perfil.whatsappVisibilidad = visibilidadADB(d.waV);
@@ -985,26 +1001,7 @@ export default function Onboarding() {
     }
   };
 
-  const completarDespues = async () => {
-    // Si dijo que atiende a domicilio pero no puso WhatsApp, no guardamos esa opción a medias
-    let datosAGuardar = datos;
-    if (paso === 3 && datos.dom && !datos.wa.trim()) {
-      datosAGuardar = { ...datos, dom: false };
-      setDatos(datosAGuardar);
-    }
-    setGuardando(true);
-    try {
-      if (paso === TOTAL_PASOS - 1) await finalizar(datosAGuardar);
-      else { await guardarPaso(paso, datosAGuardar); setPaso(paso + 1); }
-      setError('');
-    } catch (e) {
-      console.error('Error al saltear el paso:', e);
-      setError('No pudimos guardar. Revisá tu conexión y probá de nuevo.');
-    } finally {
-      setGuardando(false);
-    }
-  };
-
+  
   const volver = () => { setPaso(paso - 1); setError(''); };
 
   const cerrarSesion = async () => {
@@ -1039,9 +1036,9 @@ export default function Onboarding() {
     if (paso === 0) {
       return (
         <>
-          <label className={CLASE_LABEL} htmlFor="ob-nombre">Nombre</label>
+          <label className={CLASE_LABEL} htmlFor="ob-nombre">Nombre<Obligatorio /></label>
           <input id="ob-nombre" value={datos.nombre} onChange={cambiarNombre('nombre')} placeholder="María" autoComplete="off" className={CLASE_INPUT} />
-          <label className={CLASE_LABEL} htmlFor="ob-apellido">Apellido</label>
+          <label className={CLASE_LABEL} htmlFor="ob-apellido">Apellido<Obligatorio /></label>
           <input id="ob-apellido" value={datos.apellido} onChange={cambiarNombre('apellido')} placeholder="González" autoComplete="off" className={CLASE_INPUT} />
 
           <div className="flex items-center gap-4 mt-6">
@@ -1063,7 +1060,7 @@ export default function Onboarding() {
     if (paso === 1) {
       return (
         <>
-          <label className={CLASE_LABEL} htmlFor="ob-mat">Número de matrícula</label>
+          <label className={CLASE_LABEL} htmlFor="ob-mat">Número de matrícula<Obligatorio /></label>
           <div className="flex gap-2.5">
             <select value={datos.tipo} onChange={(e) => cambiar('tipo', e.target.value)} className={CLASE_SELECT_CORTO}>
               <option value="MP">MP</option>
@@ -1120,10 +1117,11 @@ export default function Onboarding() {
     if (paso === 2) {
       return (
         <>
-          <label className={CLASE_LABEL} htmlFor="ob-esp">Especialidad principal</label>
+          <label className={CLASE_LABEL} htmlFor="ob-esp">Especialidad principal<Obligatorio /></label>
           <input id="ob-esp" value={datos.esp} onChange={(e) => cambiar('esp', e.target.value)} placeholder="Cirugía de tejidos blandos" autoComplete="off" className={CLASE_INPUT} />
 
-          <span className={CLASE_LABEL}>Servicios que ofrecés (opcional)</span>
+          <span className={CLASE_LABEL}>Servicios que ofrecés<Obligatorio /></span>
+          <p className={CLASE_AYUDA}>Elegí al menos uno de la lista. Los tutores filtran por estos servicios en la Cartilla: si no cargás ninguno, no aparecés en sus búsquedas.</p>
           <BuscadorServicios seleccion={datos.svc} onAlternar={alternarServicio} onAgregarPropio={agregarServicioPropio} />
         </>
       );
@@ -1132,6 +1130,29 @@ export default function Onboarding() {
     if (paso === 3) {
       return (
         <>
+                  <p className="text-[16px] font-semibold text-[#1A3D3D]">Cómo y dónde atendés<Obligatorio /></p>
+          <p className={CLASE_AYUDA}>Elegí al menos una opción. Así los tutores te encuentran con los filtros de la Cartilla.</p>
+          <div className="flex items-center justify-between gap-4 bg-[#F4F7F7] rounded-2xl px-5 py-4 mt-5">
+            <div>
+              <p className="text-[16px] font-semibold text-[#1A3D3D]">Hago consultas virtuales</p>
+              <p className="text-sm text-[#666666] mt-0.5">Los tutores te encuentran con el filtro de consulta virtual.</p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={!!datos.virtual}
+              aria-label="Hago consultas virtuales"
+              onClick={() => cambiar('virtual', !datos.virtual)}
+              className="relative shrink-0 rounded-full transition-colors duration-300"
+              style={{ width: 52, height: 30, backgroundColor: datos.virtual ? '#25D366' : '#D1D5DB' }}
+            >
+              <span
+                className="absolute rounded-full bg-white shadow transition-all duration-300"
+                style={{ top: 3, left: datos.virtual ? 25 : 3, width: 24, height: 24 }}
+              />
+            </button>
+          </div>
+
           <div className="flex items-center justify-between gap-4 bg-[#F4F7F7] rounded-2xl px-5 py-4 mt-5">
             <div>
               <p className="text-[16px] font-semibold text-[#1A3D3D]">Atiendo a domicilio</p>
@@ -1153,14 +1174,73 @@ export default function Onboarding() {
             </button>
           </div>
 
-          {datos.dom && (
+          {(datos.dom || datos.virtual) && (
             <>
-              <label className={CLASE_LABEL} htmlFor="ob-wa-dom">Tu WhatsApp</label>
+              <label className={CLASE_LABEL} htmlFor="ob-wa-dom">Tu WhatsApp<Obligatorio /></label>
               <CampoWhatsapp id="ob-wa-dom" valor={datos.wa} onCambio={(v) => cambiar('wa', v)} />
-              <p className={CLASE_AYUDA}>Obligatorio si atendés a domicilio, para que los tutores coordinen con vos.</p>
+              <p className={CLASE_AYUDA}>Obligatorio si atendés a domicilio o hacés consultas virtuales, para que los tutores coordinen con vos.</p>
             </>
           )}
 
+          {datos.dom && (
+            <>
+
+              <div className="flex items-center justify-between gap-4 bg-[#F4F7F7] rounded-2xl px-5 py-4 mt-5">
+                <div>
+                  <p className="text-[16px] font-semibold text-[#1A3D3D]">También atiendo urgencias</p>
+                  <p className="text-sm text-[#666666] mt-0.5">Los tutores te encuentran con el filtro de urgencia a domicilio.</p>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={!!datos.urg}
+                  aria-label="Atiendo urgencias a domicilio"
+                  onClick={() => cambiar('urg', !datos.urg)}
+                  className="relative shrink-0 rounded-full transition-colors duration-300"
+                  style={{ width: 52, height: 30, backgroundColor: datos.urg ? '#25D366' : '#D1D5DB' }}
+                >
+                  <span
+                    className="absolute rounded-full bg-white shadow transition-all duration-300"
+                    style={{ top: 3, left: datos.urg ? 25 : 3, width: 24, height: 24 }}
+                  />
+                </button>
+              </div>
+            </>
+          )}
+
+          {/* TOGGLE: ATIENDO EN CONSULTORIO O VETERINARIAS */}
+          <div className="flex items-center justify-between gap-4 bg-[#F4F7F7] rounded-2xl px-5 py-4 mt-5">
+            <div>
+              <p className="text-[16px] font-semibold text-[#1A3D3D]">Atiendo en consultorio o veterinarias</p>
+              <p className="text-sm text-[#666666] mt-0.5">Los tutores van a ver dónde encontrarte.</p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={!!(datos.consultorio || datos.zonas.length > 0)}
+              aria-label="Atiendo en consultorio o veterinarias"
+              onClick={() => {
+                if (datos.consultorio || datos.zonas.length > 0) {
+                  // Al apagarlo, si hay veterinarias cargadas, avisamos antes de borrarlas
+                  if (datos.zonas.length > 0 && !window.confirm('Se van a borrar las veterinarias que sumaste. ¿Querés continuar?')) return;
+                  setDatos((previo) => ({ ...previo, consultorio: false, zonas: [] }));
+                  setTextoLugar('');
+                } else {
+                  cambiar('consultorio', true);
+                }
+              }}
+              className="relative shrink-0 rounded-full transition-colors duration-300"
+              style={{ width: 52, height: 30, backgroundColor: (datos.consultorio || datos.zonas.length > 0) ? '#25D366' : '#D1D5DB' }}
+            >
+              <span
+                className="absolute rounded-full bg-white shadow transition-all duration-300"
+                style={{ top: 3, left: (datos.consultorio || datos.zonas.length > 0) ? 25 : 3, width: 24, height: 24 }}
+              />
+            </button>
+          </div>
+
+          {(datos.consultorio || datos.zonas.length > 0) && (
+          <>
           <div className="flex items-center gap-3 mt-8 mb-3">
             {datos.zonas.length > 0 && (
               <span className="w-9 h-9 rounded-full bg-[#2D6A6A] text-white flex items-center justify-center shrink-0">
@@ -1188,6 +1268,8 @@ export default function Onboarding() {
               </button>
             </div>
           )))}
+          </>
+          )}
         </>
       );
     }
@@ -1199,10 +1281,10 @@ export default function Onboarding() {
           <input id="ob-email" type="email" value={datos.email} onChange={(e) => cambiar('email', e.target.value)} placeholder="nombre@email.com" autoComplete="off" className={CLASE_INPUT} />
           <p className={CLASE_AYUDA}>{EXPLICACION_VISIBILIDAD[datos.emailV]}</p>
 
-          {datos.dom ? (
+          {(datos.dom || datos.virtual) ? (
             <div className="mt-6 bg-[#F4F7F7] rounded-2xl px-4 py-3.5 flex gap-2.5">
               <MessageCircle className="w-5 h-5 text-[#25D366] shrink-0" strokeWidth={1.5} />
-              <p className="text-[14px] font-medium text-[#1A3D3D] leading-relaxed">Tu WhatsApp ya está cargado y es visible para todos, porque atendés a domicilio.</p>
+              <p className="text-[14px] font-medium text-[#1A3D3D] leading-relaxed">Tu WhatsApp ya está cargado y es visible para todos, porque atendés a domicilio o hacés consultas virtuales.</p>
             </div>
           ) : (
             <>
@@ -1214,13 +1296,16 @@ export default function Onboarding() {
 
           <label className={CLASE_LABEL} htmlFor="ob-ig">Instagram (opcional)</label>
           <input id="ob-ig" value={datos.ig} onChange={(e) => cambiar('ig', e.target.value.replace(/^@/, ''))} placeholder="@tu_usuario" autoComplete="off" className={CLASE_INPUT} />
+
+          <label className={CLASE_LABEL} htmlFor="ob-tiktok">TikTok (opcional)</label>
+          <input id="ob-tiktok" value={datos.tiktok} onChange={(e) => cambiar('tiktok', e.target.value.replace(/^@/, ''))} placeholder="@tu_usuario" autoComplete="off" className={CLASE_INPUT} />
         </>
       );
     }
 
     return (
       <>
-        <label className={CLASE_LABEL} htmlFor="ob-bio">Tu presentación</label>
+        <label className={CLASE_LABEL} htmlFor="ob-bio">Tu presentación<Obligatorio /></label>
         <textarea
           id="ob-bio"
           rows={5}
@@ -1310,9 +1395,7 @@ export default function Onboarding() {
                   <button type="button" onClick={volver} disabled={guardando} className={CLASE_BTN_VOLVER}>Volver</button>
                 ) : <span />}
                 <div className="flex items-center gap-1.5">
-                  {paso >= 3 && (
-                    <button type="button" onClick={completarDespues} disabled={guardando} className={CLASE_BTN_TEXTO}>Completar después</button>
-                  )}
+                 
                   <button type="button" onClick={irAlSiguiente} disabled={guardando || subiendoFoto || subiendoTitulo} className={CLASE_BTN_PRIMARIO}>
                     {guardando && <Loader2 className="w-4 h-4 animate-spin" />}
                     {paso === TOTAL_PASOS - 1 ? 'Enviar a verificación' : 'Siguiente'}

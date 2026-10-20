@@ -7,7 +7,7 @@ import {
   Calendar, BookMarked, // <-- NUEVOS ÍCONOS PARA PAPERS
   Home, Siren // <-- NUEVOS ÍCONOS PARA MODALIDAD
 } from 'lucide-react';
-
+import { Video as IconoVideo, Ambulance as IconoAmbulancia } from 'lucide-react';
 // Importamos los datos centralizados
 import especialidadesData from '../data/especialidades.json';
 import filtrosConfig from '../data/filtrosConfig.json';
@@ -57,6 +57,8 @@ const BarraFiltros = ({
     especialidades: getParam('especialidades'),
     mascotas: getParam('mascotas'),
     domicilio: searchParams.get('domicilio') === 'true',
+    virtual: searchParams.get('virtual') === 'true',
+    urgenciaDomicilio: searchParams.get('urgenciaDomicilio') === 'true',
     guardia24hs: searchParams.get('guardia24hs') === 'true',
     categorias_papers: getParam('categorias_papers'),
     anios: getParam('anios')
@@ -488,6 +490,52 @@ const BarraFiltros = ({
                             </button>
 
                             {/* BOTÓN: GUARDIA 24HS (solo aparece si hay alguna clínica con guardia cargada) */}
+                            {/* BOTÓN: URGENCIA A DOMICILIO */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const params = new URLSearchParams(searchParams);
+                                if (!filtros.urgenciaDomicilio) params.set('urgenciaDomicilio', 'true');
+                                else params.delete('urgenciaDomicilio');
+                                setSearchParams(params);
+                              }}
+                              className={`flex items-center gap-3 p-3 rounded-2xl border-2 transition-all text-left ${
+                                filtros.urgenciaDomicilio
+                                  ? 'bg-red-500 border-red-500 shadow-md'
+                                  : 'bg-red-50 border-red-100 hover:border-red-300'
+                              }`}
+                            >
+                              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${filtros.urgenciaDomicilio ? 'bg-white/20 text-white' : 'bg-white text-red-600 border border-red-100'}`}>
+                                <IconoAmbulancia className="w-5 h-5" />
+                              </div>
+                              <span className={`text-[13px] font-bold leading-tight ${filtros.urgenciaDomicilio ? 'text-white' : 'text-red-700'}`}>
+                                Urgencia a domicilio
+                              </span>
+                            </button>
+
+                            {/* BOTÓN: CONSULTA VIRTUAL */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const params = new URLSearchParams(searchParams);
+                                if (!filtros.virtual) params.set('virtual', 'true');
+                                else params.delete('virtual');
+                                setSearchParams(params);
+                              }}
+                              className={`flex items-center gap-3 p-3 rounded-2xl border-2 transition-all text-left ${
+                                filtros.virtual
+                                  ? 'bg-[#2D6A6A] border-[#2D6A6A] shadow-md'
+                                  : 'bg-[#2D6A6A]/10 border-[#2D6A6A]/20 hover:border-[#2D6A6A]/50'
+                              }`}
+                            >
+                              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${filtros.virtual ? 'bg-white/20 text-white' : 'bg-white text-[#2D6A6A] border border-[#2D6A6A]/20'}`}>
+                                <IconoVideo className="w-5 h-5" />
+                              </div>
+                              <span className={`text-[13px] font-bold leading-tight ${filtros.virtual ? 'text-white' : 'text-[#1A3D3D]'}`}>
+                                Consulta virtual
+                              </span>
+                            </button>
+
                             {hayGuardia24hs && (
                             <button
                               type="button"

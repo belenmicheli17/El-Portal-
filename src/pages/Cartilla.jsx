@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useMemo } from 'react';
+import { Video as IconoVideo, Ambulance as IconoAmbulancia } from 'lucide-react';
 import { 
   Search, MapPin, Home, 
   ChevronRight, Award, Dog, Cat, Filter, 
@@ -182,6 +183,8 @@ const PASOS_CARTILLA = [
             id: data.slug || doc.id,
             tipo: 'profesional',
             domicilio: data.atiendeDomicilio || false,
+            virtual: data.atiendeVirtual || false,
+            urgenciaDomicilio: data.urgenciasDomicilio || false,
             servicios: opcionesProfesional,
             opcionesFiltro: opcionesProfesional
           });
@@ -267,6 +270,8 @@ const PASOS_CARTILLA = [
     mascotas: searchParams.get('mascotas') ? searchParams.get('mascotas').split(',') : [],
     especialidades: searchParams.get('especialidades') ? searchParams.get('especialidades').split(',') : [],
     domicilio: searchParams.get('domicilio') === 'true',
+    virtual: searchParams.get('virtual') === 'true',
+    urgenciaDomicilio: searchParams.get('urgenciaDomicilio') === 'true',
     guardia24hs: searchParams.get('guardia24hs') === 'true'
   }), [searchParams]);
 
@@ -351,9 +356,10 @@ const PASOS_CARTILLA = [
       }
     }
     if (filtros.domicilio && !v.domicilio) return false;
+    if (filtros.virtual && !v.virtual) return false;
+    if (filtros.urgenciaDomicilio && !v.urgenciaDomicilio) return false;
     if (filtros.guardia24hs && !v.guardia24hs) return false;
     
-    console.log('profesional:', v.nombre, '| opcionesFiltro:', v.opcionesFiltro, '| filtros.especialidades:', filtros.especialidades);
     return true;
   });
   
@@ -421,7 +427,7 @@ const PASOS_CARTILLA = [
         </div>
 
         {/* FILTROS ACTIVOS: entre el hero y las tarjetas. Al tocar un chip, se saca ese filtro. */}
-        {(searchTerm.trim() || filtros.zonas.length > 0 || filtros.especialidades.length > 0 || filtros.domicilio || filtros.guardia24hs) && (() => {
+        {(searchTerm.trim() || filtros.zonas.length > 0 || filtros.especialidades.length > 0 || filtros.domicilio || filtros.virtual || filtros.urgenciaDomicilio || filtros.guardia24hs) && (() => {
           const claseChip = "inline-flex items-center gap-1.5 bg-white border border-[#2D6A6A]/20 text-[#1A3D3D] rounded-full pl-3.5 pr-3 py-1.5 text-[13px] font-semibold shadow-sm transition-all duration-300 hover:border-[#2D6A6A] hover:bg-[#2D6A6A]/5";
           return (
             <div className="max-w-6xl mx-auto w-full px-4 relative z-10 font-['Inter']">
@@ -449,6 +455,16 @@ const PASOS_CARTILLA = [
                 {filtros.domicilio && (
                   <button type="button" onClick={() => quitarFiltro('domicilio')} className={claseChip} title="Sacar este filtro">
                     <Home className="w-3.5 h-3.5 text-blue-600" /> Atiende a domicilio <X className="w-3.5 h-3.5 text-gray-400" />
+                  </button>
+                )}
+                {filtros.virtual && (
+                  <button type="button" onClick={() => quitarFiltro('virtual')} className={claseChip} title="Sacar este filtro">
+                    <IconoVideo className="w-3.5 h-3.5 text-[#2D6A6A]" /> Consulta virtual <X className="w-3.5 h-3.5 text-gray-400" />
+                  </button>
+                )}
+                {filtros.urgenciaDomicilio && (
+                  <button type="button" onClick={() => quitarFiltro('urgenciaDomicilio')} className={claseChip} title="Sacar este filtro">
+                    <IconoAmbulancia className="w-3.5 h-3.5 text-red-500" /> Urgencia a domicilio <X className="w-3.5 h-3.5 text-gray-400" />
                   </button>
                 )}
                 {filtros.guardia24hs && (

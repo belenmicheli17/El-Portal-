@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { signInWithCustomToken } from 'firebase/auth';
 import { httpsCallable } from 'firebase/functions';
-import { FlaskConical, Loader2 } from 'lucide-react';
+import { FlaskConical, Loader2, ClipboardList } from 'lucide-react';
 import { auth, functions } from '../../firebase';
 import { useAuth } from '../../context/AuthContext';
 
@@ -141,6 +141,20 @@ export default function BannerModoPrueba() {
               </button>
             );
           })}
+          {/* Ver el cuestionario de alta de la cuenta de prueba (usa el modo corrección que ya existe) */}
+          {enModoPrueba && (currentUser?.rol === 'profesional' || currentUser?.rol === 'clinica') && (
+            <button
+              onClick={() => navigate(
+                currentUser.rol === 'clinica' ? '/onboarding-clinica' : '/onboarding',
+                { state: { correccion: true, vistaPrueba: true } }
+              )}
+              disabled={isLoading}
+              className="px-3 py-1.5 rounded-xl text-[12px] font-bold bg-white text-[#1A3D3D] hover:bg-gray-200 transition-all duration-300 ease-in-out disabled:opacity-60 flex items-center gap-1.5"
+            >
+              <ClipboardList className="w-3.5 h-3.5" strokeWidth={2} />
+              Onboarding
+            </button>
+          )}
           <button
             onClick={handleAdmin}
             disabled={isLoading}

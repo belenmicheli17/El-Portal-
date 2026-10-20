@@ -16,7 +16,7 @@ import {
   ArrowUp, ArrowDown, MapPin, ShieldCheck, Check, ArrowLeft,
   Smartphone, Home, Mail, Award, ChevronDown, Phone,
   ArrowRight, ExternalLink, Lock, Zap, Clock, Heart, Brain, Turtle, CircleUserRound,
-  Menu, User, LayoutGrid, Edit, Search, Briefcase, FileText, Undo2, Redo2, FileCheck, Building2, AlertTriangle, Syringe, Activity, Microscope, Stethoscope, Crop, Sparkles, Loader2, Globe, CreditCard, ArrowUpRight, Eye, EyeOff, MessageSquare, Image as ImageIcon, BookOpen, UploadCloud, FileDown 
+  Menu, User, LayoutGrid, Edit, Search, Briefcase, FileText, Undo2, Redo2, FileCheck, Building2, AlertTriangle, Syringe, Activity, Microscope, Stethoscope, Crop, Sparkles, Loader2, Globe, CreditCard, ArrowUpRight, Eye, EyeOff, MessageSquare, Image as ImageIcon, BookOpen, UploadCloud, FileDown, Video, Siren 
 } from 'lucide-react';
 
 // ==========================================
@@ -530,6 +530,61 @@ function BuscadorEspecialidades({ formData, setFormData, especialidadesData }) {
           )}
         </div>
       )}
+      {/* PÍLDORAS CON LOS SERVICIOS YA ELEGIDOS */}
+      {(() => {
+        // Armamos una lista con todo lo marcado: opciones de la lista oficial y servicios propios
+        const elegidos = [];
+        especialidadesData.forEach(grupo => {
+          const g = formData.servicios[grupo.id];
+          if (!g) return;
+          (g.subOpcionesSeleccionadas || []).forEach(opcion => elegidos.push({ texto: opcion, grupoId: grupo.id, grupoNombre: grupo.grupo, propio: false }));
+          (g.serviciosPersonalizados || []).forEach(srv => elegidos.push({ texto: srv, grupoId: grupo.id, grupoNombre: grupo.grupo, propio: true }));
+        });
+
+        // Si no hay nada elegido, no mostramos el recuadro
+        if (elegidos.length === 0) return null;
+
+        // Saca un servicio de su grupo; si el grupo queda vacío, lo desactiva
+        const quitar = (item) => {
+          setFormData(prev => {
+            const g = prev.servicios[item.grupoId] || {};
+            const oficiales = (g.subOpcionesSeleccionadas || []).filter(o => item.propio || o !== item.texto);
+            const propios = (g.serviciosPersonalizados || []).filter(s => !item.propio || s !== item.texto);
+            return {
+              ...prev,
+              servicios: {
+                ...prev.servicios,
+                [item.grupoId]: { ...g, subOpcionesSeleccionadas: oficiales, serviciosPersonalizados: propios, activo: oficiales.length + propios.length > 0 }
+              }
+            };
+          });
+        };
+
+        return (
+          <div className="mb-6 bg-[#F4F7F7] border border-gray-100 rounded-2xl px-4 py-3.5">
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2.5">Tus servicios ({elegidos.length})</p>
+            <div className="flex flex-wrap gap-2">
+              {elegidos.map(item => (
+                <span
+                  key={`${item.grupoId}-${item.propio ? 'propio' : 'oficial'}-${item.texto}`}
+                  title={item.grupoNombre}
+                  className={`inline-flex items-center gap-1.5 text-[13px] font-medium pl-3 pr-1.5 py-1 rounded-full border bg-white ${item.propio ? 'text-[#666666] border-gray-200' : 'text-[#2D6A6A] border-[#2D6A6A]/20'}`}
+                >
+                  {item.texto}
+                  <button
+                    type="button"
+                    onClick={() => quitar(item)}
+                    aria-label={`Quitar ${item.texto}`}
+                    className="p-1 rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </span>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
     </>
   );
 }
@@ -653,9 +708,12 @@ tipoMatricula2: undefined,
   foto: '',
   fotosPerfil: [],
   atiendeDomicilio: false,
+  urgenciasDomicilio: false,
+  atiendeVirtual: false,
  emailContacto: '',
 emailVisibilidad: 'todos',
 instagram: '',
+  tiktok: '',
   linkedin: '',
   facebook: '',
   whatsappActivo: false,
@@ -700,7 +758,7 @@ const seccionesIncompletas = () => {
   if (!formData.trayectoria || formData.trayectoria.length === 0) {
     incompletas.add('trayectoria');
   }
-  if (!formData.zonas || formData.zonas.length === 0) {
+  if ((!formData.zonas || formData.zonas.length === 0) && !formData.atiendeDomicilio && !formData.atiendeVirtual) {
     incompletas.add('zonas');
   }
   if (!formData.emailContacto?.trim()) {
@@ -728,7 +786,7 @@ const seccionesIncompletas = () => {
     // Los servicios se guardan como objeto (un grupo por clave), no como lista:
     // revisamos si hay al menos un grupo activo
     const serviciosActivos = formData.servicios && !Array.isArray(formData.servicios)
-      ? Object.values(formData.servicios).some(s => s.activo)
+      ? Object.values(formData.servicios).some(s => s.activo && ((s.subOpcionesSeleccionadas || []).length > 0 || (s.serviciosPersonalizados || []).length > 0))
       : false;
     if (serviciosActivos) score += weights.servicios;
     if (formData.casos.length > 0) score += weights.casos;
@@ -917,9 +975,10 @@ const handleFileSelect = (e, target, caseId = null) => {
 const normalizarRedSocial = (valor, red) => {
   if (!valor) return '';
   const v = valor.trim();
-  if (red !== 'instagram') return v;
+  if (red !== 'instagram' && red !== 'tiktok') return v;
   if (v.startsWith('http://') || v.startsWith('https://')) return v;
   const usuario = v.startsWith('@') ? v.slice(1) : v;
+  if (red === 'tiktok') return `https://www.tiktok.com/@${usuario}`;
   return `https://instagram.com/${usuario}`;
 };
 const generarSlug = (texto) => {
@@ -948,7 +1007,7 @@ if (!formData.nombre.trim() || !formData.especialidad.trim() || trayectoriaIncom
         isOpen: true, 
         title: direccionSinVerificar ? 'Dirección sin confirmar' : 'Faltan datos requeridos', 
         message: direccionSinVerificar 
-          ? 'En "Zonas de Atención" hay una dirección escrita que no fue elegida de la lista de sugerencias de Google. Borrala y volvé a escribirla, eligiendo una opción del desplegable que aparece.'
+          ? 'En "Cómo y dónde atendés" hay una dirección escrita que no fue elegida de la lista de sugerencias de Google. Borrala y volvé a escribirla, eligiendo una opción del desplegable que aparece.'
           : 'Asegúrate de haber ingresado tu Foto, Nombre, Especialidad, y el Título de cada logro en Trayectoria.', 
         type: 'error' 
       });
@@ -1016,6 +1075,7 @@ setSaveStatus('saving');
       perfilDataToSave.fotosPerfil = fotosPerfilSubidas;
       perfilDataToSave.casos = casosSubidos;
       perfilDataToSave.instagram = normalizarRedSocial(perfilDataToSave.instagram, 'instagram');
+      perfilDataToSave.tiktok = normalizarRedSocial(perfilDataToSave.tiktok, 'tiktok');
       perfilDataToSave.slug = currentUser.slug;
 
       // 2. Guardamos el perfil "limpio" (Esto borrará los papers viejos del documento del profesional automáticamente)
@@ -1477,7 +1537,7 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
   <div className="flex items-center gap-3"><LayoutGrid className={`w-5 h-5 ${activeTab === 'perfil' ? 'text-[#2D6A6A]' : 'text-gray-400'}`} /> Mi perfil público</div>
   {(() => {
     const inc = seccionesIncompletas();
-    const tieneServicios = formData.servicios && Object.values(formData.servicios).some(s => s.activo);
+    const tieneServicios = formData.servicios && Object.values(formData.servicios).some(s => s.activo && ((s.subOpcionesSeleccionadas || []).length > 0 || (s.serviciosPersonalizados || []).length > 0));
     const seccionesPerfil = ['identidad', 'bio', 'trayectoria', 'zonas', 'contacto'];
     const tieneFaltantes = seccionesPerfil.some(s => inc.has(s)) || !tieneServicios;
     return (mostrarErroresSecciones && tieneFaltantes) || (!mostrarErroresSecciones && savedData === null && tieneFaltantes)
@@ -1649,6 +1709,8 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
                     <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-2">
                       {formData.especialidad && <span className="text-gray-500 bg-gray-100 border border-gray-200 px-2.5 py-0.5 rounded-full font-bold text-[10px] uppercase tracking-wider">{formData.especialidad}</span>}
                       {formData.atiendeDomicilio && <span className="text-white bg-blue-500 px-2.5 py-0.5 rounded-full font-bold text-[10px] uppercase tracking-wider flex items-center gap-1"><Home className="w-3 h-3" /> A Domicilio</span>}
+                      {formData.urgenciasDomicilio && <span className="text-white bg-red-500 px-2.5 py-0.5 rounded-full font-bold text-[10px] uppercase tracking-wider flex items-center gap-1"><Siren className="w-3 h-3" /> Urgencias a domicilio</span>}
+                      {formData.atiendeVirtual && <span className="text-white bg-[#2D6A6A] px-2.5 py-0.5 rounded-full font-bold text-[10px] uppercase tracking-wider flex items-center gap-1"><Video className="w-3 h-3" /> Consulta virtual</span>}
                     </div>
                     <div className="flex items-center justify-center md:justify-start gap-3 text-xs font-medium text-gray-500">
                       <span className="flex items-center gap-1.5 truncate"><MapPin className="w-3.5 h-3.5 text-[#2D6A6A] shrink-0" /> {formData.provincia || "Provincia"}</span>
@@ -1783,7 +1845,7 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
                       <InputGroup label="Nombre" id="nombre" value={formData.nombre} onChange={handleChange} required />
 <InputGroup label="Apellido" id="apellido" value={formData.apellido || ''} onChange={handleChange} required />
-<InputGroup label="Especialidad Principal" id="especialidad" value={formData.especialidad} onChange={handleChange} required tooltip="Tu título principal. Es lo primero que verán los usuarios bajo tu nombre." />
+<InputGroup label="Especialidad Principal" id="especialidad" value={formData.especialidad} onChange={handleChange} required tooltip="Tu título tal como querés que aparezca bajo tu nombre. No se usa para filtrar: para que te encuentren en los filtros de la Cartilla, marcá tus servicios en la sección Servicios Médicos." />
                         <div className="mb-6 w-full">
   <label className="flex items-center text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">
     Matrícula <span className="text-red-400 ml-1">*</span>
@@ -1891,6 +1953,15 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
                         tooltip="Indicá las especialidades y servicios que ofrecés en tu práctica."
                         alerta={(mostrarErroresSecciones || savedData === null) && seccionesIncompletas().has('servicios')}
                       >
+                        <div className="flex items-start gap-3 bg-[#2D6A6A]/5 border border-[#2D6A6A]/15 rounded-2xl px-4 py-3.5 mb-6">
+                          <Info className="w-4 h-4 text-[#2D6A6A] shrink-0 mt-0.5" />
+                          <div className="text-[13px] font-medium text-[#1A3D3D] leading-relaxed">
+                            <p className="font-black mb-1">Cómo completar esta sección</p>
+                            <p>1. Tocá un grupo y marcá lo que hacés.</p>
+                            <p>2. Si falta algo, usá “Agregar otro servicio” dentro del grupo.</p>
+                            <p>3. Si querés, sumá una nota para contar cómo trabajás en esa área.</p>
+                          </div>
+                        </div>
                         <BuscadorEspecialidades
                           formData={formData}
                           setFormData={setFormData}
@@ -1908,17 +1979,33 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
                             const nuevoServicio = nuevosServicios[grupo.id] || '';
                             const setNuevoServicio = (val) => setNuevosServicios(prev => ({ ...prev, [grupo.id]: val }));
 
-                            const toggleGrupo = () => {
-                              if (!isActive) {
-                                setFormData(prev => ({ ...prev, servicios: { ...prev.servicios, [grupo.id]: { ...grupoActual, activo: true } } }));
-                                setExpandido(true);
-                              } else {
-                                const sinSeleccion = totalSeleccionadas === 0;
-                                if (expandido && sinSeleccion) {
-                                  setFormData(prev => ({ ...prev, servicios: { ...prev.servicios, [grupo.id]: { ...grupoActual, activo: false } } }));
-                                }
-                                setExpandido(e => !e);
+                            // Cierra la caja. Si quedó sin nada marcado, la desactiva para que no cuente como completa
+                            const cerrarGrupo = () => {
+                              if (totalSeleccionadas === 0) {
+                                setFormData(prev => ({ ...prev, servicios: { ...prev.servicios, [grupo.id]: { ...grupoActual, activo: false } } }));
                               }
+                              setExpandido(false);
+                            };
+
+                            const toggleGrupo = () => {
+                              // Si ya estaba abierta, la cerramos
+                              if (expandido) {
+                                cerrarGrupo();
+                                return;
+                              }
+                              // Si no, abrimos esta, cerramos todas las demás y desactivamos las que quedaron vacías
+                              setGruposExpandidos({ [grupo.id]: true });
+                              setFormData(prev => {
+                                const nuevos = { ...prev.servicios };
+                                Object.keys(nuevos).forEach(id => {
+                                  if (id === grupo.id) return;
+                                  const g = nuevos[id];
+                                  const total = (g.subOpcionesSeleccionadas || []).length + (g.serviciosPersonalizados || []).length;
+                                  if (g.activo && total === 0) nuevos[id] = { ...g, activo: false };
+                                });
+                                nuevos[grupo.id] = { ...(nuevos[grupo.id] || grupoActual), activo: true };
+                                return { ...prev, servicios: nuevos };
+                              });
                             };
 
                             const agregarPersonalizado = () => {
@@ -1938,12 +2025,15 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
                             const IconoGrupo = iconosGrupo[grupo.id] || Stethoscope;
 
                             return (
-                              <div key={grupo.id} className={`rounded-[20px] border transition-all duration-300 overflow-hidden ${isActive ? 'border-[#2D6A6A] bg-white shadow-sm' : 'border-gray-200 bg-gray-50/50'}`}>
+                              <div key={grupo.id} className={`rounded-[20px] border transition-all duration-300 overflow-hidden ${isActive ? 'border-[#2D6A6A] bg-white shadow-sm' : 'border-gray-200 bg-white hover:border-[#2D6A6A]/50 hover:shadow-sm'}`}>
                                 <div className="p-4 flex items-center gap-3 cursor-pointer select-none" onClick={toggleGrupo}>
-                                  <IconoGrupo className={`w-5 h-5 shrink-0 transition-colors duration-300 ${isActive ? 'text-[#2D6A6A]' : 'text-gray-500'}`} />
-                                  <span className={`flex-1 text-sm font-black ${isActive ? 'text-[#1A3D3D]' : 'text-gray-500'}`}>{grupo.grupo}</span>
+                                  <IconoGrupo className={`w-5 h-5 shrink-0 transition-colors duration-300 text-[#2D6A6A]`} />
+                                  <span className={`flex-1 text-sm font-black text-[#1A3D3D]`}>{grupo.grupo}</span>
                                   {isActive && !expandido && totalSeleccionadas > 0 && (
                                     <span className="text-[11px] font-bold text-[#2D6A6A] bg-[#2D6A6A]/10 px-2.5 py-1 rounded-full shrink-0">{totalSeleccionadas} seleccionada{totalSeleccionadas !== 1 ? 's' : ''}</span>
+                                  )}
+                                  {!expandido && totalSeleccionadas === 0 && (
+                                    <span className="text-[11px] font-bold text-gray-400 bg-gray-100 px-2.5 py-1 rounded-full shrink-0">0 seleccionadas</span>
                                   )}
                                   <ChevronDown strokeWidth={2.5} className={`w-5 h-5 transition-transform duration-300 shrink-0 ${expandido && isActive ? 'rotate-180 text-[#2D6A6A]' : 'text-gray-500'}`} />
                                 </div>
@@ -1955,7 +2045,7 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
                                 )}
                                 {expandido && (
                                   <div className="px-4 pb-5 border-t border-gray-100 pt-4 animate-in fade-in slide-in-from-top-2 duration-200">
-                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Especialidades</p>
+                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Marcá lo que hacés</p>
                                     <div className="flex flex-col gap-2 mb-4">
                                       {grupo.opciones.map(opcion => {
                                         const isChecked = seleccionadas.includes(opcion);
@@ -1973,23 +2063,28 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
                                           <div key={srv} className="w-full justify-start px-4 py-2.5 rounded-xl text-[13px] font-bold border bg-[#1A3D3D] text-white border-[#1A3D3D] flex items-center gap-3">
                                             <div className="w-4 h-4 rounded-[4px] bg-white border-white border flex items-center justify-center shrink-0"><Check className="w-3 h-3 text-[#1A3D3D]" /></div>
                                             <span className="flex-1 text-left">{srv}</span>
+                                            <span className="text-[12px] font-medium text-white/70 shrink-0">Propio · no aparece en filtros</span>
                                             <button type="button" onClick={() => quitarPersonalizado(srv)} className="shrink-0 opacity-60 hover:opacity-100 transition-opacity"><X className="w-3.5 h-3.5" /></button>
                                           </div>
                                         ))}
                                       </div>
                                     )}
-                                    <div className="border-t border-gray-100 pt-4 mt-2">
-                                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">¿No encontrás lo que buscás? Agregá uno propio</p>
-                                      <div className="flex gap-2">
-                                        <input type="text" value={nuevoServicio} onChange={(e) => setNuevoServicio(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); agregarPersonalizado(); } }} className="flex-1 bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:border-[#2D6A6A] outline-none text-[#1A3D3D]" />
-                                        <button type="button" onClick={agregarPersonalizado} className="bg-[#2D6A6A] text-white p-2.5 rounded-xl hover:bg-[#1A3D3D] transition-colors shrink-0"><Plus className="w-4 h-4" /></button>
-                                      </div>
-                                    </div>
-                                    <div className="mt-4">
-                                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 block">Descripción opcional del grupo</label>
-                                      <textarea placeholder="Contá brevemente cómo trabajás en esta área..." value={grupoActual.desc || ''} maxLength={200} rows={2} onChange={(e) => { setFormData(prev => ({ ...prev, servicios: { ...prev.servicios, [grupo.id]: { ...grupoActual, desc: e.target.value } } })); }} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm resize-none focus:border-[#2D6A6A] outline-none text-[#1A3D3D] font-medium" />
+                                    <div className="mt-4 border-t border-gray-100 pt-4">
+                                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 block">Nota sobre cómo trabajás en esta área (opcional)</label>
+                                      <textarea placeholder="Ej: cirugías complejas de columna y cadera..." value={grupoActual.desc || ''} maxLength={200} rows={2} onChange={(e) => { setFormData(prev => ({ ...prev, servicios: { ...prev.servicios, [grupo.id]: { ...grupoActual, desc: e.target.value } } })); }} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm resize-none focus:border-[#2D6A6A] outline-none text-[#1A3D3D] font-medium" />
                                       <p className={`text-right text-[10px] font-bold mt-1 ${(grupoActual.desc?.length || 0) >= 180 ? 'text-red-400' : 'text-gray-300'}`}>{grupoActual.desc?.length || 0} / 200</p>
                                     </div>
+                                    <div className="border-t border-gray-100 pt-4 mt-2">
+                                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">¿Falta algo? Agregá otro servicio</p>
+                                      <div className="flex gap-2">
+                                        <input type="text" value={nuevoServicio} placeholder="Ej: Cirugía de columna" onChange={(e) => setNuevoServicio(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); agregarPersonalizado(); } }} className="flex-1 bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:border-[#2D6A6A] outline-none text-[#1A3D3D]" />
+                                        <button type="button" onClick={agregarPersonalizado} className="bg-[#2D6A6A] text-white p-2.5 rounded-xl hover:bg-[#1A3D3D] transition-colors shrink-0"><Plus className="w-4 h-4" /></button>
+                                      </div>
+                                      <p className="text-[13px] text-gray-400 font-medium mt-2 leading-snug">Los servicios que agregues se ven en tu perfil, pero no aparecen en los filtros de la Cartilla.</p>
+                                    </div>
+                                    <button type="button" onClick={cerrarGrupo} className="w-full mt-5 py-3 rounded-xl bg-[#1A3D3D] text-white text-[13px] font-bold hover:bg-[#2D6A6A] transition-colors flex items-center justify-center gap-2">
+                                      <Check className="w-4 h-4" /> Listo
+                                    </button>
                                   </div>
                                 )}
                               </div>
@@ -2035,8 +2130,11 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
 
                     {/* ZONAS DE ATENCIÓN (Solo visible para PRO en el editor) */}
 {isPro && (
-  <Accordion title="Zonas de Atención" icon={MapPin} isOpen={openSection === 'zonas'} onToggle={() => setOpenSection(openSection === 'zonas' ? null : 'zonas')} tooltip="Así es exactamente como van a ver tus datos los tutores en tu perfil público.">
+  <Accordion title="Cómo y dónde atendés" icon={MapPin} isOpen={openSection === 'zonas'} onToggle={() => setOpenSection(openSection === 'zonas' ? null : 'zonas')} tooltip="Así es exactamente como van a ver tus datos los tutores en tu perfil público.">
 
+    <div className="mb-5">
+      <ToggleSwitch label="Ofrezco consultas virtuales" checked={formData.atiendeVirtual} onChange={(v) => setFormData(p => ({ ...p, atiendeVirtual: v }))} tooltip="Aparecerá un distintivo en tu perfil y los tutores podrán encontrarte con el filtro Consulta virtual." />
+    </div>
     <ToggleSwitch label="Ofrezco consultas a domicilio" checked={formData.atiendeDomicilio} onChange={(v) => {
   if (v) {
     setFormData(p => ({
@@ -2046,9 +2144,16 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
       whatsappVisibilidad: 'todos'
     }));
   } else {
-    setFormData(p => ({ ...p, atiendeDomicilio: false }));
+    setFormData(p => ({ ...p, atiendeDomicilio: false, urgenciasDomicilio: false }));
   }
 }} tooltip="Añadirá un distintivo especial en tu perfil público." />
+
+{/* URGENCIAS A DOMICILIO — solo si ya ofrece domicilio */}
+{formData.atiendeDomicilio && (
+  <div className="mt-4 pl-4 border-l-2 border-[#2D6A6A]/20 animate-in fade-in slide-in-from-top-2 duration-300">
+    <ToggleSwitch label="También atiendo urgencias a domicilio" checked={formData.urgenciasDomicilio} onChange={(v) => setFormData(p => ({ ...p, urgenciasDomicilio: v }))} tooltip="Los tutores podrán encontrarte con el filtro Urgencia a domicilio. Respondé por WhatsApp rápido si lo activás." />
+  </div>
+)}
 
 {/* WHATSAPP FORZADO — solo visible si ofrece domicilio */}
 {formData.atiendeDomicilio && (
@@ -2081,12 +2186,36 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
   </div>
 )}
 
-<div className="w-full h-px bg-gray-100 my-5"></div>
+<div className="mt-5"></div>
+    <div className="mb-5">
+      <ToggleSwitch
+        label="Atiendo en consultorio o veterinarias"
+        checked={formData.zonas.length > 0}
+        onChange={(v) => {
+          if (v) {
+            // Al activarlo, dejamos una zona lista (con una veterinaria en blanco) para completar
+            setFormData(p => ({
+              ...p,
+              zonas: p.zonas.length > 0 ? p.zonas : [{ id: Date.now(), nombre: "", clinicas: [{ id: Date.now() + 1, nombre: "", direccion: "", placeId: "" }] }]
+            }));
+          } else {
+            // Al apagarlo, si hay datos cargados, avisamos antes de borrarlos
+            const hayDatos = formData.zonas.some(z => (z.nombre || '').trim() || (z.clinicas || []).some(c => (c.nombrePropio || '').trim() || (c.direccion || '').trim()));
+            if (hayDatos && !window.confirm('Se van a borrar las zonas y veterinarias que cargaste. ¿Querés continuar?')) return;
+            setFormData(p => ({ ...p, zonas: [] }));
+          }
+        }}
+        tooltip="Activalo si atendés en tu consultorio o en una o más veterinarias. Los tutores van a ver dónde encontrarte."
+      />
+    </div>
+
+    {formData.zonas.length > 0 && (
+    <>
     {/* AVISO EXPLICATIVO */}
     <div className="flex items-start gap-3 bg-[#2D6A6A]/5 border border-[#2D6A6A]/15 rounded-2xl px-4 py-3.5 mb-6">
       <MapPin className="w-4 h-4 text-[#2D6A6A] shrink-0 mt-0.5" />
       <p className="text-xs font-medium text-[#1A3D3D] leading-relaxed">
-        Agrupá las clínicas por zona geográfica. Ej: <span className="font-black">Villa La Angostura</span> con todas las clínicas de esa zona, y otra tarjeta para <span className="font-black">San Martín de los Andes</span>.
+        Agrupá las clínicas por zona geográfica. Ej: <span className="font-black">Zona Norte</span> con todas las clínicas de esa zona, y otra tarjeta para <span className="font-black">Zona Sur</span>.
       </p>
     </div>
 
@@ -2101,7 +2230,7 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
             </div>
             <input
               type="text"
-              placeholder="Nombre de la zona (Ej: Villa La Angostura)"
+              placeholder="Nombre de la zona (Ej: Zona Oeste)"
               value={z.nombre}
               onChange={(e) => handleArrayUpdate('zonas', z.id, 'nombre', e.target.value)}
               className="flex-1 bg-transparent text-sm font-black text-[#1A3D3D] uppercase tracking-wide outline-none placeholder:text-gray-400 placeholder:font-medium placeholder:normal-case placeholder:tracking-normal"
@@ -2251,6 +2380,8 @@ ref={(el) => {
         <Plus className="w-4 h-4" /> Crear nueva zona geográfica
       </button>
     </div>
+    </>
+    )}
   </Accordion>
 )}
 
@@ -2473,7 +2604,7 @@ ref={(el) => {
     <div className="flex items-start gap-3 bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3.5">
       <Phone className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />
       <p className="text-xs font-medium text-gray-500 leading-relaxed">
-        El WhatsApp se configura automáticamente en la sección <span className="font-black text-[#1A3D3D]">Zonas de Atención</span> porque ofrecés consultas a domicilio.
+        El WhatsApp se configura automáticamente en la sección <span className="font-black text-[#1A3D3D]">Cómo y dónde atendés</span> porque ofrecés consultas a domicilio.
       </p>
     </div>
   ) : (
@@ -2566,6 +2697,22 @@ ref={(el) => {
         type="text"
         value={formData.instagram.startsWith('http') ? formData.instagram.split('?')[0].replace(/\/+$/, '').split('/').pop().replace('@', '') : formData.instagram.replace('@', '')}
         onChange={(e) => setFormData(prev => ({ ...prev, instagram: e.target.value.replace('@', '') }))}
+        placeholder="tu_usuario"
+        className="flex-1 bg-transparent text-base font-medium text-[#1A3D3D] focus:outline-none placeholder:text-gray-400"
+      />
+    </div>
+  </div>
+  <div className="mb-6 w-full">
+    <label className="flex items-center text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">
+      TikTok — usuario
+    </label>
+    <div className="relative flex items-center border border-gray-200 rounded-2xl bg-gray-50/50 focus-within:border-[#2D6A6A] transition-all px-5 py-3.5">
+      <span className="text-base font-medium text-[#1A3D3D] select-none pointer-events-none">@</span>
+      <input
+        id="tiktok"
+        type="text"
+        value={(formData.tiktok || '').startsWith('http') ? formData.tiktok.split('?')[0].replace(/\/+$/, '').split('/').pop().replace('@', '') : (formData.tiktok || '').replace('@', '')}
+        onChange={(e) => setFormData(prev => ({ ...prev, tiktok: e.target.value.replace('@', '') }))}
         placeholder="tu_usuario"
         className="flex-1 bg-transparent text-base font-medium text-[#1A3D3D] focus:outline-none placeholder:text-gray-400"
       />
