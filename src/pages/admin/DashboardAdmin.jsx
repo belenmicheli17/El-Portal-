@@ -10,6 +10,16 @@ import { collection, getDocs, query, where } from 'firebase/firestore';
 import { signInWithCustomToken } from 'firebase/auth';
 import { httpsCallable } from 'firebase/functions';
 
+// Traduce la fecha de registro a una fecha común.
+// En Firebase puede venir como Timestamp, como texto (ISO) o como número en milisegundos.
+const aFecha = (valor) => {
+  if (!valor) return null;
+  if (typeof valor.toDate === 'function') return valor.toDate();
+  if (typeof valor === 'object' && typeof valor.seconds === 'number') return new Date(valor.seconds * 1000);
+  const fecha = new Date(valor);
+  return isNaN(fecha.getTime()) ? null : fecha;
+};
+
 export default function DashboardAdmin() {
   const navigate = useNavigate();
   const [metricas, setMetricas] = useState({
@@ -17,7 +27,9 @@ export default function DashboardAdmin() {
     clinicas: 0,
     // alumnos: 0, // oculto por ahora (acá se comenta con //, no con llaves)
     proveedores: 0,
-    pendientesValidacion: 0
+    pendientesValidacion: 0,
+    // Cuántos se registraron hoy (desde las 00:00), para el "+N" de cada tarjeta
+    nuevosHoy: { profesionales: 0, clinicas: 0, proveedores: 0, validaciones: 0 }
   });
   const [pendientes, setPendientes] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -48,12 +60,25 @@ const clinicasActivas = clinicasSnap.docs.filter(d => d.data().visible !== false
         const alumnos = usuarios.filter(u => u.rol === 'alumno').length;
         const proveedores = usuarios.filter(u => u.rol === 'proveedor').length;
         const pendientesValidacion = usuarios.filter(u => u.estado === 'pendiente' && u.onboardingCompleto !== false).length;
+        // Nuevos de hoy: usuarios cuya fechaRegistro es posterior a las 00:00 de hoy
+        const inicioDeHoy = new Date();
+        inicioDeHoy.setHours(0, 0, 0, 0);
+        const esDeHoy = (u) => {
+          const fecha = aFecha(u.fechaRegistro);
+          return fecha !== null && fecha >= inicioDeHoy;
+        };
+        const nuevosHoy = {
+          profesionales: usuarios.filter(u => u.rol === 'profesional' && esDeHoy(u)).length,
+          clinicas: usuarios.filter(u => u.rol === 'clinica' && esDeHoy(u)).length,
+          proveedores: usuarios.filter(u => u.rol === 'proveedor' && esDeHoy(u)).length,
+          validaciones: usuarios.filter(u => u.estado === 'pendiente' && u.onboardingCompleto !== false && esDeHoy(u)).length
+        };
         const pendientesList = usuariosSnap.docs
           .filter(d => d.data().estado === 'pendiente' && d.data().onboardingCompleto !== false)
           .map(d => ({ uid: d.id, ...d.data() }))
           .slice(0, 3);
 
-               setMetricas({ profesionales, clinicas, alumnos, proveedores, pendientesValidacion, profesionalesActivos, clinicasActivas });
+               setMetricas({ profesionales, clinicas, alumnos, proveedores, pendientesValidacion, profesionalesActivos, clinicasActivas, nuevosHoy });
         setPendientes(pendientesList);
       } catch (error) {
         console.error("Error cargando métricas:", error);
@@ -82,7 +107,7 @@ const clinicasActivas = clinicasSnap.docs.filter(d => d.data().visible !== false
     }
   };
 
-  const StatCard = ({ titulo, valor, icono, color, alerta, subtitulo }) => (
+  const StatCard = ({ titulo, valor, icono, color, alerta, subtitulo, nuevosHoy }) => (
     <div className="bg-white p-6 rounded-[24px] border border-gray-100 shadow-sm flex items-start gap-4 transition-all hover:shadow-md">
       <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${color}`}>
         {icono}
@@ -94,6 +119,11 @@ const clinicasActivas = clinicasSnap.docs.filter(d => d.data().visible !== false
             <Loader2 className="w-6 h-6 animate-spin text-[#2D6A6A]" />
           ) : (
             <p className="text-[#1A3D3D] text-[32px] font-black font-['Montserrat'] leading-none">{valor}</p>
+          )}
+          {!isLoading && nuevosHoy > 0 && (
+            <span className="bg-green-50 text-green-600 text-[12px] font-bold px-2 py-1 rounded-lg">
+              +{nuevosHoy} hoy
+            </span>
           )}
           {!isLoading && alerta > 0 && (
             <span className="bg-red-100 text-red-600 text-[11px] font-bold px-2 py-1 rounded-lg flex items-center gap-1">
@@ -164,11 +194,11 @@ const clinicasActivas = clinicasSnap.docs.filter(d => d.data().visible !== false
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-        <StatCard titulo="Profesionales" valor={metricas.profesionalesActivos} subtitulo={`de ${metricas.profesionales} registrados`} icono={<Users className="w-6 h-6 text-[#2D6A6A]" />} color="bg-[#2D6A6A]/10 border border-[#2D6A6A]/20" />
-        <StatCard titulo="Clínicas" valor={metricas.clinicasActivas} subtitulo={`de ${metricas.clinicas} registradas`} icono={<Building className="w-6 h-6 text-[#4DB6AC]" />} color="bg-[#4DB6AC]/10 border border-[#4DB6AC]/20" />
+        <StatCard titulo="Profesionales" valor={metricas.profesionalesActivos} nuevosHoy={metricas.nuevosHoy.profesionales} subtitulo={`de ${metricas.profesionales} registrados`} icono={<Users className="w-6 h-6 text-[#2D6A6A]" />} color="bg-[#2D6A6A]/10 border border-[#2D6A6A]/20" />
+        <StatCard titulo="Clínicas" valor={metricas.clinicasActivas} nuevosHoy={metricas.nuevosHoy.clinicas} subtitulo={`de ${metricas.clinicas} registradas`} icono={<Building className="w-6 h-6 text-[#4DB6AC]" />} color="bg-[#4DB6AC]/10 border border-[#4DB6AC]/20" />
       {/* <StatCard titulo="Alumnos" valor={metricas.alumnos} icono={<Users className="w-6 h-6 text-blue-500" />} color="bg-blue-50 border border-blue-100" /> */}
-        <StatCard titulo="Proveedores" valor={metricas.proveedores} icono={<Briefcase className="w-6 h-6 text-purple-600" />} color="bg-purple-100 border border-purple-200" />
-        <StatCard titulo="Validaciones" valor={metricas.pendientesValidacion} icono={<FileCheck className="w-6 h-6 text-orange-600" />} color="bg-orange-100 border border-orange-200" />
+        <StatCard titulo="Proveedores" valor={metricas.proveedores} nuevosHoy={metricas.nuevosHoy.proveedores} icono={<Briefcase className="w-6 h-6 text-purple-600" />} color="bg-purple-100 border border-purple-200" />
+        <StatCard titulo="Validaciones" valor={metricas.pendientesValidacion} nuevosHoy={metricas.nuevosHoy.validaciones} icono={<FileCheck className="w-6 h-6 text-orange-600" />} color="bg-orange-100 border border-orange-200" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
