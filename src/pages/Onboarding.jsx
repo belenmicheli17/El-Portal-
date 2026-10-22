@@ -12,7 +12,7 @@ import {
 import especialidadesData from '../data/especialidades.json';
 import provincias from '../data/provincias.js';
 import animalesData from '../data/animales.json';
-
+import { generarSlugUnico } from '../utils/slugUnico';
 // ==========================================
 // CONSTANTES DEL CUESTIONARIO
 // ==========================================
@@ -1000,6 +1000,13 @@ export default function Onboarding() {
   // Guarda un paso y anota hasta dónde llegó (para retomar después)
   const guardarPaso = async (p, d) => {
     const { perfil, usuario } = camposDelPaso(p, d);
+    // Paso 0: acá se crea el slug (el link del perfil). Si ya tiene uno lo respetamos;
+    // si no, buscamos uno libre para que dos personas con el mismo nombre no se pisen.
+    if (p === 0 && perfil && usuario) {
+      const slugFinal = currentUser.slug || await generarSlugUnico(perfil.nombreCompleto, currentUser.uid);
+      perfil.slug = slugFinal;
+      usuario.slug = slugFinal;
+    }
     await guardarCampos('profesionales', currentUser.uid, perfil);
     await guardarCampos('usuarios', currentUser.uid, { ...usuario, onboardingPaso: p + 1 });
   };

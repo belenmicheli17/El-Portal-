@@ -27,11 +27,16 @@ const slugDisponible = async (slug, uid) => {
 // Devuelve un slug libre: el del nombre si está disponible, o el nombre + 4 caracteres si ya está ocupado
 export const generarSlugUnico = async (nombreCompleto, uid) => {
   const base = generarSlug(nombreCompleto) || 'profesional';
-  if (await slugDisponible(base, uid)) return base;
+  try {
+    if (await slugDisponible(base, uid)) return base;
 
-  for (let intento = 0; intento < 5; intento++) {
-    const candidato = `${base}-${sufijoAleatorio()}`;
-    if (await slugDisponible(candidato, uid)) return candidato;
+    for (let intento = 0; intento < 5; intento++) {
+      const candidato = `${base}-${sufijoAleatorio()}`;
+      if (await slugDisponible(candidato, uid)) return candidato;
+    }
+  } catch (error) {
+    // Si Firebase no responde, no frenamos el registro: seguimos con un slug diferenciado
+    console.error('No se pudo comprobar si el slug está libre:', error);
   }
   // Último recurso: sumar un número basado en la hora, que no se repite
   return `${base}-${Date.now().toString(36)}`;

@@ -12,6 +12,7 @@ import { useAuth } from '../../context/AuthContext';
 import especialidadesData from '../../data/especialidades.json';
 import animalesData from '../../data/animales.json';
 import provincias from '../../data/provincias.js';
+import { calcularProgresoPerfil } from '../../utils/progresoPerfil';
 import { 
   Camera, Info, AlertCircle, Save, X, Plus, Trash2, Crown,
   ArrowUp, ArrowDown, MapPin, ShieldCheck, Check, ArrowLeft,
@@ -780,22 +781,9 @@ const seccionesIncompletas = () => {
   return incompletas;
 };
 
-  const calculateProgress = () => {
-    let score = 0;
-    const weights = { identidad: 20, bio: 15, trayectoria: 15, servicios: 15, casos: 20, contacto: 15 };
-    if (formData.foto && formData.nombre && formData.especialidad && formData.matricula) score += weights.identidad;
-    if (formData.bio.length > 50) score += weights.bio;
-    if (formData.trayectoria.length > 0) score += weights.trayectoria;
-    // Los servicios se guardan como objeto (un grupo por clave), no como lista:
-    // revisamos si hay al menos un grupo activo
-    const serviciosActivos = formData.servicios && !Array.isArray(formData.servicios)
-      ? Object.values(formData.servicios).some(s => s.activo && ((s.subOpcionesSeleccionadas || []).length > 0 || (s.serviciosPersonalizados || []).length > 0))
-      : false;
-    if (serviciosActivos) score += weights.servicios;
-    if (formData.casos.length > 0) score += weights.casos;
-    if (formData.emailContacto && (formData.whatsappNum || formData.instagram || formData.linkedin)) score += weights.contacto;
-    return score;
-  };
+  // El cálculo vive en src/utils/progresoPerfil.js (lo comparte el Ecosistema).
+  // Si el plan no incluye casos clínicos, esa parte no cuenta.
+  const calculateProgress = () => calcularProgresoPerfil(formData, isPro).porcentaje;
 
   const progress = calculateProgress();
 

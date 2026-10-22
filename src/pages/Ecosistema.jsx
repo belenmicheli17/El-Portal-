@@ -4,30 +4,139 @@ import { useAuth } from '../context/AuthContext';
 import { db, storage } from '../firebase';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import { 
-  User, BookOpen, Package, Newspaper, ChevronRight, 
-  Briefcase, Users, LogOut, Eye, Store,
+import {
+  User, BookOpen, Package, Newspaper, ChevronRight,
+  Briefcase, Users, LogOut, Eye, Store, PawPrint, Clock,
   ShieldCheck, AlertCircle, Upload, Loader2, Check, Camera
 } from 'lucide-react';
-import NotificationBox from '../components/NotificationBox';
 import FooterSimple from '../components/FooterSimple';
 import TourGuia from '../components/TourGuia';
 import PantallaCarga from '../components/PantallaCarga';
+import { calcularProgresoPerfil } from '../utils/progresoPerfil';
 
-const DashboardCard = ({ titulo, descripcion, icon: Icon, onClick, customBg = "bg-white/80" }) => (
-  <button 
-    onClick={onClick}
+// ── Tarjeta de una herramienta que ya funciona ─────────────────────────────
+// En celular se ve como renglón (ícono a la izquierda, flecha a la derecha).
+// En PC se ve como tarjeta alta centrada, como antes.
+const TarjetaDisponible = ({ id, titulo, descripcion, icon: Icon, onClick, distintivo }) => (
+  <button
+    id={id}
     type="button"
-    className={`${customBg} backdrop-blur-xl border border-white/60 p-5 md:p-6 rounded-[24px] md:rounded-[32px] shadow-[0_8px_32px_rgba(0,0,0,0.04)] hover:bg-white/90 hover:shadow-[0_20px_40px_rgba(26,61,61,0.12)] transition-all duration-300 transform hover:-translate-y-1 active:scale-[0.97] active:translate-y-0 min-h-[180px] md:min-h-[210px] h-full flex flex-col justify-center items-center text-center group cursor-pointer w-full outline-none focus:ring-4 focus:ring-[#2D6A6A]/10`}
+    onClick={onClick}
+    className="group w-full h-full bg-white/80 backdrop-blur-xl border border-white/60 rounded-[24px] md:rounded-[32px] shadow-[0_8px_32px_rgba(0,0,0,0.04)] hover:bg-white/90 hover:shadow-[0_20px_40px_rgba(26,61,61,0.12)] hover:-translate-y-1 active:scale-[0.98] active:translate-y-0 transition-all duration-300 ease-in-out p-4 md:p-6 flex flex-row md:flex-col items-center gap-4 md:gap-0 text-left md:text-center md:min-h-[210px] cursor-pointer outline-none focus:ring-4 focus:ring-[#2D6A6A]/10"
   >
-        <Icon strokeWidth={1.5} className="w-8 h-8 md:w-10 md:h-10 text-[#2D6A6A] mb-3 group-hover:scale-110 group-hover:-translate-y-1 group-hover:text-[#4DB6AC] transition-all duration-300" />
-    <h2 className="text-[17px] md:text-[21px] font-black text-[#1A3D3D] font-['Montserrat'] mb-1 leading-tight">{titulo}</h2>
-    <p className="text-[#333333]/70 font-medium text-[14px] md:text-[15px] px-2 mb-3 leading-normal">{descripcion}</p>
-    <span className="text-[13px] font-bold text-[#2D6A6A] group-hover:text-[#4DB6AC] flex items-center gap-1 transition-colors mt-auto">
+    <Icon strokeWidth={1.5} className="w-8 h-8 md:w-10 md:h-10 shrink-0 text-[#2D6A6A] md:mb-3 group-hover:text-[#4DB6AC] md:group-hover:scale-110 md:group-hover:-translate-y-1 transition-all duration-300" />
+    <div className="flex-1 min-w-0 flex flex-col md:items-center">
+      <h3 className="text-[16px] md:text-[21px] font-black text-[#1A3D3D] font-['Montserrat'] leading-tight mb-1">{titulo}</h3>
+      <p className="text-[#333333]/70 font-medium text-[13px] md:text-[15px] leading-snug md:leading-normal md:px-2">{descripcion}</p>
+      {distintivo}
+    </div>
+    {/* Flecha a la derecha: solo celular */}
+    <ChevronRight className="w-5 h-5 shrink-0 text-[#2D6A6A] md:hidden transition-transform group-hover:translate-x-0.5" />
+    {/* "Ingresar" abajo: solo PC */}
+    <span className="hidden md:flex mt-auto pt-3 text-[13px] font-bold text-[#2D6A6A] group-hover:text-[#4DB6AC] items-center gap-1 transition-colors">
       Ingresar <ChevronRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
     </span>
   </button>
 );
+
+// ── Tarjeta de una herramienta que todavía no está activa ──────────────────
+// Si recibe onClick se puede abrir (ej. bolsa de trabajo); si no, es solo un aviso.
+const TarjetaProximamente = ({ id, titulo, descripcion, icon: Icon, onClick }) => {
+  const contenido = (
+    <>
+      <Icon strokeWidth={1.5} className="w-7 h-7 shrink-0 text-[#2D6A6A]/60" />
+      <div className="flex-1 min-w-0">
+        <h3 className="text-[15px] md:text-[16px] font-black text-[#1A3D3D] font-['Montserrat'] leading-tight">{titulo}</h3>
+        <p className="text-[#666666] font-medium text-[13px] leading-snug mt-0.5">{descripcion}</p>
+        {onClick && (
+          <span className="inline-flex items-center gap-1 text-[12px] md:text-[13px] font-bold text-[#2D6A6A] mt-1.5">
+            Ya podés entrar <ChevronRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
+          </span>
+        )}
+      </div>
+      {!onClick && <Clock strokeWidth={1.5} className="w-4 h-4 shrink-0 text-[#2D6A6A]/40" aria-hidden="true" />}
+    </>
+  );
+
+  const estiloBase = "w-full h-full bg-[#E8EFEF]/70 border border-dashed border-[#2D6A6A]/25 rounded-[20px] md:rounded-[24px] p-4 flex items-center gap-4 text-left";
+
+  if (onClick) {
+    return (
+      <button
+        id={id}
+        type="button"
+        onClick={onClick}
+        className={`${estiloBase} group cursor-pointer hover:bg-white/80 hover:border-[#2D6A6A]/40 transition-all duration-300 ease-in-out outline-none focus:ring-4 focus:ring-[#2D6A6A]/10`}
+      >
+        {contenido}
+      </button>
+    );
+  }
+
+  return (
+    <div id={id} aria-disabled="true" className={`${estiloBase} cursor-default`}>
+      {contenido}
+    </div>
+  );
+};
+
+// ── Tarjeta de avance del perfil (va en el encabezado) ─────────────────────
+// avance: { porcentaje, faltantes } o null si ese tipo de cuenta no tiene cálculo
+function TarjetaAvance({ avance, cargando, onEditar, onVerPerfil }) {
+  // Une la lista de faltantes en una frase: "foto y contacto", "foto, contacto y más"
+  const textoFaltantes = () => {
+    if (!avance) return '';
+    const { faltantes } = avance;
+    if (faltantes.length === 0) return 'Tu perfil está completo. ¡Muy bien!';
+    const primeros = faltantes.slice(0, 2).join(' y ');
+    return `Te falta: ${primeros}${faltantes.length > 2 ? ' y algo más' : ''}`;
+  };
+
+  return (
+    <div id="tour-avance" className="w-full bg-white/80 backdrop-blur-xl border border-white/60 rounded-[24px] md:rounded-[32px] shadow-[0_8px_32px_rgba(0,0,0,0.04)] p-5 md:p-6">
+      <div className="flex justify-between items-baseline mb-3">
+        <h2 className="text-[16px] md:text-[18px] font-black text-[#1A3D3D] font-['Montserrat']">Tu perfil</h2>
+        {avance && !cargando && (
+          <span className="text-[22px] md:text-[26px] font-black text-[#1A3D3D] font-['Montserrat'] leading-none">{avance.porcentaje}%</span>
+        )}
+      </div>
+
+      {cargando ? (
+        <div className="flex items-center gap-2 text-[#666666] text-[13px] font-medium mb-4">
+          <Loader2 className="w-4 h-4 animate-spin text-[#2D6A6A]" /> Calculando tu avance...
+        </div>
+      ) : avance ? (
+        <>
+          <div className="h-2 w-full bg-[#F4F7F7] rounded-full overflow-hidden mb-3">
+            <div className="h-full bg-[#4DB6AC] rounded-full transition-all duration-1000 ease-in-out" style={{ width: `${avance.porcentaje}%` }} />
+          </div>
+          <p className="text-[13px] md:text-[14px] text-[#666666] font-medium leading-snug mb-4">{textoFaltantes()}</p>
+        </>
+      ) : (
+        <p className="text-[13px] md:text-[14px] text-[#666666] font-medium leading-snug mb-4">
+          Mantené tus datos al día para que te encuentren más fácil.
+        </p>
+      )}
+
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={onEditar}
+          className="flex-1 bg-[#2D6A6A] text-white rounded-xl px-3 py-2.5 text-[13px] font-bold transition-all duration-300 ease-in-out hover:bg-[#1A3D3D] hover:-translate-y-0.5 hover:shadow-lg"
+        >
+          {avance && avance.faltantes.length === 0 ? 'Editar perfil' : 'Seguir editando'}
+        </button>
+        <button
+          type="button"
+          onClick={onVerPerfil}
+          className="flex-1 bg-[#F4F7F7] text-[#1A3D3D] rounded-xl px-3 py-2.5 text-[13px] font-bold transition-all duration-300 ease-in-out hover:bg-gray-200 flex items-center justify-center gap-1.5"
+        >
+          <Eye className="w-4 h-4 text-[#2D6A6A]" /> Ver mi perfil
+        </button>
+      </div>
+    </div>
+  );
+}
 
 // ── Subida de documento (foto/PDF) ─────────────────────────────────────────
 function PendingDocUpload({ currentUser, onSubido }) {
@@ -484,9 +593,9 @@ const PantallaRechazo = ({ verificacion, handleLogout, rol }) => {
     </div>
   );
 };
+
 export default function Ecosistema() {
   const navigate = useNavigate();
-  const [isNotifOpen, setIsNotifOpen] = useState(false);
   const { currentUser, loading, logout } = useAuth();
   const activeRole = currentUser?.rol || 'visitante';
   const [mostrarTour, setMostrarTour] = useState(false);
@@ -494,6 +603,10 @@ export default function Ecosistema() {
   // Estado de la solicitud de verificación (solo lo necesitan los profesionales sin aprobar)
   const [verificacion, setVerificacion] = useState(null);
   const [cargandoVerificacion, setCargandoVerificacion] = useState(true);
+
+  // Avance del perfil (por ahora solo existe el cálculo para profesionales)
+  const [avance, setAvance] = useState(null);
+  const [cargandoAvance, setCargandoAvance] = useState(true);
 
   useEffect(() => {
     if (!currentUser) return;
@@ -517,6 +630,32 @@ export default function Ecosistema() {
     return () => { cancelado = true; };
   }, [currentUser?.uid, currentUser?.rol, currentUser?.estado]);
 
+  // Leemos el perfil profesional y calculamos el porcentaje con la misma cuenta que usa el editor
+  useEffect(() => {
+    if (!currentUser?.uid) return;
+    if (currentUser.rol !== 'profesional') {
+      setCargandoAvance(false);
+      return;
+    }
+    let cancelado = false;
+    const cargarAvance = async () => {
+      try {
+        const snap = await getDoc(doc(db, 'profesionales', currentUser.uid));
+        if (cancelado) return;
+        const datos = snap.exists() ? snap.data() : {};
+        // Igual que el editor: socio vitalicio o plan distinto de 'gratis' incluye casos clínicos
+        const incluyeCasos = currentUser.socioVitalicio === true || datos.planActual !== 'gratis';
+        setAvance(calcularProgresoPerfil(datos, incluyeCasos));
+      } catch (e) {
+        console.error('Error calculando el avance del perfil:', e);
+      } finally {
+        if (!cancelado) setCargandoAvance(false);
+      }
+    };
+    cargarAvance();
+    return () => { cancelado = true; };
+  }, [currentUser?.uid, currentUser?.rol, currentUser?.socioVitalicio]);
+
   useEffect(() => {
     if (!currentUser) return;
     const fetchContador = async () => {
@@ -530,51 +669,44 @@ export default function Ecosistema() {
   }, [currentUser]);
 
   const handlePasoTour = (paso) => {
-    if (paso?.cerrarNotif) { setIsNotifOpen(false); setTimeout(() => { window.scrollBy({ top: 200, behavior: 'instant' }); }, 50); }
     if (paso?.abrirAccs) {
-  window.dispatchEvent(new CustomEvent('tour:cerrarAccs'));
-}
+      window.dispatchEvent(new CustomEvent('tour:cerrarAccs'));
+    }
   };
 
+  // Pasos del tour guiado: cada targetId tiene que existir en la pantalla de ese rol
   const PASOS_TOUR = {
     profesional: [
-      { targetId: 'tour-editar-perfil', titulo: 'Tu perfil profesional', desc: 'Desde acá completás tu portfolio: foto, trayectoria, servicios y casos clínicos para que te encuentren en la cartilla.' },
-      { targetId: 'tour-cursos', titulo: 'Capacitaciones', desc: 'Explorá cursos y especializaciones del sector. También podés publicar los tuyos si sos docente.' },
-      { targetId: 'tour-empleos', titulo: 'Bolsa de trabajo', desc: 'Encontrá oportunidades laborales o marcate como disponible para que las clínicas te contacten.' },
-      { targetId: 'tour-colegas', titulo: 'Red de colegas', desc: 'Buscá especialistas para derivaciones e interconsultas dentro de la comunidad.' },
-      { targetId: 'tour-proveedores', titulo: 'Cartilla de proveedores', desc: 'Directorio de distribuidores y laboratorios con los que podés trabajar.' },
-      { targetId: 'tour-publicaciones', titulo: 'Publicaciones científicas', desc: 'Papers, novedades y actualizaciones del mundo veterinario para mantenerte al día.' },
-      { targetId: 'tour-actividad', titulo: 'Tu actividad', desc: 'Acá aparecen las novedades importantes: cursos nuevos, inscripciones y actualizaciones de la red.', cerrarNotif: true },
-
+      { targetId: 'tour-avance', titulo: 'Tu avance', desc: 'Acá ves qué tan completo está tu perfil y qué te falta. Un perfil completo da más confianza a tutores y colegas.' },
+      { targetId: 'tour-editar-perfil', titulo: 'Tu perfil profesional', desc: 'Desde acá completás tu portfolio: foto, trayectoria, servicios y casos clínicos para que te encuentren en la Cartilla.' },
+      { targetId: 'tour-colegas', titulo: 'Cartilla de colegas', desc: 'Buscá especialistas para derivaciones e interconsultas. Es la misma Cartilla que usan los tutores para encontrarte.' },
+      { targetId: 'tour-publicaciones', titulo: 'Publicaciones científicas', desc: 'Papers y actualizaciones de la comunidad. Podés publicar los tuyos desde tu perfil.' },
+      { targetId: 'tour-proximamente', titulo: 'Próximamente', desc: 'Bolsa de trabajo, proveedores y cursos se van a ir activando a medida que se sume más gente. A la bolsa ya podés entrar.' },
       { targetId: 'tour-btn-accesibilidad', titulo: 'Opciones de accesibilidad', desc: 'Este botón te permite ajustar el tamaño del texto, activar modo escala de grises, resaltar enlaces y más.', abrirAccs: true, posicion: 'derecha' },
     ],
     clinica: [
-      { targetId: 'tour-editar-perfil', titulo: 'Tu perfil institucional', desc: 'Completá los datos de tu clínica: servicios, staff médico, horarios y contacto para aparecer en la cartilla.' },
-      { targetId: 'tour-cursos', titulo: 'Capacitaciones', desc: 'Explorá y publicá cursos para la comunidad veterinaria.' },
-      { targetId: 'tour-empleos', titulo: 'Bolsa de trabajo', desc: 'Publicá búsquedas de personal especializado para tu institución.' },
-      { targetId: 'tour-colegas', titulo: 'Red de colegas', desc: 'Encontrá profesionales disponibles para sumar a tu equipo o para derivaciones.' },
-      { targetId: 'tour-proveedores', titulo: 'Cartilla de proveedores', desc: 'Directorio de distribuidores y laboratorios de confianza.' },
-      { targetId: 'tour-publicaciones', titulo: 'Publicaciones científicas', desc: 'Papers, novedades y actualizaciones del mundo veterinario para mantenerte al día.' },
-      { targetId: 'tour-actividad', titulo: 'Tu actividad', desc: 'Novedades del sector, nuevos profesionales disponibles y actualizaciones importantes.' },
-
+      { targetId: 'tour-avance', titulo: 'Tu perfil', desc: 'Desde acá seguís editando tu clínica o ves cómo la ven los tutores.' },
+      { targetId: 'tour-editar-perfil', titulo: 'Tu perfil institucional', desc: 'Completá los datos de tu clínica: servicios, equipo, horarios y contacto para aparecer en la Cartilla.' },
+      { targetId: 'tour-colegas', titulo: 'Cartilla de colegas', desc: 'Encontrá profesionales para sumar a tu equipo o para derivaciones.' },
+      { targetId: 'tour-publicaciones', titulo: 'Publicaciones científicas', desc: 'Papers y actualizaciones del mundo veterinario para mantenerte al día.' },
+      { targetId: 'tour-proximamente', titulo: 'Próximamente', desc: 'Bolsa de trabajo, proveedores y cursos se van a ir activando a medida que se sume más gente. A la bolsa ya podés entrar.' },
       { targetId: 'tour-btn-accesibilidad', titulo: 'Opciones de accesibilidad', desc: 'Ajustá el tamaño del texto, activá modo escala de grises, resaltá enlaces y más.', abrirAccs: true, posicion: 'derecha' },
     ],
     alumnx: [
-      { targetId: 'tour-editar-perfil', titulo: 'Tu perfil', desc: 'Completá tu perfil para aparecer en búsquedas y mostrar tu trayectoria académica.' },
-      { targetId: 'tour-cursos', titulo: 'Capacitaciones', desc: 'Explorá cursos y especializaciones pensados para estudiantes y recién recibidos.' },
-      { targetId: 'tour-empleos', titulo: 'Bolsa de trabajo', desc: 'Marcate como disponible para que las clínicas puedan encontrarte.' },
-      { targetId: 'tour-actividad', titulo: 'Tu actividad', desc: 'Novedades y oportunidades relevantes para vos.' },
-
+      { targetId: 'tour-avance', titulo: 'Tu perfil', desc: 'Desde acá seguís editando tu perfil o ves cómo lo ven los demás.' },
+      { targetId: 'tour-editar-perfil', titulo: 'Editar tu perfil', desc: 'Completá tu perfil para aparecer en búsquedas y mostrar tu trayectoria académica.' },
+      { targetId: 'tour-proximamente', titulo: 'Próximamente', desc: 'Bolsa de trabajo, proveedores y cursos se van a ir activando a medida que se sume más gente. A la bolsa ya podés entrar.' },
       { targetId: 'tour-btn-accesibilidad', titulo: 'Opciones de accesibilidad', desc: 'Ajustá el tamaño del texto, activá modo escala de grises y más.', abrirAccs: true, posicion: 'derecha' },
     ],
     proveedor: [
+      { targetId: 'tour-avance', titulo: 'Tu perfil', desc: 'Desde acá seguís editando tu marca o ves cómo te ven profesionales y clínicas.' },
       { targetId: 'tour-editar-perfil', titulo: 'Tu perfil de empresa', desc: 'Completá los datos de tu marca: descripción, contacto y redes para aparecer en la cartilla de proveedores.' },
-      { targetId: 'tour-cursos', titulo: 'Capacitaciones', desc: 'Explorá y publicá cursos para la comunidad veterinaria.' },
-      { targetId: 'tour-proveedores', titulo: 'Cartilla de proveedores', desc: 'Así es como te ven los profesionales y clínicas cuando buscan proveedores.' },
-
+      { targetId: 'tour-catalogo', titulo: 'Tu catálogo', desc: 'Cargá y ordená tus productos y servicios.' },
+      { targetId: 'tour-proximamente', titulo: 'Próximamente', desc: 'La cartilla de proveedores y los cursos se van a activar a medida que se sume más gente.' },
       { targetId: 'tour-btn-accesibilidad', titulo: 'Opciones de accesibilidad', desc: 'Ajustá el tamaño del texto, activá modo escala de grises y más.', abrirAccs: true, posicion: 'derecha' },
     ],
   };
+
   const handleLogout = async () => {
     try { if (logout) await logout(); navigate('/'); }
     catch (error) { console.error("Error al cerrar sesión", error); }
@@ -630,8 +762,20 @@ export default function Ecosistema() {
     return <PantallaEstado tipo={currentUser.estado} currentUser={currentUser} handleLogout={handleLogout} />;
   }
 
+  // Rutas según el tipo de cuenta
+  const rutaEditor = activeRole === 'clinica' ? '/editor-clinica' : activeRole === 'proveedor' ? '/editor-proveedores' : '/editor-profesional';
+  const rutaPerfilPublico = `/${activeRole === 'clinica' ? 'clinica' : activeRole === 'proveedor' ? 'proveedor' : 'profesional'}/${currentUser?.slug}`;
+  const esProveedor = activeRole === 'proveedor';
+
+  // Etiqueta para la Cartilla de colegas: avisa que también la ven los tutores (huella naranja = mundo tutores)
+  const distintivoTutores = (
+    <span className="inline-flex items-center gap-1.5 self-start md:self-center mt-2 bg-[#FF9800]/10 text-[#666666] text-[12px] md:text-[13px] font-bold px-2.5 py-1 rounded-full">
+      <PawPrint className="w-3.5 h-3.5 text-[#FF9800]" /> También la ven los tutores
+    </span>
+  );
+
   return (
-    // Div raíz: flex-col para que footer quede al fondo
+    // Div raíz: flex-col para que el footer quede al fondo
     <div className="min-h-screen bg-[#F4F7F7] font-['Inter'] text-[#333333] relative overflow-x-hidden selection:bg-[#2D6A6A] selection:text-white flex flex-col">
 
       {/* Burbujas de fondo */}
@@ -640,134 +784,118 @@ export default function Ecosistema() {
         <div className="absolute bottom-[10%] right-[-10%] w-[60vw] h-[60vw] bg-[#4DB6AC]/15 rounded-full blur-[150px]"></div>
       </div>
 
-      {/* Contenido principal con padding */}
+      {/* Contenido principal */}
       <div className="flex-1 p-4 md:p-10 lg:p-12 relative z-10">
         <div className="max-w-[1200px] mx-auto">
 
-          <div className="flex flex-col lg:grid lg:grid-cols-3 gap-6 md:gap-8 items-start">
+          {/* ENCABEZADO: saludo + tarjeta de avance */}
+          <div className="flex flex-col lg:grid lg:grid-cols-3 gap-6 md:gap-8 lg:items-center mb-10 md:mb-12">
 
-            {/* ENCABEZADO */}
-            <div className="order-1 lg:col-span-2 w-full flex flex-col justify-center gap-6">
-              <div>
-                <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-[#1A3D3D] font-['Montserrat'] leading-[1.1] tracking-tight">
-  ¡Hola, {currentUser.nombre || 'Profesional'}! <br className="hidden md:block" />
-  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#1A3D3D] to-[#2D6A6A]">
-    Bienvenido/a al ecosistema.
-  </span>
-</h1>
-                <h3 className="text-[#2D6A6A] font-bold text-[12px] md:text-[13px] uppercase tracking-[0.2em] mb-2 mt-4">
-                  ¿Qué te gustaría hacer hoy?
-                </h3>
-              </div>
-              <div className="flex flex-row items-center gap-3 w-full md:w-auto mt-2">
-               <button
-  onClick={() => navigate(`/${currentUser.rol === 'clinica' ? 'clinica' : currentUser.rol === 'proveedor' ? 'proveedor' : 'profesional'}/${currentUser?.slug}`)}
-                  className="bg-white/60 backdrop-blur-md border border-white/50 text-[#1A3D3D] px-4 py-2.5 rounded-xl font-bold text-[12px] md:text-[13px] uppercase tracking-wider hover:bg-white hover:shadow-sm transition-all flex items-center justify-center gap-2 flex-1 md:flex-none"
-                >
-                  <Eye className="w-4 h-4 text-[#2D6A6A]" /> Ver mi perfil público
-                </button>
-                <button
-                  onClick={handleLogout}
-                  className="bg-[#1A3D3D]/5 hover:bg-red-50 text-[#1A3D3D]/70 hover:text-red-600 px-4 py-2.5 rounded-xl font-bold text-[12px] md:text-[13px] uppercase tracking-wider transition-colors flex items-center justify-center gap-2 flex-1 md:flex-none border border-transparent hover:border-red-100"
-                >
-                  <LogOut className="w-4 h-4" /> Cerrar sesión
-                </button>
-              </div>
+            <div className="lg:col-span-2">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-[#1A3D3D] font-['Montserrat'] leading-[1.1] tracking-tight">
+                ¡Hola, {currentUser.nombre || 'Profesional'}! <br className="hidden md:block" />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#1A3D3D] to-[#2D6A6A]">
+                  Bienvenido/a al ecosistema.
+                </span>
+              </h1>
+              <h3 className="text-[#2D6A6A] font-bold text-[12px] md:text-[13px] uppercase tracking-[0.2em] mt-4">
+                ¿Qué te gustaría hacer hoy?
+              </h3>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="mt-4 text-[#666666] text-[13px] font-bold hover:text-red-500 transition-colors flex items-center gap-1.5"
+              >
+                <LogOut className="w-4 h-4" /> Cerrar sesión
+              </button>
             </div>
 
-            {/* NOTIFICACIONES / MÉTRICAS */}
-            {activeRole === 'proveedor' ? (
-              <div className="order-2 lg:col-span-1 bg-[#E8EFEF]/80 backdrop-blur-xl border border-[#2D6A6A]/10 rounded-[24px] md:rounded-[32px] shadow-[0_12px_40px_rgba(0,0,0,0.04)] flex flex-col overflow-hidden w-full p-5 md:p-6 gap-4">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-[18px] md:text-[22px] font-black text-[#1A3D3D]/30 font-['Montserrat'] leading-none mt-1">Métricas</h2>
-                  <span className="bg-[#1A3D3D]/10 text-[#1A3D3D]/40 text-[10px] font-black uppercase tracking-[0.2em] px-3 py-1 rounded-full">Próximamente</span>
-                </div>
-                <div className="flex flex-col gap-3 mt-1">
-                  {['Visitas a tu perfil', 'Clicks a tu catálogo', 'Consultas recibidas'].map((label, i) => (
-                    <div key={i} className={`flex items-center justify-between ${i % 2 === 0 ? 'bg-[#1A3D3D]/5' : 'bg-[#1A3D3D]/[0.03]'} rounded-2xl px-4 py-3`}>
-                      <span className="text-[13px] text-[#1A3D3D]/30 font-medium">{label}</span>
-                      <span className="text-[15px] font-black text-[#1A3D3D]/20">--</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div id="tour-actividad" className="order-2 lg:col-span-1 w-full relative mt-3">
-                <div className="absolute -top-3 -right-4 flex items-center gap-2 bg-[#4DB6AC] text-white text-[11px] font-bold uppercase tracking-[0.15em] px-3 py-1.5 rounded-full shadow-md z-10">
-                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse shrink-0"></span>
-                  Próximamente
-                </div>
-                <div className="rounded-[24px] md:rounded-[32px] overflow-hidden opacity-40 pointer-events-none grayscale">
-                  <NotificationBox isNotifOpen={isNotifOpen} setIsNotifOpen={setIsNotifOpen} userRole={activeRole} userId={currentUser?.uid} />
-                </div>
-              </div>
-            )}
-
-            {/* CARDS DE HERRAMIENTAS */}
-            <div className={`order-3 w-full grid gap-3 md:gap-6 transition-all duration-500 ${isNotifOpen ? 'lg:col-span-2 grid-cols-2 lg:grid-cols-2' : 'lg:col-span-3 grid-cols-2 md:grid-cols-3'}`}>
-
-              <div id="tour-editar-perfil" className="h-full">
-                <DashboardCard
-                  titulo="Editar Perfil"
-                  descripcion="Actualizá tus datos profesionales para que el público conozca tus servicios y formación"
-                  icon={User}
-                  onClick={() => navigate(activeRole === 'clinica' ? '/editor-clinica' : activeRole === 'proveedor' ? '/editor-proveedores' : '/editor-profesional')}
-                />
-              </div>
-
-              {activeRole === 'proveedor' && (
-                <DashboardCard titulo="Mi catálogo" descripcion="Gestioná tus productos y servicios veterinarios" icon={Store} customBg="bg-white/80" onClick={() => navigate('/editor-proveedores', { state: { tab: 'productos' } })} />
-              )}
-
-              {activeRole !== 'proveedor' && (
-                <div id="tour-colegas" className="h-full">
-                  <button 
-                    onClick={() => navigate('/cartilla')}
-                    type="button"
-                    className="bg-white/80 backdrop-blur-xl border border-white/60 p-5 md:p-6 rounded-[24px] md:rounded-[32px] shadow-[0_8px_32px_rgba(0,0,0,0.04)] hover:bg-white/90 hover:shadow-[0_20px_40px_rgba(26,61,61,0.12)] transition-all duration-300 transform hover:-translate-y-1 active:scale-[0.97] active:translate-y-0 min-h-[180px] md:min-h-[210px] h-full flex flex-col justify-center items-center text-center group cursor-pointer w-full outline-none focus:ring-4 focus:ring-[#FF9800]/10"
-                  >
-                    <Users strokeWidth={1.5} className="w-8 h-8 md:w-10 md:h-10 text-[#2D6A6A] mb-3 group-hover:scale-110 group-hover:-translate-y-1 group-hover:text-[#e68900] transition-all duration-300" />
-                    <h2 className="text-[17px] md:text-[21px] font-black text-[#1A3D3D] font-['Montserrat'] mb-1 leading-tight">Cartilla de colegas</h2>
-                    <p className="text-[#333333]/70 font-medium text-[14px] md:text-[15px] px-2 mb-3 leading-normal">Tené los contactos siempre a mano de tus colegas para derivaciones o trabajos en equipo. Esta pantalla es para <span className="group-hover:text-[#e68900] transition-colors duration-300">todo público.</span></p>
-                    <span className="text-[13px] font-bold text-[#2D6A6A] group-hover:text-[#e68900] flex items-center gap-1 transition-colors mt-auto">
-                      Ingresar <ChevronRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
-                    </span>
-                  </button>
-                </div>
-              )}
-
-              {/* Card Cursos */}
-              <div id="tour-cursos" className="bg-white/80 backdrop-blur-xl border border-white/60 rounded-[24px] md:rounded-[32px] shadow-[0_8px_32px_rgba(0,0,0,0.04)] flex flex-col overflow-hidden min-h-[180px] md:min-h-[210px] group hover:bg-white/90 hover:shadow-[0_20px_40px_rgba(26,61,61,0.12)] transition-all duration-300">
-                <button onClick={() => navigate('/capacitaciones')} className="flex-1 flex flex-col justify-center items-center text-center p-5 transition-all">
-                  <BookOpen strokeWidth={1.5} className="w-8 h-8 md:w-10 md:h-10 text-[#2D6A6A] mb-2 group-hover:scale-110 group-hover:text-[#4DB6AC] transition-all duration-300" />
-                  <h2 className="text-[17px] md:text-[19px] font-black text-[#1A3D3D] font-['Montserrat'] mb-1 leading-tight">Cursos</h2>
-                  <p className="text-[#333333]/70 font-medium text-[16px] px-2 leading-normal">Encontra todas las especializaciones y capacitaciones. Publicar es gratis.</p>
-                </button>
-                <div className="border-t border-gray-100 px-4 py-3">
-                  <button onClick={() => navigate('/capacitaciones', { state: { vista: 'miscursos' } })} className="w-full text-[11px] font-bold text-[#2D6A6A] uppercase tracking-widest hover:bg-[#2D6A6A]/10 hover:text-[#1A3D3D] rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 py-2">
-                    <BookOpen className="w-3 h-3" /> Ver mis cursos publicados
-                  </button>
-                </div>
-              </div>
-
-              {activeRole !== 'proveedor' && (
-                <div id="tour-empleos" className="h-full">
-                  <DashboardCard titulo="Bolsa de trabajo" descripcion="Acá podrás encontrar ofertas de clinicas que buscan personal y marcarte como disponible para nuevas oportunidades." icon={Briefcase} onClick={() => navigate('/bolsa-de-trabajo')} />
-                </div>
-              )}
-
-              <div id="tour-proveedores" className="h-full">
-                <DashboardCard titulo="Cartilla de proveedores" descripcion="Directorio de distribuidores mayoristas, laboratorios y mas rubros afines" icon={Package} onClick={() => navigate('/cartilla-proveedores')} />
-              </div>
-
-              {activeRole !== 'proveedor' && (
-                <div id="tour-publicaciones" className="h-full">
-                  <DashboardCard titulo="Publicaciones científicas" descripcion="Actualizaciones y papers de la comunidad veterinaria" icon={Newspaper} onClick={() => navigate('/papers')} />
-                </div>
-              )}
-
+            <div className="lg:col-span-1 w-full">
+              <TarjetaAvance
+                avance={avance}
+                cargando={cargandoAvance}
+                onEditar={() => navigate(rutaEditor)}
+                onVerPerfil={() => navigate(rutaPerfilPublico)}
+              />
             </div>
           </div>
+
+          {/* BLOQUE 1: TU ESPACIO (lo que ya funciona) */}
+          <h2 className="text-[#2D6A6A] font-bold text-[12px] md:text-[13px] uppercase tracking-[0.2em] mb-4">
+            Tu espacio
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-6 mb-10 md:mb-12">
+
+            <TarjetaDisponible
+              id="tour-editar-perfil"
+              titulo="Editar perfil"
+              descripcion="Actualizá tus datos para que el público conozca tus servicios y tu formación."
+              icon={User}
+              onClick={() => navigate(rutaEditor)}
+            />
+
+            {esProveedor ? (
+              <TarjetaDisponible
+                id="tour-catalogo"
+                titulo="Mi catálogo"
+                descripcion="Gestioná tus productos y servicios veterinarios."
+                icon={Store}
+                onClick={() => navigate('/editor-proveedores', { state: { tab: 'productos' } })}
+              />
+            ) : (
+              <>
+                <TarjetaDisponible
+                  id="tour-colegas"
+                  titulo="Cartilla de colegas"
+                  descripcion="Tené a mano los contactos de tus colegas para derivaciones o trabajos en equipo."
+                  icon={Users}
+                  onClick={() => navigate('/cartilla')}
+                  distintivo={distintivoTutores}
+                />
+                <TarjetaDisponible
+                  id="tour-publicaciones"
+                  titulo="Publicaciones científicas"
+                  descripcion="Papers y actualizaciones de la comunidad. Podés publicar los tuyos."
+                  icon={Newspaper}
+                  onClick={() => navigate('/papers')}
+                />
+              </>
+            )}
+          </div>
+
+          {/* BLOQUE 2: PRÓXIMAMENTE (se activa con más usuarios) */}
+          <div id="tour-proximamente">
+            <div className="flex items-center gap-3 mb-2">
+              <h2 className="text-[#2D6A6A] font-bold text-[12px] md:text-[13px] uppercase tracking-[0.2em] shrink-0">
+                Próximamente
+              </h2>
+              <span className="flex-1 h-px bg-[#2D6A6A]/15"></span>
+            </div>
+            <p className="text-[#666666] text-[13px] md:text-[14px] font-medium mb-4">
+              Se van a ir activando a medida que se sume más gente a la comunidad.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+              {!esProveedor && (
+                <TarjetaProximamente
+                  titulo="Bolsa de trabajo"
+                  descripcion="Ofertas de clínicas y profesionales disponibles."
+                  icon={Briefcase}
+                  onClick={() => navigate('/bolsa-de-trabajo')}
+                />
+              )}
+              <TarjetaProximamente
+                titulo="Cartilla de proveedores"
+                descripcion="Distribuidores, laboratorios y rubros afines."
+                icon={Package}
+              />
+              <TarjetaProximamente
+                titulo="Cursos"
+                descripcion="Capacitaciones y especializaciones del sector."
+                icon={BookOpen}
+              />
+            </div>
+          </div>
+
         </div>
       </div>
 
