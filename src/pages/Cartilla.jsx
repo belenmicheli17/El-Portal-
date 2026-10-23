@@ -1,25 +1,139 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useMemo } from 'react';
-import { Video as IconoVideo, Ambulance as IconoAmbulancia } from 'lucide-react';
-import { 
-  Search, MapPin, Home, 
-  ChevronRight, Award, Dog, Cat, Filter, 
-  Heart, Stethoscope, Layers, ChevronDown,
-  Bird, Rabbit, PawPrint, Hospital, TreeDeciduous, X 
+import {
+  Search, MapPin, Home, ChevronRight, Dog, Cat, Heart, Stethoscope, Hospital, X,
+  PawPrint, Activity, Scissors, Microscope, FlaskConical, Brain, Leaf, Building2,
+  Video as IconoVideo, Ambulance as IconoAmbulancia
 } from 'lucide-react';
-import { db } from '../firebase'; 
+import { db } from '../firebase';
 import { collection, getDocs } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 import TourGuia from '../components/TourGuia';
 import BarraFiltros from '../components/BarraFiltros';
 import { coincideBusqueda } from '../utils/busquedaTolerante';
-const HuellaPremium = ({ className }) => (
-  <svg viewBox="0 0 24 24" fill="currentColor" className={className} xmlns="http://www.w3.org/2000/svg">
-    <path d="M8.5 8c1.38 0 2.5-1.57 2.5-3.5S9.88 1 8.5 1 6 2.57 6 4.5 7.12 8 8.5 8zM15.5 8c1.38 0 2.5-1.57 2.5-3.5S16.88 1 15.5 1 13 2.57 13 4.5 14.12 8 15.5 8zM3.5 12C4.88 12 6 10.43 6 8.5S4.88 5 3.5 5 1 6.57 1 8.5 2.12 12 3.5 12zM20.5 12c1.38 0 2.5-1.57 2.5-3.5S21.88 5 20.5 5 18 6.57 18 8.5 19.12 12 20.5 12zM12 10.5c-3.5 0-6 2-6 4.5 0 1.5 1.5 3.5 3.5 4.5 1.5.7 2.5.5 2.5.5s1 .2 2.5-.5c2-1 3.5-3 3.5-4.5 0-2.5-2.5-4.5-6-4.5z"/>
-  </svg>
-);
+import especialidadesData from '../data/especialidades.json';
+
+// Íconos de cada grupo de especialidades (para las pastillas de "Explorá por especialidad")
+const ICONOS_GRUPO = {
+  consulta_general: Stethoscope,
+  especialidades_medicas: Activity,
+  quirurgico_critico: Scissors,
+  imagenes: Microscope,
+  laboratorio: FlaskConical,
+  atencion_por_especie: PawPrint,
+  bienestar_comportamiento: Brain,
+  terapias_holisticas: Leaf,
+  terapias_complementarias: Leaf,
+  equipamiento_infraestructura: Building2
+};
+
+// Dónde atiende un profesional: primero los barrios de sus veterinarias,
+// si no hay, los nombres de sus zonas, y si tampoco, la provincia
+const ubicacionProfesional = (item) => {
+  const barrios = [];
+  (item.zonas || []).forEach(z => (z.clinicas || []).forEach(c => {
+    const barrio = (c.barrio || '').trim();
+    if (barrio && !barrios.includes(barrio)) barrios.push(barrio);
+  }));
+  if (barrios.length) return barrios.slice(0, 2).join(' · ') + (barrios.length > 2 ? ` +${barrios.length - 2}` : '');
+  const nombresZona = (item.zonas || []).map(z => (z.nombre || '').trim()).filter(Boolean);
+  if (nombresZona.length) return nombresZona.slice(0, 2).join(' · ');
+  return item.provincia || '';
+};
+
+// Dónde está una clínica: barrio, o la localidad de su dirección, o la provincia.
+// Si no hay ningún dato, no mostramos nada (antes salía una dirección de ejemplo).
+const ubicacionClinica = (item) => {
+  if ((item.barrio || '').trim()) return item.barrio.trim();
+  if (item.direccion) {
+    const partes = item.direccion.split(',').map(p => p.trim()).filter(Boolean);
+    return partes[1] || partes[0] || item.provincia || '';
+  }
+  return item.provincia || '';
+};
+
+// ── Tarjeta horizontal de resultado (sirve para profesionales y clínicas) ──
+const TarjetaResultado = ({ item, onAbrir }) => {
+  const esProfesional = item.tipo === 'profesional';
+  const nombre = esProfesional ? `${item.nombre || ''} ${item.apellido || ''}`.trim() : item.nombre;
+  const ubicacion = esProfesional ? ubicacionProfesional(item) : ubicacionClinica(item);
+  const servicios = Array.isArray(item.servicios) ? item.servicios.filter(Boolean) : [];
+
+  // Modalidades con su color (urgencias a domicilio reemplaza a "a domicilio" para no repetir)
+  const modalidades = [];
+  if (esProfesional) {
+    if (item.urgenciaDomicilio) modalidades.push({ texto: 'Urgencias a domicilio', icono: IconoAmbulancia, clase: 'bg-red-50 text-red-700' });
+    else if (item.domicilio) modalidades.push({ texto: 'A domicilio', icono: Home, clase: 'bg-blue-50 text-blue-700' });
+    if (item.virtual) modalidades.push({ texto: 'Consulta virtual', icono: IconoVideo, clase: 'bg-[#2D6A6A]/10 text-[#1A3D3D]' });
+  } else if (item.guardia24hs) {
+    modalidades.push({ texto: 'Guardia 24hs', punto: true, clase: 'bg-red-50 text-red-700' });
+  }
+
+  return (
+    <article
+      onClick={onAbrir}
+      className="group bg-white rounded-[24px] p-4 border border-gray-100 shadow-sm hover:border-[#2D6A6A]/30 hover:shadow-[0_15px_30px_rgba(45,106,106,0.08)] hover:-translate-y-0.5 transition-all duration-300 ease-in-out cursor-pointer flex items-start gap-4 h-full"
+    >
+      {/* Foto o ilustración por defecto en tonos pastel */}
+      {item.foto ? (
+        <img
+          src={item.foto}
+          alt={nombre}
+          className={`w-14 h-14 shrink-0 object-cover border border-gray-50 shadow-sm ${esProfesional ? 'rounded-full' : 'rounded-[16px]'}`}
+        />
+      ) : (
+        <div className={`w-14 h-14 shrink-0 bg-[#FFF5EE] border border-[#FFE4D6] text-[#df803b] flex items-center justify-center ${esProfesional ? 'rounded-full' : 'rounded-[16px]'}`}>
+          {esProfesional ? <PawPrint className="w-6 h-6" strokeWidth={1.75} /> : <Hospital className="w-6 h-6" strokeWidth={1.75} />}
+        </div>
+      )}
+
+      <div className="flex-1 min-w-0">
+        <h2 className="font-['Montserrat'] font-extrabold text-[#1A3D3D] text-[15px] leading-tight truncate">{nombre}</h2>
+        {esProfesional && item.especialidad && (
+          <p className="text-[#2D6A6A] text-[13px] font-semibold leading-snug mt-0.5 line-clamp-1">{item.especialidad}</p>
+        )}
+        {ubicacion && (
+          <p className="flex items-center gap-1 text-[#666666] text-[13px] font-medium mt-0.5 min-w-0">
+            <MapPin className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">{ubicacion}</span>
+          </p>
+        )}
+
+        {/* Modalidades */}
+        {modalidades.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mt-2">
+            {modalidades.map(m => (
+              <span key={m.texto} className={`inline-flex items-center gap-1 text-[12px] lg:text-[13px] font-semibold px-2.5 py-0.5 rounded-full ${m.clase}`}>
+                {m.punto
+                  ? <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                  : <m.icono className="w-3.5 h-3.5" />}
+                {m.texto}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* Algunos servicios */}
+        {servicios.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mt-2">
+            {servicios.slice(0, 2).map(srv => (
+              <span key={srv} className="bg-[#F4F7F7] text-[#666666] text-[12px] lg:text-[13px] font-medium px-2 py-0.5 rounded-lg max-w-full truncate">
+                {srv}
+              </span>
+            ))}
+            {servicios.length > 2 && (
+              <span className="bg-[#F4F7F7] text-[#666666] text-[12px] lg:text-[13px] font-medium px-2 py-0.5 rounded-lg">
+                +{servicios.length - 2}
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+
+      <ChevronRight className="w-5 h-5 shrink-0 self-center text-[#9CA3AF] group-hover:text-[#2D6A6A] group-hover:translate-x-0.5 transition-all duration-300" />
+    </article>
+  );
+};
 
 const Cartilla = () => {
   const navigate = useNavigate();
@@ -27,66 +141,70 @@ const Cartilla = () => {
 
   // TODOS LOS HOOKS DECLARADOS AL PRINCIPIO (regla de React)
   const [searchParams, setSearchParams] = useSearchParams();
-  // Sincronizamos activeTab con la URL: si hay filtro de guardia arrancamos en 'clinicas'
+  // Vista de entrada: 'todos' (clínicas arriba y especialistas abajo).
+  // Las pestañas Especialistas / Clínicas filtran; si tocás la que ya está elegida, volvés a 'todos'.
   const [activeTab, setActiveTab] = useState(() => {
     const params = new URLSearchParams(window.location.search);
-    return params.get('guardia24hs') === 'true' ? 'clinicas' : 'especialistas';
+    return params.get('guardia24hs') === 'true' ? 'clinicas' : 'todos';
   });
   const [mostrarTourCartilla, setMostrarTourCartilla] = useState(false);
   const [veterinarios, setVeterinarios] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showUrgenciaBox, setShowUrgenciaBox] = useState(true);
   const [buscandoUbicacion, setBuscandoUbicacion] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const hayClinicas = veterinarios.some(v => v.tipo === 'clinica');
-  // ¿Hay al menos una clínica con guardia 24hs cargada? Si no hay ninguna, ocultamos los botones de guardia
   // ¿Hay al menos un profesional o clínica con cada modalidad? Si no hay nadie, se oculta el botón
   const hayDomicilio = veterinarios.some(v => v.domicilio);
   const hayVirtual = veterinarios.some(v => v.virtual);
   const hayUrgenciaDomicilio = veterinarios.some(v => v.urgenciaDomicilio);
-  const hayGuardia24hs = veterinarios.some(v => v.tipo === 'clinica' && v.guardia24hs)
+  const hayGuardia24hs = veterinarios.some(v => v.tipo === 'clinica' && v.guardia24hs);
 
-useEffect(() => {
-  if (!currentUser) return;
-  const fetchContador = async () => {
-    try {
-      const { doc, getDoc } = await import('firebase/firestore');
-      const snap = await getDoc(doc(db, 'usuarios', currentUser.uid));
-      const visto = snap.data()?.tourVisto?.cartilla || false;
-      if (!visto) setTimeout(() => setMostrarTourCartilla(true), 1000);
-    } catch (e) {
-      console.error('Error leyendo tour cartilla:', e);
-    }
+  // Elegir pestaña: si ya estaba elegida, la soltamos y volvemos a ver todo
+  const elegirTab = (valor) => {
+    setActiveTab(prev => {
+      const nuevo = typeof valor === 'function' ? valor(prev) : valor;
+      return prev === nuevo ? 'todos' : nuevo;
+    });
   };
-  fetchContador();
-}, [currentUser]);
 
-const editorUrl = currentUser?.rol === 'clinica'
-  ? '/editor-clinica'
-  : currentUser?.rol === 'proveedor'
-  ? '/editor-proveedores'
-  : '/editor-profesional';
+  useEffect(() => {
+    if (!currentUser) return;
+    const fetchContador = async () => {
+      try {
+        const { doc, getDoc } = await import('firebase/firestore');
+        const snap = await getDoc(doc(db, 'usuarios', currentUser.uid));
+        const visto = snap.data()?.tourVisto?.cartilla || false;
+        if (!visto) setTimeout(() => setMostrarTourCartilla(true), 1000);
+      } catch (e) {
+        console.error('Error leyendo tour cartilla:', e);
+      }
+    };
+    fetchContador();
+  }, [currentUser]);
 
-const PASOS_CARTILLA = [
+  const editorUrl = currentUser?.rol === 'clinica'
+    ? '/editor-clinica'
+    : currentUser?.rol === 'proveedor'
+    ? '/editor-proveedores'
+    : '/editor-profesional';
+
+  const PASOS_CARTILLA = [
     {
       targetId: 'tour-grid-todos',
       titulo: 'Tu perfil aparece acá',
-      desc: `Para aparecer en esta sección, tenes que completar tu perfil desde el editor para que los tutores y colegas puedan ver toda tu información.<button onclick="window.location.href='${editorUrl}'" style="background:#2D6A6A;color:white;padding:8px 18px;border-radius:10px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;border:none;cursor:pointer;margin-top:4px">Ir al editor →</button>`,
+      desc: `Para aparecer en esta sección, tenés que completar tu perfil desde el editor para que los tutores y colegas puedan ver toda tu información.<button onclick="window.location.href='${editorUrl}'" style="background:#2D6A6A;color:white;padding:8px 18px;border-radius:10px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;border:none;cursor:pointer;margin-top:4px">Ir al editor →</button>`,
       posicion: 'arriba'
     }
   ];
 
-
-  
-  // Sincroniza la tab activa cuando cambian los searchParams (ej: volver atrás con el browser)
+  // Sincroniza la pestaña cuando cambian los searchParams (ej: volver atrás con el navegador)
   useEffect(() => {
     if (searchParams.get('guardia24hs') === 'true') {
       setActiveTab('clinicas');
     }
   }, [searchParams]);
 
-  // SEO dinámico: cuando el filtro de guardia está activo, cambiamos el título y meta descripción
+  // SEO dinámico: cuando el filtro de guardia está activo, cambiamos el título y la meta descripción
   useEffect(() => {
     let meta = document.querySelector('meta[name="description"]');
     if (!meta) { meta = document.createElement('meta'); meta.name = 'description'; document.head.appendChild(meta); }
@@ -107,14 +225,13 @@ const PASOS_CARTILLA = [
     const R = 6371;
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLng = (lng2 - lng1) * Math.PI / 180;
-    const a = Math.sin(dLat/2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng/2) ** 2;
-    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   };
 
   const handleBuscarCercana = () => {
     if (!navigator.geolocation) {
       setSearchParams(prev => { const p = new URLSearchParams(prev); p.set('guardia24hs', 'true'); return p; });
-      setShowUrgenciaBox(false);
       setActiveTab('clinicas');
       return;
     }
@@ -134,19 +251,16 @@ const PASOS_CARTILLA = [
         });
         setSearchParams(prev => { const p = new URLSearchParams(prev); p.set('guardia24hs', 'true'); return p; });
         setBuscandoUbicacion(false);
-        setShowUrgenciaBox(false);
         setActiveTab('clinicas');
       },
       () => {
         // Si rechaza el permiso, igual filtramos pero sin ordenar por distancia
         setSearchParams(prev => { const p = new URLSearchParams(prev); p.set('guardia24hs', 'true'); return p; });
         setBuscandoUbicacion(false);
-        setShowUrgenciaBox(false);
         setActiveTab('clinicas');
       }
     );
   };
-
 
   useEffect(() => {
     // Incorporación de la familia de fuentes Inter para UI consistente
@@ -233,7 +347,8 @@ const PASOS_CARTILLA = [
                       quirurgico_critico: 'Quirúrgico',
                       atencion_por_especie: 'Atención por Especie',
                       bienestar_comportamiento: 'Bienestar y Comportamiento',
-                      terapias_holisticas: 'Terapias Holísticas',
+                      terapias_holisticas: 'Terapias Complementarias',
+                      terapias_complementarias: 'Terapias Complementarias',
                       equipamiento_infraestructura: 'Equipamiento e Infraestructura'
                     };
                     return infoBase[_] || _;
@@ -267,24 +382,34 @@ const PASOS_CARTILLA = [
   }, []);
 
   // Filtros desde la URL
-
-  const getParam = (key) => searchParams.get(key) ? searchParams.get(key).split(',') : [];
-
-  const filtros = React.useMemo(() => ({
+  const filtros = useMemo(() => ({
     zonas: searchParams.get('zonas') ? searchParams.get('zonas').split(',') : [],
-    mascotas: searchParams.get('mascotas') ? searchParams.get('mascotas').split(',') : [],
     especialidades: searchParams.get('especialidades') ? searchParams.get('especialidades').split(',') : [],
+    grupo: searchParams.get('grupo') || '',
     domicilio: searchParams.get('domicilio') === 'true',
     virtual: searchParams.get('virtual') === 'true',
     urgenciaDomicilio: searchParams.get('urgenciaDomicilio') === 'true',
     guardia24hs: searchParams.get('guardia24hs') === 'true'
   }), [searchParams]);
 
-  
+  // El grupo de especialidad elegido desde las pastillas (si hay uno)
+  const grupoElegido = filtros.grupo ? especialidadesData.find(g => g.id === filtros.grupo) : null;
 
-// 4. EL MOTOR DE FILTRADO: Procesa los datos antes de dibujarlos
-  // 4. EL MOTOR DE FILTRADO (Inteligente: ignora tildes y mayúsculas)
-  const normalizar = (texto) => 
+  // Pastillas "Explorá por especialidad": solo los grupos con al menos 1 perfil en la pestaña actual
+  const gruposDisponibles = useMemo(() => {
+    const deLaPestaña = veterinarios.filter(v =>
+      activeTab === 'todos' || (activeTab === 'especialistas' ? v.tipo === 'profesional' : v.tipo === 'clinica')
+    );
+    return especialidadesData
+      .map(grupo => ({
+        ...grupo,
+        cantidad: deLaPestaña.filter(v => (v.opcionesFiltro || []).some(o => grupo.opciones.includes(o))).length
+      }))
+      .filter(grupo => grupo.cantidad > 0);
+  }, [veterinarios, activeTab]);
+
+  // MOTOR DE FILTRADO (ignora tildes y mayúsculas)
+  const normalizar = (texto) =>
     texto ? texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() : "";
 
   const limpiarFiltros = () => {
@@ -292,7 +417,7 @@ const PASOS_CARTILLA = [
     setSearchTerm('');
   };
 
-    // Filtros dinámicos: solo muestran opciones que tienen al menos 1 resultado
+  // Filtros dinámicos: solo muestran opciones que tienen al menos 1 resultado
   const provinciasDisponibles = useMemo(() => {
     const conteo = {};
     veterinarios.forEach(v => {
@@ -327,8 +452,18 @@ const PASOS_CARTILLA = [
     });
   };
 
+  // Toca una pastilla de especialidad: la elige, o la suelta si ya estaba elegida
+  const elegirGrupo = (grupoId) => {
+    setSearchParams(prev => {
+      const p = new URLSearchParams(prev);
+      if (p.get('grupo') === grupoId) p.delete('grupo');
+      else p.set('grupo', grupoId);
+      return p;
+    });
+  };
+
   const veterinariosFiltrados = veterinarios.filter(v => {
-    //     // Buscador de texto libre: busca en nombre, apellido, especialidad, servicios,
+    // Buscador de texto libre: busca en nombre, apellido, especialidad, servicios,
     // provincia, dirección, zonas y barrios. Cada palabra tiene que aparecer en algún lado.
     if (searchTerm) {
       const textoDelItem = normalizar([
@@ -344,34 +479,45 @@ const PASOS_CARTILLA = [
       // Búsqueda tolerante: perdona errores de ortografía y entiende sinónimos
       if (!coincideBusqueda(searchTerm, textoDelItem)) return false;
     }
-    
-    // Filtros de Botones (esto se mantiene igual)
-    console.log('filtros activos:', JSON.stringify(filtros));
+
     if (filtros.zonas.length > 0 && !filtros.zonas.includes(v.provincia)) return false;
     if (filtros.especialidades.length > 0) {
-      if (v.tipo === 'profesional') {
-        // Busca en subOpcionesSeleccionadas y serviciosPersonalizados de todos los grupos activos
-        const opcionesProfesional = v.opcionesFiltro || v.servicios || [];
-        const tieneAlguna = filtros.especialidades.some(f => opcionesProfesional.includes(f));
-        if (!tieneAlguna) return false;
-      } else if (v.tipo === 'clinica') {
-        // Para clínicas: las opciones ya vienen procesadas en el array "servicios"
-        const opcionesClinica = v.opcionesFiltro || (Array.isArray(v.servicios) ? v.servicios : []);
-        const tieneAlguna = filtros.especialidades.some(f => opcionesClinica.includes(f));
-        if (!tieneAlguna) return false;
-      }
+      const opciones = v.opcionesFiltro || (Array.isArray(v.servicios) ? v.servicios : []);
+      if (!filtros.especialidades.some(f => opciones.includes(f))) return false;
     }
+    // Pastilla de grupo: tiene que tener al menos una opción de ese grupo
+    if (grupoElegido && !(v.opcionesFiltro || []).some(o => grupoElegido.opciones.includes(o))) return false;
     if (filtros.domicilio && !v.domicilio) return false;
     if (filtros.virtual && !v.virtual) return false;
     if (filtros.urgenciaDomicilio && !v.urgenciaDomicilio) return false;
     if (filtros.guardia24hs && !v.guardia24hs) return false;
-    
+
     return true;
   });
-  
- return (
-    <>
 
+  const clinicasFiltradas = veterinariosFiltrados.filter(v => v.tipo === 'clinica');
+  const profesionalesFiltrados = veterinariosFiltrados.filter(v => v.tipo === 'profesional');
+
+  // Cuántas tarjetas mostramos de cada tipo en la vista de entrada (después, "Ver todos")
+  const MAX_CLINICAS_TODOS = 3;
+  const MAX_ESPECIALISTAS_TODOS = 6;
+
+  const abrir = (item) => navigate(`/${item.tipo}/${item.id}`);
+
+  // Título de una sección con su cantidad de resultados
+  const TituloSeccion = ({ texto, cantidad }) => (
+    <div className="flex items-baseline justify-between px-1 mb-3">
+      <h3 className="font-['Montserrat'] font-bold text-[#1A3D3D] text-[16px] md:text-[18px] leading-none">{texto}</h3>
+      <span className="text-[#666666] text-[13px] font-medium">{cantidad} {cantidad === 1 ? 'resultado' : 'resultados'}</span>
+    </div>
+  );
+
+  const claseGrilla = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4";
+
+  const hayFiltrosActivos = searchTerm.trim() || filtros.zonas.length > 0 || filtros.especialidades.length > 0 || grupoElegido || filtros.domicilio || filtros.virtual || filtros.urgenciaDomicilio || filtros.guardia24hs;
+
+  return (
+    <>
       <main className="min-h-screen bg-[#F9F5F0] pb-24 relative flex flex-col gap-4 sm:gap-6 animate-in fade-in duration-500 overflow-hidden">
         {/* BURBUJAS DE FONDO LIBRES */}
         <div className="absolute top-[-10%] left-[-15%] w-[600px] h-[600px] bg-[#FF9800]/20 rounded-full blur-[120px] pointer-events-none z-0"></div>
@@ -399,16 +545,15 @@ const PASOS_CARTILLA = [
               </div>
             </section>
 
-            {/* BARRA DE BÚSQUEDA GLOBAL COMPONENTIZADA — envuelta para compensar su padding interno y alinearla con el título */}
+            {/* BARRA DE BÚSQUEDA — sin pestaña "Todos": se ve todo de entrada y las pestañas filtran */}
             <div className="lg:-ml-3 lg:mt-0">
               <BarraFiltros
                 tabs={[
-                  { id: 'todos', label: 'Todos', icon: Layers },
                   { id: 'especialistas', label: 'Especialistas', icon: Stethoscope, tourId: 'tour-tab-especialistas' },
                   { id: 'clinicas', label: 'Clínicas', icon: Hospital }
                 ]}
                 activeTab={activeTab}
-                setActiveTab={setActiveTab}
+                setActiveTab={elegirTab}
                 searchPlaceholder="Ej: Dermatólogo, San Isidro, Vacunación..."
                 searchTerm={searchTerm}
                 setSearchTerm={setSearchTerm}
@@ -426,7 +571,7 @@ const PASOS_CARTILLA = [
           </div>
 
           {/* COLUMNA DERECHA: ilustración del hero (solo PC) */}
-                    <div className="hidden lg:flex lg:w-[45%] items-center justify-center">
+          <div className="hidden lg:flex lg:w-[45%] items-center justify-center">
             <img
               src="/cartilla-hero-ilustracion.svg"
               alt=""
@@ -435,8 +580,33 @@ const PASOS_CARTILLA = [
           </div>
         </div>
 
-        {/* FILTROS ACTIVOS: entre el hero y las tarjetas. Al tocar un chip, se saca ese filtro. */}
-        {(searchTerm.trim() || filtros.zonas.length > 0 || filtros.especialidades.length > 0 || filtros.domicilio || filtros.virtual || filtros.urgenciaDomicilio || filtros.guardia24hs) && (() => {
+        {/* EXPLORÁ POR ESPECIALIDAD: en celular se desliza al costado, en PC se acomoda en varias líneas */}
+        {!loading && gruposDisponibles.length > 0 && (
+          <div className="max-w-6xl mx-auto w-full px-4 relative z-10 font-['Inter']">
+            <p className="text-[14px] font-bold text-[#1A3D3D] mb-3 px-1">Explorá por especialidad</p>
+            <div className="flex gap-2 overflow-x-auto -mx-4 px-4 pb-1 lg:mx-0 lg:px-0 lg:flex-wrap lg:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {gruposDisponibles.map(grupo => {
+                const Icono = ICONOS_GRUPO[grupo.id] || Stethoscope;
+                const activo = filtros.grupo === grupo.id;
+                return (
+                  <button
+                    key={grupo.id}
+                    type="button"
+                    onClick={() => elegirGrupo(grupo.id)}
+                    className={`shrink-0 inline-flex items-center gap-2 rounded-full px-4 py-2 text-[13px] font-semibold border shadow-sm transition-all duration-300 ease-in-out ${activo ? 'bg-[#FF9800]/10 border-[#FF9800] text-[#1A3D3D]' : 'bg-white border-gray-200 text-[#1A3D3D] hover:border-[#FF9800]/60 hover:-translate-y-0.5'}`}
+                  >
+                    <Icono className="w-4 h-4 text-[#FF9800]" />
+                    {grupo.grupo}
+                    <span className="text-[#666666] font-medium">· {grupo.cantidad}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* FILTROS ACTIVOS: al tocar un chip, se saca ese filtro */}
+        {hayFiltrosActivos && (() => {
           const claseChip = "inline-flex items-center gap-1.5 bg-white border border-[#2D6A6A]/20 text-[#1A3D3D] rounded-full pl-3.5 pr-3 py-1.5 text-[13px] font-semibold shadow-sm transition-all duration-300 hover:border-[#2D6A6A] hover:bg-[#2D6A6A]/5";
           return (
             <div className="max-w-6xl mx-auto w-full px-4 relative z-10 font-['Inter']">
@@ -449,6 +619,11 @@ const PASOS_CARTILLA = [
                 {searchTerm.trim() && (
                   <button type="button" onClick={() => setSearchTerm('')} className={claseChip} title="Sacar esta búsqueda">
                     <Search className="w-3.5 h-3.5 text-[#2D6A6A]" /> {searchTerm.trim()} <X className="w-3.5 h-3.5 text-gray-400" />
+                  </button>
+                )}
+                {grupoElegido && (
+                  <button type="button" onClick={() => quitarFiltro('grupo')} className={claseChip} title="Sacar este filtro">
+                    <PawPrint className="w-3.5 h-3.5 text-[#FF9800]" /> {grupoElegido.grupo} <X className="w-3.5 h-3.5 text-gray-400" />
                   </button>
                 )}
                 {filtros.zonas.map(z => (
@@ -490,14 +665,14 @@ const PASOS_CARTILLA = [
           );
         })()}
 
-        <div className="grid grid-cols-1 max-w-6xl mx-auto w-full px-4 mt-2 sm:mt-2 mb-4 relative z-10 font-['Inter'] min-h-[80vh]">
+        <div className="max-w-6xl mx-auto w-full px-4 mt-2 mb-4 relative z-10 font-['Inter'] min-h-[80vh]">
           {loading && (
             <div className="flex justify-center items-center py-20">
               <div className="w-12 h-12 border-4 border-[#2D6A6A]/20 border-t-[#2D6A6A] rounded-full animate-spin"></div>
             </div>
           )}
 
-          {/* GRILLA DE RESULTADOS */}
+          {/* RESULTADOS */}
           {!loading && (
             <section className="animate-in fade-in slide-in-from-bottom-4">
               {veterinariosFiltrados.length === 0 ? (
@@ -506,10 +681,10 @@ const PASOS_CARTILLA = [
                     <Search className="w-10 h-10 text-[#2D6A6A] opacity-50" />
                   </div>
                   <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[20px] md:text-[24px] mb-2">
-                    ¡Uy! No encontramos resultados
+                    Todavía no hay resultados con estos filtros
                   </h3>
                   <p className="text-[#666666] font-medium text-[14px] max-w-md mx-auto mb-6">
-                    Probá ajustando los filtros o buscando con otras palabras para ver más opciones disponibles.
+                    ¿Probamos cambiando la zona o buscando con otras palabras?
                   </p>
                   <button
                     onClick={limpiarFiltros}
@@ -519,212 +694,98 @@ const PASOS_CARTILLA = [
                   </button>
                 </div>
               ) : (
-                (() => {
-                  const renderCard = (item) => {
-                    const isProfesional = item.tipo === 'profesional';
-                    const nameParts = item.nombre ? item.nombre.split(' ') : [''];
-                    const firstName = nameParts[0];
-                    const lastName = nameParts.slice(1).join(' ');
-
-                    return (
-                      <article
-                        key={item.id}
-                        onClick={() => navigate(`/${item.tipo}/${item.id}`)}
-                        className={`bg-white rounded-[24px] p-4 sm:p-5 border border-gray-100 shadow-sm hover:border-[#2D6A6A]/30 hover:shadow-[0_15px_30px_rgba(45,106,106,0.08)] transition-all duration-300 ease-in-out cursor-pointer group flex flex-col relative mt-6 sm:mt-4 z-20 ${isProfesional ? 'text-center' : ''}`}
-                      >
-                        {/* BADGES FLOTANTES */}
-                        {isProfesional ? (
-                          <div className="absolute -top-4 right-4 flex items-center z-30">
-                            {item.planActual === 'pro' ? (
-                              <div className="w-10 h-10 rounded-2xl bg-yellow-50 flex items-center justify-center text-yellow-600 border border-yellow-100 shadow-sm hover:-translate-y-0.5 transition-transform cursor-help" title="Profesional Destacado">
-                                <Award className="w-5 h-5" />
-                              </div>
-                            ) : item.domicilio ? (
-                              <div className="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 border border-blue-100 shadow-sm hover:-translate-y-0.5 transition-transform cursor-help" title="Atención a domicilio">
-                                <Home className="w-5 h-5" />
-                              </div>
-                            ) : null}
+                <>
+                  {/* VISTA DE ENTRADA: clínicas arriba, especialistas abajo */}
+                  {activeTab === 'todos' && (
+                    <div id="tour-grid-todos" className="flex flex-col gap-10">
+                      {clinicasFiltradas.length > 0 && (
+                        <div>
+                          <TituloSeccion texto="Clínicas" cantidad={clinicasFiltradas.length} />
+                          <div className={claseGrilla}>
+                            {clinicasFiltradas.slice(0, MAX_CLINICAS_TODOS).map(item => (
+                              <TarjetaResultado key={item.id} item={item} onAbrir={() => abrir(item)} />
+                            ))}
                           </div>
-                        ) : (
-                          item.guardia24hs && (
-                            <div className="absolute -top-3 right-4 inline-flex items-center gap-2 bg-red-50 border border-red-100 px-3 py-1.5 rounded-full shadow-sm z-30">
-                              <span className="relative flex h-2 w-2">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-                              </span>
-                              <span className="text-red-600 font-bold text-[10px] uppercase tracking-[0.2em]">Guardia 24hs.</span>
-                            </div>
-                          )
-                        )}
-
-                        {isProfesional ? (
-                          <>
-                            <div className="relative mx-auto mb-3 shrink-0">
-                              {item.foto ? (
-                                <img src={item.foto} alt={item.nombre} className="w-[56px] h-[56px] rounded-full object-cover shadow-sm border border-gray-50" />
-                              ) : (
-                                <div className="w-[56px] h-[56px] rounded-full bg-[#FFF5EE] border border-[#FFE4D6] text-[#df803b] flex items-center justify-center shadow-sm">
-                                  <Stethoscope className="w-6 h-6 opacity-80" />
-                                </div>
-                              )}
-                            </div>
-                            <div className="mb-2">
-                              <h2 className="font-montserrat font-extrabold text-[#1A3D3D] text-[14px] sm:text-[15px] leading-[1.2] line-clamp-2">
-                                <span className="block truncate">{item.nombre} {item.apellido || lastName}</span>
-                              </h2>
-                            </div>
-                            <div className="mb-0 flex flex-col gap-1.5">
-                              <span className="inline-flex flex-col justify-center bg-[#F4F7F7] px-3 py-2 rounded-xl w-full">
-                                <span className="text-[#2D6A6A] text-[12px] sm:text-[13px] font-semibold leading-[1.3] break-words">
-                                  {item.especialidad}
-                                </span>
-                              </span>
-                           
-                            </div>
-                            <div className="flex items-center justify-between pt-2 border-t border-gray-50 mt-2">
-                              <div className="flex items-center gap-1 text-[#666666] font-medium text-[11px] sm:text-[12px] min-w-0 max-w-[70%]">
-                                <MapPin className="w-3.5 h-3.5 shrink-0" />
-                                <span className="truncate font-bold text-[#1A3D3D]">{item.provincia}</span>
-                              </div>
-                              <div className="flex items-center gap-1 text-[#9CA3AF] group-hover:text-[#2D6A6A] transition-colors shrink-0">
-                                <span className="text-[12px] font-medium hidden sm:inline-block">Ver perfil</span>
-                                <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                              </div>
-                            </div>
-                          </>
-                        ) : (
-                          <>
-                            <div className="flex items-center gap-3 sm:gap-4 mb-1">
-                              <div className="relative shrink-0">
-                                {item.foto ? (
-                                  <img src={item.foto} alt={item.nombre} className="w-[48px] h-[48px] sm:w-[52px] sm:h-[52px] rounded-[14px] sm:rounded-[16px] object-cover shadow-sm border border-gray-50" />
-                                ) : (
-                                  <div className="w-[48px] h-[48px] sm:w-[52px] sm:h-[52px] rounded-[14px] sm:rounded-[16px] bg-[#FFF5EE] border border-[#FFE4D6] text-[#df803b] flex items-center justify-center shadow-sm">
-                                    <Hospital className="w-5 h-5 sm:w-6 sm:h-6 opacity-80" />
-                                  </div>
-                                )}
-                              </div>
-                              <div className="flex-1 min-w-0 pr-2">
-                                <h2 className="font-montserrat font-extrabold text-[#1A3D3D] text-[13px] sm:text-[15px] leading-[1.2] line-clamp-2">
-                                  <span className="block truncate">{firstName}</span>
-                                  {lastName && <span className="block truncate">{lastName}</span>}
-                                </h2>
-                              </div>
-                            </div>
-                            <div className="hidden sm:flex mb-3 items-center gap-1.5 text-[#666666]">
-                              <MapPin className="w-3 h-3 shrink-0" />
-                              <p className="text-[12px] font-medium truncate">
-                                {item.direccion ? (
-                                  <>{item.direccion.split(',')[0]}, <span className="font-bold text-[#1A3D3D]">{item.direccion.split(',')[1]}</span></>
-                                ) : (
-                                  <>Av. San Martín 1234, <span className="font-bold text-[#1A3D3D]">{item.provincia}</span></>
-                                )}
-                              </p>
-                            </div>
-                            <div className="flex sm:hidden mb-2 mt-1 w-full">
-                              <div className="flex items-center gap-1.5 flex-nowrap w-full overflow-hidden">
-                                {item.servicios?.slice(0, 4).map((srv, i) => (
-                                  <span key={i} className="bg-[#F4F7F7] text-[#666666] px-2 py-1 rounded-[8px] text-[10px] font-medium border border-gray-100 truncate min-w-0">
-                                    {srv}
-                                  </span>
-                                ))}
-                                {item.servicios?.length > 4 && (
-                                  <span className="bg-gray-50 text-gray-400 px-1.5 py-1 rounded-[8px] text-[10px] font-medium shrink-0">
-                                    +{item.servicios.length - 4}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                            <div className="hidden sm:flex mb-3 mt-auto">
-                              <div className="flex flex-wrap gap-1.5">
-                                {item.servicios?.slice(0, 6).map((srv, i) => (
-                                  <span key={i} className="bg-[#F4F7F7] text-[#666666] px-2 py-1 rounded-[8px] text-[12px] font-medium border border-gray-100">
-                                    {srv}
-                                  </span>
-                                ))}
-                                {item.servicios?.length > 6 && (
-                                  <span className="bg-gray-50 text-gray-400 px-2 py-1 rounded-[8px] text-[12px] font-medium">
-                                    +{item.servicios.length - 6}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                            <div className="flex items-center justify-between sm:justify-end pt-2.5 border-t border-gray-50 mt-auto">
-                              <div className="flex sm:hidden items-center gap-1 text-[#666666] text-[11px] min-w-0 max-w-[70%]">
-                                <MapPin className="w-3.5 h-3.5 shrink-0" />
-                                <span className="truncate">
-                                  {item.direccion ? (
-                                    <>{item.direccion.split(',')[0]}, <span className="font-bold text-[#1A3D3D]">{item.direccion.split(',')[1]}</span></>
-                                  ) : (
-                                    <>San Martín 1234, <span className="font-bold text-[#1A3D3D]">{item.provincia}</span></>
-                                  )}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-0.5 text-[#9CA3AF] group-hover:text-[#2D6A6A] transition-colors shrink-0">
-                                <span className="text-[12px] font-medium hidden sm:inline-block">Ver perfil</span>
-                                <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                              </div>
-                            </div>
-                          </>
-                        )}
-                      </article>
-                    );
-                  };
-
-                  return (
-                    <>
-                      {/* VISTA 1: TODOS */}
-                      {activeTab === 'todos' && (
-                        <div id="tour-grid-todos" className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-6 pt-0 mt-0">
-                          <div className="lg:col-span-2 flex flex-col gap-0">
-                            <h3 className="font-['Montserrat'] font-bold text-[#1A3D3D] text-[16px] px-2 leading-none">Clínicas</h3>
-                            <div className="grid grid-cols-1 gap-x-4 gap-y-3 sm:gap-y-8 mt-3">
-                              {veterinariosFiltrados.filter(v => v.tipo === 'clinica').slice(0, 4).map(renderCard)}
-                            </div>
-                          </div>
-                          <div className="lg:col-span-3 flex flex-col gap-0">
-                            <h3 className="font-['Montserrat'] font-bold text-[#1A3D3D] text-[16px] px-2 leading-none">Especialistas</h3>
-                            <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-3 sm:gap-x-4 gap-y-3 sm:gap-y-8 mt-3">
-                              {veterinariosFiltrados.filter(v => v.tipo === 'profesional').slice(0, 9).map(renderCard)}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* VISTA 2: ESPECIALISTAS */}
-                      {activeTab === 'especialistas' && (
-                        <div id="tour-tab-especialistas" className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-x-3 sm:gap-x-4 gap-y-3 sm:gap-y-8 pt-0 mt-0">
-                          {veterinariosFiltrados.filter(v => v.tipo === 'profesional').map(renderCard)}
-                        </div>
-                      )}
-
-                      {/* VISTA 3: CLÍNICAS */}
-                      {activeTab === 'clinicas' && (
-                        <>
-                          {veterinariosFiltrados.filter(v => v.tipo === 'clinica').length === 0 ? (
-                            <div className="flex flex-col items-center justify-center py-20 text-center">
-                              
-                              <span className="inline-flex items-center gap-2 bg-[#1A3D3D] text-[#4DB6AC] text-[11px] font-bold uppercase tracking-[0.2em] px-4 py-2 rounded-full mb-4">
-                                <span className="w-1.5 h-1.5 rounded-full bg-[#4DB6AC] animate-pulse" />
-                                Próximamente
-                              </span>
-                              <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[20px] md:text-[24px] mb-2">
-                                Las clínicas están en camino
-                              </h3>
-                              <p className="text-[#666666] font-medium text-[14px] max-w-md mx-auto">
-                                Pronto vas a poder encontrar clínicas y centros veterinarios de alta complejidad en esta sección.
-                              </p>
-                            </div>
-                          ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 sm:gap-x-6 gap-y-3 sm:gap-y-8 pt-0 mt-0">
-                              {veterinariosFiltrados.filter(v => v.tipo === 'clinica').map(renderCard)}
+                          {clinicasFiltradas.length > MAX_CLINICAS_TODOS && (
+                            <div className="flex justify-center mt-5">
+                              <button type="button" onClick={() => setActiveTab('clinicas')} className="bg-white border border-gray-200 text-[#2D6A6A] rounded-full px-5 py-2.5 text-[13px] font-bold shadow-sm hover:border-[#2D6A6A] transition-all duration-300 flex items-center gap-1.5">
+                                Ver las {clinicasFiltradas.length} clínicas <ChevronRight className="w-4 h-4" />
+                              </button>
                             </div>
                           )}
-                        </>
+                        </div>
                       )}
-                    </>
-                  );
-                })()
+
+                      {profesionalesFiltrados.length > 0 && (
+                        <div>
+                          <TituloSeccion texto="Especialistas" cantidad={profesionalesFiltrados.length} />
+                          <div className={claseGrilla}>
+                            {profesionalesFiltrados.slice(0, MAX_ESPECIALISTAS_TODOS).map(item => (
+                              <TarjetaResultado key={item.id} item={item} onAbrir={() => abrir(item)} />
+                            ))}
+                          </div>
+                          {profesionalesFiltrados.length > MAX_ESPECIALISTAS_TODOS && (
+                            <div className="flex justify-center mt-5">
+                              <button type="button" onClick={() => setActiveTab('especialistas')} className="bg-white border border-gray-200 text-[#2D6A6A] rounded-full px-5 py-2.5 text-[13px] font-bold shadow-sm hover:border-[#2D6A6A] transition-all duration-300 flex items-center gap-1.5">
+                                Ver los {profesionalesFiltrados.length} especialistas <ChevronRight className="w-4 h-4" />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* PESTAÑA ESPECIALISTAS */}
+                  {activeTab === 'especialistas' && (
+                    profesionalesFiltrados.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-20 text-center">
+                        <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[20px] md:text-[24px] mb-2">
+                          Todavía no hay especialistas con estos filtros
+                        </h3>
+                        <p className="text-[#666666] font-medium text-[14px] max-w-md mx-auto">
+                          ¿Probamos cambiando la zona o la especialidad?
+                        </p>
+                      </div>
+                    ) : (
+                      <div id="tour-tab-especialistas">
+                        <TituloSeccion texto="Especialistas" cantidad={profesionalesFiltrados.length} />
+                        <div className={claseGrilla}>
+                          {profesionalesFiltrados.map(item => (
+                            <TarjetaResultado key={item.id} item={item} onAbrir={() => abrir(item)} />
+                          ))}
+                        </div>
+                      </div>
+                    )
+                  )}
+
+                  {/* PESTAÑA CLÍNICAS */}
+                  {activeTab === 'clinicas' && (
+                    clinicasFiltradas.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-20 text-center">
+                        <span className="inline-flex items-center gap-2 bg-[#1A3D3D] text-[#4DB6AC] text-[11px] font-bold uppercase tracking-[0.2em] px-4 py-2 rounded-full mb-4">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#4DB6AC] animate-pulse" />
+                          Próximamente
+                        </span>
+                        <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[20px] md:text-[24px] mb-2">
+                          Las clínicas están en camino
+                        </h3>
+                        <p className="text-[#666666] font-medium text-[14px] max-w-md mx-auto">
+                          Pronto vas a poder encontrar clínicas y centros veterinarios de alta complejidad en esta sección.
+                        </p>
+                      </div>
+                    ) : (
+                      <div>
+                        <TituloSeccion texto="Clínicas" cantidad={clinicasFiltradas.length} />
+                        <div className={claseGrilla}>
+                          {clinicasFiltradas.map(item => (
+                            <TarjetaResultado key={item.id} item={item} onAbrir={() => abrir(item)} />
+                          ))}
+                        </div>
+                      </div>
+                    )
+                  )}
+                </>
               )}
             </section>
           )}
