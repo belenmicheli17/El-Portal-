@@ -23,6 +23,14 @@ const iconoEspecieMap = {
 
 // (Borramos el array estático de aniosDisponibles de acá arriba)
 
+// Todas las opciones que se pueden recomendar al escribir (especialidades + animales), sin repetidas
+const todasLasOpciones = [
+  ...new Set([
+    ...especialidadesData.flatMap(g => g.opciones),
+    ...Object.values(animalesData).flatMap(g => g.opciones)
+  ])
+];
+
 const BarraFiltros = ({ 
   tabs = [], 
   activeTab, 
@@ -47,6 +55,8 @@ const BarraFiltros = ({
   const [openSection, setOpenSection] = useState(null);
   const filtrosRef = useRef(null);
   const [showProvincia, setShowProvincia] = useState(false);
+  // Controla si el buscador está enfocado (para mostrar las recomendaciones rápidas)
+  const [buscadorEnfocado, setBuscadorEnfocado] = useState(false);
 
   // Ancho del panel de filtros en PC: ocupa todo el ancho de la pantalla,
   // con el mismo margen a la izquierda y a la derecha
@@ -84,6 +94,29 @@ const BarraFiltros = ({
   // Funciones de lectura de URL
   const getParam = (key) => searchParams.get(key) ? searchParams.get(key).split(',') : [];
 
+  // Recomendaciones rápidas: aparecen a partir de 3 letras (máximo 6)
+  // Primero van las que empiezan con lo que escribiste, después las que solo coinciden
+  const sugerencias = textoBusqueda.length >= 3
+    ? todasLasOpciones
+        // Primero una coincidencia simple (contiene lo que escribiste, sin tildes ni mayúsculas).
+        // Si no, la búsqueda tolerante que perdona errores de ortografía.
+        .filter(opcion => normalizarTexto(opcion).includes(textoBusqueda) || coincideBusqueda(searchTerm, opcion))
+        .sort((a, b) => {
+          const aEmpieza = normalizarTexto(a).startsWith(textoBusqueda) ? 0 : 1;
+          const bEmpieza = normalizarTexto(b).startsWith(textoBusqueda) ? 0 : 1;
+          return aEmpieza - bEmpieza;
+        })
+        .slice(0, 6)
+    : [];
+
+  // Elegir una recomendación: la agrega como filtro, limpia el buscador y cierra el teclado
+  const elegirSugerencia = (opcion) => {
+    if (!getParam('especialidades').includes(opcion)) toggleFiltro('especialidades', opcion);
+    setSearchTerm('');
+    setBuscadorEnfocado(false);
+    if (document.activeElement) document.activeElement.blur();
+  };
+
   // NUEVO: Agregamos los filtros de papers
   const filtros = {
     zonas: getParam('zonas'),
@@ -115,6 +148,22 @@ const BarraFiltros = ({
   };
 
 
+
+  // Cuántos filtros del panel hay aplicados (para saber si mostrar el botón de borrar)
+  const hayFiltrosActivos =
+    filtros.especialidades.length > 0 ||
+    filtros.mascotas.length > 0 ||
+    filtros.categorias_papers.length > 0 ||
+    filtros.anios.length > 0 ||
+    filtros.domicilio || filtros.virtual || filtros.urgenciaDomicilio || filtros.guardia24hs;
+
+  // Borra todos los filtros del panel de una vez (no toca la provincia ni lo que escribiste en el buscador)
+  const borrarFiltros = () => {
+    const params = new URLSearchParams(searchParams);
+    ['especialidades', 'mascotas', 'categorias_papers', 'anios', 'domicilio', 'virtual', 'urgenciaDomicilio', 'guardia24hs']
+      .forEach(clave => params.delete(clave));
+    setSearchParams(params);
+  };
 
   // Manejo de scroll dinámico
   const toggleModal = () => {
@@ -216,10 +265,35 @@ const BarraFiltros = ({
               type="search" 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              onFocus={() => { if (modo === 'default') openModal(); }}
+              onFocus={() => {
+                setBuscadorEnfocado(true);
+                // En celular NO abrimos el panel ni hacemos scroll (eso hacía saltar la pantalla).
+                // En PC sigue abriéndose como antes.
+                if (modo === 'default' && window.innerWidth >= 768) openModal();
+              }}
+              onBlur={() => setBuscadorEnfocado(false)}
               placeholder={searchPlaceholder}
-              className="w-full bg-transparent border-none pl-3 pr-2 py-0.5 text-[15px] font-medium focus:outline-none focus:ring-0 text-[#1A3D3D] placeholder:text-[#888888]" 
+              className="w-full bg-transparent border-none pl-3 pr-2 py-0.5 text-[16px] md:text-[15px] font-medium focus:outline-none focus:ring-0 text-[#1A3D3D] placeholder:text-[#888888]" 
             />
+
+            {/* RECOMENDACIONES RÁPIDAS — aparecen desde 3 letras, solo si el panel de filtros está cerrado */}
+            {buscadorEnfocado && !showFilters && sugerencias.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl border border-gray-100 shadow-xl z-50 py-2 overflow-hidden">
+                {sugerencias.map(opcion => (
+                  <button
+                    key={opcion}
+                    type="button"
+                    // onMouseDown + preventDefault evita que el buscador pierda el foco antes de tocar la opción
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => elegirSugerencia(opcion)}
+                    className="w-full flex items-center gap-2 text-left px-4 py-2.5 text-[14px] font-medium text-[#555555] hover:bg-[#F4F7F7] hover:text-[#2D6A6A] transition-colors"
+                  >
+                    <Search className="w-4 h-4 text-[#2D6A6A] shrink-0" />
+                    <span className="truncate">{opcion}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* CAMPO PROVINCIA/LOCALIDAD — dropdown con diseño propio */}
@@ -280,27 +354,38 @@ const BarraFiltros = ({
             </div>
           )}
 
-          {/* BOTÓN BUSCAR — solo modo default, junto al buscador (reemplaza el rol de "Ver resultados") */}
+          {/* BOTONES FILTROS (solo celular) + BUSCAR — modo default */}
           {modo === 'default' && (
-            <button
-              onClick={() => setShowFilters(false)}
-              className="w-full md:w-auto shrink-0 bg-[#2D6A6A] text-white px-7 py-3 md:py-2.5 rounded-[20px] md:rounded-full text-[13px] md:text-[14px] font-semibold flex items-center justify-center gap-2 hover:bg-[#1A3D3D] transition-colors shadow-sm"
-            >
-              <Search className="w-4 h-4" /> Buscar
-            </button>
+            <div className="flex gap-2 w-full md:w-auto shrink-0">
+              {/* Botón Filtros: solo se ve en celular. Abre/cierra el panel con modalidad, especie, etc. */}
+              <button
+                type="button"
+                onClick={toggleModal}
+                className={`md:hidden flex-1 px-5 py-3 rounded-[20px] text-[13px] font-semibold flex items-center justify-center gap-2 transition-all duration-300 ${
+                  showFilters ? 'bg-[#1A3D3D] text-white shadow-md' : 'bg-[#F4F7F7] text-[#1A3D3D] hover:bg-gray-200'
+                }`}
+              >
+                <Filter className="w-4 h-4" />
+                <span>Filtros</span>
+                {/* Globito con la cantidad de filtros aplicados */}
+                {(filtros.especialidades.length + [filtros.domicilio, filtros.virtual, filtros.urgenciaDomicilio, filtros.guardia24hs].filter(Boolean).length) > 0 && (
+                  <span className={`text-[11px] font-bold rounded-full px-2 py-0.5 ${showFilters ? 'bg-white/20 text-white' : 'bg-[#2D6A6A] text-white'}`}>
+                    {filtros.especialidades.length + [filtros.domicilio, filtros.virtual, filtros.urgenciaDomicilio, filtros.guardia24hs].filter(Boolean).length}
+                  </span>
+                )}
+              </button>
+
+              {/* BOTÓN BUSCAR — cierra el panel y muestra los resultados */}
+              <button
+                onClick={() => setShowFilters(false)}
+                className="flex-1 md:flex-none shrink-0 bg-[#2D6A6A] text-white px-7 py-3 md:py-2.5 rounded-[20px] md:rounded-full text-[13px] md:text-[14px] font-semibold flex items-center justify-center gap-2 hover:bg-[#1A3D3D] transition-colors shadow-sm"
+              >
+                <Search className="w-4 h-4" /> Buscar
+              </button>
+            </div>
           )}
         </div>
-        {/* BOTÓN ABRIR MODAL FILTROS — desktop, solo si NO es modo default */}
-        {modo !== 'default' && (
-          <button 
-            onClick={toggleModal} 
-            className={`hidden md:flex w-auto px-6 py-3 rounded-[18px] text-[13px] font-medium items-center justify-center gap-2 transition-all duration-300 shrink-0 ${
-              showFilters ? 'bg-[#1A3D3D] text-white shadow-md' : 'bg-[#F4F7F7] text-[#666666] hover:bg-gray-200'
-            }`}
-          >
-            <Filter className="w-4 h-4" /> Filtros
-          </button>
-        )}
+       
 
         {/* BOTÓN ABRIR MODAL FILTROS — desktop, solo si NO es modo default */}
         {modo !== 'default' && (
@@ -670,6 +755,19 @@ const BarraFiltros = ({
                 </>
               )}
             </div>
+
+            {/* BORRAR FILTROS — al pie del panel, solo si hay filtros aplicados */}
+            {hayFiltrosActivos && (
+              <div className="pt-5 border-t border-gray-100 flex justify-center">
+                <button
+                  type="button"
+                  onClick={borrarFiltros}
+                  className="px-6 py-2.5 rounded-xl bg-[#F4F7F7] text-[#1A3D3D] text-[13px] font-semibold hover:bg-gray-200 transition-all duration-300 ease-in-out"
+                >
+                  Borrar filtros
+                </button>
+              </div>
+            )}
             
           </div>
         )}

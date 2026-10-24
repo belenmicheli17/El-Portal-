@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useLayoutEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Search, MapPin, Home, ChevronRight, Dog, Cat, Heart, Stethoscope, Hospital, X,
@@ -152,6 +152,15 @@ const Cartilla = () => {
   const [loading, setLoading] = useState(true);
   const [buscandoUbicacion, setBuscandoUbicacion] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  // Versión "con pausa" de lo que escribís: la lista y los chips usan esta,
+  // así no se rearman con cada letra (eso hacía saltar la pantalla)
+  const [terminoBuscado, setTerminoBuscado] = useState('');
+  useEffect(() => {
+    // Si borrás todo, se actualiza al instante; si escribís, espera 500ms de pausa
+    if (searchTerm === '') { setTerminoBuscado(''); return; }
+    const timer = setTimeout(() => setTerminoBuscado(searchTerm), 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   // ¿Hay al menos un profesional o clínica con cada modalidad? Si no hay nadie, se oculta el botón
   const hayDomicilio = veterinarios.some(v => v.domicilio);
@@ -159,8 +168,25 @@ const Cartilla = () => {
   const hayUrgenciaDomicilio = veterinarios.some(v => v.urgenciaDomicilio);
   const hayGuardia24hs = veterinarios.some(v => v.tipo === 'clinica' && v.guardia24hs);
 
+  // Referencia a la barra de búsqueda + dónde estaba parada en la pantalla antes de cambiar de pestaña
+  const barraWrapRef = useRef(null);
+  const topBarraAntes = useRef(null);
+
+  // Después de cambiar de pestaña, corregimos el scroll para que la barra quede en el mismo lugar
+  // (si no, la página se acorta y el celular te manda hacia arriba)
+  useLayoutEffect(() => {
+    if (topBarraAntes.current === null) return;
+    const topAhora = barraWrapRef.current?.getBoundingClientRect().top;
+    if (topAhora !== undefined) {
+      window.scrollBy({ top: topAhora - topBarraAntes.current, behavior: 'instant' });
+    }
+    topBarraAntes.current = null;
+  }, [activeTab]);
+
   // Elegir pestaña: si ya estaba elegida, la soltamos y volvemos a ver todo
   const elegirTab = (valor) => {
+    // Anotamos dónde está la barra ANTES del cambio
+    topBarraAntes.current = barraWrapRef.current?.getBoundingClientRect().top ?? null;
     setActiveTab(prev => {
       const nuevo = typeof valor === 'function' ? valor(prev) : valor;
       return prev === nuevo ? 'todos' : nuevo;
@@ -465,7 +491,7 @@ const Cartilla = () => {
   const veterinariosFiltrados = veterinarios.filter(v => {
     // Buscador de texto libre: busca en nombre, apellido, especialidad, servicios,
     // provincia, dirección, zonas y barrios. Cada palabra tiene que aparecer en algún lado.
-    if (searchTerm) {
+    if (terminoBuscado) {
       const textoDelItem = normalizar([
         v.nombre, v.apellido, v.especialidad, v.provincia, v.direccion,
         ...(Array.isArray(v.servicios) ? v.servicios : []),
@@ -477,7 +503,7 @@ const Cartilla = () => {
       ].filter(Boolean).join(' '));
 
       // Búsqueda tolerante: perdona errores de ortografía y entiende sinónimos
-      if (!coincideBusqueda(searchTerm, textoDelItem)) return false;
+      if (!coincideBusqueda(terminoBuscado, textoDelItem)) return false;
     }
 
     if (filtros.zonas.length > 0 && !filtros.zonas.includes(v.provincia)) return false;
@@ -514,7 +540,7 @@ const Cartilla = () => {
 
   const claseGrilla = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4";
 
-  const hayFiltrosActivos = searchTerm.trim() || filtros.zonas.length > 0 || filtros.especialidades.length > 0 || grupoElegido || filtros.domicilio || filtros.virtual || filtros.urgenciaDomicilio || filtros.guardia24hs;
+  const hayFiltrosActivos = terminoBuscado.trim() || filtros.zonas.length > 0 || filtros.especialidades.length > 0 || grupoElegido || filtros.domicilio || filtros.virtual || filtros.urgenciaDomicilio || filtros.guardia24hs;
 
   return (
     <>
@@ -546,7 +572,7 @@ const Cartilla = () => {
             </section>
 
             {/* BARRA DE BÚSQUEDA — sin pestaña "Todos": se ve todo de entrada y las pestañas filtran */}
-            <div className="lg:-ml-3 lg:mt-0">
+            <div ref={barraWrapRef} className="lg:-ml-3 lg:mt-0">
               <BarraFiltros
                 tabs={[
                   { id: 'especialistas', label: 'Especialistas', icon: Stethoscope, tourId: 'tour-tab-especialistas' },
@@ -616,9 +642,9 @@ const Cartilla = () => {
                 </span>
                 <ChevronRight className="w-4 h-4 text-gray-300" />
 
-                {searchTerm.trim() && (
+                {terminoBuscado.trim() && (
                   <button type="button" onClick={() => setSearchTerm('')} className={claseChip} title="Sacar esta búsqueda">
-                    <Search className="w-3.5 h-3.5 text-[#2D6A6A]" /> {searchTerm.trim()} <X className="w-3.5 h-3.5 text-gray-400" />
+                    <Search className="w-3.5 h-3.5 text-[#2D6A6A]" /> {terminoBuscado.trim()} <X className="w-3.5 h-3.5 text-gray-400" />
                   </button>
                 )}
                 {grupoElegido && (
@@ -665,7 +691,7 @@ const Cartilla = () => {
           );
         })()}
 
-        <div className="max-w-6xl mx-auto w-full px-4 mt-2 mb-4 relative z-10 font-['Inter'] min-h-[80vh]">
+        <div className="max-w-6xl mx-auto w-full px-4 mt-2 mb-4 relative z-10 font-['Inter'] min-h-[80vh] [overflow-anchor:none]">
           {loading && (
             <div className="flex justify-center items-center py-20">
               <div className="w-12 h-12 border-4 border-[#2D6A6A]/20 border-t-[#2D6A6A] rounded-full animate-spin"></div>
