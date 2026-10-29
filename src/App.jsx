@@ -119,6 +119,7 @@ export default function App() {
             {/* Perfiles públicos */}
             <Route path="/perfil-profesional" element={<Perfil />} />
             <Route path="/perfil-proveedores" element={<PerfilProveedor />} />
+            <Route path="/profesional" element={<Navigate to="/Cartilla" replace />} />
             <Route path="/profesional/:slug" element={<Perfil />} />
             <Route path="/clinica/:slug" element={<PerfilClinica />} />
             <Route path="/proveedor/:slug" element={<PerfilProveedor />} />
