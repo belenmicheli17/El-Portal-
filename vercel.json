@@ -1,6 +1,16 @@
 {
   "rewrites": [
     { "source": "/sitemap.xml", "destination": "/api/sitemap" },
+    {
+      "source": "/profesional/:slug",
+      "has": [{ "type": "header", "key": "user-agent", "value": "(?i).*(googlebot|bingbot|duckduckbot|yandex|baiduspider|facebookexternalhit|twitterbot|linkedinbot|slackbot|telegrambot|whatsapp).*" }],
+      "destination": "/api/seo?tipo=profesional&slug=:slug"
+    },
+    {
+      "source": "/clinica/:slug",
+      "has": [{ "type": "header", "key": "user-agent", "value": "(?i).*(googlebot|bingbot|duckduckbot|yandex|baiduspider|facebookexternalhit|twitterbot|linkedinbot|slackbot|telegrambot|whatsapp).*" }],
+      "destination": "/api/seo?tipo=clinica&slug=:slug"
+    },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "crons": [
