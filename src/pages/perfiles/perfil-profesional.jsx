@@ -219,6 +219,40 @@ setData({
     }
   }, [selectedCaso, isPhotoModalOpen]);
 
+  // SEO dinámico: título y descripción propios para cada perfil.
+  // Es lo que Google muestra en los resultados de búsqueda.
+  useEffect(() => {
+    if (!data) return;
+
+    // Guardamos los valores anteriores para devolverlos al salir del perfil
+    const tituloAnterior = document.title;
+    let meta = document.querySelector('meta[name="description"]');
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.name = 'description';
+      document.head.appendChild(meta);
+    }
+    const descripcionAnterior = meta.content;
+
+    // Título: "Mercedes Arenas | Cirugía general y traumatología | El Portal Veterinario"
+    const nombreCompleto = `${data.nombre || ''} ${data.apellido || ''}`.trim();
+    const partesTitulo = [nombreCompleto, data.especialidad, 'El Portal Veterinario'].filter(Boolean);
+    document.title = partesTitulo.join(' | ');
+
+    // Descripción: nombre + especialidad + provincia + el comienzo de la bio (máx. ~155 letras)
+    const intro = [data.especialidad, data.provincia ? `en ${data.provincia}` : ''].filter(Boolean).join(' ');
+    const bioLimpia = (data.bio || '').replace(/\s+/g, ' ').trim();
+    let descripcion = `${nombreCompleto}${intro ? ' — ' + intro : ''}. ${bioLimpia}`.trim();
+    if (descripcion.length > 155) descripcion = descripcion.slice(0, 152).trim() + '...';
+    meta.content = descripcion;
+
+    // Al salir del perfil, devolvemos el título y la descripción de antes
+    return () => {
+      document.title = tituloAnterior;
+      meta.content = descripcionAnterior;
+    };
+  }, [data]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#F4F7F7] flex flex-col items-center justify-center gap-4">
