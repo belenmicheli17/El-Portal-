@@ -703,6 +703,7 @@ apellido: '',
   especialidad: '',
   matricula: '',
 tipoMatricula: 'MP',
+  tituloGenero: '',
 matricula2: undefined,
 tipoMatricula2: undefined,
   provincia: 'Buenos Aires',
@@ -1921,6 +1922,28 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
                           <select id="provincia" value={formData.provincia} onChange={handleChange} className="w-full bg-gray-50/50 border border-gray-200 rounded-2xl px-5 py-3.5 text-base font-medium focus:outline-none focus:border-[#2D6A6A] text-[#1A3D3D] shadow-sm transition-colors">
                             {provincias.map(p => <option key={p} value={p}>{p}</option>)}
                           </select>
+                        </div>
+                        <div className="mb-6 text-left">
+                          <label className="flex items-center text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">
+                            Cómo figura tu título
+                            <Tooltip text="Elegí cómo querés que se lea tu título en Google y en tu perfil. Si no especificás, aparece como Veterinaria/o." />
+                          </label>
+                          <div className="grid grid-cols-3 gap-2">
+                            {[
+                              { valor: 'veterinaria', texto: 'Veterinaria' },
+                              { valor: 'veterinario', texto: 'Veterinario' },
+                              { valor: '', texto: 'No especificar' }
+                            ].map((op) => (
+                              <button
+                                key={op.valor || 'ninguno'}
+                                type="button"
+                                onClick={() => setFormData(prev => ({ ...prev, tituloGenero: op.valor }))}
+                                className={`px-2 py-3.5 rounded-2xl border text-[13px] font-bold transition-colors ${(formData.tituloGenero || '') === op.valor ? 'bg-[#1A3D3D] text-white border-[#1A3D3D]' : 'bg-gray-50/50 text-gray-600 border-gray-200 hover:border-[#2D6A6A]'}`}
+                              >
+                                {op.texto}
+                              </button>
+                            ))}
+                          </div>
                         </div>
                       </div>
                     </Accordion>
