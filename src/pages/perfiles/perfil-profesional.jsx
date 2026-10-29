@@ -319,6 +319,7 @@ setData({
   }
 
   const isPro = data.planActual === 'pro';
+  const destacado = data.tituloGenero === 'veterinaria' ? 'Destacada' : data.tituloGenero === 'veterinario' ? 'Destacado' : 'Destacado/a';
   const tieneCasos = isPro && data.casos && data.casos.length > 0;
 const mobileTabs = [
   'perfil',
@@ -663,7 +664,7 @@ const mobileTabs = [
     <div className="w-8 h-8 rounded-2xl bg-yellow-50 flex items-center justify-center text-yellow-600 border border-yellow-100">
       <Award className="w-4 h-4" />
     </div>
-    <p className="font-bold text-[#1A3D3D] text-[11px] uppercase tracking-wide text-center">Destacada</p>
+    <p className="font-bold text-[#1A3D3D] text-[11px] uppercase tracking-wide text-center">{destacado}</p>
   </div>
   {data.atiendeDomicilio && (
     <button type="button" onClick={scrollToContacto} className="flex flex-col items-center gap-1.5 w-[80px] active:scale-95 transition-transform">
@@ -1122,7 +1123,7 @@ return (
                   <div className="w-12 h-12 rounded-2xl bg-yellow-50 flex items-center justify-center text-yellow-600 border border-yellow-100"><Award className="w-5 h-5" /></div>
                   <div>
                     <p className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.3em] mb-2 leading-none">Reconocimiento</p>
-                    <p className="font-bold text-[#1A3D3D] text-[15px] uppercase tracking-wide">Especialista Destacada</p>
+                    <p className="font-bold text-[#1A3D3D] text-[15px] uppercase tracking-wide">Especialista {destacado}</p>
                   </div>
                 </div>
                 {data.atiendeDomicilio && (
