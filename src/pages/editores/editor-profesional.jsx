@@ -1925,11 +1925,11 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
                         </div>
                         <div className="mb-6 text-left">
                           <label className="flex items-center text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">
-                            Cómo figura tu título
+                            Cómo te identificas
                             <Tooltip text="Elegí cómo querés que se lea tu título en Google y en tu perfil. Si no especificás, aparece como Veterinaria/o." />
                           </label>
                           <div className="grid grid-cols-3 gap-2">
-                            {[
+                            {[ 
                               { valor: 'veterinaria', texto: 'Veterinaria' },
                               { valor: 'veterinario', texto: 'Veterinario' },
                               { valor: '', texto: 'No especificar' }

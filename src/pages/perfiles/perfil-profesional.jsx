@@ -238,12 +238,13 @@ setData({
     // Siempre incluye la palabra "Veterinaria/o" para que Google lo relacione con esa búsqueda
     const nombreCompleto = `${data.nombre || ''} ${data.apellido || ''}`.trim();
     const ubicacion = data.provincia ? ` en ${data.provincia}` : '';
-    document.title = `${nombreCompleto} | Veterinaria/o | Cartilla Veterinaria`;
+    const tipoTitulo = data.tituloGenero === 'veterinaria' ? 'Veterinaria' : data.tituloGenero === 'veterinario' ? 'Veterinario' : 'Veterinaria/o';
+    document.title = `${nombreCompleto} | ${tipoTitulo} | Cartilla Veterinaria`;
 
     // Descripción: nombre + "veterinaria/o" + especialidad + el comienzo de la bio (máx. ~155 letras)
     const especialidadTexto = data.especialidad ? ` especialista en ${data.especialidad}` : '';
     const bioLimpia = (data.bio || '').replace(/\s+/g, ' ').trim();
-    let descripcion = `${nombreCompleto}, veterinaria/o${especialidadTexto}${ubicacion}. ${bioLimpia}`.trim();
+    let descripcion = `${nombreCompleto}, ${tipoTitulo.toLowerCase()}${especialidadTexto}${ubicacion}. ${bioLimpia}`.trim();
     if (descripcion.length > 155) descripcion = descripcion.slice(0, 152).trim() + '...';
     meta.content = descripcion;
 

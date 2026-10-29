@@ -49,10 +49,11 @@ ${cuerpo}
 
 function armarProfesional(data, slug) {
   const nombre = `${data.nombre || ''} ${data.apellido || ''}`.trim();
+  const tipoTitulo = data.tituloGenero === 'veterinaria' ? 'Veterinaria' : data.tituloGenero === 'veterinario' ? 'Veterinario' : 'Veterinaria/o';
   const provincia = data.provincia || '';
   const intro = [data.especialidad ? `especialista en ${data.especialidad}` : '', provincia ? `en ${provincia}` : '']
     .filter(Boolean).join(' ');
-  const descripcion = recortar(`${nombre}, veterinaria/o ${intro}. ${data.bio || ''}`, 155);
+  const descripcion = recortar(`${nombre}, ${tipoTitulo.toLowerCase()} ${intro}. ${data.bio || ''}`, 155);
 
   const trayectoria = (Array.isArray(data.trayectoria) ? data.trayectoria : [])
     .filter((t) => t && (t.titulo || t.desc))
@@ -66,13 +67,13 @@ function armarProfesional(data, slug) {
     .join('\n');
 
   const cuerpo = `<h1>${esc(nombre)}</h1>
-<p>Veterinaria/o${data.especialidad ? ' · ' + esc(data.especialidad) : ''}${provincia ? ' · ' + esc(provincia) : ''}</p>
+<p>${tipoTitulo}${data.especialidad ? ' · ' + esc(data.especialidad) : ''}${provincia ? ' · ' + esc(provincia) : ''}</p>
 ${data.bio ? `<p>${esc(data.bio)}</p>` : ''}
 ${trayectoria ? `<h2>Trayectoria</h2>\n<ul>\n${trayectoria}\n</ul>` : ''}
 ${lugares ? `<h2>Dónde atiende</h2>\n<ul>\n${lugares}\n</ul>` : ''}`;
 
   return pagina({
-    titulo: `${nombre} | Veterinaria/o | Cartilla Veterinaria`,
+    titulo: `${nombre} | ${tipoTitulo} | Cartilla Veterinaria`,
     descripcion,
     ruta: `/profesional/${encodeURIComponent(slug)}`,
     cuerpo
