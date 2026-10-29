@@ -234,15 +234,16 @@ setData({
     }
     const descripcionAnterior = meta.content;
 
-    // Título: "Mercedes Arenas | Cirugía general y traumatología | El Portal Veterinario"
+    // Título: "Mercedes Arenas | Veterinaria/o en Buenos Aires | El Portal Veterinario"
+    // Siempre incluye la palabra "Veterinaria/o" para que Google lo relacione con esa búsqueda
     const nombreCompleto = `${data.nombre || ''} ${data.apellido || ''}`.trim();
-    const partesTitulo = [nombreCompleto, data.especialidad, 'El Portal Veterinario'].filter(Boolean);
-    document.title = partesTitulo.join(' | ');
+    const ubicacion = data.provincia ? ` en ${data.provincia}` : '';
+    document.title = `${nombreCompleto} | Veterinaria/o | Cartilla Veterinaria`;
 
-    // Descripción: nombre + especialidad + provincia + el comienzo de la bio (máx. ~155 letras)
-    const intro = [data.especialidad, data.provincia ? `en ${data.provincia}` : ''].filter(Boolean).join(' ');
+    // Descripción: nombre + "veterinaria/o" + especialidad + el comienzo de la bio (máx. ~155 letras)
+    const especialidadTexto = data.especialidad ? ` especialista en ${data.especialidad}` : '';
     const bioLimpia = (data.bio || '').replace(/\s+/g, ' ').trim();
-    let descripcion = `${nombreCompleto}${intro ? ' — ' + intro : ''}. ${bioLimpia}`.trim();
+    let descripcion = `${nombreCompleto}, veterinaria/o${especialidadTexto}${ubicacion}. ${bioLimpia}`.trim();
     if (descripcion.length > 155) descripcion = descripcion.slice(0, 152).trim() + '...';
     meta.content = descripcion;
 

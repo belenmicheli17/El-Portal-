@@ -212,6 +212,50 @@ export default function PerfilClinica() {
     };
   }, []);
 
+  // SEO dinámico: título y descripción propios para cada clínica.
+  // Es lo que Google muestra en los resultados de búsqueda.
+  useEffect(() => {
+    if (!data) return;
+
+    // Guardamos los valores anteriores para devolverlos al salir del perfil
+    const tituloAnterior = document.title;
+    let meta = document.querySelector('meta[name="description"]');
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.name = 'description';
+      document.head.appendChild(meta);
+    }
+    const descripcionAnterior = meta.content;
+
+    // Zona: "Castelar, Buenos Aires" (sin repetir "Provincia de")
+    const provincia = (data.provincia || '').replace(/^Provincia de\s+/i, '').trim();
+    const zonaClinica = data.barrio || data.localidad || '';
+    const ubicacionSeo = [zonaClinica, provincia].filter(Boolean).join(', ');
+    const enUbicacion = ubicacionSeo ? ` en ${ubicacionSeo}` : '';
+
+    // Si el nombre ya dice "veterinaria", no se lo repetimos
+    const nombreClinica = (data.nombre || '').trim();
+    const yaDiceVeterinaria = /veterinari/i.test(nombreClinica);
+    const nombreConTipo = yaDiceVeterinaria ? nombreClinica : `Veterinaria ${nombreClinica}`;
+
+    // Título corto (Google corta a ~60 caracteres): "Veterinaria Dequivet | El Portal Veterinario"
+    // La ubicación queda solo en la descripción, que tiene más lugar
+    document.title = `${nombreConTipo} | Cartilla Veterinaria`;
+
+    // Descripción: nombre + zona + guardia 24 hs (si tiene) + el comienzo de la presentación
+    const guardiaTexto = data.guardia24hs ? ' Con guardia las 24 horas.' : '';
+    const textoBase = (data.historia || data.descripcion || '').replace(/\s+/g, ' ').trim();
+    let descripcion = `${nombreConTipo}${enUbicacion}.${guardiaTexto} ${textoBase}`.trim();
+    if (descripcion.length > 155) descripcion = descripcion.slice(0, 152).trim() + '...';
+    meta.content = descripcion;
+
+    // Al salir del perfil, devolvemos el título y la descripción de antes
+    return () => {
+      document.title = tituloAnterior;
+      meta.content = descripcionAnterior;
+    };
+  }, [data]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#F4F7F7] flex flex-col items-center justify-center">
