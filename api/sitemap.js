@@ -68,6 +68,15 @@ export default async function handler(req, res) {
       bloques.push(armarUrl(`/profesional/${encodeURIComponent(data.slug)}`, '0.8', 'weekly'));
     });
 
+    const snapClinicas = await db.collection('clinicas').get();
+    snapClinicas.forEach((doc) => {
+      const data = doc.data();
+      if (data.visible === false) return;
+      const identificador = data.slug || doc.id;
+      if (!identificador) return;
+      bloques.push(armarUrl(`/clinica/${encodeURIComponent(identificador)}`, '0.8', 'weekly'));
+    });
+
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${bloques.join('\n')}

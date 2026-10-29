@@ -234,7 +234,7 @@ setData({
     }
     const descripcionAnterior = meta.content;
 
-    // Título: "Mercedes Arenas | Veterinaria/o en Buenos Aires | El Portal Veterinario"
+    // Título: "Mercedes Arenas | Veterinaria/o en Buenos Aires | Portal Veterinario"
     // Siempre incluye la palabra "Veterinaria/o" para que Google lo relacione con esa búsqueda
     const nombreCompleto = `${data.nombre || ''} ${data.apellido || ''}`.trim();
     const ubicacion = data.provincia ? ` en ${data.provincia}` : '';
@@ -347,7 +347,7 @@ const mobileTabs = [
   };
 
   const handleSendMail = () => {
-    window.location.href = `mailto:${data.emailContacto}?subject=Consulta desde El Portal Veterinario`;
+    window.location.href = `mailto:${data.emailContacto}?subject=Consulta desde Portal Veterinario`;
   };
 
  

@@ -225,7 +225,7 @@ export default function Login() {
           </p>
         </div>
         <div className="relative z-10 mt-10">
-          <p className="text-white/40 text-[12px] font-medium">© {new Date().getFullYear()} El Portal Veterinario.</p>
+          <p className="text-white/40 text-[12px] font-medium">© {new Date().getFullYear()} Portal Veterinario.</p>
         </div>
       </div>
 

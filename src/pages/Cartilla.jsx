@@ -240,7 +240,7 @@ const Cartilla = () => {
       document.title = 'Guardia veterinaria 24hs cerca tuyo | Cartilla Veterinaria';
       meta.content = 'Encontrá clínicas veterinarias con guardia 24 horas cerca tuyo. Atención de urgencias para tu mascota en cualquier momento.';
     } else {
-      document.title = 'Cartilla de Veterinarios: Especialistas y Clínicas cerca tuyo | Cartilla Veterinaria';
+      document.title = 'Cartilla de Veterinarios y Clínicas cerca tuyo | Cartilla Veterinaria';
       meta.content = 'Encontrá todos los especialistas veterinarios y clínicas cerca tuyo: guardias 24 horas, atención a domicilio y profesionales verificados en toda Argentina.';
     }
   }, [searchParams]);

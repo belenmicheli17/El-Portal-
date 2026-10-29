@@ -238,7 +238,6 @@ export default function PerfilClinica() {
     const yaDiceVeterinaria = /veterinari/i.test(nombreClinica);
     const nombreConTipo = yaDiceVeterinaria ? nombreClinica : `Veterinaria ${nombreClinica}`;
 
-    // Título corto (Google corta a ~60 caracteres): "Veterinaria Dequivet | El Portal Veterinario"
     // La ubicación queda solo en la descripción, que tiene más lugar
     document.title = `${nombreConTipo} | Cartilla Veterinaria`;
 
