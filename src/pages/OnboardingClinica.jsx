@@ -13,7 +13,7 @@ import especialidadesData from '../data/especialidades.json';
 import equipamientoData from '../data/equipamientoClinicas.json';
 import provincias from '../data/provincias.js';
 import {
-  BuscadorDireccionGoogle, RecortadorImagen, SelectorServicios,
+  BuscadorDireccionGoogle, RecortadorImagen, RecortadorPortada, SelectorServicios,
   normalizarServicios, contarServicios, generarSlug, instagramAURL, usuarioDeInstagram,
   leerArchivoComoDataURL, comprimirImagen, normalizarWeb, esEmailValido
 } from '../components/editor/EditorComponents';
@@ -89,10 +89,11 @@ const CLASE_BTN_SECUNDARIO = "bg-white text-[#1A3D3D] border border-gray-200 rou
 
 // Estado inicial de todo lo que se carga en el cuestionario
 const ESTADO_INICIAL = {
-  nombre: '', foto: '', desc: '', anios: '',
+  nombre: '', foto: '', portada: '', desc: '', anios: '',
   directorNombre: '', tipo: 'MP', mat: '', provMat: provincias[0] || 'Buenos Aires',
   tituloPath: '', tituloNombre: '',
   direccion: '', placeId: '', lat: null, lng: null, provincia: '', localidad: '', barrio: '',
+  sedes: [],       // otras sedes: [{ id, nombre, direccion, placeId, lat, lng, provincia, localidad, barrio }]
   wa: '',          // solo los dígitos, sin el 54
   telefono: '', email: '', web: '',
   domicilio: false,
@@ -416,6 +417,8 @@ export default function OnboardingClinica() {
   const [error, setError] = useState('');
   const [guardando, setGuardando] = useState(false);
   const [subiendoLogo, setSubiendoLogo] = useState(false);
+  const [subiendoPortada, setSubiendoPortada] = useState(false);
+  const [portadaParaRecortar, setPortadaParaRecortar] = useState(null);
   const [subiendoTitulo, setSubiendoTitulo] = useState(false);
   const [progresoTitulo, setProgresoTitulo] = useState(0);
   const [subiendoGaleria, setSubiendoGaleria] = useState(false);
@@ -425,6 +428,7 @@ export default function OnboardingClinica() {
   const [motivoRechazo, setMotivoRechazo] = useState('');
   // Si está en la pantalla de la pregunta "¿Cómo llegaron?" (antes de enviar)
   const [enEncuesta, setEnEncuesta] = useState(false);
+  const [textoSede, setTextoSede] = useState('');
 
   // Datos del sistema de la clínica (no los edita la persona): si el documento ya existe y cuál es su slug
   const sistema = useRef({ existe: false, slug: '' });
@@ -473,6 +477,7 @@ export default function OnboardingClinica() {
           ...ESTADO_INICIAL,
           nombre: clinica.nombre || '',
           foto: clinica.foto || '',
+          portada: clinica.portada || '',
           desc: clinica.descripcion || '',
           anios: clinica.añosExperiencia === null || clinica.añosExperiencia === undefined ? '' : String(clinica.añosExperiencia),
           directorNombre: currentUser.directorNombre || '',
@@ -488,6 +493,7 @@ export default function OnboardingClinica() {
           provincia: clinica.provincia || '',
           localidad: clinica.localidad || '',
           barrio: clinica.barrio || '',
+          sedes: Array.isArray(clinica.sedes) ? clinica.sedes : [],
           wa: String(clinica.whatsapp || '').replace(/\D/g, '').replace(/^54/, ''),
           telefono: clinica.telefono || '',
           email: clinica.email || '',
@@ -596,6 +602,38 @@ export default function OnboardingClinica() {
     }
   };
 
+  // ----- Portada: se elige la foto, se encuadra y recién ahí se sube -----
+  const manejarPortada = async (evento) => {
+    const archivo = evento.target.files[0];
+    evento.target.value = null;
+    if (!archivo) return;
+    if (!archivo.type.startsWith('image/')) { setError('Elegí una imagen (JPG o PNG).'); return; }
+    if (archivo.size > 15 * 1024 * 1024) { setError('La imagen no puede pesar más de 15 MB.'); return; }
+    try {
+      setPortadaParaRecortar(await leerArchivoComoDataURL(archivo));
+    } catch (e) {
+      console.error('Error leyendo la imagen:', e);
+      setError('No pudimos abrir la imagen. Probá con otra.');
+    }
+  };
+
+  const subirPortadaRecortada = async (imagenRecortada) => {
+    setPortadaParaRecortar(null);
+    setSubiendoPortada(true);
+    setError('');
+    try {
+      const archivoRef = ref(storage, `clinicas/${currentUser.uid}/portada_${Date.now()}.jpg`);
+      await uploadString(archivoRef, imagenRecortada, 'data_url');
+      const url = await getDownloadURL(archivoRef);
+      setDatos((previo) => ({ ...previo, portada: url }));
+    } catch (e) {
+      console.error('Error subiendo la portada:', e);
+      setError('No pudimos subir la portada. Revisá tu conexión y probá de nuevo.');
+    } finally {
+      setSubiendoPortada(false);
+    }
+  };
+
   // ----- Foto del título del director/a (va a una carpeta privada de Storage) -----
   const manejarTitulo = async (evento) => {
     const archivo = evento.target.files[0];
@@ -666,6 +704,23 @@ export default function OnboardingClinica() {
       localidad: lugar.localidad,
       barrio: lugar.barrio
     }));
+    setError('');
+  };
+
+  // ----- Otras sedes: cada una con su dirección confirmada por Google -----
+  const agregarSede = (lugar) => {
+    setDatos((previo) => {
+      // Si esa dirección ya está cargada, no la repetimos
+      if (previo.placeId === lugar.placeId || previo.sedes.some((s) => s.placeId === lugar.placeId)) return previo;
+      return {
+        ...previo,
+        sedes: [...previo.sedes, {
+          id: Date.now(), nombre: '', direccion: lugar.direccion, placeId: lugar.placeId,
+          lat: lugar.lat, lng: lugar.lng, provincia: lugar.provincia, localidad: lugar.localidad, barrio: lugar.barrio
+        }]
+      };
+    });
+    setTextoSede('');
     setError('');
   };
 
@@ -753,6 +808,7 @@ export default function OnboardingClinica() {
     }
     if (p === 2) {
       if (!datos.placeId) return 'Elegí la dirección de la lista de Google para confirmarla.';
+      if (textoSede.trim()) return 'Elegí la otra sede de la lista de Google para confirmarla, o borrá lo que escribiste.';
       if (contarDigitos(datos.wa) < 8) return 'Cargá el WhatsApp de la clínica (con código de área, ej: 11 2345 6789).';
       if (datos.email.trim() && !esEmailValido(datos.email)) return 'Revisá el email: parece que falta algo.';
       if (!datos.guardia) {
@@ -783,7 +839,7 @@ export default function OnboardingClinica() {
     if (p === 0) {
       return {
         clinica: {
-          uid: currentUser.uid, slug, nombre: d.nombre.trim(), foto: d.foto,
+          uid: currentUser.uid, slug, nombre: d.nombre.trim(), foto: d.foto, portada: d.portada || '',
           descripcion: d.desc.trim(),
           añosExperiencia: d.anios === '' ? null : Number(d.anios),
           // Una clínica nueva no se publica hasta que la verifiquemos
@@ -811,6 +867,10 @@ export default function OnboardingClinica() {
           whatsapp: d.wa ? `54${d.wa}` : '', telefono: d.telefono.trim(),
           email: d.email.trim(), sitioWeb: normalizarWeb(d.web),
           atiendeDomicilio: d.domicilio,
+          sedes: d.sedes.map((s) => ({
+            id: s.id, nombre: (s.nombre || '').trim(), direccion: s.direccion, placeId: s.placeId,
+            lat: s.lat, lng: s.lng, provincia: s.provincia, localidad: s.localidad, barrio: s.barrio
+          })),
           guardia24hs: d.guardia,
           telefonoGuardia: d.guardia && d.wa ? `54${d.wa}` : '',
           horarios: {
@@ -991,7 +1051,7 @@ export default function OnboardingClinica() {
   };
 
   // Algo se está subiendo: bloqueamos los botones para no perder fotos
-  const hayAlgoSubiendo = subiendoLogo || subiendoTitulo || subiendoGaleria || subiendoFoto !== null;
+  const hayAlgoSubiendo = subiendoPortada || subiendoLogo || subiendoTitulo || subiendoGaleria || subiendoFoto !== null;
   const configRecorte = CONFIG_RECORTE[recorte.tipo] || CONFIG_RECORTE.logo;
 
   // ----- Pantalla de carga -----
@@ -1025,6 +1085,22 @@ export default function OnboardingClinica() {
               <p className={CLASE_AYUDA}>El logo o una foto de la fachada. Lo pueden sumar después.</p>
             </div>
           </div>
+
+          <span className={CLASE_LABEL}>Foto de portada (opcional)</span>
+          <label className={`block cursor-pointer rounded-2xl overflow-hidden border-2 border-dashed transition-all duration-300 ${datos.portada ? 'border-transparent' : 'border-[#2D6A6A]/40 hover:bg-[#2D6A6A]/5 hover:border-[#2D6A6A]'} ${subiendoPortada ? 'opacity-60 pointer-events-none' : ''}`}>
+            {datos.portada ? (
+              <img src={datos.portada} alt="Portada" className="w-full h-[140px] object-cover" />
+            ) : (
+              <span className="flex items-center justify-center gap-2.5 px-4 py-6 text-[#2D6A6A] text-[15px] font-semibold">
+                {subiendoPortada ? <><Loader2 className="w-5 h-5 animate-spin" /> Subiendo…</> : <><ImageIcon className="w-5 h-5" /> Subir foto de portada</>}
+              </span>
+            )}
+            <input type="file" accept="image/*" className="hidden" onChange={manejarPortada} disabled={subiendoPortada} />
+          </label>
+          {datos.portada && (
+            <button type="button" onClick={() => cambiar('portada', '')} className={`${CLASE_BTN_TEXTO} mt-1`}>Quitar portada</button>
+          )}
+          <p className={CLASE_AYUDA}>Ideal: una foto horizontal (apaisada) de la veterinaria. Si la dejan vacía no pasa nada: el perfil se ve igual, con la portada más chica.</p>
 
           <label className={CLASE_LABEL} htmlFor="ob-desc">Descripción corta<Obligatorio /></label>
           <textarea
@@ -1117,6 +1193,35 @@ export default function OnboardingClinica() {
           ) : (
             <p className={CLASE_AYUDA}>Elegí una opción de la lista para confirmar la dirección con Google.</p>
           )}
+
+          {datos.sedes.map((sede) => (
+            <div key={sede.id} className="border border-gray-200 rounded-2xl p-4 mt-4">
+              <div className="flex items-start gap-3">
+                <Building2 className="w-[22px] h-[22px] text-[#2D6A6A] mt-3 shrink-0" strokeWidth={1.5} />
+                <div className="flex-1 min-w-0 flex flex-col gap-2.5">
+                  <input aria-label="Nombre de la sede" value={sede.nombre} maxLength={50} onChange={(e) => actualizarEnLista('sedes', sede.id, 'nombre', e.target.value)} placeholder="Nombre de la sede (ej: Sede Palermo)" autoComplete="off" className={CLASE_INPUT} />
+                  <p className="text-sm text-[#666666] leading-snug">{sede.direccion}</p>
+                  <p className="text-[12px] font-semibold text-[#2D6A6A] flex items-center gap-1">
+                    <CheckCircle2 className="w-[15px] h-[15px]" /> Confirmado con Google{sede.barrio ? ` · Barrio: ${sede.barrio}` : ''}
+                  </p>
+                </div>
+                <button type="button" aria-label="Quitar sede" onClick={() => quitarDeLista('sedes', sede.id)} className="p-1.5 text-gray-400 hover:text-red-500 transition-colors">
+                  <Trash2 className="w-[18px] h-[18px]" />
+                </button>
+              </div>
+            </div>
+          ))}
+
+          <span className={CLASE_LABEL}>¿Tienen otra sede? (opcional)</span>
+          <BuscadorDireccionGoogle
+            id="ob-sede"
+            valor={textoSede}
+            onEscribir={setTextoSede}
+            onElegir={agregarSede}
+            placeholder="Buscá la dirección de otra sede"
+            listaProvincias={provincias}
+          />
+          <p className={CLASE_AYUDA}>Podés sumar todas las que quieras. Aparecen juntas en el mismo perfil.</p>
 
           <label className={CLASE_LABEL} htmlFor="ob-wa">WhatsApp de la clínica<Obligatorio /></label>
           <CampoWhatsapp id="ob-wa" valor={datos.wa} onCambio={(v) => cambiar('wa', v)} />
@@ -1467,6 +1572,26 @@ export default function OnboardingClinica() {
   // ==========================================
   return (
     <div className="min-h-screen bg-[#F4F7F7] font-['Inter'] text-[#333333] selection:bg-[#2D6A6A] selection:text-white">
+      {/* Ventana para encuadrar la portada */}
+      {portadaParaRecortar && (
+        <div className="fixed inset-0 bg-[#1A3D3D]/40 backdrop-blur-md z-[200] flex items-center justify-center p-4">
+          <div className="bg-white rounded-[32px] w-full max-w-lg overflow-hidden shadow-2xl flex flex-col">
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+              <div>
+                <h3 className="font-bold font-['Montserrat'] text-xl text-[#1A3D3D]">Encuadre de la portada</h3>
+                <p className="text-sm text-gray-500 mt-1">El recuadro es lo que se ve en tu perfil.</p>
+              </div>
+              <button onClick={() => setPortadaParaRecortar(null)} className="p-2.5 bg-gray-100 rounded-full hover:bg-red-100 hover:text-red-500 transition-colors">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="bg-[#F4F7F7] p-6 flex justify-center items-center">
+              <RecortadorPortada imagen={portadaParaRecortar} onAplicar={subirPortadaRecortada} onCancelar={() => setPortadaParaRecortar(null)} />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Ventana para encuadrar logo, fotos del staff o de los casos */}
       {recorte.abierto && (
         <div className="fixed inset-0 bg-[#1A3D3D]/40 backdrop-blur-md z-[200] flex items-center justify-center p-4">

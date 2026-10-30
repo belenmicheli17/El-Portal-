@@ -1,7 +1,10 @@
+import { useState as useEstado, useRef as useReferencia } from 'react';
+import { RotateCcw as IconoGiroIzq, RotateCw as IconoGiroDer, Check as IconoListo } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Info, ExternalLink, Eye, EyeOff, ChevronDown, Crop, Check, Search, X, Plus, MapPin, Maximize2, Stethoscope
 } from 'lucide-react';
+
 
 // =====================================================================
 // COMPONENTES COMPARTIDOS DE LOS EDITORES
@@ -138,7 +141,7 @@ export const datosDesdeLugarGoogle = (lugar, listaProvincias = []) => {
   const buscar = (tipo) => componentes.find((c) => c.types.includes(tipo))?.long_name || '';
   const localidad = buscar('locality') || buscar('administrative_area_level_2') || '';
   // Barrio: si Google lo tiene (ej: Palermo) usamos ese; si no, la localidad (ej: Castelar)
-  const barrio = buscar('neighborhood') || buscar('sublocality_level_1') || buscar('sublocality') || localidad;
+  const barrio = buscar('sublocality_level_1') || buscar('sublocality') || buscar('neighborhood') || localidad;
   return {
     nombre: lugar.name || '',
     direccion: lugar.formatted_address || '',
@@ -904,5 +907,116 @@ export function SelectorServicios({ servicios, setFormData, grupos, iconosGrupo 
         })}
       </div>
     </>
+  );
+}
+// ----- Recortador de portada: recuadro horizontal, se mueve, se acerca y se gira -----
+export function RecortadorPortada({ imagen, onAplicar, onCancelar }) {
+  const ANCHO = Math.min(448, (typeof window !== 'undefined' ? window.innerWidth : 448) - 96);
+  const ALTO = Math.round((ANCHO * 3) / 8);
+  const [zoom, setZoom] = useEstado(1);
+  const [giro, setGiro] = useEstado(0);
+  const [pos, setPos] = useEstado({ x: 0, y: 0 });
+  const [natural, setNatural] = useEstado({ ancho: 0, alto: 0 });
+  const [arrastrando, setArrastrando] = useEstado(false);
+  const [inicio, setInicio] = useEstado({ x: 0, y: 0 });
+  const imgRef = useReferencia(null);
+
+  // Si está girada de costado, ancho y alto se intercambian
+  const girada = giro % 180 !== 0;
+  const anchoVisible = girada ? natural.alto : natural.ancho;
+  const altoVisible = girada ? natural.ancho : natural.alto;
+  const escalaBase = anchoVisible ? Math.max(ANCHO / anchoVisible, ALTO / altoVisible) : 1;
+  const escala = escalaBase * zoom;
+  // La foto nunca deja huecos vacíos dentro del recuadro
+  const maxX = Math.max(0, (anchoVisible * escala - ANCHO) / 2);
+  const maxY = Math.max(0, (altoVisible * escala - ALTO) / 2);
+  const x = Math.min(maxX, Math.max(-maxX, pos.x));
+  const y = Math.min(maxY, Math.max(-maxY, pos.y));
+
+  const alApretar = (e) => {
+    e.preventDefault();
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+    setArrastrando(true);
+    setInicio({ x: e.clientX - x, y: e.clientY - y });
+  };
+  const alMover = (e) => {
+    if (!arrastrando) return;
+    setPos({ x: e.clientX - inicio.x, y: e.clientY - inicio.y });
+  };
+  const alSoltar = () => setArrastrando(false);
+
+  const girar = (grados) => {
+    setGiro((g) => (g + grados + 360) % 360);
+    setPos({ x: 0, y: 0 });
+  };
+
+  const aplicar = () => {
+    const k = 1600 / ANCHO;
+    const canvas = document.createElement('canvas');
+    canvas.width = 1600;
+    canvas.height = Math.round(ALTO * k);
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.translate(canvas.width / 2 + x * k, canvas.height / 2 + y * k);
+    ctx.rotate((giro * Math.PI) / 180);
+    ctx.scale(escala * k, escala * k);
+    ctx.drawImage(imgRef.current, -natural.ancho / 2, -natural.alto / 2);
+    onAplicar(canvas.toDataURL('image/jpeg', 0.88));
+  };
+
+  return (
+    <div className="flex flex-col items-center w-full">
+      <div
+        className="relative bg-gray-200 overflow-hidden cursor-move touch-none rounded-2xl shadow-inner ring-4 ring-[#2D6A6A]/40"
+        style={{ width: ANCHO, height: ALTO }}
+        onPointerDown={alApretar} onPointerMove={alMover} onPointerUp={alSoltar} onPointerCancel={alSoltar}
+      >
+        <img
+          ref={imgRef}
+          src={imagen}
+          alt="Portada"
+          draggable={false}
+          onLoad={(e) => setNatural({ ancho: e.target.naturalWidth, alto: e.target.naturalHeight })}
+          className="absolute pointer-events-none select-none max-w-none"
+          style={{
+            left: '50%', top: '50%', width: 'auto', height: 'auto', transformOrigin: 'center center',
+            transform: `translate(-50%, -50%) translate(${x}px, ${y}px) rotate(${giro}deg) scale(${escala})`
+          }}
+        />
+        {/* Guía en tercios para centrar */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute left-1/3 top-0 bottom-0 w-px bg-white/40" />
+          <div className="absolute left-2/3 top-0 bottom-0 w-px bg-white/40" />
+          <div className="absolute top-1/3 left-0 right-0 h-px bg-white/40" />
+          <div className="absolute top-2/3 left-0 right-0 h-px bg-white/40" />
+        </div>
+      </div>
+      <p className="text-xs text-gray-500 mt-3 text-center leading-relaxed max-w-[420px]">
+        Arrastrá para mover. En el celular los costados se ven más recortados: dejá lo importante en el centro.
+      </p>
+
+      <div className="mt-5 w-full max-w-[420px] flex items-center gap-4">
+        <button type="button" onClick={() => girar(-90)} className="p-3 rounded-xl bg-white border border-gray-200 text-[#1A3D3D] hover:border-[#2D6A6A] transition-colors" aria-label="Girar a la izquierda">
+          <IconoGiroIzq className="w-5 h-5" />
+        </button>
+        <button type="button" onClick={() => girar(90)} className="p-3 rounded-xl bg-white border border-gray-200 text-[#1A3D3D] hover:border-[#2D6A6A] transition-colors" aria-label="Girar a la derecha">
+          <IconoGiroDer className="w-5 h-5" />
+        </button>
+        <div className="flex-1">
+          <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 flex justify-between">
+            <span>Alejar</span><span>Acercar</span>
+          </label>
+          <input type="range" min="1" max="3" step="0.05" value={zoom} onChange={(e) => setZoom(parseFloat(e.target.value))} className="w-full accent-[#2D6A6A] h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" />
+        </div>
+      </div>
+
+      <div className="flex justify-end gap-3 w-full mt-6 border-t border-gray-100 pt-5">
+        <button type="button" onClick={onCancelar} className="px-6 py-3 rounded-xl text-gray-500 font-bold hover:bg-gray-100 transition-colors text-base">Cancelar</button>
+        <button type="button" onClick={aplicar} className="px-8 py-3 rounded-xl bg-[#1A3D3D] text-white font-bold hover:bg-[#2D6A6A] transition-colors shadow-lg flex items-center gap-2 text-base">
+          <IconoListo className="w-5 h-5" /> Aplicar
+        </button>
+      </div>
+    </div>
   );
 }

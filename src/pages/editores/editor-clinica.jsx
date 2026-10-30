@@ -16,7 +16,7 @@ import {
   Tooltip, InputGroup, ToggleSwitch, Accordion, PuntoAlerta, CampoWhatsapp, RecortadorImagen,
   BuscadorDireccionGoogle, SelectorServicios, normalizarServicios, contarServicios,
   soloDigitos, generarSlug, esEmailValido, esDataUrl, whatsappCompleto, usuarioDeInstagram,
-  instagramAURL, normalizarWeb, leerArchivoComoDataURL, comprimirImagen
+  instagramAURL, normalizarWeb, leerArchivoComoDataURL, comprimirImagen, RecortadorPortada
 } from '../../components/editor/EditorComponents';
 import {
   Camera, Info, AlertCircle, Save, X, Plus, Trash2, Crown,
@@ -100,6 +100,8 @@ const DATOS_INICIALES = {
   provincia: '',
   localidad: '',
   barrio: '',
+  sedes: [],
+  portada: '',
   telefono: '',
   whatsapp: '',
   email: '',
@@ -152,6 +154,8 @@ const prepararDatosCargados = (data) => ({
   provincia: data.provincia || '',
   localidad: data.localidad || '',
   barrio: data.barrio || '',
+  sedes: Array.isArray(data.sedes) ? data.sedes : [],
+    portada: data.portada || '',
   telefono: data.telefono || '',
   whatsapp: conPrefijo54(data.whatsapp),
   email: data.email || '',
@@ -233,6 +237,9 @@ export default function EditorClinico() {
   const [esNueva, setEsNueva] = useState(false);
   const [socioUsuario, setSocioUsuario] = useState(false);
   // Datos que maneja el sistema (no los edita la clínica)
+  const [textoSede, setTextoSede] = useState('');
+  const [subiendoPortada, setSubiendoPortada] = useState(false);
+  const [portadaParaRecortar, setPortadaParaRecortar] = useState(null);
   const [docSistema, setDocSistema] = useState({ existe: false, slug: '', slugLegado: null, socioVitalicio: false, visibleLegado: undefined });
 
   const formData = _formData;
@@ -433,6 +440,29 @@ export default function EditorClinico() {
     }));
   };
 
+  // ----- Otras sedes -----
+  const agregarSede = (lugar) => {
+    setFormData((prev) => {
+      if (prev.placeId === lugar.placeId || (prev.sedes || []).some((s) => s.placeId === lugar.placeId)) return prev;
+      return {
+        ...prev,
+        sedes: [...(prev.sedes || []), {
+          id: Date.now(), nombre: '', direccion: lugar.direccion, placeId: lugar.placeId,
+          lat: lugar.lat, lng: lugar.lng, provincia: lugar.provincia, localidad: lugar.localidad, barrio: lugar.barrio
+        }]
+      };
+    });
+    setTextoSede('');
+  };
+
+  const actualizarSede = (id, nombre) => {
+    setFormData((prev) => ({ ...prev, sedes: (prev.sedes || []).map((s) => (s.id === id ? { ...s, nombre } : s)) }));
+  };
+
+  const quitarSede = (id) => {
+    setFormData((prev) => ({ ...prev, sedes: (prev.sedes || []).filter((s) => s.id !== id) }));
+  };
+
   // ----- Preguntas frecuentes -----
   const handleFaqChange = (id, field, value) => {
     setFormData((prev) => ({ ...prev, faqs: prev.faqs.map((faq) => (faq.id === id ? { ...faq, [field]: value } : faq)) }));
@@ -450,7 +480,37 @@ export default function EditorClinico() {
     setFormData((prev) => ({ ...prev, faqs: prev.faqs.filter((faq) => faq.id !== id) }));
   };
 
-  // ----- Fotos: elegir → encuadrar → (se suben a Storage recién al guardar) -----
+  // Portada: se elige la foto, se encuadra y recién ahí se sube a Storage
+  const manejarPortada = async (e) => {
+    const archivo = e.target.files?.[0];
+    e.target.value = null;
+    if (!archivo) return;
+    if (!archivo.type.startsWith('image/')) { alert('Elegí una imagen (JPG o PNG).'); return; }
+    if (archivo.size > 15 * 1024 * 1024) { alert('La imagen no puede pesar más de 15 MB.'); return; }
+    try {
+      setPortadaParaRecortar(await leerArchivoComoDataURL(archivo));
+    } catch (error) {
+      console.error('Error leyendo la imagen:', error);
+      alert('No pudimos abrir la imagen. Probá con otra.');
+    }
+  };
+
+  const subirPortadaRecortada = async (imagenRecortada) => {
+    setPortadaParaRecortar(null);
+    setSubiendoPortada(true);
+    try {
+      const archivoRef = ref(storage, `clinicas/${currentUser.uid}/portada_${Date.now()}.jpg`);
+      await uploadString(archivoRef, imagenRecortada, 'data_url');
+      const url = await getDownloadURL(archivoRef);
+      setFormData((prev) => ({ ...prev, portada: url }));
+    } catch (error) {
+      console.error('Error subiendo la portada:', error);
+      alert('No pudimos subir la portada. Revisá tu conexión y probá de nuevo.');
+    } finally {
+      setSubiendoPortada(false);
+    }
+  };
+
   const handleFileSelect = async (e, tipo, targetId = null) => {
     const archivo = e.target.files?.[0];
     e.target.value = null;
@@ -586,6 +646,10 @@ export default function EditorClinico() {
     historia: f.historia.trim(),
     email: f.email.trim(),
     telefono: f.telefono.trim(),
+    sedes: (f.sedes || []).map((s) => ({
+      id: s.id, nombre: (s.nombre || '').trim(), direccion: s.direccion, placeId: s.placeId,
+      lat: s.lat ?? null, lng: s.lng ?? null, provincia: s.provincia || '', localidad: s.localidad || '', barrio: s.barrio || ''
+    })),
     sitioWeb: normalizarWeb(f.sitioWeb),
     redes: {
       instagram: instagramAURL(f.redes.instagram),
@@ -1270,6 +1334,26 @@ export default function EditorClinico() {
             {activeTab === 'perfil' && (
               <div className="flex flex-col w-full animate-in fade-in duration-300 relative">
 
+                {/* Ventana para encuadrar la portada */}
+                {portadaParaRecortar && (
+                  <div className="fixed inset-0 bg-[#1A3D3D]/40 backdrop-blur-md z-[200] flex items-center justify-center p-4">
+                    <div className="bg-white rounded-[32px] w-full max-w-lg overflow-hidden shadow-2xl flex flex-col">
+                      <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+                        <div>
+                          <h3 className="font-bold font-['Montserrat'] text-xl text-[#1A3D3D]">Encuadre de la portada</h3>
+                          <p className="text-sm text-gray-500 mt-1">El recuadro es lo que se ve en tu perfil.</p>
+                        </div>
+                        <button onClick={() => setPortadaParaRecortar(null)} className="p-2.5 bg-gray-100 rounded-full hover:bg-red-100 hover:text-red-500 transition-colors">
+                          <X className="w-6 h-6" />
+                        </button>
+                      </div>
+                      <div className="bg-[#F4F7F7] p-6 flex justify-center items-center">
+                        <RecortadorPortada imagen={portadaParaRecortar} onAplicar={subirPortadaRecortada} onCancelar={() => setPortadaParaRecortar(null)} />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* TARJETA DE HEADER */}
                 <div className="w-full bg-white rounded-[32px] shadow-sm border border-gray-100 mb-6 flex flex-col md:flex-row items-center p-6 gap-6">
                   <div className="relative shrink-0">
@@ -1382,6 +1466,36 @@ export default function EditorClinico() {
                             <Tooltip text="Subí el logo de tu clínica en alta resolución (con fondo blanco o transparente) o una foto de tu equipo para que sepan rápido quién los atiende." />
                           </h3>
                           <p className="text-xs text-gray-500 mb-4 leading-relaxed">Formatos PNG o JPG. Si tu logo es alargado, en el encuadre tocá "Ver la imagen entera".</p>
+                        </div>
+                      </div>
+
+                      <div className="mb-8 text-left">
+                        <h3 className="text-sm font-bold text-[#1A3D3D] mb-2 uppercase tracking-wide flex items-center">
+                          Foto de portada <span className="text-gray-400 ml-1.5 normal-case tracking-normal font-medium">(opcional)</span>
+                          <Tooltip text="Es la foto grande que se ve arriba de todo en tu perfil. Ideal: una foto horizontal (apaisada) de tu veterinaria." />
+                        </h3>
+                        <p className="text-xs text-gray-500 mb-3 leading-relaxed">Ideal: una foto horizontal de la veterinaria. Si la dejás vacía no pasa nada: tu perfil se ve igual, con la portada más chica.</p>
+                        <div className="relative">
+                          <label htmlFor="portada-upload" className={`block w-full rounded-[24px] overflow-hidden border-2 border-dashed ${formData.portada ? 'border-transparent' : 'border-gray-200 hover:border-[#2D6A6A]'} bg-gray-50 cursor-pointer transition-all ${subiendoPortada ? 'opacity-60 pointer-events-none' : ''}`}>
+                            {formData.portada ? (
+                              <img src={formData.portada} className="w-full h-[140px] object-cover" alt="Portada" />
+                            ) : (
+                              <span className="flex items-center justify-center gap-2 py-8 text-[#2D6A6A] text-sm font-bold">
+                                <Camera className="w-5 h-5" /> {subiendoPortada ? 'Subiendo…' : 'Subir foto de portada'}
+                              </span>
+                            )}
+                          </label>
+                          <input type="file" id="portada-upload" className="hidden" accept="image/*" onChange={manejarPortada} disabled={subiendoPortada} />
+                          {formData.portada && (
+                            <button
+                              type="button"
+                              onClick={() => setFormData((prev) => ({ ...prev, portada: '' }))}
+                              className="absolute top-2 right-2 p-1.5 bg-white text-red-500 rounded-full shadow-md hover:bg-red-50 transition-colors"
+                              aria-label="Quitar portada"
+                            >
+                              <X className="w-4 h-4" strokeWidth={3} />
+                            </button>
+                          )}
                         </div>
                       </div>
 
@@ -1523,6 +1637,39 @@ export default function EditorClinico() {
                             <AlertTriangle className="w-3 h-3 shrink-0" /> Elegí una opción de la lista que aparece al escribir
                           </p>
                         ) : null}
+                      </div>
+
+                      <div className="mb-6 w-full">
+                        <label className="flex items-center text-xs font-bold text-gray-500 uppercase tracking-widest leading-none mb-2 ml-1">
+                          Otras sedes (opcional)
+                        </label>
+                        {(formData.sedes || []).map((sede) => (
+                          <div key={sede.id} className="flex items-start gap-3 bg-gray-50/50 border border-gray-200 rounded-2xl p-4 mb-3">
+                            <MapPin className="w-5 h-5 text-[#2D6A6A] mt-3 shrink-0" />
+                            <div className="flex-1 min-w-0 flex flex-col gap-2">
+                              <input
+                                value={sede.nombre || ''}
+                                maxLength={50}
+                                onChange={(e) => actualizarSede(sede.id, e.target.value)}
+                                placeholder="Nombre de la sede (opcional, si tiene distinto nombre) Ej: Sede Palermo"
+                                className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-[15px] font-medium text-[#1A3D3D] outline-none focus:border-[#2D6A6A]"
+                              />
+                              <p className="text-[13px] text-gray-500 leading-snug">{sede.direccion}</p>
+                              <p className="text-[11px] text-[#2D6A6A] font-bold">Confirmada con Google{sede.barrio ? ` · Barrio: ${sede.barrio}` : ''}</p>
+                            </div>
+                            <button type="button" onClick={() => quitarSede(sede.id)} className="p-1.5 text-gray-400 hover:text-red-500 transition-colors" aria-label="Quitar sede">
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
+                        <BuscadorDireccionGoogle
+                          id="sede-nueva"
+                          valor={textoSede}
+                          onEscribir={setTextoSede}
+                          onElegir={agregarSede}
+                          placeholder="Buscá la dirección de otra sede"
+                          listaProvincias={provincias}
+                        />
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 mt-4">

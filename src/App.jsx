@@ -29,7 +29,7 @@ import Ecosistema from './pages/Ecosistema';
 import SalaDeEspera from './pages/SalaDeEspera';
 import Onboarding from './pages/Onboarding';
 import RestablecerClave from './pages/restablecer-clave';
-import OnboardingClinica from './pages/OnboardingClinica';
+import OnboardingClinica from './pages/Onboardingclinica';
 
 // Panel Admin
 import RutaProtegidaAdmin from './components/admin/RutaProtegidaAdmin';
@@ -47,6 +47,12 @@ import Configuracion from './pages/admin/Configuracion';
 // ==========================================
 // SCROLL TO TOP
 // ==========================================
+// Muestra lo que tenga adentro, salvo dentro del panel de admin
+const OcultarEnAdmin = ({ children }) => {
+  const { pathname } = useLocation();
+  return pathname.startsWith('/admin') ? null : children;
+};
+
 const ScrollToTop = () => {
   const { pathname } = useLocation();
   useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
@@ -105,7 +111,7 @@ export default function App() {
 
         <ScrollToTop />
         <BannerModoPrueba />
-        <AccessibilityWidget /> 
+        <OcultarEnAdmin><AccessibilityWidget /></OcultarEnAdmin> 
 
         <Routes>
 

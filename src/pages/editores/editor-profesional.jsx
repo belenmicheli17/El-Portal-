@@ -1203,7 +1203,7 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
           // usamos la localidad (igual que en el cuestionario de alta)
           const piezas = place.address_components || [];
           const buscarPieza = (tipoPieza) => piezas.find(p => p.types.includes(tipoPieza))?.long_name || '';
-          const barrioAuto = buscarPieza('sublocality_level_1') || buscarPieza('neighborhood') || buscarPieza('sublocality') || buscarPieza('locality');
+          const barrioAuto = buscarPieza('sublocality_level_1') || buscarPieza('sublocality') || buscarPieza('neighborhood') || buscarPieza('locality');
           updateClinica(zonaId, clinicaId, 'barrio', barrioAuto);
 
           // Teléfono automático: solo viene si el negocio lo tiene cargado en Google

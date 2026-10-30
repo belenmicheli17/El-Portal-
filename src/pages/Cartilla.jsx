@@ -44,6 +44,11 @@ const ubicacionProfesional = (item) => {
 // Dónde está una clínica: barrio, o la localidad de su dirección, o la provincia.
 // Si no hay ningún dato, no mostramos nada (antes salía una dirección de ejemplo).
 const ubicacionClinica = (item) => {
+  const cantidad = Array.isArray(item.sedes) ? item.sedes.length : 0;
+  return [ubicacionBaseClinica(item), cantidad > 0 ? `${cantidad + 1} sedes` : ''].filter(Boolean).join(' · ');
+};
+
+const ubicacionBaseClinica = (item) => {
   if ((item.barrio || '').trim()) return item.barrio.trim();
   if (item.direccion) {
     const partes = item.direccion.split(',').map(p => p.trim()).filter(Boolean);
@@ -494,6 +499,7 @@ const Cartilla = () => {
     if (terminoBuscado) {
       const textoDelItem = normalizar([
         v.nombre, v.apellido, v.especialidad, v.provincia, v.direccion,
+        ...(Array.isArray(v.sedes) ? v.sedes.flatMap(s => [s.nombre, s.direccion, s.barrio, s.localidad]) : []),
         ...(Array.isArray(v.servicios) ? v.servicios : []),
         ...(Array.isArray(v.opcionesFiltro) ? v.opcionesFiltro : []),
         ...(Array.isArray(v.zonas) ? v.zonas.flatMap(z => [

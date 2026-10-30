@@ -33,6 +33,8 @@ export default function Validaciones() {
   const [procesando, setProcesando] = useState(null);
   const [abriendoTitulo, setAbriendoTitulo] = useState(null);
   const [tituloVisor, setTituloVisor] = useState(null);
+  const [mailsFallidos, setMailsFallidos] = useState([]);
+  const [reenviando, setReenviando] = useState(null);
 
   // Ventana para escribir el motivo del rechazo: guarda a quién se está rechazando
   const [modalRechazo, setModalRechazo] = useState(null);
@@ -145,11 +147,35 @@ export default function Validaciones() {
       if (!respuesta.ok) throw new Error(`Respuesta ${respuesta.status}`);
     } catch (error) {
       console.error('Error enviando el mail de aprobación:', error);
-      alert('La persona quedó aprobada, pero el mail de aviso no salió.');
+      setMailsFallidos((prev) => [...prev, {
+        uid: req.uid,
+        nombre: req.nombre,
+        tipo: 'aprobación',
+        cuerpo: { tipo: 'aprobacion', email: req.email, nombre: req.nombrePila || req.nombre }
+      }]);
     }
 
     setPendientes((prev) => prev.filter((u) => u.uid !== req.uid));
     setProcesando(null);
+  };
+
+  const reenviarMail = async (item) => {
+    setReenviando(item.uid);
+    try {
+      const token = await auth.currentUser.getIdToken();
+      const respuesta = await fetch('/api/enviar-mail', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify(item.cuerpo)
+      });
+      if (!respuesta.ok) throw new Error(`Respuesta ${respuesta.status}`);
+      setMailsFallidos((prev) => prev.filter((m) => m.uid !== item.uid));
+    } catch (error) {
+      console.error('Error reenviando el mail:', error);
+      alert('El mail sigue sin salir. Probá de nuevo en un rato.');
+    } finally {
+      setReenviando(null);
+    }
   };
 
   // ----- Rechazar: abre la ventana para escribir el motivo -----
@@ -199,7 +225,12 @@ export default function Validaciones() {
         if (!respuesta.ok) throw new Error(`Respuesta ${respuesta.status}`);
       } catch (errorMail) {
         console.error('Error enviando el mail de rechazo:', errorMail);
-        alert('La solicitud quedó rechazada, pero el mail de aviso no salió. La persona va a ver el motivo cuando entre.');
+        setMailsFallidos((prev) => [...prev, {
+          uid: modalRechazo.uid,
+          nombre: modalRechazo.nombre,
+          tipo: 'rechazo',
+          cuerpo: { tipo: 'rechazo', email: modalRechazo.email, nombre: modalRechazo.nombrePila || modalRechazo.nombre, motivo: motivoLimpio }
+        }]);
       }
 
       setPendientes((prev) => prev.filter((u) => u.uid !== modalRechazo.uid));
@@ -298,6 +329,26 @@ export default function Validaciones() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {mailsFallidos.length > 0 && (
+        <div className="bg-orange-50 border border-orange-100 rounded-[24px] p-5 mb-6 flex flex-col gap-3">
+          {mailsFallidos.map((item) => (
+            <div key={item.uid} className="flex items-center justify-between gap-4 flex-wrap">
+              <p className="text-orange-700 text-[14px] font-medium">
+                No salió el mail de {item.tipo} a <span className="font-bold">{item.nombre}</span>.
+              </p>
+              <button
+                type="button"
+                onClick={() => reenviarMail(item)}
+                disabled={reenviando === item.uid}
+                className="px-4 py-2 rounded-xl bg-white border border-orange-200 text-orange-700 text-[13px] font-bold hover:bg-orange-100 transition-colors flex items-center gap-2 disabled:opacity-60"
+              >
+                {reenviando === item.uid && <Loader2 className="w-4 h-4 animate-spin" />} Reenviar mail
+              </button>
+            </div>
+          ))}
         </div>
       )}
 

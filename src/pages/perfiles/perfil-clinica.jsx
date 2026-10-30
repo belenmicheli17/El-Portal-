@@ -289,7 +289,7 @@ export default function PerfilClinica() {
 
   // Fotos: la galería también aporta la portada de arriba
   const galeria = Array.isArray(data.galeria) ? data.galeria.filter((g) => g && g.url) : [];
-  const portada = galeria.find((g) => !g.esSensible)?.url || null;
+  const portada = data.portada || galeria.find((g) => !g.esSensible)?.url || null;
 
   // Servicios: "Atendemos" (especies) va aparte y el resto se junta en una sola caja
   const servicios = data.servicios && typeof data.servicios === 'object' ? data.servicios : {};
@@ -309,7 +309,7 @@ export default function PerfilClinica() {
   const horarioSabado = h.sabadoDesde && h.sabadoHasta ? `${h.sabadoDesde} – ${h.sabadoHasta} hs` : null;
 
   // Zona y provincia sin repetir: "Castelar, Buenos Aires" (si barrio y localidad son iguales, se muestra una sola vez)
-  const provinciaCorta = (data.provincia || '').replace(/^Provincia de\s+/i, '').trim();
+  const provinciaCorta = (data.provincia || '').replace(/^Provincia de\s+/i, '').replace(/^Ciudad Aut[oó]noma de Buenos Aires$/i, 'CABA').trim();
   const zona = data.barrio || data.localidad || '';
   const ubicacionCorta = [zona, provinciaCorta].filter(Boolean).join(', ');
   // La dirección de Google viene larga ("Calle 123, B1712KSK Castelar, Provincia de ..."): nos quedamos solo con la calle y el número
@@ -327,6 +327,28 @@ export default function PerfilClinica() {
     ? `https://maps.google.com/maps?q=${encodeURIComponent(data.direccion)}&t=&z=15&ie=UTF8&iwloc=&output=embed`
     : null;
 
+  // Otras sedes: cada una con su dirección y su link a Google Maps
+  const otrasSedes = Array.isArray(data.sedes) ? data.sedes.filter((s) => s.direccion) : [];
+  const linkDeSede = (s) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.direccion)}${s.placeId ? `&query_place_id=${s.placeId}` : ''}`;
+
+  // Barrios de todas las sedes (sin repetir) y lista completa de ubicaciones
+  const zonaDe = (s) => s.barrio || s.localidad || '';
+  const todasLasSedes = [{ id: 'principal', direccion: data.direccion, placeId: data.placeId, barrio: data.barrio, localidad: data.localidad, provincia: data.provincia }, ...otrasSedes];
+  // Una línea por barrio, con su provincia: "Castelar · Buenos Aires", "Recoleta · CABA"
+  const provCorta = (p) => (p || '').replace(/^Provincia de\s+/i, '').replace(/^Ciudad Aut[oó]noma de Buenos Aires$/i, 'CABA').trim();
+  const lineasUbicacion = [];
+  todasLasSedes.forEach((s) => {
+    const texto = [zonaDe(s), provCorta(s.provincia)].filter(Boolean).join(' · ');
+    if (texto && !lineasUbicacion.some((l) => l.texto === texto)) lineasUbicacion.push({ clave: texto, texto });
+  });
+
+  // WhatsApp sin el +54 y con guiones: 11-3480-1709
+  const whatsappLindo = (numero) => {
+    const d = String(numero || '').replace(/\D/g, '').replace(/^54(9)?/, '');
+    if (d.length !== 10) return d;
+    return d.startsWith('11') ? `${d.slice(0, 2)}-${d.slice(2, 6)}-${d.slice(6)}` : `${d.slice(0, 3)}-${d.slice(3, 6)}-${d.slice(6)}`;
+  };
+
   const irAContacto = (e) => {
     e.preventDefault();
     document.getElementById('contacto')?.scrollIntoView({ behavior: 'smooth' });
@@ -338,7 +360,7 @@ export default function PerfilClinica() {
       <VisorFotos visor={visor} setVisor={setVisor} />
 
       {/* ============ PORTADA ============ */}
-      <header className="relative h-[220px] lg:h-[320px] bg-[#1A3D3D] overflow-hidden">
+    <header className={`relative ${portada ? 'h-[220px] lg:h-[320px]' : 'h-[120px] lg:h-[170px]'} bg-[#1A3D3D] overflow-hidden`}>
         {portada ? (
           <img src={portada} alt="" className="absolute inset-0 w-full h-full object-cover" />
         ) : (
@@ -391,7 +413,16 @@ export default function PerfilClinica() {
             <h1 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[28px] lg:text-[44px] leading-[1.1] tracking-tight break-words">
               {data.nombre}
             </h1>
-            {calleYNumero && (
+            {otrasSedes.length > 0 ? (
+              <div className="mt-2 flex flex-col gap-1">
+                {lineasUbicacion.map((l) => (
+                  <a key={l.clave} href="#contacto" onClick={irAContacto} className="inline-flex items-start gap-1.5 text-[#2D6A6A] hover:text-[#1A3D3D] text-[13px] lg:text-sm font-semibold underline-offset-4 hover:underline transition-colors">
+                    <MapPin className="w-4 h-4 shrink-0 mt-px" />
+                    <span>{l.texto}</span>
+                  </a>
+                ))}
+              </div>
+            ) : calleYNumero && (
               linkMapa ? (
                 <a
                   href={linkMapa}
@@ -429,8 +460,21 @@ export default function PerfilClinica() {
             {!data.guardia24hs && horarioSabado && <p className="text-xs text-gray-500 mt-0.5">Sáb · {horarioSabado}</p>}
           </div>
           <div className="bg-[#F4F7F7] border border-[#e5eded] rounded-[20px] p-3.5 lg:p-5">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 flex items-center gap-1.5"><MapPin className="w-3 h-3" /> Ubicación</p>
-            <p className="font-bold text-[#1A3D3D] text-[13px] lg:text-sm mt-1.5 leading-snug">{ubicacionCorta || data.provincia || 'A confirmar'}</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 flex items-center gap-1.5"><MapPin className="w-3 h-3" /> {otrasSedes.length > 0 ? 'Ubicaciones' : 'Ubicación'}</p>
+            <p className="font-bold text-[#1A3D3D] text-[13px] lg:text-sm mt-1.5 leading-snug">{otrasSedes.length > 0 ? '' : (ubicacionCorta || data.provincia || 'A confirmar')}</p>
+            {otrasSedes.length > 0 && (
+              <ul className="mt-2 flex flex-col gap-2">
+                {todasLasSedes.map((s) => (
+                  <li key={s.id}>
+                    <a href={linkDeSede(s)} target="_blank" rel="noreferrer" className="group flex items-start gap-2 font-bold text-[#1A3D3D] text-[13px] lg:text-sm leading-snug hover:text-[#2D6A6A] transition-colors">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#2D6A6A] shrink-0 mt-[7px]" />
+                      <span className="flex-1 min-w-0 group-hover:underline underline-offset-4">{(s.direccion || '').split(',')[0].trim()}{zonaDe(s) ? ` · ${zonaDe(s)}` : ''}</span>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5 shrink-0 mt-[3px] text-[#2D6A6A] transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"><path d="M7 7h10v10" /><path d="M7 17 17 7" /></svg>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
           {data.añosExperiencia ? (
             <div className="bg-[#F4F7F7] border border-[#e5eded] rounded-[20px] p-3.5 lg:p-5">
@@ -650,6 +694,20 @@ export default function PerfilClinica() {
               <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#2D6A6A]">Contacto</p>
               <h2 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[22px] lg:text-3xl leading-tight tracking-tight mt-2 mb-4">Estamos cerca tuyo</h2>
 
+              {otrasSedes.length > 0 && (
+                <div className="flex flex-col gap-2 mb-4">
+                  {todasLasSedes.map((s) => (
+                    <a key={s.id} href={linkDeSede(s)} target="_blank" rel="noreferrer" className="flex items-center gap-3 bg-white rounded-2xl p-3.5  transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md ">
+                      <MapPin className="w-5 h-5 text-[#2D6A6A] shrink-0" />
+                      <span className="min-w-0">
+                        {s.nombre && <span className="block text-[11px] font-bold uppercase text-gray-400">{s.nombre}</span>}
+                        <span className="block text-sm font-black text-[#1A3D3D]">{(s.direccion || '').split(',')[0].trim()}{zonaDe(s) ? ` · ${zonaDe(s)}` : ''}</span>
+                      </span>
+                    </a>
+                  ))}
+                </div>
+              )}
+
               {mapaIncrustado && (
                 <div className="h-[150px] lg:hidden rounded-[18px] overflow-hidden mb-3.5 bg-white">
                   <iframe title="Ubicación en el mapa" width="100%" height="100%" style={{ border: 0 }} loading="lazy" src={mapaIncrustado}></iframe>
@@ -658,25 +716,25 @@ export default function PerfilClinica() {
 
               <div className="flex flex-col gap-2">
                 {data.whatsapp && (
-                  <a href={linkWhatsapp} target="_blank" rel="noreferrer" className="flex items-center gap-3 bg-white rounded-2xl p-3.5">
+                  <a href={linkWhatsapp} target="_blank" rel="noreferrer" className="flex items-center gap-3 bg-white rounded-2xl p-3.5  transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md ">
                     <span className="w-9 h-9 rounded-xl bg-[#25D366]/10 text-[#25D366] flex items-center justify-center shrink-0"><Phone className="w-4 h-4" /></span>
-                    <span className="min-w-0"><span className="block text-[10px] font-bold uppercase text-gray-400">WhatsApp</span><span className="block text-sm font-black text-[#1A3D3D] truncate">+{data.whatsapp}</span></span>
+                    <span className="min-w-0"><span className="block text-[10px] font-bold uppercase text-gray-400">WhatsApp</span><span className="block text-sm font-black text-[#1A3D3D] truncate">{whatsappLindo(data.whatsapp)}</span></span>
                   </a>
                 )}
                 {data.email && (
-                  <a href={`mailto:${data.email}`} className="flex items-center gap-3 bg-white rounded-2xl p-3.5">
+                  <a href={`mailto:${data.email}`} className="flex items-center gap-3 bg-white rounded-2xl p-3.5  transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md ">
                     <span className="w-9 h-9 rounded-xl bg-[#2D6A6A]/10 text-[#2D6A6A] flex items-center justify-center shrink-0"><Mail className="w-4 h-4" /></span>
                     <span className="min-w-0"><span className="block text-[10px] font-bold uppercase text-gray-400">Email</span><span className="block text-sm font-black text-[#1A3D3D] truncate">{data.email}</span></span>
                   </a>
                 )}
                 {data.telefono && (
-                  <a href={`tel:${data.telefono}`} className="flex items-center gap-3 bg-white rounded-2xl p-3.5">
+                  <a href={`tel:${data.telefono}`} className="flex items-center gap-3 bg-white rounded-2xl p-3.5  transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md ">
                     <span className="w-9 h-9 rounded-xl bg-[#2D6A6A]/10 text-[#2D6A6A] flex items-center justify-center shrink-0"><Phone className="w-4 h-4" /></span>
                     <span className="min-w-0"><span className="block text-[10px] font-bold uppercase text-gray-400">Teléfono fijo</span><span className="block text-sm font-black text-[#1A3D3D] truncate">{data.telefono}</span></span>
                   </a>
                 )}
                 {data.sitioWeb && (
-                  <a href={data.sitioWeb} target="_blank" rel="noreferrer" className="flex items-center gap-3 bg-white rounded-2xl p-3.5">
+                  <a href={data.sitioWeb} target="_blank" rel="noreferrer" className="flex items-center gap-3 bg-white rounded-2xl p-3.5  transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md ">
                     <span className="w-9 h-9 rounded-xl bg-[#2D6A6A]/10 text-[#2D6A6A] flex items-center justify-center shrink-0"><Globe className="w-4 h-4" /></span>
                     <span className="min-w-0"><span className="block text-[10px] font-bold uppercase text-gray-400">Sitio web</span><span className="block text-sm font-black text-[#1A3D3D] truncate">{data.sitioWeb.replace(/^https?:\/\//, '')}</span></span>
                   </a>
@@ -684,35 +742,26 @@ export default function PerfilClinica() {
                 {data.redes && (data.redes.instagram || data.redes.facebook || data.redes.tiktok || data.redes.linkedin) && (
                   <div className="grid grid-cols-2 gap-2">
                     {data.redes.instagram && (
-                      <a href={data.redes.instagram} target="_blank" rel="noreferrer" className="flex-1 flex items-center justify-center gap-2 bg-white rounded-2xl p-3.5 text-[#E4405F] text-sm font-bold">
+                      <a href={data.redes.instagram} target="_blank" rel="noreferrer" className="flex-1 flex items-center justify-center gap-2 bg-white rounded-2xl p-3.5  transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md text-[#E4405F] text-sm font-bold">
                         <Instagram className="w-4 h-4" /> Instagram
                       </a>
                     )}
                     {data.redes.facebook && (
-                      <a href={data.redes.facebook} target="_blank" rel="noreferrer" className="flex-1 flex items-center justify-center gap-2 bg-white rounded-2xl p-3.5 text-[#1877F2] text-sm font-bold">
+                      <a href={data.redes.facebook} target="_blank" rel="noreferrer" className="flex-1 flex items-center justify-center gap-2 bg-white rounded-2xl p-3.5  transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md text-[#1877F2] text-sm font-bold">
                         <Facebook className="w-4 h-4" /> Facebook
                       </a>
                     )}
                     {data.redes.tiktok && (
-                      <a href={data.redes.tiktok} target="_blank" rel="noreferrer" className="flex-1 flex items-center justify-center gap-2 bg-white rounded-2xl p-3.5 text-[#1A3D3D] text-sm font-bold">
+                      <a href={data.redes.tiktok} target="_blank" rel="noreferrer" className="flex-1 flex items-center justify-center gap-2 bg-white rounded-2xl p-3.5  transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md text-[#1A3D3D] text-sm font-bold">
                         <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg> TikTok
                       </a>
                     )}
                     {data.redes.linkedin && (
-                      <a href={data.redes.linkedin} target="_blank" rel="noreferrer" className="flex-1 flex items-center justify-center gap-2 bg-white rounded-2xl p-3.5 text-[#0A66C2] text-sm font-bold">
+                      <a href={data.redes.linkedin} target="_blank" rel="noreferrer" className="flex-1 flex items-center justify-center gap-2 bg-white rounded-2xl p-3.5  transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md text-[#0A66C2] text-sm font-bold">
                         <Linkedin className="w-4 h-4" /> LinkedIn
                       </a>
                     )}
-                    {data.redes.tiktok && (
-                      <a href={data.redes.tiktok} target="_blank" rel="noreferrer" className="flex-1 flex items-center justify-center gap-2 bg-white rounded-2xl p-3.5 text-[#1A3D3D] text-sm font-bold">
-                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg> TikTok
-                      </a>
-                    )}
-                    {data.redes.linkedin && (
-                      <a href={data.redes.linkedin} target="_blank" rel="noreferrer" className="flex-1 flex items-center justify-center gap-2 bg-white rounded-2xl p-3.5 text-[#0A66C2] text-sm font-bold">
-                        <Linkedin className="w-4 h-4" /> LinkedIn
-                      </a>
-                    )}
+                   
                   </div>
                 )}
               </div>

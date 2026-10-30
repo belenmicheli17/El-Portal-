@@ -219,7 +219,7 @@ const zonaDesdeComponentes = (componentes = []) => {
 // y si no, usa la localidad (ej: Castelar). Es lo que va en el campo "barrio" del editor.
 const barrioDesdeComponentes = (componentes = []) => {
   const buscar = (tipo) => componentes.find((c) => c.types.includes(tipo))?.long_name;
-  return buscar('neighborhood') || buscar('sublocality_level_1') || buscar('sublocality') || buscar('locality') || '';
+  return buscar('sublocality_level_1') || buscar('sublocality') || buscar('neighborhood') || buscar('locality') || '';
 };
 
 // Convierte la lista de servicios elegidos al formato que guarda el editor

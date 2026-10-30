@@ -106,33 +106,15 @@ export default function AdminLayout() {
           ))}
 
           {/* Accesos rápidos al portal (desplegable) */}
-          <div className="pt-4 mt-4 border-t border-white/10">
-            <button
-              onClick={() => setPortalAbierto(!portalAbierto)}
-              className="w-full flex items-center justify-between gap-3 px-4 py-3.5 rounded-2xl font-bold text-[13px] text-white/60 hover:bg-white/5 hover:text-white transition-all duration-200"
+                    <div className="pt-4 mt-4 border-t border-white/10">
+            <Link
+              to="/Cartilla"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl font-bold text-[13px] text-white/60 hover:bg-white/5 hover:text-white transition-all duration-200"
             >
-              <span className="flex items-center gap-3">
-                <Globe className="w-5 h-5" />
-                Ir al portal
-              </span>
-              <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${portalAbierto ? 'rotate-180' : ''}`} />
-            </button>
-
-            {portalAbierto && (
-              <div className="space-y-1 mt-2 pl-2">
-                {linksPortal.map((item) => (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex items-center gap-3 px-4 py-3 rounded-2xl font-bold text-[13px] text-white/60 hover:bg-white/5 hover:text-white transition-all duration-200"
-                  >
-                    {item.icon}
-                    {item.label}
-                  </Link>
-                ))}
-              </div>
-            )}
+              <MapPin className="w-5 h-5" />
+              Ir a la Cartilla
+            </Link>
           </div>
         </nav>
 

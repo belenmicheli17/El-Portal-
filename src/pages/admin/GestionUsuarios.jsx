@@ -6,6 +6,15 @@ import {
 import { db } from '../../firebase';
 import { collection, getDocs, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 
+// La fecha puede venir como Timestamp, texto o número: la pasamos a fecha común
+const aFecha = (valor) => {
+  if (!valor) return null;
+  if (typeof valor.toDate === 'function') return valor.toDate();
+  if (typeof valor === 'object' && typeof valor.seconds === 'number') return new Date(valor.seconds * 1000);
+  const fecha = new Date(valor);
+  return isNaN(fecha.getTime()) ? null : fecha;
+};
+
 export default function GestionUsuarios() {
   const [usuarios, setUsuarios] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -35,6 +44,13 @@ export default function GestionUsuarios() {
     const coincideBusqueda = user.nombre?.toLowerCase().includes(searchTerm.toLowerCase());
     const coincideFiltro = filtroRol === 'todos' || user.rol === filtroRol;
     return coincideBusqueda && coincideFiltro;
+  }).sort((a, b) => {
+    const fechaA = aFecha(a.fechaRegistro);
+    const fechaB = aFecha(b.fechaRegistro);
+    if (!fechaA && !fechaB) return 0;
+    if (!fechaA) return 1;
+    if (!fechaB) return -1;
+    return fechaB - fechaA;
   });
 
   const handleGuardarEdicion = async (e) => {
