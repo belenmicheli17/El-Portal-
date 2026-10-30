@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   CheckCircle, XCircle, User, Calendar, Mail, AlertTriangle, Loader2,
-  Hash, MapPin, FileText, ExternalLink, X
+  Hash, MapPin, FileText, ExternalLink, X, Megaphone
 } from 'lucide-react';
 import { db, storage, auth } from '../../firebase';
 import { collection, getDocs, getDoc, getCountFromServer, doc, query, where, writeBatch, serverTimestamp } from 'firebase/firestore';
@@ -32,6 +32,7 @@ export default function Validaciones() {
   const [errorCarga, setErrorCarga] = useState('');
   const [procesando, setProcesando] = useState(null);
   const [abriendoTitulo, setAbriendoTitulo] = useState(null);
+  const [tituloVisor, setTituloVisor] = useState(null);
 
   // Ventana para escribir el motivo del rechazo: guarda a quién se está rechazando
   const [modalRechazo, setModalRechazo] = useState(null);
@@ -61,6 +62,7 @@ export default function Validaciones() {
             email: usuario.email || '',
             slug: usuario.slug || '',
             nombrePila: usuario.nombre || '',
+            comoLlego: verificacion.datosEnviados?.comoLlego || usuario.comoLlego || '',
             nombre: verificacion.datosEnviados?.nombreCompleto || usuario.nombreCompleto || usuario.nombre || 'Sin nombre'
           };
         }));
@@ -82,15 +84,11 @@ export default function Validaciones() {
   const handleVerTitulo = async (req) => {
     if (!req.tituloPath) return;
     setAbriendoTitulo(req.uid);
-    // Abrimos la pestaña ya mismo (si esperamos, el navegador la puede bloquear) y después le ponemos el link
-    const ventana = window.open('', '_blank');
     try {
       const url = await getDownloadURL(ref(storage, req.tituloPath));
-      if (ventana) ventana.location.href = url;
-      else window.open(url, '_blank');
+      setTituloVisor({ url, nombre: req.nombre, esPdf: /\.pdf$/i.test(req.tituloPath) });
     } catch (error) {
       console.error('Error abriendo el título:', error);
-      if (ventana) ventana.close();
       alert('No pudimos abrir el archivo del título.');
     } finally {
       setAbriendoTitulo(null);
@@ -217,6 +215,32 @@ export default function Validaciones() {
 
   return (
     <div className="animate-in fade-in duration-500 pb-10">
+
+      {/* Ventana para ver el título o carnet */}
+      {tituloVisor && (
+        <div className="fixed inset-0 bg-[#1A3D3D]/40 backdrop-blur-md z-[200] flex items-center justify-center p-4" onClick={() => setTituloVisor(null)}>
+          <div className="bg-white rounded-[32px] w-full max-w-3xl max-h-[90vh] shadow-2xl overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <div className="p-5 border-b border-gray-100 flex justify-between items-center gap-4">
+              <h3 className="font-['Montserrat'] font-black text-lg text-[#1A3D3D] truncate">Título de {tituloVisor.nombre}</h3>
+              <div className="flex items-center gap-2 shrink-0">
+                <a href={tituloVisor.url} target="_blank" rel="noreferrer" className="px-4 py-2 rounded-xl bg-[#F4F7F7] text-[#1A3D3D] text-[12px] font-bold hover:bg-gray-200 transition-colors flex items-center gap-1.5">
+                  <ExternalLink className="w-4 h-4" /> Abrir aparte
+                </a>
+                <button type="button" onClick={() => setTituloVisor(null)} className="p-2.5 bg-gray-100 rounded-full hover:bg-red-100 hover:text-red-500 transition-colors">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+            <div className="bg-[#F4F7F7] p-4 overflow-auto flex-1 flex items-center justify-center">
+              {tituloVisor.esPdf ? (
+                <iframe src={tituloVisor.url} title="Título" className="w-full h-[70vh] rounded-2xl bg-white" />
+              ) : (
+                <img src={tituloVisor.url} alt="Título o carnet" className="max-w-full max-h-[70vh] object-contain rounded-2xl" />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Ventana para escribir el motivo del rechazo */}
       {modalRechazo && (
@@ -346,6 +370,11 @@ export default function Validaciones() {
                         <span className="text-[#1A3D3D] text-[13px] font-bold">{datos.directorNombre || '—'}</span>
                       </div>
                     )}
+                    <div className="flex items-center gap-3 bg-white rounded-xl px-4 py-3">
+                      <Megaphone className="w-4 h-4 text-[#2D6A6A] shrink-0" />
+                      <span className="text-[#666666] text-[12px] font-medium w-24 shrink-0">Llegó por:</span>
+                      <span className="text-[#1A3D3D] text-[13px] font-bold">{req.comoLlego || '—'}</span>
+                    </div>
                     <div className="flex items-center gap-3 bg-white rounded-xl px-4 py-3">
                       <Hash className="w-4 h-4 text-[#2D6A6A] shrink-0" />
                       <span className="text-[#666666] text-[12px] font-medium w-24 shrink-0">Matrícula:</span>

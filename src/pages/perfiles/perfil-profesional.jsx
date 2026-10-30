@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { db } from '../../firebase'; // Ajustá esta ruta hacia tu archivo firebase.js
+import { db } from '../../firebase';
 import { doc, collection, query, where, getDocs, getDoc } from 'firebase/firestore';
 import { useAuth } from '../../context/AuthContext';
 import especialidadesData from '../../data/especialidades.json';
@@ -117,7 +117,6 @@ const ContactoEmail = ({ email, nombre, whatsappActivo, whatsappNum, mostrarWhat
 function PerfilPublico() {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
-  console.log('currentUser en perfil:', currentUser);
   
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -133,7 +132,7 @@ const [casoIdx, setCasoIdx] = useState(0);
 const [verTodosCasos, setVerTodosCasos] = useState(false);
   const [galeriaModal, setGaleriaModal] = useState({ isOpen: false, idx: 0 });
 
-  const { slug } = useParams(); // 1. Capturamos el slug de la URL
+  const { slug } = useParams(); // Capturamos el slug de la URL
 
   useEffect(() => {
     const fetchVeterinarioInfo = async () => {
@@ -318,7 +317,7 @@ setData({
     );
   }
 
-  const isPro = data.planActual === 'pro';
+  const isPro = data.planActual === 'pro' || (currentUser?.rol === 'admin' && data.visible === false);
   const destacado = data.tituloGenero === 'veterinaria' ? 'Destacada' : data.tituloGenero === 'veterinario' ? 'Destacado' : 'Destacado/a';
   const tieneCasos = isPro && data.casos && data.casos.length > 0;
 const mobileTabs = [

@@ -7,7 +7,8 @@ import { ref, uploadBytesResumable, uploadString, getDownloadURL, deleteObject }
 import {
   Camera, Check, Loader2, Search, MapPin, Trash2, X, Plus, Clock,
   Stethoscope, Home, Crop, ChevronRight, FileCheck, Upload, CheckCircle2,
-  Building2, MessageCircle, LogOut, AlertCircle, ChevronDown
+  Building2, MessageCircle, LogOut, AlertCircle, ChevronDown,
+  AlertTriangle, ArrowUp, ArrowDown, Image as ImageIcon
 } from 'lucide-react';
 import especialidadesData from '../data/especialidades.json';
 import provincias from '../data/provincias.js';
@@ -16,17 +17,35 @@ import { generarSlugUnico } from '../utils/slugUnico';
 // ==========================================
 // CONSTANTES DEL CUESTIONARIO
 // ==========================================
-const TOTAL_PASOS = 6;
+const TOTAL_PASOS = 9;
 
-const TITULOS = ['Tus datos', 'Tu matrícula', 'Tu especialidad', 'Dónde atendés', 'Cómo te contactan', 'Sobre vos'];
+const TITULOS = [
+  'Tus datos', 'Tu matrícula', 'Tu especialidad', 'Tu trayectoria', 'Dónde atendés',
+  'Cómo te contactan', 'Sobre vos', 'Tu galería de fotos', 'Tus casos clínicos'
+];
 
 const SUBTITULOS = [
   'Empecemos por lo básico. Así te van a ver los tutores.',
   'Verificamos tu matrícula para que los tutores confíen en tu perfil.',
   'Contanos a qué te dedicás. Lo podés cambiar cuando quieras.',
+  'Tus títulos, posgrados y logros. Le dan confianza a tutores y colegas.',
   'Sumá los lugares donde atendés. Los tutores te encuentran por zona.',
   'Elegí cómo y quién puede contactarte.',
-  'Una presentación corta, con tus palabras.'
+  'Una presentación corta, con tus palabras.',
+  'Fotos de tu lugar de trabajo, congresos o equipo. Podés sumar más después.',
+  'Mostrá casos que hayas resuelto. Podés sumar más después.'
+];
+
+// Desde este paso en adelante se puede "Completar después"
+const PRIMER_PASO_OPCIONAL = 7;
+const LIMITE_GALERIA = 15;
+const LIMITE_CASOS = 6;
+const LIMITE_FOTOS_CASO = 6;
+
+// Opciones de la pregunta "¿Cómo llegaste hasta acá?"
+const OPCIONES_LLEGADA = [
+  'Me escribieron del Portal', 'Un colega me lo recomendó',  'Instagram', 'Facebook', 'Google',
+  'Congreso, curso o evento', 'Publicidad', 'Otro'
 ];
 
 // Estilos reutilizables (mismos que el manual de marca: inputs Ceniza, rounded-2xl, ring esmeralda)
@@ -37,8 +56,8 @@ const CLASE_SELECT_CORTO = "w-24 shrink-0 bg-[#F4F7F7] border border-transparent
 const CLASE_AYUDA = "text-sm text-[#666666] mt-2 leading-normal";
 // Asterisco rojo para marcar los campos obligatorios
 const Obligatorio = () => <span className="text-red-500" aria-hidden="true"> *</span>;
-const CLASE_BTN_PRIMARIO = "bg-[#2D6A6A] text-white rounded-xl px-7 py-4 text-[13px] font-bold uppercase tracking-[0.15em] shadow-md transition-all duration-300 ease-in-out hover:bg-[#1A3D3D] hover:-translate-y-1 hover:shadow-xl disabled:opacity-60 disabled:hover:translate-y-0 disabled:cursor-not-allowed flex items-center justify-center gap-2";
-const CLASE_BTN_VOLVER = "bg-white text-[#666666] border border-gray-200 rounded-xl px-5 py-4 text-[13px] font-bold uppercase tracking-[0.15em] transition-all duration-300 ease-in-out hover:border-[#2D6A6A] hover:text-[#1A3D3D] disabled:opacity-60";
+const CLASE_BTN_PRIMARIO = "bg-[#2D6A6A] text-white rounded-xl px-4 md:px-7 py-4 text-[13px] font-bold uppercase tracking-[0.15em] shadow-md transition-all duration-300 ease-in-out hover:bg-[#1A3D3D] hover:-translate-y-1 hover:shadow-xl disabled:opacity-60 disabled:hover:translate-y-0 disabled:cursor-not-allowed flex items-center justify-center gap-2";
+const CLASE_BTN_VOLVER = "bg-white text-[#666666] border border-gray-200 rounded-xl px-4 md:px-5 py-4 text-[13px] font-bold uppercase tracking-[0.15em] transition-all duration-300 ease-in-out hover:border-[#2D6A6A] hover:text-[#1A3D3D] disabled:opacity-60";
 const CLASE_BTN_TEXTO = "text-[#2D6A6A] text-[12px] font-bold uppercase tracking-[0.12em] px-2 py-3 transition-all duration-300 ease-in-out hover:text-[#1A3D3D] disabled:opacity-60";
 const CLASE_BTN_SECUNDARIO = "bg-white text-[#1A3D3D] border border-gray-200 rounded-xl px-4 py-3 text-[12px] font-bold uppercase tracking-[0.12em] transition-all duration-300 ease-in-out hover:border-[#2D6A6A] disabled:opacity-60";
 const CLASE_CHIP = "border rounded-xl px-3.5 py-2.5 text-[15px] font-medium transition-all duration-300 ease-in-out";
@@ -53,16 +72,20 @@ const tiktokAUsuario = (valor) => String(valor || '').replace(/^https?:\/\/(www\
 
 // Estado inicial de todo lo que se carga en el cuestionario
 const ESTADO_INICIAL = {
-  nombre: '', apellido: '', foto: '', fotosPerfil: [],
+  nombre: '', apellido: '', foto: '', fotosPerfil: [], tituloGenero: '',
   tipo: 'MP', mat: '', m2: false, mat2: '',
   prov: provincias[0] || 'Buenos Aires',
   tituloPath: '', tituloNombre: '',
   esp: '', svc: [],          // svc: [{ nombre, grupoId, propio }]
+  trayectoria: [],           // [{ id, titulo, desc, extra }]
   dom: false, wa: '',        // wa: solo los dígitos, sin el 54
   zonas: [],                 // mismo formato que el editor: [{ id, nombre, clinicas: [...] }]
   email: '', emailV: 'todos', waV: 'todos',
-  ig: '', tiktok: '', bio: '',
-  animalesExoticos: [], animalesCampo: []
+  ig: '', tiktok: '', linkedin: '', facebook: '', bio: '',
+  galeria: [],               // [{ id, url, epigrafe, storagePath, esSensible }]
+  casos: [],                 // [{ id, nombre, patologia, desc, fotos: [url] }]
+  animalesExoticos: [], animalesCampo: [],
+  comoLlego: '', comoLlegoOtro: ''
 };
 
 // ==========================================
@@ -104,6 +127,13 @@ const instagramAUsuario = (valor) => {
   return valor.replace(/^@/, '');
 };
 
+// LinkedIn y Facebook: se guarda el link completo (si falta el https://, se lo agregamos)
+const normalizarLink = (valor) => {
+  const v = String(valor || '').trim();
+  if (!v) return '';
+  return /^https?:\/\//i.test(v) ? v : `https://${v}`;
+};
+
 // Recorta la foto al centro, en cuadrado, y la achica para que pese poco
 const prepararFotoCuadrada = (archivo, lado = 400) => new Promise((resolve, reject) => {
   const lector = new FileReader();
@@ -123,6 +153,32 @@ const prepararFotoCuadrada = (archivo, lado = 400) => new Promise((resolve, reje
       ctx.fillRect(0, 0, lado, lado);
       ctx.drawImage(imagen, sx, sy, ladoOrigen, ladoOrigen, 0, 0, lado, lado);
       resolve(canvas.toDataURL('image/jpeg', 0.88));
+    };
+    imagen.src = evento.target.result;
+  };
+  lector.readAsDataURL(archivo);
+});
+
+// Achica una foto (sin recortarla) para que no pese de más: máximo 1400 px de lado
+const prepararFotoGrande = (archivo, maximo = 1400) => new Promise((resolve, reject) => {
+  const lector = new FileReader();
+  lector.onerror = reject;
+  lector.onload = (evento) => {
+    const imagen = new Image();
+    imagen.onerror = reject;
+    imagen.onload = () => {
+      let ancho = imagen.width;
+      let alto = imagen.height;
+      if (ancho > maximo) { alto = (alto * maximo) / ancho; ancho = maximo; }
+      if (alto > maximo) { ancho = (ancho * maximo) / alto; alto = maximo; }
+      const canvas = document.createElement('canvas');
+      canvas.width = ancho;
+      canvas.height = alto;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, ancho, alto);
+      ctx.drawImage(imagen, 0, 0, ancho, alto);
+      resolve(canvas.toDataURL('image/jpeg', 0.9));
     };
     imagen.src = evento.target.result;
   };
@@ -187,37 +243,41 @@ const guardarCampos = (coleccion, uid, datos) =>
 // COMPONENTES CHICOS
 // ==========================================
 
-// Barra de pasos: círculos unidos por una línea con flechita, y el nombre de cada paso abajo
-// (igual que el stepper de Capacitaciones). En celular se ocultan los nombres para que entre todo.
-function BarraPasos({ paso }) {
-  const nombres = ['Datos', 'Matrícula', 'Especialidad', 'Dónde atendés', 'Contacto', 'Sobre vos'];
+// Barra de pasos: círculos unidos por una línea con flechita. Solo el paso actual muestra su nombre.
+// Si se pasa "onIrAPaso" (al corregir una solicitud rechazada), cada círculo se puede tocar.
+function BarraPasos({ paso, onIrAPaso }) {
+  const nombres = ['Datos', 'Matrícula', 'Especialidad', 'Trayectoria', 'Dónde atendés', 'Contacto', 'Sobre vos', 'Galería', 'Casos'];
 
   return (
-    <div className="flex items-start mb-8 md:mb-14">
+    <div className="flex items-start mb-8 md:mb-14 md:pt-7">
       {nombres.map((nombre, i) => {
         const completado = paso >= TOTAL_PASOS || i < paso;
         const activo = i === paso && paso < TOTAL_PASOS;
         return (
           <React.Fragment key={nombre}>
-            {/* Círculo del paso. El nombre flota debajo y no le saca lugar a la línea */}
-            <div className="relative shrink-0">
+            <div
+              className={`relative shrink-0 ${onIrAPaso ? 'cursor-pointer' : ''}`}
+              onClick={onIrAPaso ? () => onIrAPaso(i) : undefined}
+              role={onIrAPaso ? 'button' : undefined}
+              aria-label={onIrAPaso ? `Ir al paso ${i + 1}` : undefined}
+            >
               <div
-                className={`w-9 h-9 rounded-full border-4 border-white flex items-center justify-center text-[13px] font-bold transition-all duration-300 ${
+                className={`w-7 h-7 md:w-9 md:h-9 rounded-full border-2 md:border-4 border-white flex items-center justify-center text-[11px] md:text-[13px] font-bold transition-all duration-300 ${
                   activo ? 'bg-[#1A3D3D] text-white scale-110 shadow-lg shadow-[#1A3D3D]/30'
                   : completado ? 'bg-[#2D6A6A] text-white'
                   : 'bg-white text-gray-400 ring-2 ring-inset ring-gray-200'
                 }`}
               >
-                {completado ? <Check className="w-4 h-4" strokeWidth={3} /> : i + 1}
+                {completado ? <Check className="w-3.5 h-3.5 md:w-4 md:h-4" strokeWidth={3} /> : i + 1}
               </div>
-              <span className={`hidden md:block absolute top-full left-1/2 -translate-x-1/2 mt-2 w-28 text-center text-[12px] font-bold leading-tight transition-colors duration-300 ${activo || completado ? 'text-[#1A3D3D]' : 'text-gray-400'}`}>
+              <span className={`hidden md:block absolute left-1/2 -translate-x-1/2 w-28 text-center text-[12px] font-bold leading-tight transition-colors duration-300 ${i % 2 === 0 ? 'bottom-full mb-2' : 'top-full mt-2'} ${activo || completado ? 'text-[#1A3D3D]' : 'text-gray-400'}`}>
                 {nombre}
               </span>
             </div>
 
             {/* Línea que une un paso con el siguiente (se pinta de esmeralda al avanzar) */}
             {i < TOTAL_PASOS - 1 && (
-              <div className="flex-1 h-9 flex items-center">
+              <div className="flex-1 min-w-0 h-7 md:h-9 flex items-center">
                 <div className="w-full h-1 bg-gray-200 overflow-hidden">
                   <div className="h-full bg-[#2D6A6A] transition-all duration-500" style={{ width: i < paso ? '100%' : '0%' }} />
                 </div>
@@ -230,7 +290,7 @@ function BarraPasos({ paso }) {
   );
 }
 
-// Tarjeta en vivo (versión provisoria, parecida a la de la cartilla; en la etapa 3 se cambia por la real)
+// Tarjeta en vivo (versión provisoria, parecida a la de la cartilla)
 function TarjetaViva({ datos, paso }) {
   const nombreCompleto = `${datos.nombre.trim()} ${datos.apellido.trim()}`.trim();
 
@@ -238,9 +298,12 @@ function TarjetaViva({ datos, paso }) {
     datos.nombre.trim() && datos.apellido.trim(),
     contarDigitos(datos.mat) >= 3 && datos.tituloPath,
     datos.esp.trim(),
+    datos.trayectoria.some((t) => t.titulo.trim()),
     datos.dom || datos.virtual || datos.zonas.length > 0,
     datos.email.trim() || datos.wa.trim() || datos.ig.trim(),
-    datos.bio.trim().length >= 30
+    datos.bio.trim().length >= 30,
+    datos.galeria.length > 0,
+    datos.casos.length > 0
   ].filter(Boolean).length;
   const porcentaje = Math.round((pasosCompletos / TOTAL_PASOS) * 100);
 
@@ -522,7 +585,7 @@ function BuscadorLugares({ onElegir, texto, setTexto }) {
         if (cancelado || !inputRef.current) return;
         autocomplete = new window.google.maps.places.Autocomplete(inputRef.current, {
           componentRestrictions: { country: 'ar' },
-          fields: ['name', 'formatted_address', 'place_id', 'address_components']
+          fields: ['name', 'formatted_address', 'place_id', 'address_components', 'formatted_phone_number']
         });
         autocomplete.addListener('place_changed', () => {
           const lugar = autocomplete.getPlace();
@@ -532,7 +595,8 @@ function BuscadorLugares({ onElegir, texto, setTexto }) {
             direccion: lugar.formatted_address || '',
             placeId: lugar.place_id,
             zona: zonaDesdeComponentes(lugar.address_components),
-            barrio: barrioDesdeComponentes(lugar.address_components)
+            barrio: barrioDesdeComponentes(lugar.address_components),
+            telefono: lugar.formatted_phone_number || ''
           });
           setTexto('');
           if (inputRef.current) inputRef.current.value = '';
@@ -674,6 +738,52 @@ function RecortadorFoto({ imagen, onAplicar, onCancelar }) {
   );
 }
 
+// Pantalla final antes de enviar: "¿Cómo llegaste hasta acá?" (obligatoria, no cuenta como paso)
+function PantallaComoLlegaste({ datos, cambiar, error, guardando, onVolver, onEnviar }) {
+  return (
+    <>
+      <h1 className="font-['Montserrat'] font-extrabold text-2xl md:text-[28px] leading-tight text-[#1A3D3D] mb-2">
+        ¿Cómo llegaste hasta acá?
+      </h1>
+      <p className="text-[16px] md:text-[17px] leading-relaxed text-[#666666]">Última pregunta antes de enviar. Nos ayuda a saber dónde conocen el Portal.</p>
+
+      <div className="flex flex-wrap gap-2 mt-6">
+        {OPCIONES_LLEGADA.map((opcion) => (
+          <button
+            key={opcion}
+            type="button"
+            onClick={() => cambiar('comoLlego', opcion)}
+            className={`${CLASE_CHIP} ${datos.comoLlego === opcion ? 'bg-[#2D6A6A] border-[#2D6A6A] text-white' : 'bg-white border-gray-200 text-[#555555] hover:border-[#2D6A6A]'}`}
+          >
+            {opcion}
+          </button>
+        ))}
+      </div>
+
+      {datos.comoLlego === 'Otro' && (
+        <input
+          value={datos.comoLlegoOtro}
+          maxLength={100}
+          onChange={(e) => cambiar('comoLlegoOtro', e.target.value)}
+          placeholder="Contanos cómo"
+          autoComplete="off"
+          className={`${CLASE_INPUT} mt-3`}
+        />
+      )}
+
+      <p className="min-h-[20px] text-sm font-medium text-red-500 mt-4" role="alert">{error}</p>
+
+      <div className="flex flex-col gap-3 mt-6">
+        <button type="button" onClick={onEnviar} disabled={guardando} className={`${CLASE_BTN_PRIMARIO} w-full`}>
+          {guardando && <Loader2 className="w-4 h-4 animate-spin" />}
+          Enviar a verificación
+        </button>
+        <button type="button" onClick={onVolver} disabled={guardando} className={`${CLASE_BTN_VOLVER} w-full`}>Volver</button>
+      </div>
+    </>
+  );
+}
+
 // ==========================================
 // PÁGINA PRINCIPAL: ONBOARDING
 // ==========================================
@@ -696,8 +806,12 @@ export default function Onboarding() {
   const [subiendoFoto, setSubiendoFoto] = useState(false);
   const [subiendoTitulo, setSubiendoTitulo] = useState(false);
   const [progresoTitulo, setProgresoTitulo] = useState(0);
+  const [subiendoGaleria, setSubiendoGaleria] = useState(false);
+  const [subiendoCaso, setSubiendoCaso] = useState(null); // id del caso que está subiendo fotos
   const [recorte, setRecorte] = useState({ abierto: false, imagen: null });
   const [motivoRechazo, setMotivoRechazo] = useState('');
+  // Si está en la pantalla de la pregunta "¿Cómo llegaste?" (antes de enviar)
+  const [enEncuesta, setEnEncuesta] = useState(false);
 
   // Guarda las descripciones de grupos de servicios que ya tenía la persona (para no perderlas)
   const descripcionesServicios = useRef({});
@@ -710,8 +824,6 @@ export default function Onboarding() {
   // ----- Carga inicial: decide si corresponde el cuestionario y recupera lo que ya se guardó -----
   useEffect(() => {
     if (!currentUser?.uid) return;
-
-   
 
     // Solo entra al cuestionario un profesional con onboardingCompleto en false.
     // Los usuarios que ya existían (sin ese campo) pasan directo al ecosistema.
@@ -757,6 +869,7 @@ export default function Onboarding() {
           apellido: perfil.apellido || currentUser.apellido || '',
           foto: perfil.foto || '',
           fotosPerfil: perfil.fotosPerfil || [],
+          tituloGenero: perfil.tituloGenero || '',
           tipo: perfil.tipoMatricula || 'MP',
           mat: perfil.matricula || '',
           m2: !!perfil.matricula2,
@@ -766,6 +879,9 @@ export default function Onboarding() {
           tituloNombre: verificacion.tituloNombre || '',
           esp: perfil.especialidad || '',
           svc: servicios,
+          trayectoria: Array.isArray(perfil.trayectoria)
+            ? perfil.trayectoria.map((t) => ({ id: t.id || Date.now() + Math.random(), titulo: t.titulo || '', desc: t.desc || '', extra: t.extra || '' }))
+            : [],
           dom: !!perfil.atiendeDomicilio,
           virtual: !!perfil.atiendeVirtual,
           urg: !!perfil.urgenciasDomicilio,
@@ -776,9 +892,21 @@ export default function Onboarding() {
           waV: visibilidadAPantalla(perfil.whatsappVisibilidad),
           ig: instagramAUsuario(perfil.instagram),
           tiktok: tiktokAUsuario(perfil.tiktok),
+          linkedin: perfil.linkedin || '',
+          facebook: perfil.facebook || '',
           bio: perfil.bio || '',
+          galeria: Array.isArray(perfil.galeria) ? perfil.galeria : [],
+          casos: Array.isArray(perfil.casos)
+            ? perfil.casos.map((c) => ({
+                id: c.id || Date.now() + Math.random(),
+                nombre: c.nombre || '', patologia: c.patologia || '', desc: c.desc || '',
+                fotos: Array.isArray(c.fotos) ? c.fotos : []
+              }))
+            : [],
           animalesExoticos: perfil.animalesExoticos || [],
-          animalesCampo: perfil.animalesCampo || []
+          animalesCampo: perfil.animalesCampo || [],
+          comoLlego: currentUser.comoLlego || '',
+          comoLlegoOtro: currentUser.comoLlegoOtro || ''
         });
 
         // En corrección arranca desde el principio para revisar todo; si no, retoma donde dejó
@@ -793,6 +921,11 @@ export default function Onboarding() {
     cargarDatos();
     return () => { cancelado = true; };
   }, [currentUser?.uid]);
+
+  // Cada vez que cambia el paso (o aparece la pregunta final), volvemos arriba de todo
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [paso, enEncuesta]);
 
   // ----- Foto de perfil: primero se elige, después se encuadra y recién ahí se sube -----
   const manejarFoto = (evento) => {
@@ -829,7 +962,7 @@ export default function Onboarding() {
     evento.target.value = null;
     if (!archivo) return;
     if (!archivo.type.startsWith('image/') && archivo.type !== 'application/pdf') { setError('Subí una foto (JPG o PNG) o un PDF.'); return; }
-    if (archivo.size > 10 * 1024 * 1024) { setError('El archivo no puede pesar más de 10 MB.'); return; }
+ if (archivo.size > 10 * 1024 * 1024) { setError('El archivo no puede pesar más de 10 MB.'); return; }
 
     setSubiendoTitulo(true);
     setProgresoTitulo(0);
@@ -894,7 +1027,7 @@ export default function Onboarding() {
       const nombreZona = lugar.zona || previo.prov;
       const clinica = {
         id: Date.now(), nombrePropio: lugar.nombre, barrio: lugar.barrio || '', direccion: lugar.direccion,
-        placeId: lugar.placeId, telefono: ''
+        placeId: lugar.placeId, telefono: lugar.telefono || ''
       };
       const indiceZona = previo.zonas.findIndex((z) => normalizar(z.nombre) === normalizar(nombreZona));
 
@@ -916,6 +1049,127 @@ export default function Onboarding() {
     }));
   };
 
+  // ----- Trayectoria: logros y títulos -----
+  const agregarLogro = () => {
+    setDatos((previo) => ({ ...previo, trayectoria: [...previo.trayectoria, { id: Date.now(), titulo: '', desc: '', extra: '' }] }));
+    setError('');
+  };
+
+  const actualizarLogro = (id, campo, valor) => {
+    setDatos((previo) => ({ ...previo, trayectoria: previo.trayectoria.map((t) => (t.id === id ? { ...t, [campo]: valor } : t)) }));
+    setError('');
+  };
+
+  const quitarLogro = (id) => {
+    setDatos((previo) => ({ ...previo, trayectoria: previo.trayectoria.filter((t) => t.id !== id) }));
+  };
+
+  const moverLogro = (indice, direccion) => {
+    setDatos((previo) => {
+      const nueva = [...previo.trayectoria];
+      const destino = indice + direccion;
+      if (destino < 0 || destino >= nueva.length) return previo;
+      [nueva[indice], nueva[destino]] = [nueva[destino], nueva[indice]];
+      return { ...previo, trayectoria: nueva };
+    });
+  };
+
+  // ----- Fotos que se suben directo a Storage (galería y casos) -----
+  const subirFotoACarpeta = async (archivo, carpeta, nombreArchivo) => {
+    const imagen = await prepararFotoGrande(archivo);
+    const archivoRef = ref(storage, `profesionales/${currentUser.uid}/${carpeta}/${nombreArchivo}.jpg`);
+    await uploadString(archivoRef, imagen, 'data_url');
+    const url = await getDownloadURL(archivoRef);
+    return { url, storagePath: archivoRef.fullPath };
+  };
+
+  // ----- Galería -----
+  const manejarGaleria = async (evento) => {
+    const archivos = Array.from(evento.target.files || []).filter((a) => a.type.startsWith('image/'));
+    evento.target.value = null;
+    if (archivos.length === 0) { setError('Elegí imágenes (JPG o PNG).'); return; }
+
+    const lugar = LIMITE_GALERIA - datos.galeria.length;
+    if (lugar <= 0) { setError(`Llegaste al límite de ${LIMITE_GALERIA} fotos.`); return; }
+    const aSubir = archivos.slice(0, lugar);
+
+    setSubiendoGaleria(true);
+    setError(archivos.length > lugar ? `Solo entran ${LIMITE_GALERIA} fotos: subimos las primeras ${lugar}.` : '');
+    try {
+      for (let i = 0; i < aSubir.length; i++) {
+        const id = Date.now() + i;
+        const { url, storagePath } = await subirFotoACarpeta(aSubir[i], 'galeria', String(id));
+        setDatos((previo) => ({
+          ...previo,
+          galeria: [...previo.galeria, { id, url, epigrafe: '', storagePath, esSensible: false }]
+        }));
+      }
+    } catch (e) {
+      console.error('Error subiendo fotos de la galería:', e);
+      setError('No pudimos subir alguna foto. Revisá tu conexión y probá de nuevo.');
+    } finally {
+      setSubiendoGaleria(false);
+    }
+  };
+
+  const actualizarGaleria = (id, campo, valor) => {
+    setDatos((previo) => ({ ...previo, galeria: previo.galeria.map((g) => (g.id === id ? { ...g, [campo]: valor } : g)) }));
+  };
+
+  const quitarFotoGaleria = (id) => {
+    setDatos((previo) => ({ ...previo, galeria: previo.galeria.filter((g) => g.id !== id) }));
+  };
+
+  // ----- Casos clínicos -----
+  const agregarCaso = () => {
+    setDatos((previo) => ({ ...previo, casos: [...previo.casos, { id: Date.now(), nombre: '', patologia: '', desc: '', fotos: [] }] }));
+    setError('');
+  };
+
+  const actualizarCaso = (id, campo, valor) => {
+    setDatos((previo) => ({ ...previo, casos: previo.casos.map((c) => (c.id === id ? { ...c, [campo]: valor } : c)) }));
+  };
+
+  const quitarCaso = (id) => {
+    setDatos((previo) => ({ ...previo, casos: previo.casos.filter((c) => c.id !== id) }));
+  };
+
+  const manejarFotosCaso = async (evento, casoId) => {
+    const archivos = Array.from(evento.target.files || []).filter((a) => a.type.startsWith('image/'));
+    evento.target.value = null;
+    if (archivos.length === 0) { setError('Elegí imágenes (JPG o PNG).'); return; }
+
+    const caso = datos.casos.find((c) => c.id === casoId);
+    const lugar = LIMITE_FOTOS_CASO - (caso ? caso.fotos.length : 0);
+    if (lugar <= 0) { setError(`Cada caso admite hasta ${LIMITE_FOTOS_CASO} fotos.`); return; }
+    const aSubir = archivos.slice(0, lugar);
+
+    setSubiendoCaso(casoId);
+    setError(archivos.length > lugar ? `Cada caso admite ${LIMITE_FOTOS_CASO} fotos: subimos las primeras ${lugar}.` : '');
+    try {
+      for (let i = 0; i < aSubir.length; i++) {
+        const nombreArchivo = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+        const { url } = await subirFotoACarpeta(aSubir[i], 'casos', nombreArchivo);
+        setDatos((previo) => ({
+          ...previo,
+          casos: previo.casos.map((c) => (c.id === casoId ? { ...c, fotos: [...c.fotos, url] } : c))
+        }));
+      }
+    } catch (e) {
+      console.error('Error subiendo fotos del caso:', e);
+      setError('No pudimos subir alguna foto. Revisá tu conexión y probá de nuevo.');
+    } finally {
+      setSubiendoCaso(null);
+    }
+  };
+
+  const quitarFotoCaso = (casoId, indice) => {
+    setDatos((previo) => ({
+      ...previo,
+      casos: previo.casos.map((c) => (c.id === casoId ? { ...c, fotos: c.fotos.filter((_, i) => i !== indice) } : c))
+    }));
+  };
+
   // ----- Validaciones de cada paso (los mismos avisos del mockup) -----
   const validarPaso = (p) => {
     if (p === 0 && !(datos.nombre.trim() && datos.apellido.trim())) return 'Escribí tu nombre y apellido para seguir.';
@@ -928,13 +1182,21 @@ export default function Onboarding() {
     // Los servicios propios no cuentan: no aparecen en los filtros de la Cartilla
     if (p === 2 && datos.svc.filter((s) => !s.propio).length === 0) return 'Elegí al menos un servicio de la lista: con eso te encuentran los tutores en la Cartilla.';
     if (p === 3) {
+      // Un logro con datos pero sin título no se puede guardar (igual que en el editor)
+      const sinTitulo = datos.trayectoria.some((t) => !t.titulo.trim() && (t.desc.trim() || t.extra.trim()));
+      if (sinTitulo) return 'Escribí el título de cada logro, o quitá los que dejaste a medias.';
+      if (!datos.trayectoria.some((t) => t.titulo.trim())) return 'Sumá al menos un título o logro para seguir.';
+    }
+    if (p === 4) {
       if (datos.dom && !datos.wa.trim()) return 'Si atendés a domicilio, tu WhatsApp es obligatorio.';
       if (!(datos.dom || datos.virtual || datos.zonas.length > 0)) return 'Elegí al menos una forma de atención: consulta virtual, domicilio o consultorio / veterinaria.';
       if (datos.virtual && !datos.wa.trim()) return 'Si hacés consultas virtuales, tu WhatsApp es obligatorio.';
       if (textoLugar.trim()) return 'Elegí una opción de la lista de Google para confirmar la dirección.';
     }
-    if (p === 4 && datos.email.trim() && !/^\S+@\S+\.\S+$/.test(datos.email.trim())) return 'Revisá el email: parece que falta algo.';
-    if (p === TOTAL_PASOS - 1 && !datos.bio.trim()) return 'Escribí una breve presentación para poder terminar.';
+    if (p === 5 && datos.email.trim() && !/^\S+@\S+\.\S+$/.test(datos.email.trim())) return 'Revisá el email: parece que falta algo.';
+    if (p === 6 && !datos.bio.trim()) return 'Escribí una breve presentación para poder seguir.';
+    if (p === 7 && subiendoGaleria) return 'Esperá a que terminen de subir las fotos.';
+    if (p === 8 && subiendoCaso !== null) return 'Esperá a que terminen de subir las fotos.';
     return '';
   };
 
@@ -944,7 +1206,7 @@ export default function Onboarding() {
 
     if (p === 0) {
       return {
-        perfil: { nombre: d.nombre.trim(), apellido: d.apellido.trim(), nombreCompleto, slug: generarSlug(nombreCompleto), foto: d.foto, fotosPerfil: d.fotosPerfil, visible: false },
+        perfil: { nombre: d.nombre.trim(), apellido: d.apellido.trim(), nombreCompleto, slug: generarSlug(nombreCompleto), foto: d.foto, fotosPerfil: d.fotosPerfil, tituloGenero: d.tituloGenero, visible: false },
         usuario: { nombre: d.nombre.trim(), apellido: d.apellido.trim(), nombreCompleto, slug: generarSlug(nombreCompleto) }
       };
     }
@@ -971,6 +1233,16 @@ export default function Onboarding() {
       };
     }
     if (p === 3) {
+      return {
+        perfil: {
+          trayectoria: d.trayectoria
+            .filter((t) => t.titulo.trim())
+            .map((t) => ({ id: t.id, titulo: t.titulo.trim(), desc: t.desc.trim(), extra: (t.extra || '').trim() }))
+        },
+        usuario: {}
+      };
+    }
+    if (p === 4) {
       const perfil = { atiendeDomicilio: d.dom, atiendeVirtual: !!d.virtual, urgenciasDomicilio: !!d.dom && !!d.urg, zonas: d.zonas };
       if (d.dom || d.virtual) {
         // Igual que el editor: si atiende a domicilio, el WhatsApp es obligatorio y público
@@ -980,12 +1252,14 @@ export default function Onboarding() {
       }
       return { perfil, usuario: {} };
     }
-    if (p === 4) {
+    if (p === 5) {
       const perfil = {
         emailContacto: d.email.trim(),
         emailVisibilidad: visibilidadADB(d.emailV),
         instagram: instagramAURL(d.ig),
-        tiktok: tiktokAURL(d.tiktok)
+        tiktok: tiktokAURL(d.tiktok),
+        linkedin: normalizarLink(d.linkedin),
+        facebook: normalizarLink(d.facebook)
       };
       if (!(d.dom || d.virtual)) {
         perfil.whatsappActivo = d.wa.length > 0;
@@ -994,7 +1268,17 @@ export default function Onboarding() {
       }
       return { perfil, usuario: {} };
     }
-    return { perfil: { bio: d.bio.trim() }, usuario: {} };
+    if (p === 6) return { perfil: { bio: d.bio.trim() }, usuario: {} };
+    if (p === 7) return { perfil: { galeria: d.galeria }, usuario: {} };
+    // p === 8: casos clínicos (se descartan los que quedaron totalmente vacíos)
+    return {
+      perfil: {
+        casos: d.casos
+          .filter((c) => c.nombre.trim() || c.patologia.trim() || c.desc.trim() || c.fotos.length > 0)
+          .map((c) => ({ id: c.id, nombre: c.nombre.trim(), patologia: c.patologia.trim(), desc: c.desc.trim(), fotos: c.fotos }))
+      },
+      usuario: {}
+    };
   };
 
   // Guarda un paso y anota hasta dónde llegó (para retomar después)
@@ -1011,11 +1295,10 @@ export default function Onboarding() {
     await guardarCampos('usuarios', currentUser.uid, { ...usuario, onboardingPaso: p + 1 });
   };
 
-  // Último paso: manda todo a verificación y marca el cuestionario como completo
+  // Envío final: manda todo a verificación y marca el cuestionario como completo
   const finalizar = async (d) => {
     const uid = currentUser.uid;
-    const { perfil } = camposDelPaso(TOTAL_PASOS - 1, d);
-    await guardarCampos('profesionales', uid, { ...perfil, visible: false });
+    await guardarCampos('profesionales', uid, { visible: false });
 
     // El estado de verificación vive en su propia colección, lejos de lo que edita la persona.
     // Guardamos una "foto" de los datos enviados para que quien verifica vea exactamente lo que se mandó.
@@ -1025,6 +1308,7 @@ export default function Onboarding() {
       // Si es un reenvío tras un rechazo, borramos el motivo anterior
       ...(esCorreccion ? { motivoRechazo: '' } : {}),
       datosEnviados: {
+        comoLlego: d.comoLlego === 'Otro' ? `Otro: ${d.comoLlegoOtro.trim()}` : d.comoLlego,
         nombreCompleto: `${d.nombre.trim()} ${d.apellido.trim()}`.trim(),
         matricula: d.mat, tipoMatricula: d.tipo,
         matricula2: d.m2 ? d.mat2 : '', tipoMatricula2: d.m2 ? (d.tipo === 'MP' ? 'MN' : 'MP') : '',
@@ -1032,20 +1316,24 @@ export default function Onboarding() {
       }
     });
 
-    await guardarCampos('usuarios', uid, { onboardingCompleto: true, onboardingPaso: TOTAL_PASOS });
+    await guardarCampos('usuarios', uid, {
+      onboardingCompleto: true,
+      onboardingPaso: TOTAL_PASOS,
+      comoLlego: d.comoLlego,
+      comoLlegoOtro: d.comoLlego === 'Otro' ? d.comoLlegoOtro.trim() : ''
+    });
     await refreshUser();
     setPaso(TOTAL_PASOS);
   };
 
   // ----- Botones de navegación -----
-  const irAlSiguiente = async () => {
-    const mensaje = validarPaso(paso);
-    if (mensaje) { setError(mensaje); return; }
-
+  // Guarda el paso actual y pasa al siguiente (o a la pregunta final si era el último)
+  const avanzar = async () => {
     setGuardando(true);
     try {
-      if (paso === TOTAL_PASOS - 1) await finalizar(datos);
-      else { await guardarPaso(paso, datos); setPaso(paso + 1); }
+      await guardarPaso(paso, datos);
+      if (paso === TOTAL_PASOS - 1) setEnEncuesta(true);
+      else setPaso(paso + 1);
       setError('');
     } catch (e) {
       console.error('Error guardando el paso:', e);
@@ -1055,8 +1343,49 @@ export default function Onboarding() {
     }
   };
 
-  
+  const irAlSiguiente = () => {
+    const mensaje = validarPaso(paso);
+    if (mensaje) {
+      setError(mensaje);
+      // Llevamos la pantalla hasta el aviso para que no pase desapercibido
+      requestAnimationFrame(() => {
+        document.querySelector('[role="alert"]')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+      return;
+    }
+    avanzar();
+  };
+
+  const completarDespues = () => avanzar();
+
   const volver = () => { setPaso(paso - 1); setError(''); };
+
+  const irAPaso = (p) => { setEnEncuesta(false); setPaso(p); setError(''); };
+
+  const enviarDesdeEncuesta = async () => {
+    if (esCorreccion) {
+      for (let p = 0; p < TOTAL_PASOS; p++) {
+        const mensaje = validarPaso(p);
+        if (mensaje) { setEnEncuesta(false); setPaso(p); setError(mensaje); return; }
+      }
+    }
+    if (!datos.comoLlego) { setError('Elegí una opción para contarnos cómo llegaste.'); return; }
+    if (datos.comoLlego === 'Otro' && !datos.comoLlegoOtro.trim()) { setError('Contanos cómo llegaste en el cuadro de abajo.'); return; }
+
+    setGuardando(true);
+    try {
+      if (esCorreccion) {
+        for (let p = 0; p < TOTAL_PASOS; p++) await guardarPaso(p, datos);
+      }
+      await finalizar(datos);
+      setError('');
+    } catch (e) {
+      console.error('Error al enviar a verificación:', e);
+      setError('No pudimos enviar. Revisá tu conexión y probá de nuevo.');
+    } finally {
+      setGuardando(false);
+    }
+  };
 
   const cerrarSesion = async () => {
     try { if (logout) await logout(); navigate('/'); }
@@ -1073,6 +1402,9 @@ export default function Onboarding() {
 
   // Tipo de matrícula: la segunda es siempre la otra (MP ↔ MN)
   const tipoSegundaMatricula = datos.tipo === 'MP' ? 'MN' : 'MP';
+
+  // Algo se está subiendo: bloqueamos los botones para no perder fotos
+  const hayAlgoSubiendo = subiendoFoto || subiendoTitulo || subiendoGaleria || subiendoCaso !== null;
 
   // ----- Pantalla de carga -----
   if (cargando || !currentUser) {
@@ -1094,6 +1426,21 @@ export default function Onboarding() {
           <input id="ob-nombre" value={datos.nombre} onChange={cambiarNombre('nombre')} placeholder="María" autoComplete="off" className={CLASE_INPUT} />
           <label className={CLASE_LABEL} htmlFor="ob-apellido">Apellido<Obligatorio /></label>
           <input id="ob-apellido" value={datos.apellido} onChange={cambiarNombre('apellido')} placeholder="González" autoComplete="off" className={CLASE_INPUT} />
+
+          <span className={CLASE_LABEL}>Cómo te identificás</span>
+          <div className="grid grid-cols-3 gap-2">
+            {[['veterinaria', 'Veterinaria'], ['veterinario', 'Veterinario'], ['', 'No especificar']].map(([valor, texto]) => (
+              <button
+                key={valor || 'ninguno'}
+                type="button"
+                onClick={() => cambiar('tituloGenero', valor)}
+                className={`${CLASE_CHIP} text-center px-2 ${datos.tituloGenero === valor ? 'bg-[#2D6A6A] border-[#2D6A6A] text-white' : 'bg-white border-gray-200 text-[#555555] hover:border-[#2D6A6A]'}`}
+              >
+                {texto}
+              </button>
+            ))}
+          </div>
+          <p className={CLASE_AYUDA}>Es cómo se lee tu título en Google y en tu perfil. Si no especificás, aparece como "Veterinaria/o".</p>
 
           <div className="flex items-center gap-4 mt-6">
             <div className="w-16 h-16 rounded-full bg-[#F4F7F7] text-gray-400 flex items-center justify-center shrink-0 overflow-hidden">
@@ -1210,7 +1557,36 @@ export default function Onboarding() {
     if (paso === 3) {
       return (
         <>
-                  <p className="text-[16px] font-semibold text-[#1A3D3D]">Cómo y dónde atendés<Obligatorio /></p>
+          <p className={`${CLASE_AYUDA} mt-5`}>Sumá al menos un título o logro<Obligatorio />. Por ejemplo: carrera de grado, posgrado, residencia o cargo docente.</p>
+
+          {datos.trayectoria.map((item, indice) => (
+            <div key={item.id} className="border border-gray-200 rounded-2xl p-4 mt-3">
+              <div className="flex items-start gap-2">
+                <div className="flex flex-col gap-1 pt-1">
+                  <button type="button" aria-label="Subir logro" onClick={() => moverLogro(indice, -1)} disabled={indice === 0} className="p-1 text-gray-300 hover:text-[#1A3D3D] disabled:opacity-20 transition-colors"><ArrowUp className="w-4 h-4" /></button>
+                  <button type="button" aria-label="Bajar logro" onClick={() => moverLogro(indice, 1)} disabled={indice === datos.trayectoria.length - 1} className="p-1 text-gray-300 hover:text-[#1A3D3D] disabled:opacity-20 transition-colors"><ArrowDown className="w-4 h-4" /></button>
+                </div>
+                <div className="flex-1 min-w-0 flex flex-col gap-2.5">
+                  <input aria-label="Título" value={item.titulo} onChange={(e) => actualizarLogro(item.id, 'titulo', e.target.value)} placeholder="Título (ej: Especialista en Cirugía)" autoComplete="off" className={CLASE_INPUT} />
+                  <input aria-label="Entidad o año" value={item.desc} onChange={(e) => actualizarLogro(item.id, 'desc', e.target.value)} placeholder="Entidad o año (ej: UBA, 2018)" autoComplete="off" className={CLASE_INPUT} />
+                  <input aria-label="Dato extra" value={item.extra} onChange={(e) => actualizarLogro(item.id, 'extra', e.target.value)} placeholder="Dato extra (opcional)" autoComplete="off" className={CLASE_INPUT} />
+                </div>
+                <button type="button" aria-label="Quitar logro" onClick={() => quitarLogro(item.id)} className="p-1.5 text-gray-400 hover:text-red-500 transition-colors"><Trash2 className="w-[18px] h-[18px]" /></button>
+              </div>
+            </div>
+          ))}
+
+          <button type="button" onClick={agregarLogro} className={`${CLASE_BTN_SECUNDARIO} mt-4 inline-flex items-center gap-2`}>
+            <Plus className="w-4 h-4" /> {datos.trayectoria.length > 0 ? 'Agregar otro logro' : 'Agregar mi primer logro'}
+          </button>
+        </>
+      );
+    }
+
+    if (paso === 4) {
+      return (
+        <>
+          <p className="text-[16px] font-semibold text-[#1A3D3D]">Cómo y dónde atendés<Obligatorio /></p>
           <p className={CLASE_AYUDA}>Elegí al menos una opción. Así los tutores te encuentran con los filtros de la Cartilla.</p>
           <div className="flex items-center justify-between gap-4 bg-[#F4F7F7] rounded-2xl px-5 py-4 mt-5">
             <div>
@@ -1264,7 +1640,6 @@ export default function Onboarding() {
 
           {datos.dom && (
             <>
-
               <div className="flex items-center justify-between gap-4 bg-[#F4F7F7] rounded-2xl px-5 py-4 mt-5">
                 <div>
                   <p className="text-[16px] font-semibold text-[#1A3D3D]">También atiendo urgencias</p>
@@ -1339,6 +1714,7 @@ export default function Onboarding() {
               <div className="flex-1 min-w-0">
                 <p className="text-[15px] font-bold text-[#1A3D3D]">{clinica.nombrePropio}</p>
                 <p className="text-sm text-[#666666] mt-0.5 leading-snug">{clinica.direccion}</p>
+                {clinica.telefono && <p className="text-sm text-[#666666] mt-0.5">{clinica.telefono}</p>}
                 <p className="text-[12px] font-semibold text-[#2D6A6A] mt-2 flex items-center gap-1">
                   <CheckCircle2 className="w-[15px] h-[15px]" /> Confirmado con Google{clinica.barrio ? ` · Barrio: ${clinica.barrio}` : ''}
                 </p>
@@ -1354,7 +1730,7 @@ export default function Onboarding() {
       );
     }
 
-    if (paso === 4) {
+    if (paso === 5) {
       return (
         <>
           <EtiquetaConVisibilidad id="ob-email" texto="Email de contacto" valor={datos.emailV} onCambio={(v) => cambiar('emailV', v)} />
@@ -1379,23 +1755,152 @@ export default function Onboarding() {
 
           <label className={CLASE_LABEL} htmlFor="ob-tiktok">TikTok (opcional)</label>
           <input id="ob-tiktok" value={datos.tiktok} onChange={(e) => cambiar('tiktok', e.target.value.replace(/^@/, ''))} placeholder="@tu_usuario" autoComplete="off" className={CLASE_INPUT} />
+
+          <label className={CLASE_LABEL} htmlFor="ob-linkedin">LinkedIn (opcional)</label>
+          <input id="ob-linkedin" value={datos.linkedin} onChange={(e) => cambiar('linkedin', e.target.value)} placeholder="Link de tu perfil" autoComplete="off" className={CLASE_INPUT} />
+
+          <label className={CLASE_LABEL} htmlFor="ob-facebook">Facebook (opcional)</label>
+          <input id="ob-facebook" value={datos.facebook} onChange={(e) => cambiar('facebook', e.target.value)} placeholder="Link de tu perfil" autoComplete="off" className={CLASE_INPUT} />
         </>
       );
     }
 
+    if (paso === 6) {
+      return (
+        <>
+          <label className={CLASE_LABEL} htmlFor="ob-bio">Tu presentación<Obligatorio /></label>
+          <textarea
+            id="ob-bio"
+            rows={5}
+            maxLength={350}
+            value={datos.bio}
+            onChange={(e) => cambiar('bio', e.target.value)}
+            placeholder="Soy médica veterinaria y me dedico a la cirugía de pequeños animales hace diez años."
+            className={`${CLASE_INPUT} resize-none`}
+          />
+          <p className="text-right text-sm text-[#666666] mt-2">{datos.bio.length} / 350</p>
+        </>
+      );
+    }
+
+    if (paso === 7) {
+      return (
+        <>
+          <p className={`${CLASE_AYUDA} mt-5`}>Hasta {LIMITE_GALERIA} fotos. Después las podés ordenar y sumar más desde tu perfil.</p>
+
+          {datos.galeria.length > 0 && (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-4">
+              {datos.galeria.map((item) => (
+                <div key={item.id} className="relative bg-[#F4F7F7] rounded-2xl overflow-hidden border border-gray-100">
+                  <div className="aspect-square relative overflow-hidden">
+                    <img src={item.url} alt={item.epigrafe || 'Foto de la galería'} className="w-full h-full object-cover" />
+                    {item.esSensible && (
+                      <div className="absolute inset-0 bg-[#1A3D3D]/70 flex items-center justify-center pointer-events-none">
+                        <span className="flex items-center gap-1.5 bg-white/90 text-[#1A3D3D] text-[10px] font-black uppercase tracking-widest px-2.5 py-1.5 rounded-full">
+                          <AlertTriangle className="w-3 h-3" /> Sensible
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => actualizarGaleria(item.id, 'esSensible', !item.esSensible)}
+                    title={item.esSensible ? 'Quitar aviso de contenido sensible' : 'Marcar como contenido sensible'}
+                    aria-label="Marcar como contenido sensible"
+                    className={`absolute top-2 left-2 p-1.5 rounded-full shadow-md ${item.esSensible ? 'bg-[#FF9800] text-white' : 'bg-white/90 text-gray-500 hover:bg-yellow-50'}`}
+                  >
+                    <AlertTriangle className="w-3.5 h-3.5" strokeWidth={2.5} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => quitarFotoGaleria(item.id)}
+                    aria-label="Quitar foto"
+                    className="absolute top-2 right-2 p-1.5 bg-white/90 text-red-500 rounded-full shadow-md hover:bg-red-50"
+                  >
+                    <X className="w-3.5 h-3.5" strokeWidth={3} />
+                  </button>
+                  <div className="p-2.5">
+                    <input
+                      type="text"
+                      placeholder="Descripción opcional..."
+                      value={item.epigrafe || ''}
+                      maxLength={80}
+                      onChange={(e) => actualizarGaleria(item.id, 'epigrafe', e.target.value)}
+                      className="w-full text-[13px] font-medium text-gray-500 bg-transparent outline-none placeholder:text-gray-300 border-b border-gray-200 pb-1 focus:border-[#2D6A6A] transition-colors"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {datos.galeria.length < LIMITE_GALERIA ? (
+            <label className={`mt-4 w-full border-2 border-dashed border-[#2D6A6A]/40 rounded-2xl px-4 py-6 text-[#2D6A6A] text-[15px] font-semibold flex items-center justify-center gap-2.5 transition-all duration-300 ${subiendoGaleria ? 'bg-[#2D6A6A]/5 cursor-not-allowed' : 'cursor-pointer hover:bg-[#2D6A6A]/5 hover:border-[#2D6A6A]'}`}>
+              {subiendoGaleria
+                ? <><Loader2 className="w-5 h-5 animate-spin" /> Subiendo fotos…</>
+                : <><ImageIcon className="w-5 h-5" /> Agregar fotos ({datos.galeria.length}/{LIMITE_GALERIA})</>}
+              <input type="file" accept="image/*" multiple className="hidden" onChange={manejarGaleria} disabled={subiendoGaleria} />
+            </label>
+          ) : (
+            <p className="mt-4 text-sm font-semibold text-gray-400 text-center">Llegaste al límite de {LIMITE_GALERIA} fotos.</p>
+          )}
+          <p className={CLASE_AYUDA}>Marcá con el triángulo las imágenes que muestren contenido sensible.</p>
+        </>
+      );
+    }
+
+    // paso === 8: casos clínicos
     return (
       <>
-        <label className={CLASE_LABEL} htmlFor="ob-bio">Tu presentación<Obligatorio /></label>
-        <textarea
-          id="ob-bio"
-          rows={5}
-          maxLength={350}
-          value={datos.bio}
-          onChange={(e) => cambiar('bio', e.target.value)}
-          placeholder="Soy médica veterinaria y me dedico a la cirugía de pequeños animales hace diez años."
-          className={`${CLASE_INPUT} resize-none`}
-        />
-        <p className="text-right text-sm text-[#666666] mt-2">{datos.bio.length} / 350</p>
+        <p className={`${CLASE_AYUDA} mt-5`}>Contá casos que hayas resuelto, con fotos si podés. Hasta {LIMITE_CASOS} casos por ahora; después sumás más desde tu perfil.</p>
+
+        {datos.casos.map((caso, indice) => (
+          <div key={caso.id} className="border border-gray-200 rounded-2xl p-4 mt-4">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-[12px] font-bold text-[#2D6A6A] uppercase tracking-widest">Caso {indice + 1}</p>
+              <button type="button" aria-label="Quitar caso" onClick={() => quitarCaso(caso.id)} className="p-1.5 text-gray-400 hover:text-red-500 transition-colors"><Trash2 className="w-[18px] h-[18px]" /></button>
+            </div>
+
+            <div className="flex flex-wrap gap-2 mb-3">
+              {caso.fotos.map((foto, i) => (
+                <div key={foto} className="relative w-16 h-16 rounded-xl overflow-hidden border-2 border-gray-200">
+                  <img src={foto} alt={`Foto ${i + 1} del caso`} className="w-full h-full object-cover" />
+                  <button type="button" aria-label="Quitar foto" onClick={() => quitarFotoCaso(caso.id, i)} className="absolute top-0.5 right-0.5 p-0.5 bg-white/90 text-red-500 rounded-full">
+                    <X className="w-3 h-3" strokeWidth={3} />
+                  </button>
+                </div>
+              ))}
+              {caso.fotos.length < LIMITE_FOTOS_CASO && (
+                <label className={`w-16 h-16 rounded-xl border-2 border-dashed border-[#2D6A6A]/40 flex flex-col items-center justify-center text-[#2D6A6A] bg-white transition-colors ${subiendoCaso !== null ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:bg-[#2D6A6A]/5 hover:border-[#2D6A6A]'}`}>
+                  {subiendoCaso === caso.id ? <Loader2 className="w-5 h-5 animate-spin" /> : <ImageIcon className="w-5 h-5 mb-0.5" />}
+                  <span className="text-[10px] font-black uppercase">{subiendoCaso === caso.id ? '' : 'Foto'}</span>
+                  <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => manejarFotosCaso(e, caso.id)} disabled={subiendoCaso !== null} />
+                </label>
+              )}
+            </div>
+
+            <div className="flex flex-col md:flex-row gap-2.5">
+              <input aria-label="Paciente" value={caso.nombre} onChange={(e) => actualizarCaso(caso.id, 'nombre', e.target.value)} placeholder="Paciente (ej: Firulais)" autoComplete="off" className={`${CLASE_INPUT} md:w-1/3`} />
+              <input aria-label="Patología o motivo" value={caso.patologia} onChange={(e) => actualizarCaso(caso.id, 'patologia', e.target.value)} placeholder="Patología o motivo" autoComplete="off" className={CLASE_INPUT} />
+            </div>
+            <textarea
+              aria-label="Relato del caso"
+              rows={4}
+              maxLength={600}
+              value={caso.desc}
+              onChange={(e) => actualizarCaso(caso.id, 'desc', e.target.value)}
+              placeholder="Contá la historia clínica, el tratamiento y la evolución…"
+              className={`${CLASE_INPUT} resize-none mt-2.5`}
+            />
+            <p className="text-right text-sm text-[#666666] mt-1.5">{caso.desc.length} / 600</p>
+          </div>
+        ))}
+
+        {datos.casos.length < LIMITE_CASOS && (
+          <button type="button" onClick={agregarCaso} className={`${CLASE_BTN_SECUNDARIO} mt-4 inline-flex items-center gap-2`}>
+            <Plus className="w-4 h-4" /> {datos.casos.length > 0 ? 'Agregar otro caso' : 'Agregar un caso'}
+          </button>
+        )}
       </>
     );
   };
@@ -1458,9 +1963,18 @@ export default function Onboarding() {
               </div>
             </div>
           )}
-          <BarraPasos paso={paso} />
+          <BarraPasos paso={enEncuesta ? TOTAL_PASOS : paso} onIrAPaso={esCorreccion && paso < TOTAL_PASOS ? irAPaso : null} />
 
-          {paso < TOTAL_PASOS ? (
+          {paso < TOTAL_PASOS && enEncuesta ? (
+            <PantallaComoLlegaste
+              datos={datos}
+              cambiar={cambiar}
+              error={error}
+              guardando={guardando}
+              onVolver={() => { setEnEncuesta(false); setError(''); }}
+              onEnviar={enviarDesdeEncuesta}
+            />
+          ) : paso < TOTAL_PASOS ? (
             <>
               <p className="text-[13px] font-semibold text-[#2D6A6A] mb-1.5">Paso {paso + 1} de {TOTAL_PASOS}</p>
               <h1 className="font-['Montserrat'] font-extrabold text-2xl md:text-[28px] leading-tight text-[#1A3D3D] mb-2">{TITULOS[paso]}</h1>
@@ -1470,15 +1984,17 @@ export default function Onboarding() {
 
               <p className="min-h-[20px] text-sm font-medium text-red-500 mt-4" role="alert">{error}</p>
 
-              <div className="flex justify-between items-center gap-2 mt-6">
-                {paso > 0 ? (
-                  <button type="button" onClick={volver} disabled={guardando} className={CLASE_BTN_VOLVER}>Volver</button>
-                ) : <span />}
-                <div className="flex items-center gap-1.5">
-                 
-                  <button type="button" onClick={irAlSiguiente} disabled={guardando || subiendoFoto || subiendoTitulo} className={CLASE_BTN_PRIMARIO}>
+              <div className="flex flex-col gap-3 mt-6">
+                {paso >= PRIMER_PASO_OPCIONAL && (
+                  <button type="button" onClick={completarDespues} disabled={guardando || hayAlgoSubiendo} className={`${CLASE_BTN_VOLVER} w-full`}>Completar después</button>
+                )}
+                <div className={`grid gap-3 ${paso > 0 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                  {paso > 0 && (
+                    <button type="button" onClick={volver} disabled={guardando} className={CLASE_BTN_VOLVER}>Volver</button>
+                  )}
+                  <button type="button" onClick={irAlSiguiente} disabled={guardando || hayAlgoSubiendo} className={CLASE_BTN_PRIMARIO}>
                     {guardando && <Loader2 className="w-4 h-4 animate-spin" />}
-                    {paso === TOTAL_PASOS - 1 ? 'Enviar a verificación' : 'Siguiente'}
+                    Siguiente
                   </button>
                 </div>
               </div>
@@ -1496,7 +2012,7 @@ export default function Onboarding() {
                 Recibimos tu matrícula. La verificamos en 24 a 48 horas y te avisamos por mail.
               </p>
               <div className="bg-[#F4F7F7] rounded-2xl px-4 py-3.5 my-6 text-left text-[15px] font-medium text-[#1A3D3D] leading-relaxed">
-                Mientras esperás, podés sumar tu trayectoria y tus fotos desde tu perfil. Apenas te verifiquemos, sale publicado.
+                Mientras esperás, podés seguir completando tu perfil, por ejemplo con tus investigaciones. Apenas te verifiquemos, sale publicado.
               </div>
               <button type="button" onClick={() => navigate('/ecosistema')} className={`${CLASE_BTN_PRIMARIO} w-full`}>
                 Ir a mi perfil

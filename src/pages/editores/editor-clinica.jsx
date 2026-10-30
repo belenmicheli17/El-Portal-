@@ -41,7 +41,7 @@ const IconoBisturi = ({ className }) => (
 const PERFIL_EJEMPLO_URL = '';
 
 // Cantidad máxima de fotos de la galería según el plan
-const LIMITE_GALERIA = { gratis: 6, pro: 20 };
+const LIMITE_GALERIA = { gratis: 4, pro: 15 };
 
 // Las clínicas usan las especialidades de siempre + el grupo de equipamiento (que solo ven las clínicas)
 const GRUPOS_CLINICA = [...especialidadesData, ...equipamientoData];
@@ -104,7 +104,8 @@ const DATOS_INICIALES = {
   whatsapp: '',
   email: '',
   sitioWeb: '',
-  redes: { instagram: '', facebook: '' },
+  redes: { instagram: '', facebook: '', tiktok: '', linkedin: '' },
+  atiendeDomicilio: false,
   guardia24hs: false,
   telefonoGuardia: '',
   horarios: { semanaDesde: '', semanaHasta: '', sabadoDesde: '', sabadoHasta: '' },
@@ -129,6 +130,13 @@ const conPrefijo54 = (valor) => {
   return digitos.startsWith('54') ? digitos : `54${digitos}`;
 };
 
+// TikTok: se guarda la URL completa, y en pantalla se muestra solo el usuario
+const tiktokAURL = (usuario) => {
+  const limpio = String(usuario || '').trim().replace(/^@/, '').replace(/^https?:\/\/(www\.)?tiktok\.com\/@?/i, '').replace(/\/.*$/, '');
+  return limpio ? `https://www.tiktok.com/@${limpio}` : '';
+};
+const tiktokAUsuario = (valor) => String(valor || '').replace(/^https?:\/\/(www\.)?tiktok\.com\/@?/i, '').replace(/\/.*$/, '').replace(/^@/, '');
+
 // Convierte lo que viene de Firestore al formato del formulario, rellenando lo que falte
 const prepararDatosCargados = (data) => ({
   ...DATOS_INICIALES,
@@ -149,6 +157,7 @@ const prepararDatosCargados = (data) => ({
   email: data.email || '',
   sitioWeb: data.sitioWeb || '',
   redes: { ...DATOS_INICIALES.redes, ...(data.redes || {}) },
+  atiendeDomicilio: data.atiendeDomicilio === true,
   guardia24hs: data.guardia24hs === true,
   telefonoGuardia: conPrefijo54(data.telefonoGuardia),
   horarios: { ...DATOS_INICIALES.horarios, ...(data.horarios || {}) },
@@ -578,7 +587,12 @@ export default function EditorClinico() {
     email: f.email.trim(),
     telefono: f.telefono.trim(),
     sitioWeb: normalizarWeb(f.sitioWeb),
-    redes: { instagram: instagramAURL(f.redes.instagram), facebook: normalizarWeb(f.redes.facebook) },
+    redes: {
+      instagram: instagramAURL(f.redes.instagram),
+      facebook: normalizarWeb(f.redes.facebook),
+      tiktok: tiktokAURL(f.redes.tiktok),
+      linkedin: normalizarWeb(f.redes.linkedin)
+    },
     staff: f.staff.filter((m) => m.nombre.trim()).map((m) => ({ ...m, nombre: m.nombre.trim(), especialidad: m.especialidad.trim(), bio: m.bio.trim() })),
     casos: f.casos.filter((c) => c.patologia.trim() || c.nombre.trim() || c.desc.trim() || c.fotos.length).map((c) => ({ ...c, nombre: c.nombre.trim(), patologia: c.patologia.trim(), desc: c.desc.trim() })),
     faqs: f.faqs.filter((q) => q.pregunta.trim()).map((q) => ({ ...q, pregunta: q.pregunta.trim(), respuesta: q.respuesta.trim() })),
@@ -1528,6 +1542,14 @@ export default function EditorClinico() {
                           placeholder="Ej: 011 4567-8901"
                         />
                       </div>
+                      <div className="mb-6">
+                        <ToggleSwitch
+                          label="Ofrecemos atención a domicilio"
+                          checked={formData.atiendeDomicilio}
+                          onChange={(v) => setFormData((p) => ({ ...p, atiendeDomicilio: v }))}
+                          tooltip="Suma una insignia en tu perfil público."
+                        />
+                      </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
                         <InputGroup label="Email oficial" id="email" type="email" value={formData.email} onChange={handleChange} placeholder="contacto@tuclinica.com" />
                         <InputGroup label="Sitio web" id="sitioWeb" value={formData.sitioWeb} onChange={handleChange} placeholder="www.tuclinica.com" canTest />
@@ -1601,6 +1623,23 @@ export default function EditorClinico() {
                             </div>
                           </div>
                           <InputGroup label="Facebook" id="facebook" value={formData.redes.facebook} onChange={(e) => handleRedesChange('facebook', e.target.value)} placeholder="Link completo de tu página" canTest />
+                          <div className="mb-6 w-full">
+                            <label htmlFor="tiktok" className="flex items-center text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">
+                              TikTok — usuario
+                            </label>
+                            <div className="relative flex items-center border border-gray-200 rounded-2xl bg-gray-50/50 focus-within:border-[#2D6A6A] transition-all px-5 py-3.5">
+                              <span className="text-base font-medium text-[#1A3D3D] select-none pointer-events-none">@</span>
+                              <input
+                                id="tiktok"
+                                type="text"
+                                value={tiktokAUsuario(formData.redes.tiktok)}
+                                onChange={(e) => handleRedesChange('tiktok', e.target.value.replace(/@/g, '').trim())}
+                                placeholder="tu_clinica"
+                                className="flex-1 bg-transparent text-base font-medium text-[#1A3D3D] focus:outline-none placeholder:text-gray-400"
+                              />
+                            </div>
+                          </div>
+                          <InputGroup label="LinkedIn" id="linkedin" value={formData.redes.linkedin} onChange={(e) => handleRedesChange('linkedin', e.target.value)} placeholder="Link completo de tu página" canTest />
                         </div>
                       </div>
                     </Accordion>

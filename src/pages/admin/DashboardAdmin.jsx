@@ -32,6 +32,7 @@ export default function DashboardAdmin() {
     nuevosHoy: { profesionales: 0, clinicas: 0, proveedores: 0, validaciones: 0 }
   });
   const [pendientes, setPendientes] = useState([]);
+  const [llegaronPor, setLlegaronPor] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [menuCuentasAbierto, setMenuCuentasAbierto] = useState(false);
   const [rolEntrando, setRolEntrando] = useState(null); // rol de la cuenta de prueba a la que se está entrando
@@ -80,6 +81,17 @@ const clinicasActivas = clinicasSnap.docs.filter(d => d.data().visible !== false
 
                setMetricas({ profesionales, clinicas, alumnos, proveedores, pendientesValidacion, profesionalesActivos, clinicasActivas, nuevosHoy });
         setPendientes(pendientesList);
+        // Cuántas personas eligieron cada opción de "¿Cómo llegaste?" (sin admin ni cuentas de prueba)
+        const conteoLlegada = {};
+        usuarios.filter(u => u.rol !== 'admin').forEach(u => {
+          const clave = u.comoLlego || 'Sin dato';
+          conteoLlegada[clave] = (conteoLlegada[clave] || 0) + 1;
+        });
+        setLlegaronPor(Object.entries(conteoLlegada).sort((a, b) => {
+          if (a[0] === 'Sin dato') return 1;
+          if (b[0] === 'Sin dato') return -1;
+          return b[1] - a[1];
+        }));
       } catch (error) {
         console.error("Error cargando métricas:", error);
       } finally {
@@ -236,21 +248,36 @@ const clinicasActivas = clinicasSnap.docs.filter(d => d.data().visible !== false
 
         <div className="bg-[#1A3D3D] rounded-[32px] p-8 shadow-xl text-white relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-[20px] -translate-y-1/2 translate-x-1/2"></div>
-          <h2 className="text-[18px] font-black font-['Montserrat'] mb-6 relative z-10">Estado del Sistema</h2>
-          <div className="space-y-6 relative z-10">
-            <div>
-              <p className="text-white/50 text-[10px] uppercase tracking-widest font-bold mb-1">Base de Datos</p>
-              <div className="flex items-center gap-2 text-[14px] font-semibold text-[#4DB6AC]">
-                <span className="w-2 h-2 rounded-full bg-[#4DB6AC] animate-pulse"></span>
-                Conectada (Firebase)
-              </div>
-            </div>
-            <div className="pt-4 border-t border-white/10">
-              <p className="text-white/50 text-[10px] uppercase tracking-widest font-bold mb-2">Tip de Moderación</p>
-              <p className="text-white/80 text-[13px] font-medium leading-relaxed">
-                Revisá las validaciones pendientes al menos una vez al día para no demorar el ingreso de nuevos profesionales.
-              </p>
-            </div>
+          <h2 className="text-[18px] font-black font-['Montserrat'] mb-6 relative z-10">Llegaron por</h2>
+          <div className="space-y-4 relative z-10">
+            {isLoading ? (
+              <Loader2 className="w-6 h-6 animate-spin text-[#4DB6AC]" />
+            ) : llegaronPor.length > 0 ? (
+              <>
+                {llegaronPor.map(([nombre, cantidad]) => {
+                  const total = llegaronPor.reduce((suma, [, n]) => suma + n, 0);
+                  return (
+                    <div key={nombre}>
+                      <div className="flex items-center justify-between text-[13px] font-semibold mb-1.5">
+                        <span className={nombre === 'Sin dato' ? 'text-white/50' : 'text-white'}>{nombre}</span>
+                        <span className="text-[#4DB6AC] font-black">{cantidad}</span>
+                      </div>
+                      <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full ${nombre === 'Sin dato' ? 'bg-white/30' : 'bg-[#4DB6AC]'}`}
+                          style={{ width: `${(cantidad / total) * 100}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+                <p className="pt-4 border-t border-white/10 text-white/50 text-[12px] font-medium leading-relaxed">
+                  "Sin dato": cuentas anteriores al cuestionario o que todavía no lo terminaron.
+                </p>
+              </>
+            ) : (
+              <p className="text-white/70 text-[13px] font-medium">Todavía no hay datos.</p>
+            )}
           </div>
         </div>
       </div>

@@ -124,7 +124,7 @@ function TarjetaAvance({ avance, cargando, onEditar, onVerPerfil }) {
           onClick={onEditar}
           className="flex-1 bg-[#2D6A6A] text-white rounded-xl px-3 py-2.5 text-[13px] font-bold transition-all duration-300 ease-in-out hover:bg-[#1A3D3D] hover:-translate-y-0.5 hover:shadow-lg"
         >
-          {avance && avance.faltantes.length === 0 ? 'Editar perfil' : 'Seguir editando'}
+          {avance && avance.faltantes.length === 0 ? 'Editar mi información' : 'Seguir editando'}
         </button>
         <button
           type="button"
@@ -630,6 +630,10 @@ export default function Ecosistema() {
     return () => { cancelado = true; };
   }, [currentUser?.uid, currentUser?.rol, currentUser?.estado]);
 
+// Cómo se identifica la persona (veterinaria / veterinario / vacío), para el saludo
+  const [tituloGenero, setTituloGenero] = useState('');
+
+
   // Leemos el perfil profesional y calculamos el porcentaje con la misma cuenta que usa el editor
   useEffect(() => {
     if (!currentUser?.uid) return;
@@ -643,6 +647,7 @@ export default function Ecosistema() {
         const snap = await getDoc(doc(db, 'profesionales', currentUser.uid));
         if (cancelado) return;
         const datos = snap.exists() ? snap.data() : {};
+        setTituloGenero(datos.tituloGenero || '');
         // Igual que el editor: socio vitalicio o plan distinto de 'gratis' incluye casos clínicos
         const incluyeCasos = currentUser.socioVitalicio === true || datos.planActual !== 'gratis';
         setAvance(calcularProgresoPerfil(datos, incluyeCasos));
@@ -793,9 +798,9 @@ export default function Ecosistema() {
 
             <div className="lg:col-span-2">
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-[#1A3D3D] font-['Montserrat'] leading-[1.1] tracking-tight">
-                ¡Hola, {currentUser.nombre || 'Profesional'}! <br className="hidden md:block" />
+                ¡Hola, {currentUser.nombre || (activeRole === 'clinica' ? 'Clínica' : activeRole === 'proveedor' ? 'Proveedor' : 'Profesional')}! <br className="hidden md:block" />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#1A3D3D] to-[#2D6A6A]">
-                  Bienvenido/a al ecosistema.
+                  {tituloGenero === 'veterinaria' ? 'Bienvenida' : tituloGenero === 'veterinario' ? 'Bienvenido' : 'Bienvenido/a'} al ecosistema.
                 </span>
               </h1>
               <h3 className="text-[#2D6A6A] font-bold text-[12px] md:text-[13px] uppercase tracking-[0.2em] mt-4">
@@ -828,7 +833,7 @@ export default function Ecosistema() {
 
             <TarjetaDisponible
               id="tour-editar-perfil"
-              titulo="Editar perfil"
+              titulo="Editar mi información"
               descripcion="Actualizá tus datos para que el público conozca tus servicios y tu formación."
               icon={User}
               onClick={() => navigate(rutaEditor)}

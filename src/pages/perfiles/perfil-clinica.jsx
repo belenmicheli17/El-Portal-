@@ -1,12 +1,13 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { db } from '../../firebase';
+import { useAuth } from '../../context/AuthContext';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 
 import {
   ChevronLeft, ChevronRight, ChevronDown, MapPin, Phone, Mail, Globe,
   Clock, Star, AlertTriangle, Building2, Instagram, Facebook, Users,
-  Award, Eye, X, Heart, MessageCircle
+  Award, Eye, X, Heart, MessageCircle, Home, Linkedin
 } from 'lucide-react';
 
 // Pasos de urgencia que se muestran si la clínica activó la guardia pero no personalizó los suyos
@@ -144,6 +145,7 @@ function FotoSensible({ src, sensible, alt, className, onAbrir }) {
 export default function PerfilClinica() {
   const navigate = useNavigate();
   const { slug } = useParams();
+  const { currentUser } = useAuth();
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -279,7 +281,7 @@ export default function PerfilClinica() {
   // ==========================================
   // DATOS ARMADOS PARA MOSTRAR
   // ==========================================
-  const esPro = data.planActual === 'pro';
+  const esPro = data.planActual === 'pro' || (currentUser?.rol === 'admin' && data.visible === false);
 
   // Etiqueta de fundadora (si no tiene número guardado, se muestra sin número)
   const esFundadora = data.socioVitalicio === true;
@@ -363,7 +365,7 @@ export default function PerfilClinica() {
           </div>
 
           <div className="flex-1 min-w-0">
-            {(data.guardia24hs || esFundadora) && (
+            {(data.guardia24hs || esFundadora || data.atiendeDomicilio) && (
               <div className="flex flex-wrap gap-1.5 mb-2.5">
                 {data.guardia24hs && (
                   <span className={`${ETIQUETA} bg-red-50 text-red-600`}>
@@ -372,6 +374,11 @@ export default function PerfilClinica() {
                       <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500"></span>
                     </span>
                     Guardia 24 hs
+                  </span>
+                )}
+                {data.atiendeDomicilio && (
+                  <span className={`${ETIQUETA} bg-blue-50 text-blue-600`}>
+                    <Home className="w-3 h-3" /> Atiende a domicilio
                   </span>
                 )}
                 {esFundadora && (
@@ -674,8 +681,8 @@ export default function PerfilClinica() {
                     <span className="min-w-0"><span className="block text-[10px] font-bold uppercase text-gray-400">Sitio web</span><span className="block text-sm font-black text-[#1A3D3D] truncate">{data.sitioWeb.replace(/^https?:\/\//, '')}</span></span>
                   </a>
                 )}
-                {data.redes && (data.redes.instagram || data.redes.facebook) && (
-                  <div className="flex gap-2">
+                {data.redes && (data.redes.instagram || data.redes.facebook || data.redes.tiktok || data.redes.linkedin) && (
+                  <div className="grid grid-cols-2 gap-2">
                     {data.redes.instagram && (
                       <a href={data.redes.instagram} target="_blank" rel="noreferrer" className="flex-1 flex items-center justify-center gap-2 bg-white rounded-2xl p-3.5 text-[#E4405F] text-sm font-bold">
                         <Instagram className="w-4 h-4" /> Instagram
@@ -684,6 +691,26 @@ export default function PerfilClinica() {
                     {data.redes.facebook && (
                       <a href={data.redes.facebook} target="_blank" rel="noreferrer" className="flex-1 flex items-center justify-center gap-2 bg-white rounded-2xl p-3.5 text-[#1877F2] text-sm font-bold">
                         <Facebook className="w-4 h-4" /> Facebook
+                      </a>
+                    )}
+                    {data.redes.tiktok && (
+                      <a href={data.redes.tiktok} target="_blank" rel="noreferrer" className="flex-1 flex items-center justify-center gap-2 bg-white rounded-2xl p-3.5 text-[#1A3D3D] text-sm font-bold">
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg> TikTok
+                      </a>
+                    )}
+                    {data.redes.linkedin && (
+                      <a href={data.redes.linkedin} target="_blank" rel="noreferrer" className="flex-1 flex items-center justify-center gap-2 bg-white rounded-2xl p-3.5 text-[#0A66C2] text-sm font-bold">
+                        <Linkedin className="w-4 h-4" /> LinkedIn
+                      </a>
+                    )}
+                    {data.redes.tiktok && (
+                      <a href={data.redes.tiktok} target="_blank" rel="noreferrer" className="flex-1 flex items-center justify-center gap-2 bg-white rounded-2xl p-3.5 text-[#1A3D3D] text-sm font-bold">
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg> TikTok
+                      </a>
+                    )}
+                    {data.redes.linkedin && (
+                      <a href={data.redes.linkedin} target="_blank" rel="noreferrer" className="flex-1 flex items-center justify-center gap-2 bg-white rounded-2xl p-3.5 text-[#0A66C2] text-sm font-bold">
+                        <Linkedin className="w-4 h-4" /> LinkedIn
                       </a>
                     )}
                   </div>
