@@ -29,7 +29,7 @@ import Ecosistema from './pages/Ecosistema';
 import SalaDeEspera from './pages/SalaDeEspera';
 import Onboarding from './pages/Onboarding';
 import RestablecerClave from './pages/restablecer-clave';
-import OnboardingClinica from './pages/Onboardingclinica';
+import OnboardingClinica from './pages/OnboardingClinica';
 
 // Panel Admin
 import RutaProtegidaAdmin from './components/admin/RutaProtegidaAdmin';
