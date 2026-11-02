@@ -7,7 +7,7 @@ import { calcularAvance } from './_progreso.js';
 const ID_PLANTILLA_PERFIL = 7; // ← poné el número real de la plantilla nueva
 const DIAS_PARA_AVISAR = 7;
 const DIAS_MAXIMOS = 45;
-const AVANCE_MAXIMO = 70;
+const AVANCE_MAXIMO = 50;
 const UN_DIA = 24 * 60 * 60 * 1000;
 const SITIO = 'https://www.portalveterinario.ar';
 const COLECCIONES = { profesional: 'profesionales', clinica: 'clinicas' };
@@ -81,6 +81,7 @@ export default async function handler(req, res) {
     let errores = 0;
     let sinPerfil = 0;
     const lista = [];
+    let vistaPreviaEnviada = false;
 
     for (const documento of snap.docs) {
       const usuario = documento.data();
@@ -119,6 +120,15 @@ export default async function handler(req, res) {
 
       if (simular) {
         lista.push(`${usuario.email} (${avance.porcentaje}%) falta: ${params.faltantes}`);
+        // Una sola copia por corrida, a tu casilla, con los datos de la primera cuenta
+        if (MODO_PRUEBA && !vistaPreviaEnviada) {
+          try {
+            await enviarMail(MAIL_ADMIN, params);
+            vistaPreviaEnviada = true;
+          } catch (error) {
+            console.error('No se pudo mandar la vista previa', error);
+          }
+        }
         continue;
       }
 
