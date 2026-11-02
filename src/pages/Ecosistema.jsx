@@ -12,7 +12,7 @@ import {
 import FooterSimple from '../components/FooterSimple';
 import TourGuia from '../components/TourGuia';
 import PantallaCarga from '../components/PantallaCarga';
-import { calcularProgresoPerfil } from '../utils/progresoPerfil';
+import { calcularProgresoPerfil, calcularProgresoClinica } from '../utils/progresoPerfil';
 
 // ── Tarjeta de una herramienta que ya funciona ─────────────────────────────
 // En celular se ve como renglón (ícono a la izquierda, flecha a la derecha).
@@ -82,15 +82,8 @@ const TarjetaProximamente = ({ id, titulo, descripcion, icon: Icon, onClick }) =
 
 // ── Tarjeta de avance del perfil (va en el encabezado) ─────────────────────
 // avance: { porcentaje, faltantes } o null si ese tipo de cuenta no tiene cálculo
-function TarjetaAvance({ avance, cargando, onEditar, onVerPerfil }) {
-  // Une la lista de faltantes en una frase: "foto y contacto", "foto, contacto y más"
-  const textoFaltantes = () => {
-    if (!avance) return '';
-    const { faltantes } = avance;
-    if (faltantes.length === 0) return 'Tu perfil está completo. ¡Muy bien!';
-    const primeros = faltantes.slice(0, 2).join(' y ');
-    return `Te falta: ${primeros}${faltantes.length > 2 ? ' y algo más' : ''}`;
-  };
+function TarjetaAvance({ avance, cargando, onEditar, onVerPerfil, onIrA }) {
+  
 
   return (
     <div id="tour-avance" className="w-full bg-white/80 backdrop-blur-xl border border-white/60 rounded-[24px] md:rounded-[32px] shadow-[0_8px_32px_rgba(0,0,0,0.04)] p-5 md:p-6">
@@ -110,7 +103,25 @@ function TarjetaAvance({ avance, cargando, onEditar, onVerPerfil }) {
           <div className="h-2 w-full bg-[#F4F7F7] rounded-full overflow-hidden mb-3">
             <div className="h-full bg-[#4DB6AC] rounded-full transition-all duration-1000 ease-in-out" style={{ width: `${avance.porcentaje}%` }} />
           </div>
-          <p className="text-[13px] md:text-[14px] text-[#666666] font-medium leading-snug mb-4">{textoFaltantes()}</p>
+          {avance.pendientes?.length > 0 ? (
+            <div className="mb-4">
+              <p className="text-[13px] md:text-[14px] text-[#666666] font-medium mb-2">Te falta completar:</p>
+              <div className="flex flex-wrap gap-2">
+                {avance.pendientes.map((p) => (
+                  <button
+                    key={p.clave}
+                    type="button"
+                    onClick={() => onIrA(p.clave)}
+                    className="inline-flex items-center gap-1 bg-[#2D6A6A]/10 text-[#1A3D3D] text-[13px] font-bold px-3 py-1.5 rounded-full transition-all duration-300 ease-in-out hover:bg-[#2D6A6A] hover:text-white"
+                  >
+                    {p.texto} <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <p className="text-[13px] md:text-[14px] text-[#666666] font-medium leading-snug mb-4">Tu perfil está completo. ¡Muy bien!</p>
+          )}
         </>
       ) : (
         <p className="text-[13px] md:text-[14px] text-[#666666] font-medium leading-snug mb-4">
@@ -637,20 +648,25 @@ export default function Ecosistema() {
   // Leemos el perfil profesional y calculamos el porcentaje con la misma cuenta que usa el editor
   useEffect(() => {
     if (!currentUser?.uid) return;
-    if (currentUser.rol !== 'profesional') {
+    if (currentUser.rol !== 'profesional' && currentUser.rol !== 'clinica') {
       setCargandoAvance(false);
       return;
     }
     let cancelado = false;
     const cargarAvance = async () => {
       try {
-        const snap = await getDoc(doc(db, 'profesionales', currentUser.uid));
+        const coleccion = currentUser.rol === 'clinica' ? 'clinicas' : 'profesionales';
+        const snap = await getDoc(doc(db, coleccion, currentUser.uid));
         if (cancelado) return;
         const datos = snap.exists() ? snap.data() : {};
         setTituloGenero(datos.tituloGenero || '');
-        // Igual que el editor: socio vitalicio o plan distinto de 'gratis' incluye casos clínicos
-        const incluyeCasos = currentUser.socioVitalicio === true || datos.planActual !== 'gratis';
-        setAvance(calcularProgresoPerfil(datos, incluyeCasos));
+        if (currentUser.rol === 'clinica') {
+          const esPro = currentUser.socioVitalicio === true || datos.socioVitalicio === true || datos.planActual === 'pro';
+          setAvance(calcularProgresoClinica(datos, esPro));
+        } else {
+          const incluyeCasos = currentUser.socioVitalicio === true || datos.planActual !== 'gratis';
+          setAvance(calcularProgresoPerfil(datos, incluyeCasos));
+        }
       } catch (e) {
         console.error('Error calculando el avance del perfil:', e);
       } finally {
@@ -821,6 +837,7 @@ export default function Ecosistema() {
                 cargando={cargandoAvance}
                 onEditar={() => navigate(rutaEditor)}
                 onVerPerfil={() => navigate(rutaPerfilPublico)}
+                onIrA={(clave) => navigate(rutaEditor, { state: { seccion: clave } })}
               />
             </div>
           </div>

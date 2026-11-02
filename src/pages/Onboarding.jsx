@@ -1318,6 +1318,7 @@ export default function Onboarding() {
 
     await guardarCampos('usuarios', uid, {
       onboardingCompleto: true,
+      onboardingFecha: new Date().toISOString(),
       onboardingPaso: TOTAL_PASOS,
       comoLlego: d.comoLlego,
       comoLlegoOtro: d.comoLlego === 'Otro' ? d.comoLlegoOtro.trim() : ''

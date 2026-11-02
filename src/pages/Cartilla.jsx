@@ -29,13 +29,27 @@ const ICONOS_GRUPO = {
 
 // Dónde atiende un profesional: primero los barrios de sus veterinarias,
 // si no hay, los nombres de sus zonas, y si tampoco, la provincia
+// Saca la localidad de una dirección de Google: "Dorrego 242, S2000 Rosario, Santa Fe" → "Rosario"
+const localidadDeDireccion = (direccion) => {
+  const partes = (direccion || '').split(',').map(p => p.trim()).filter(Boolean);
+  return (partes[1] || '').replace(/^[A-Z]?\d{4}[A-Z]{0,3}\s+/, '');
+};
+
+// "Barrio, Localidad" sin repetir (si son iguales, queda uno solo)
+const barrioConLocalidad = (barrio, localidad) => {
+  const b = (barrio || '').trim();
+  const l = (localidad || '').trim();
+  if (b && l && b.toLowerCase() !== l.toLowerCase()) return `${b}, ${l}`;
+  return b || l;
+};
+
 const ubicacionProfesional = (item) => {
-  const barrios = [];
+  const lugares = [];
   (item.zonas || []).forEach(z => (z.clinicas || []).forEach(c => {
-    const barrio = (c.barrio || '').trim();
-    if (barrio && !barrios.includes(barrio)) barrios.push(barrio);
+    const lugar = barrioConLocalidad(c.barrio, c.localidad || localidadDeDireccion(c.direccion));
+    if (lugar && !lugares.includes(lugar)) lugares.push(lugar);
   }));
-  if (barrios.length) return barrios.slice(0, 2).join(' · ') + (barrios.length > 2 ? ` +${barrios.length - 2}` : '');
+  if (lugares.length) return lugares.slice(0, 2).join(' · ') + (lugares.length > 2 ? ` +${lugares.length - 2}` : '');
   const nombresZona = (item.zonas || []).map(z => (z.nombre || '').trim()).filter(Boolean);
   if (nombresZona.length) return nombresZona.slice(0, 2).join(' · ');
   return item.provincia || '';
@@ -49,12 +63,29 @@ const ubicacionClinica = (item) => {
 };
 
 const ubicacionBaseClinica = (item) => {
-  if ((item.barrio || '').trim()) return item.barrio.trim();
-  if (item.direccion) {
-    const partes = item.direccion.split(',').map(p => p.trim()).filter(Boolean);
-    return partes[1] || partes[0] || item.provincia || '';
+  const localidad = (item.localidad || '').trim() || localidadDeDireccion(item.direccion);
+  return barrioConLocalidad(item.barrio, localidad) || item.provincia || '';
+};
+
+// Todos los lugares donde atiende un perfil: provincia, ciudad y barrio (para buscar por zona)
+const lugaresDe = (v) => {
+  const lista = [];
+  const agregar = (provincia, localidad, barrio) => {
+    const prov = (provincia || v.provincia || '').trim();
+    const loc = (localidad || '').trim();
+    const bar = (barrio || '').trim();
+    if (prov) lista.push({ valor: prov, tipo: 'Provincia', etiqueta: prov, detalle: '' });
+    if (loc) lista.push({ valor: loc, tipo: 'Ciudad', etiqueta: loc, detalle: prov });
+    if (bar && bar.toLowerCase() !== loc.toLowerCase()) lista.push({ valor: `${bar} · ${loc || prov}`, tipo: 'Barrio', etiqueta: bar, detalle: loc || prov });
+  };
+  agregar(v.provincia, '', '');
+  if (v.tipo === 'profesional') {
+    (v.zonas || []).forEach(z => (z.clinicas || []).forEach(c => agregar(c.provincia, c.localidad || localidadDeDireccion(c.direccion), c.barrio)));
+  } else {
+    agregar(v.provincia, v.localidad || localidadDeDireccion(v.direccion), v.barrio);
+    (v.sedes || []).forEach(s => agregar(s.provincia, s.localidad || localidadDeDireccion(s.direccion), s.barrio));
   }
-  return item.provincia || '';
+  return lista;
 };
 
 // ── Tarjeta horizontal de resultado (sirve para profesionales y clínicas) ──
@@ -467,6 +498,28 @@ const Cartilla = () => {
     return conteo;
   }, [veterinarios]);
 
+  // Lugares de cada perfil, para filtrar por zona (clave: tipo-id)
+  const lugaresPorPerfil = useMemo(() => {
+    const mapa = new Map();
+    veterinarios.forEach(v => mapa.set(`${v.tipo}-${v.id}`, new Set(lugaresDe(v).map(l => l.valor))));
+    return mapa;
+  }, [veterinarios]);
+
+  // Lista de sugerencias de zona: solo lugares que tienen al menos 1 perfil, con su cantidad
+  const lugaresDisponibles = useMemo(() => {
+    const conteo = new Map();
+    veterinarios.forEach(v => {
+      const vistos = new Set();
+      lugaresDe(v).forEach(l => {
+        if (vistos.has(l.valor)) return;
+        vistos.add(l.valor);
+        const previo = conteo.get(l.valor);
+        conteo.set(l.valor, previo ? { ...previo, cantidad: previo.cantidad + 1 } : { ...l, cantidad: 1 });
+      });
+    });
+    return [...conteo.values()];
+  }, [veterinarios]);
+
   // Saca un filtro de la URL. Si le pasás un valor (ej: una provincia) saca solo ese;
   // si no, saca el filtro entero (ej: "domicilio").
   const quitarFiltro = (clave, valor) => {
@@ -487,11 +540,41 @@ const Cartilla = () => {
   const elegirGrupo = (grupoId) => {
     setSearchParams(prev => {
       const p = new URLSearchParams(prev);
+      // Al cambiar de categoría, soltamos las subespecialidades de la anterior
+      const grupoPrevio = especialidadesData.find(g => g.id === p.get('grupo'));
+      if (grupoPrevio) {
+        const resto = (p.get('especialidades') || '').split(',').filter(o => o && !grupoPrevio.opciones.includes(o));
+        if (resto.length) p.set('especialidades', resto.join(','));
+        else p.delete('especialidades');
+      }
       if (p.get('grupo') === grupoId) p.delete('grupo');
       else p.set('grupo', grupoId);
       return p;
     });
   };
+
+  // Marca o desmarca una subespecialidad (se puede elegir más de una)
+  const alternarSubespecialidad = (opcion) => {
+    setSearchParams(prev => {
+      const p = new URLSearchParams(prev);
+      const actuales = (p.get('especialidades') || '').split(',').filter(Boolean);
+      const nuevas = actuales.includes(opcion) ? actuales.filter(o => o !== opcion) : [...actuales, opcion];
+      if (nuevas.length) p.set('especialidades', nuevas.join(','));
+      else p.delete('especialidades');
+      return p;
+    });
+  };
+
+  // Subespecialidades de la categoría elegida que tienen al menos 1 perfil en la pestaña actual
+  const opcionesGrupo = useMemo(() => {
+    if (!grupoElegido) return [];
+    const deLaPestaña = veterinarios.filter(v =>
+      activeTab === 'todos' || (activeTab === 'especialistas' ? v.tipo === 'profesional' : v.tipo === 'clinica')
+    );
+    return grupoElegido.opciones
+      .map(opcion => ({ opcion, cantidad: deLaPestaña.filter(v => (v.opcionesFiltro || []).includes(opcion)).length }))
+      .filter(o => o.cantidad > 0);
+  }, [grupoElegido, veterinarios, activeTab]);
 
   const veterinariosFiltrados = veterinarios.filter(v => {
     // Buscador de texto libre: busca en nombre, apellido, especialidad, servicios,
@@ -512,7 +595,10 @@ const Cartilla = () => {
       if (!coincideBusqueda(terminoBuscado, textoDelItem)) return false;
     }
 
-    if (filtros.zonas.length > 0 && !filtros.zonas.includes(v.provincia)) return false;
+    if (filtros.zonas.length > 0) {
+      const lugares = lugaresPorPerfil.get(`${v.tipo}-${v.id}`);
+      if (!filtros.zonas.some(z => z === v.provincia || (lugares && lugares.has(z)))) return false;
+    }
     if (filtros.especialidades.length > 0) {
       const opciones = v.opcionesFiltro || (Array.isArray(v.servicios) ? v.servicios : []);
       if (!filtros.especialidades.some(f => opciones.includes(f))) return false;
@@ -591,6 +677,9 @@ const Cartilla = () => {
                 setSearchTerm={setSearchTerm}
                 showModalidad={true}
                 provinciasDisponibles={provinciasDisponibles}
+                lugaresDisponibles={lugaresDisponibles}
+                perfiles={veterinarios}
+                onAbrirPerfil={(item) => navigate(`/${item.tipo}/${item.id}`)}
                 especialidadesDisponibles={especialidadesDisponibles}
                 hayGuardia24hs={hayGuardia24hs}
                 hayDomicilio={hayDomicilio}
@@ -630,6 +719,30 @@ const Cartilla = () => {
                     <Icono className="w-4 h-4 text-[#FF9800]" />
                     {grupo.grupo}
                     <span className="text-[#666666] font-medium">· {grupo.cantidad}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* SUBESPECIALIDADES: aparecen al elegir una categoría */}
+        {!loading && grupoElegido && opcionesGrupo.length > 0 && (
+          <div className="max-w-6xl mx-auto w-full px-4 relative z-10 font-['Inter'] -mt-2">
+            <p className="text-[13px] font-semibold text-[#666666] mb-2 px-1">Afiná tu búsqueda en {grupoElegido.grupo}</p>
+            <div className="flex flex-wrap gap-2 animate-in fade-in slide-in-from-top-2 duration-300">
+              {opcionesGrupo.map(({ opcion, cantidad }) => {
+                const activa = filtros.especialidades.includes(opcion);
+                return (
+                  <button
+                    key={opcion}
+                    type="button"
+                    onClick={() => alternarSubespecialidad(opcion)}
+                    aria-pressed={activa}
+                    className={`shrink-0 inline-flex items-center gap-2 rounded-full px-4 py-2 text-[13px] font-semibold border shadow-sm text-[#1A3D3D] transition-all duration-300 ease-in-out ${activa ? 'bg-sky-50 border-sky-500' : 'bg-white border-sky-300 hover:border-sky-500 hover:-translate-y-0.5'}`}
+                  >
+                    {opcion}
+                    <span className="text-[#666666] font-medium">· {cantidad}</span>
                   </button>
                 );
               })}
@@ -795,16 +908,22 @@ const Cartilla = () => {
                   {activeTab === 'clinicas' && (
                     clinicasFiltradas.length === 0 ? (
                       <div className="flex flex-col items-center justify-center py-20 text-center">
-                        <span className="inline-flex items-center gap-2 bg-[#1A3D3D] text-[#4DB6AC] text-[11px] font-bold uppercase tracking-[0.2em] px-4 py-2 rounded-full mb-4">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#4DB6AC] animate-pulse" />
-                          Próximamente
-                        </span>
+                        <div className="w-20 h-20 bg-[#F4F7F7] rounded-full flex items-center justify-center mb-5">
+                          <Hospital className="w-10 h-10 text-[#2D6A6A] opacity-50" />
+                        </div>
                         <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[20px] md:text-[24px] mb-2">
-                          Las clínicas están en camino
+                          Todavía no hay clínicas con estos filtros
                         </h3>
-                        <p className="text-[#666666] font-medium text-[14px] max-w-md mx-auto">
-                          Pronto vas a poder encontrar clínicas y centros veterinarios de alta complejidad en esta sección.
+                        <p className="text-[#666666] font-medium text-[14px] max-w-md mx-auto mb-6">
+                          ¿Probamos cambiando la zona o buscando con otras palabras?
                         </p>
+                        <button
+                          type="button"
+                          onClick={limpiarFiltros}
+                          className="bg-[#1A3D3D] text-white px-8 py-3 rounded-[16px] text-[13px] font-medium hover:bg-[#2D6A6A] transition-colors shadow-md"
+                        >
+                          Limpiar filtros
+                        </button>
                       </div>
                     ) : (
                       <div>

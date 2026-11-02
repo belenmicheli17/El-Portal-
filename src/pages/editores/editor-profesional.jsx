@@ -603,7 +603,16 @@ export default function EditorProfesional() {
   useEffect(() => {
     if (location.state && location.state.tab) {
       setActiveTab(location.state.tab);
-      // Limpiamos el historial para que no se vuelva a abrir si el usuario recarga la página manualmente
+      window.history.replaceState({}, document.title);
+    }
+    if (location.state && location.state.seccion) {
+      const seccion = location.state.seccion;
+      if (seccion === 'casos') {
+        setActiveTab('casos');
+      } else {
+        setActiveTab('perfil');
+        setOpenSection(seccion);
+      }
       window.history.replaceState({}, document.title);
     }
   }, [location]); 

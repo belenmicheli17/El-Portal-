@@ -12,6 +12,7 @@ import FooterSimple from '../../components/FooterSimple';
 import especialidadesData from '../../data/especialidades.json';
 import equipamientoData from '../../data/equipamientoClinicas.json';
 import provincias from '../../data/provincias.js';
+import { analizarPerfilClinica, horaValida } from '../../utils/progresoPerfil';
 import {
   Tooltip, InputGroup, ToggleSwitch, Accordion, PuntoAlerta, CampoWhatsapp, RecortadorImagen,
   BuscadorDireccionGoogle, SelectorServicios, normalizarServicios, contarServicios,
@@ -201,9 +202,6 @@ const urlsDeStorage = (datos) => {
   return lista;
 };
 
-// Un horario válido es un número entre 0 y 24
-const horaValida = (valor) => valor !== '' && !Number.isNaN(Number(valor)) && Number(valor) >= 0 && Number(valor) <= 24;
-
 // ==========================================
 // APLICACIÓN PRINCIPAL
 // ==========================================
@@ -266,6 +264,21 @@ export default function EditorClinico() {
   useEffect(() => {
     if (location.state && location.state.tab) {
       setActiveTab(location.state.tab);
+      window.history.replaceState({}, document.title);
+    }
+    if (location.state && location.state.seccion) {
+      const destinos = {
+        identidad: { tab: 'perfil', seccion: 'identidad' },
+        contacto: { tab: 'perfil', seccion: 'contacto' },
+        guardia: { tab: 'perfil', seccion: 'urgencias' },
+        servicios: { tab: 'servicios' },
+        staff: { tab: 'staff' }
+      };
+      const destino = destinos[location.state.seccion];
+      if (destino) {
+        setActiveTab(destino.tab);
+        if (destino.seccion) setOpenSection(destino.seccion);
+      }
       window.history.replaceState({}, document.title);
     }
   }, [location]);
@@ -365,20 +378,7 @@ export default function EditorClinico() {
   // ==========================================
   // SECCIONES INCOMPLETAS Y PROGRESO (una sola función para las dos cosas)
   // ==========================================
-  const seccionesIncompletas = () => {
-    const incompletas = new Set();
-    if (!formData.nombre.trim() || !formData.foto || formData.descripcion.trim().length < 30) incompletas.add('identidad');
-    const horariosCargados = formData.guardia24hs || (horaValida(formData.horarios.semanaDesde) && horaValida(formData.horarios.semanaHasta));
-    if (!formData.placeId || !whatsappCompleto(formData.whatsapp) || !horariosCargados) incompletas.add('contacto');
-    if (formData.guardia24hs && !whatsappCompleto(formData.telefonoGuardia)) incompletas.add('guardia');
-    if (isPro && contarServicios(formData.servicios) === 0) incompletas.add('servicios');
-    if (isPro && !formData.staff.some((m) => m.nombre.trim())) incompletas.add('staff');
-    return incompletas;
-  };
-
-  const incompletas = seccionesIncompletas();
-  const seccionesEvaluadas = ['identidad', 'contacto', ...(formData.guardia24hs ? ['guardia'] : []), ...(isPro ? ['servicios', 'staff'] : [])];
-  const progress = Math.round(100 * seccionesEvaluadas.filter((s) => !incompletas.has(s)).length / seccionesEvaluadas.length);
+    const { incompletas, progreso: progress } = analizarPerfilClinica(formData, isPro);
   const mostrarAlertas = mostrarErroresSecciones || esNueva;
   const alerta = (seccion) => mostrarAlertas && incompletas.has(seccion);
 

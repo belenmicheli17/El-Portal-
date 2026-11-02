@@ -13,7 +13,10 @@ import especialidadesData from '../data/especialidades.json';
 import filtrosConfig from '../data/filtrosConfig.json';
 import animalesData from '../data/animales.json';
 import { coincideBusqueda } from '../utils/busquedaTolerante';
-import provincias from '../data/provincias.js'; 
+import provincias from '../data/provincias.js';
+
+// Compara textos sin tildes ni mayúsculas ("Córdoba" = "cordoba")
+const normZona = (t) => (t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase(); 
 // Mapeo de íconos para "Atención por Especie" (por nombre exacto de la opción real)
 const iconoEspecieMap = {
   'Medicina Felina Especializada': Cat,
@@ -42,6 +45,9 @@ const BarraFiltros = ({
   modo = 'default',
   aniosDisponibles = [],
   provinciasDisponibles = {},
+  lugaresDisponibles = [],
+  perfiles = [],
+  onAbrirPerfil,
   especialidadesDisponibles = {},
   hayGuardia24hs = true,
   hayDomicilio = true,
@@ -55,6 +61,7 @@ const BarraFiltros = ({
   const [openSection, setOpenSection] = useState(null);
   const filtrosRef = useRef(null);
   const [showProvincia, setShowProvincia] = useState(false);
+  const [busquedaZona, setBusquedaZona] = useState('');
   // Controla si el buscador está enfocado (para mostrar las recomendaciones rápidas)
   const [buscadorEnfocado, setBuscadorEnfocado] = useState(false);
 
@@ -108,6 +115,26 @@ const BarraFiltros = ({
         })
         .slice(0, 6)
     : [];
+
+  // Perfiles que coinciden con el nombre escrito (desde 3 letras, máximo 4).
+  // Cada palabra tiene que estar en el nombre, en cualquier orden: "arenas mercedes" también encuentra a Mercedes Arenas
+  const palabrasBusqueda = textoBusqueda.split(' ').filter(Boolean);
+  const perfilesSugeridos = textoBusqueda.length >= 3
+    ? perfiles
+        .filter(p => {
+          const nombreCompleto = normalizarTexto(`${p.nombre || ''} ${p.apellido || ''}`);
+          return palabrasBusqueda.every(palabra => nombreCompleto.includes(palabra));
+        })
+        .slice(0, 4)
+    : [];
+
+  // Abrir el perfil elegido: limpia el buscador y navega
+  const abrirPerfilSugerido = (perfil) => {
+    setSearchTerm('');
+    setBuscadorEnfocado(false);
+    if (document.activeElement) document.activeElement.blur();
+    if (onAbrirPerfil) onAbrirPerfil(perfil);
+  };
 
   // Elegir una recomendación: la agrega como filtro, limpia el buscador y cierra el teclado
   const elegirSugerencia = (opcion) => {
@@ -276,78 +303,141 @@ const BarraFiltros = ({
               className="w-full bg-transparent border-none pl-3 pr-2 py-0.5 text-[16px] md:text-[15px] font-medium focus:outline-none focus:ring-0 text-[#1A3D3D] placeholder:text-[#888888]" 
             />
 
-            {/* RECOMENDACIONES RÁPIDAS — aparecen desde 3 letras, solo si el panel de filtros está cerrado */}
-            {buscadorEnfocado && !showFilters && sugerencias.length > 0 && (
+            {/* RECOMENDACIONES RÁPIDAS: perfiles y especialidades, desde 3 letras, solo si el panel de filtros está cerrado */}
+            {buscadorEnfocado && !showFilters && (perfilesSugeridos.length > 0 || sugerencias.length > 0) && (
               <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl border border-gray-100 shadow-xl z-50 py-2 overflow-hidden">
-                {sugerencias.map(opcion => (
-                  <button
-                    key={opcion}
-                    type="button"
-                    // onMouseDown + preventDefault evita que el buscador pierda el foco antes de tocar la opción
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => elegirSugerencia(opcion)}
-                    className="w-full flex items-center gap-2 text-left px-4 py-2.5 text-[14px] font-medium text-[#555555] hover:bg-[#F4F7F7] hover:text-[#2D6A6A] transition-colors"
-                  >
-                    <Search className="w-4 h-4 text-[#2D6A6A] shrink-0" />
-                    <span className="truncate">{opcion}</span>
-                  </button>
-                ))}
+                {perfilesSugeridos.length > 0 && (
+                  <>
+                    <p className="px-4 pt-1 pb-1 text-[12px] font-bold text-gray-400">Perfiles</p>
+                    {perfilesSugeridos.map(p => {
+                      const esProfesional = p.tipo === 'profesional';
+                      const nombreMostrado = esProfesional ? `${p.nombre || ''} ${p.apellido || ''}`.trim() : p.nombre;
+                      return (
+                        <button
+                          key={`${p.tipo}-${p.id}`}
+                          type="button"
+                          // onMouseDown + preventDefault evita que el buscador pierda el foco antes de tocar la opción
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => abrirPerfilSugerido(p)}
+                          className="w-full flex items-center gap-3 text-left px-4 py-2.5 hover:bg-[#F4F7F7] transition-colors"
+                        >
+                          {p.foto ? (
+                            <img src={p.foto} alt="" className={`w-9 h-9 shrink-0 object-cover ${esProfesional ? 'rounded-full' : 'rounded-xl'}`} />
+                          ) : (
+                            <span className={`w-9 h-9 shrink-0 bg-[#FFF5EE] border border-[#FFE4D6] text-[#df803b] font-bold text-[14px] flex items-center justify-center ${esProfesional ? 'rounded-full' : 'rounded-xl'}`}>
+                              {(nombreMostrado || '?').charAt(0).toUpperCase()}
+                            </span>
+                          )}
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-[14px] font-bold text-[#1A3D3D]">{nombreMostrado}</span>
+                            <span className="block truncate text-[12px] text-[#666666]">{esProfesional ? (p.especialidad || 'Profesional') : 'Clínica'}</span>
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </>
+                )}
+                {sugerencias.length > 0 && (
+                  <>
+                    {perfilesSugeridos.length > 0 && <p className="px-4 pt-2 pb-1 text-[12px] font-bold text-gray-400 border-t border-gray-100 mt-1">Especialidades</p>}
+                    {sugerencias.map(opcion => (
+                      <button
+                        key={opcion}
+                        type="button"
+                        // onMouseDown + preventDefault evita que el buscador pierda el foco antes de tocar la opción
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => elegirSugerencia(opcion)}
+                        className="w-full flex items-center gap-2 text-left px-4 py-2.5 text-[14px] font-medium text-[#555555] hover:bg-[#F4F7F7] hover:text-[#2D6A6A] transition-colors"
+                      >
+                        <Search className="w-4 h-4 text-[#2D6A6A] shrink-0" />
+                        <span className="truncate">{opcion}</span>
+                      </button>
+                    ))}
+                  </>
+                )}
               </div>
             )}
           </div>
 
-          {/* CAMPO PROVINCIA/LOCALIDAD — dropdown con diseño propio */}
+                  {/* CAMPO ZONA: se puede escribir una provincia, ciudad o barrio */}
           {modo === 'default' && (
             <div className="relative w-full md:w-[250px] shrink-0">
-              <button
-                type="button"
-                onClick={() => setShowProvincia(v => !v)}
-                className="w-full flex items-center gap-2 bg-[#F4F7F7] border border-transparent rounded-[20px] md:rounded-full px-4 py-3 md:py-2.5 transition-all text-left"
-              >
+              <div className="w-full flex items-center gap-2 bg-[#F4F7F7] border border-transparent focus-within:border-[#2D6A6A] rounded-[20px] md:rounded-full px-4 py-3 md:py-2.5 transition-all">
                 <MapPin className="text-[#666666] w-4 h-4 shrink-0" />
-                <span className={`flex-1 truncate text-[15px] font-medium ${filtros.zonas[0] ? 'text-[#1A3D3D]' : 'text-[#888888]'}`}>
-                  {filtros.zonas[0] || 'Provincia / Localidad'}
-                </span>
+                <input
+                  type="text"
+                  value={showProvincia ? busquedaZona : (filtros.zonas[0] || '')}
+                  onChange={(e) => { setBusquedaZona(e.target.value); setShowProvincia(true); }}
+                  onFocus={() => { setBusquedaZona(''); setShowProvincia(true); }}
+                  placeholder="Provincia, ciudad o barrio"
+                  autoComplete="off"
+                  className="flex-1 min-w-0 bg-transparent outline-none truncate text-[15px] font-medium text-[#1A3D3D] placeholder:text-[#888888]"
+                />
                 <ChevronDown className={`w-4 h-4 text-[#666666] shrink-0 transition-transform ${showProvincia ? 'rotate-180' : ''}`} />
-              </button>
+              </div>
 
               {showProvincia && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setShowProvincia(false)} />
                   <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl border border-gray-100 shadow-xl z-50 max-h-64 overflow-y-auto custom-scrollbar py-2">
-                    <button
-                      onClick={() => {
+                    {(() => {
+                      const elegir = (valor) => {
                         const params = new URLSearchParams(searchParams);
-                        params.delete('zonas');
+                        if (valor) params.set('zonas', valor);
+                        else params.delete('zonas');
                         setSearchParams(params);
+                        setBusquedaZona('');
                         setShowProvincia(false);
-                      }}
-                      className={`w-full text-left px-4 py-2.5 text-[13px] font-medium transition-colors ${!filtros.zonas[0] ? 'text-[#2D6A6A] bg-[#F4F7F7]' : 'text-[#555555] hover:bg-[#F4F7F7]'}`}
-                    >
-                      Todas las provincias
-                    </button>
-                    {provincias
-                      .filter(p => Object.keys(provinciasDisponibles).length === 0 || provinciasDisponibles[p])
-                      .map(p => {
-                        const isActive = filtros.zonas[0] === p;
-                        return (
-                          <button
-                            key={p}
-                            onClick={() => {
-                              const params = new URLSearchParams(searchParams);
-                              params.set('zonas', p);
-                              setSearchParams(params);
-                              setShowProvincia(false);
-                            }}
-                            className={`w-full text-left px-4 py-2.5 text-[13px] font-medium transition-colors flex items-center justify-between ${isActive ? 'text-[#2D6A6A] bg-[#F4F7F7]' : 'text-[#555555] hover:bg-[#F4F7F7]'}`}
-                          >
-                            <span className="truncate">{p}</span>
-                            {provinciasDisponibles[p] && (
-                              <span className="text-[11px] text-gray-400 font-bold ml-2 shrink-0">{provinciasDisponibles[p]}</span>
-                            )}
-                          </button>
-                        );
-                      })}
+                      };
+                      const escribiendo = busquedaZona.trim().length >= 2;
+                      const ordenTipo = { Provincia: 0, Ciudad: 1, Barrio: 2 };
+                      // Si no llegó la lista de lugares, usamos solo las provincias
+                      const base = lugaresDisponibles.length > 0
+                        ? lugaresDisponibles
+                        : provincias.filter(p => provinciasDisponibles[p]).map(p => ({ valor: p, tipo: 'Provincia', etiqueta: p, detalle: '', cantidad: provinciasDisponibles[p] }));
+                      // Sin escribir: las provincias de siempre. Escribiendo: lo que coincide.
+                      const filas = escribiendo
+                        ? base
+                            .filter(l => normZona(`${l.etiqueta} ${l.detalle}`).includes(normZona(busquedaZona.trim())))
+                            .sort((a, b) => (ordenTipo[a.tipo] - ordenTipo[b.tipo]) || (b.cantidad - a.cantidad))
+                            .slice(0, 12)
+                        : provincias.map(p => base.find(l => l.tipo === 'Provincia' && l.valor === p)).filter(Boolean);
+                      return (
+                        <>
+                          {!escribiendo && (
+                            <button
+                              type="button"
+                              onClick={() => elegir('')}
+                              className={`w-full text-left px-4 py-2.5 text-[13px] font-medium transition-colors ${!filtros.zonas[0] ? 'text-[#2D6A6A] bg-[#F4F7F7]' : 'text-[#555555] hover:bg-[#F4F7F7]'}`}
+                            >
+                              Todas las zonas
+                            </button>
+                          )}
+                          {filas.map(l => {
+                            const activo = filtros.zonas[0] === l.valor;
+                            return (
+                              <button
+                                key={`${l.tipo}-${l.valor}`}
+                                type="button"
+                                onClick={() => elegir(l.valor)}
+                                className={`w-full text-left px-4 py-2.5 text-[13px] font-medium transition-colors flex items-center justify-between gap-2 ${activo ? 'text-[#2D6A6A] bg-[#F4F7F7]' : 'text-[#555555] hover:bg-[#F4F7F7]'}`}
+                              >
+                                <span className="min-w-0">
+                                  <span className="block truncate">{l.etiqueta}</span>
+                                  {escribiendo && (
+                                     <span className="block truncate text-[12px] text-gray-400">{l.tipo}{l.detalle ? ` · ${l.detalle}` : ''}</span>
+                                  )}
+                                </span>
+                                <span className="text-[11px] text-gray-400 font-bold shrink-0">{l.cantidad}</span>
+                              </button>
+                            );
+                          })}
+                          {escribiendo && filas.length === 0 && (
+                            <p className="px-4 py-3 text-[13px] text-[#666666]">Todavía no hay perfiles en "{busquedaZona.trim()}". ¿Probamos con otra zona?</p>
+                          )}
+                        </>
+                      );
+                    })()}
                   </div>
                 </>
               )}
@@ -529,6 +619,38 @@ const BarraFiltros = ({
 
                     <div className={`overflow-hidden transition-all duration-300 ease-in-out lg:max-h-none lg:opacity-100 ${openSection === 'especialidad' ? 'max-h-[800px] opacity-100 pb-4 lg:pb-0' : 'max-h-0 opacity-0'}`}>
                       <div className="flex flex-col gap-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                        {/* PERFILES que coinciden con lo que escribiste en el buscador */}
+                        {perfilesSugeridos.length > 0 && (
+                          <div>
+                            <p className="text-[11px] font-black text-[#1A3D3D] uppercase tracking-[0.15em] mb-2 opacity-50">Perfiles</p>
+                            <div className="flex flex-wrap gap-2">
+                              {perfilesSugeridos.map(p => {
+                                const esProfesional = p.tipo === 'profesional';
+                                const nombreMostrado = esProfesional ? `${p.nombre || ''} ${p.apellido || ''}`.trim() : p.nombre;
+                                return (
+                                  <button
+                                    key={`${p.tipo}-${p.id}`}
+                                    type="button"
+                                    onClick={() => abrirPerfilSugerido(p)}
+                                    className="flex items-center gap-2.5 bg-[#F4F7F7] hover:bg-gray-200 rounded-xl pl-2 pr-4 py-2 text-left transition-colors"
+                                  >
+                                    {p.foto ? (
+                                      <img src={p.foto} alt="" className={`w-8 h-8 shrink-0 object-cover ${esProfesional ? 'rounded-full' : 'rounded-lg'}`} />
+                                    ) : (
+                                      <span className={`w-8 h-8 shrink-0 bg-[#FFF5EE] border border-[#FFE4D6] text-[#df803b] font-bold text-[13px] flex items-center justify-center ${esProfesional ? 'rounded-full' : 'rounded-lg'}`}>
+                                        {(nombreMostrado || '?').charAt(0).toUpperCase()}
+                                      </span>
+                                    )}
+                                    <span className="min-w-0">
+                                      <span className="block truncate text-[13px] font-bold text-[#1A3D3D]">{nombreMostrado}</span>
+                                      <span className="block truncate text-[12px] text-[#666666]">{esProfesional ? (p.especialidad || 'Profesional') : 'Clínica'}</span>
+                                    </span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
                         {especialidadesData.filter(grupo => grupo.id !== 'atencion_por_especie').map(grupo => {
                           const opcionesFiltradas = grupo.opciones.filter(
                             opcion => (Object.keys(especialidadesDisponibles).length === 0 || especialidadesDisponibles[opcion])

@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { armarLinkWhatsapp } from '../../utils/whatsapp';
 import { db } from '../../firebase';
 import { useAuth } from '../../context/AuthContext';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
@@ -153,6 +154,21 @@ export default function PerfilClinica() {
   const [visor, setVisor] = useState(null);
   const [urgenciaAbierta, setUrgenciaAbierta] = useState(false);
   const [presentacionAbierta, setPresentacionAbierta] = useState(false);
+  const [presentacionRecortada, setPresentacionRecortada] = useState(false);
+  const presentacionRef = useRef(null);
+
+  // Mide si el texto de "Sobre nosotros" realmente quedó cortado en pantalla
+  useEffect(() => {
+    const medir = () => {
+      const el = presentacionRef.current;
+      if (!el || presentacionAbierta) return;
+      setPresentacionRecortada(el.scrollHeight > el.clientHeight + 1);
+    };
+    medir();
+    window.addEventListener('resize', medir);
+    return () => window.removeEventListener('resize', medir);
+  }, [data, presentacionAbierta]);
+  const [bioEquipoAbierta, setBioEquipoAbierta] = useState({});
   const [highlightContacto, setHighlightContacto] = useState(false);
   const scrollRef = useRef(null);
 
@@ -318,8 +334,8 @@ export default function PerfilClinica() {
   const textoPresentacion = data.historia || data.descripcion || '';
   const presentacionLarga = textoPresentacion.length > 260;
 
-  const linkUrgencia = data.telefonoGuardia ? `https://wa.me/${data.telefonoGuardia}` : `https://wa.me/${data.whatsapp}`;
-  const linkWhatsapp = `https://wa.me/${data.whatsapp}`;
+  const linkUrgencia = armarLinkWhatsapp(data.telefonoGuardia || data.whatsapp, 'Hola, necesito atención de urgencia para mi mascota. Los encontré en El Portal Veterinario.');
+  const linkWhatsapp = armarLinkWhatsapp(data.whatsapp, 'Hola, los encontré en El Portal Veterinario y quería hacerles una consulta.');
   const linkMapa = data.direccion
     ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data.direccion)}${data.placeId ? `&query_place_id=${data.placeId}` : ''}`
     : null;
@@ -483,7 +499,12 @@ export default function PerfilClinica() {
             </div>
           ) : null}
           {staff.length > 0 && (
-            <div className="bg-[#F4F7F7] border border-[#e5eded] rounded-[20px] p-3.5 lg:p-5">
+            <div
+              role={esPro ? 'button' : undefined}
+              tabIndex={esPro ? 0 : undefined}
+              onClick={esPro ? () => document.getElementById('equipo')?.scrollIntoView({ behavior: 'smooth', block: 'start' }) : undefined}
+              className={`bg-[#F4F7F7] border border-[#e5eded] rounded-[20px] p-3.5 lg:p-5 ${esPro ? 'cursor-pointer hover:bg-white hover:border-[#2D6A6A]/40 transition-all duration-300 ease-in-out' : ''}`}
+            >
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 flex items-center gap-1.5"><Users className="w-3 h-3" /> Equipo</p>
               <p className="font-bold text-[#1A3D3D] text-[13px] lg:text-sm mt-1.5">{staff.length} profesional{staff.length !== 1 ? 'es' : ''}</p>
             </div>
@@ -511,12 +532,13 @@ export default function PerfilClinica() {
             <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#2D6A6A]">Quiénes somos</p>
             <h2 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[22px] lg:text-3xl tracking-tight mt-2 mb-3">Sobre nosotros</h2>
             <p
+              ref={presentacionRef}
               className="text-base lg:text-[17px] leading-relaxed text-gray-600 font-medium whitespace-pre-line"
               style={presentacionLarga && !presentacionAbierta ? { display: '-webkit-box', WebkitBoxOrient: 'vertical', WebkitLineClamp: 5, overflow: 'hidden' } : {}}
             >
               {textoPresentacion}
             </p>
-            {presentacionLarga && (
+            {(presentacionRecortada || presentacionAbierta) && (
               <button
                 onClick={() => setPresentacionAbierta(!presentacionAbierta)}
                 className="mt-2 text-[#2D6A6A] text-xs font-bold flex items-center gap-1"
@@ -628,7 +650,7 @@ export default function PerfilClinica() {
 
         {/* ============ EQUIPO ============ */}
         {esPro && staff.length > 0 && (
-          <section className="pt-9">
+          <section id="equipo" className="pt-9 scroll-mt-24">
             <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#2D6A6A]">Nuestro equipo</p>
             <h2 className="font-['Montserrat'] font-black text-[#1A3D3D] text-2xl lg:text-3xl tracking-tight mt-2 mb-3.5">Profesionales</h2>
             <Carrusel>
@@ -644,7 +666,25 @@ export default function PerfilClinica() {
                   <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[15px] leading-tight">{m.nombre}</h3>
                   {m.especialidad && <p className="text-[#2D6A6A] text-xs font-bold mt-1">{m.especialidad}</p>}
                   {m.matricula && <p className="text-gray-400 text-[11px] mt-1">Matrícula {m.tipoMatricula ? `${m.tipoMatricula} ` : ''}{m.matricula}</p>}
-                  {m.bio && <p className="text-gray-500 text-xs leading-relaxed mt-2 line-clamp-4">{m.bio}</p>}
+                  {m.bio && (() => {
+                    const clave = m.id || idx;
+                    const abierta = !!bioEquipoAbierta[clave];
+                    const larga = m.bio.length > 110;
+                    return (
+                      <>
+                        <p className={`text-gray-500 text-xs leading-relaxed mt-2 ${larga && !abierta ? 'line-clamp-4' : ''}`}>{m.bio}</p>
+                        {larga && (
+                          <button
+                            type="button"
+                            onClick={() => setBioEquipoAbierta((prev) => ({ ...prev, [clave]: !abierta }))}
+                            className="mt-1.5 text-[#2D6A6A] text-xs font-bold hover:text-[#1A3D3D] transition-colors"
+                          >
+                            {abierta ? 'Ver menos' : 'Ver más'}
+                          </button>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
               ))}
             </Carrusel>

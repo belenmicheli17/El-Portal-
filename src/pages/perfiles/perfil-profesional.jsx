@@ -13,6 +13,7 @@ import {
   Clock, Eye, FileText, Sparkles, Globe, BookOpen, FileDown, Download, Check
 } from 'lucide-react';
 import { opcionesConAnimales } from '../../utils/animales';
+import { armarLinkWhatsapp } from '../../utils/whatsapp';
 
 const IconoHueso = ({ className }) => (
    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`lucide lucide-bone-icon lucide-bone ${className}`}><path d="M17 10c.7-.7 1.69 0 2.5 0a2.5 2.5 0 1 0 0-5 .5.5 0 0 1-.5-.5 2.5 2.5 0 1 0-5 0c0 .81.7 1.8 0 2.5l-7 7c-.7.7-1.69 0-2.5 0a2.5 2.5 0 0 0 0 5c.28 0 .5.22.5.5a2.5 2.5 0 1 0 5 0c0-.81-.7-1.8 0-2.5Z"/></svg>
@@ -102,7 +103,7 @@ const ContactoEmail = ({ email, nombre, whatsappActivo, whatsappNum, mostrarWhat
           </div>
 
           <a
-            href={`https://wa.me/${whatsappNum}`}
+            href={armarLinkWhatsapp(whatsappNum, `Hola ${nombre}, vi tu perfil en El Portal Veterinario y quería hacerte una consulta.`)}
             target="_blank"
             rel="noreferrer"
             className="w-full py-4 rounded-2xl font-bold text-[12px] uppercase tracking-[0.2em] flex items-center justify-center gap-2.5 bg-[#25D366] text-white hover:bg-[#20b858] hover:-translate-y-0.5 hover:shadow-lg transition-all duration-300 shadow-md"
@@ -131,6 +132,59 @@ const [fotoIdx, setFotoIdx] = useState(0);
 const [casoIdx, setCasoIdx] = useState(0);
 const [verTodosCasos, setVerTodosCasos] = useState(false);
   const [galeriaModal, setGaleriaModal] = useState({ isOpen: false, idx: 0 });
+
+    // Veterinarias que también están en El Portal (para llevar su nombre a su página)
+  const normTexto = (t) => (t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+  const localidadDe = (dir) => ((dir || '').split(',').map((p) => p.trim()).filter(Boolean)[1] || '').replace(/^[A-Z]?\d{4}[A-Z]{0,3}\s+/, '');
+  const claveDireccion = (dir, localidad) => `${normTexto((dir || '').split(',')[0])}|${normTexto(localidad || localidadDe(dir))}`;
+
+  const [clinicasPortal, setClinicasPortal] = useState({ porLugar: {}, lista: [] });
+  useEffect(() => {
+    let cancelado = false;
+    const cargar = async () => {
+      try {
+        const snap = await getDocs(collection(db, 'clinicas'));
+        const porLugar = {};
+        const lista = [];
+        snap.forEach((d) => {
+          const c = d.data();
+          // Solo clínicas visibles, con nombre y con página propia
+          if (c.visible === false || !(c.nombre || '').trim() || !c.slug) return;
+          const nombre = normTexto(c.nombre);
+          if (c.placeId) porLugar[c.placeId] = c.slug;
+          lista.push({ slug: c.slug, nombre, clave: claveDireccion(c.direccion, c.localidad) });
+          (c.sedes || []).forEach((s) => {
+            if (s.placeId) porLugar[s.placeId] = c.slug;
+            lista.push({ slug: c.slug, nombre, clave: claveDireccion(s.direccion, s.localidad) });
+          });
+        });
+        if (!cancelado) setClinicasPortal({ porLugar, lista });
+      } catch (e) {
+        // Si falla, la lista queda vacía y todos los links van a Google como siempre
+        console.error('No se pudieron leer las clínicas del Portal:', e);
+      }
+    };
+    cargar();
+    return () => { cancelado = true; };
+  }, []);
+
+  // Busca si la veterinaria del profesional es una clínica del Portal (por código de Google o por dirección + nombre)
+  const slugDeClinicaPortal = (c) => {
+    if (c.placeId && clinicasPortal.porLugar[c.placeId]) return clinicasPortal.porLugar[c.placeId];
+    const nombre = normTexto(c.nombrePropio || c.nombre);
+    const clave = claveDireccion(c.direccion, c.localidad);
+    if (!nombre || clave.startsWith('|')) return null;
+    const hallada = clinicasPortal.lista.find((x) => x.clave === clave && x.nombre && (nombre.includes(x.nombre) || x.nombre.includes(nombre)));
+    return hallada ? hallada.slug : null;
+  };
+
+  // Si la veterinaria está en El Portal, el nombre lleva a su página; si no, a Google Maps
+  const linkVeterinaria = (c, mapsUrl) => {
+    const slugPortal = slugDeClinicaPortal(c);
+    return slugPortal
+      ? { href: `/clinica/${slugPortal}` }
+      : { href: mapsUrl, target: '_blank', rel: 'noreferrer' };
+  };
 
   const { slug } = useParams(); // Capturamos el slug de la URL
 
@@ -620,7 +674,7 @@ const mobileTabs = [
               {(data.instagram || data.tiktok || data.linkedin || data.facebook || (data.whatsappActivo && data.whatsappNum && (data.whatsappVisibilidad === 'todos' || !data.whatsappVisibilidad || currentUser))) && (
                 <div className="flex items-center justify-center gap-3 mt-3">
                   {data.whatsappActivo && data.whatsappNum && (data.whatsappVisibilidad === 'todos' || !data.whatsappVisibilidad || currentUser) && (
-                    <a href={`https://wa.me/${data.whatsappNum}`} target="_blank" rel="noreferrer" className="text-white bg-[#25D366] hover:bg-[#20b858] p-2 rounded-xl border border-white/20 transition-all shadow-md"><IconoWhatsApp className="w-4 h-4" /></a>
+                    <a href={armarLinkWhatsapp(data.whatsappNum, `Hola ${data.nombre}, vi tu perfil en El Portal Veterinario y quería hacerte una consulta.`)} target="_blank" rel="noreferrer" className="text-white bg-[#25D366] hover:bg-[#20b858] p-2 rounded-xl border border-white/20 transition-all shadow-md"><IconoWhatsApp className="w-4 h-4" /></a>
                   )}
                   {data.instagram && <a href={data.instagram} target="_blank" rel="noreferrer" className="text-white/50 hover:text-white p-2 bg-white/10 rounded-xl border border-white/20 transition-all"><Instagram className="w-4 h-4" /></a>}
                   {data.tiktok && <a href={data.tiktok} target="_blank" rel="noreferrer" className="text-white/50 hover:text-white p-2 bg-white/10 rounded-xl border border-white/20 transition-all"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-label="TikTok"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg></a>}
@@ -714,7 +768,7 @@ const mobileTabs = [
                             ? `https://www.google.com/maps/place/?q=place_id:${c.placeId}`
                             : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${c.direccion || ''}, ${data.provincia || ''}`)}`;
                           const waUrl = c.telefono
-                            ? `https://wa.me/${c.telefono.replace(/[\s\-+()]/g, '')}`
+                            ? armarLinkWhatsapp(c.telefono, `Hola, los encontré en el perfil de ${data.nombre} en El Portal Veterinario y quería hacerles una consulta.`)
                             : null;
 
                           return (
@@ -723,7 +777,7 @@ const mobileTabs = [
                               <div className="flex flex-col gap-1.5 flex-1">
                                 
                                 {/* NOMBRE + BARRIO */}
-                                <a href={mapsUrl} target="_blank" rel="noreferrer" className="font-bold text-[#1A3D3D] text-[16px] leading-tight active:text-[#4DB6AC] transition-colors">
+                                <a {...linkVeterinaria(c, mapsUrl)} className="font-bold text-[#1A3D3D] text-[16px] leading-tight active:text-[#4DB6AC] transition-colors">
                                   {c.nombrePropio || c.nombre}
                                   {c.barrio && <span className="ml-1">({c.barrio})</span>}
                                 </a>
@@ -1021,7 +1075,7 @@ return (
   </a>
 )}
               {mostrarWp && (
-                <a href={`https://wa.me/${data.whatsappNum}`} target="_blank" rel="noreferrer" className="bg-[#25D366] text-white font-bold rounded-xl flex flex-col items-center justify-center gap-1 py-3 px-2 shadow-lg shadow-[#25D366]/20 hover:bg-[#20b858] transition-colors text-center">
+                <a href={armarLinkWhatsapp(data.whatsappNum, `Hola ${data.nombre}, vi tu perfil en El Portal Veterinario y quería hacerte una consulta.`)} target="_blank" rel="noreferrer" className="bg-[#25D366] text-white font-bold rounded-xl flex flex-col items-center justify-center gap-1 py-3 px-2 shadow-lg shadow-[#25D366]/20 hover:bg-[#20b858] transition-colors text-center">
                   <Phone size={18} />
                   <span className="text-[9px] font-black uppercase tracking-wider leading-tight">Chatear por WhatsApp</span>
                 </a>
@@ -1054,7 +1108,7 @@ return (
             {/* REDES SOCIALES */}
             <div className="absolute right-6 top-[104px] -translate-y-1/2 md:top-[168px] md:translate-y-0 z-20 flex flex-col gap-3">
               {data.whatsappActivo && data.whatsappNum && (data.whatsappVisibilidad === 'todos' || !data.whatsappVisibilidad || currentUser) && (
-                <a href={`https://wa.me/${data.whatsappNum}`} target="_blank" rel="noreferrer" className="text-white bg-[#25D366] hover:bg-[#20b858] p-2.5 rounded-xl border border-white/20 hover:scale-110 transition-all shadow-md"><IconoWhatsApp className="w-5 h-5" /></a>
+                <a href={armarLinkWhatsapp(data.whatsappNum, `Hola ${data.nombre}, vi tu perfil en El Portal Veterinario y quería hacerte una consulta.`)} target="_blank" rel="noreferrer" className="text-white bg-[#25D366] hover:bg-[#20b858] p-2.5 rounded-xl border border-white/20 hover:scale-110 transition-all shadow-md"><IconoWhatsApp className="w-5 h-5" /></a>
               )}
               {data.instagram && <a href={data.instagram} target="_blank" rel="noreferrer" className="text-white/40 hover:text-white p-2.5 bg-white/5 rounded-xl border border-white/20 hover:scale-110 transition-all"><Instagram className="w-5 h-5" /></a>}
               {data.tiktok && <a href={data.tiktok} target="_blank" rel="noreferrer" className="text-white/40 hover:text-white p-2.5 bg-white/5 rounded-xl border border-white/20 hover:scale-110 transition-all"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-label="TikTok"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg></a>}
@@ -1383,7 +1437,7 @@ return (
 
                                   <div className="flex flex-col gap-1.5 flex-1">
                                     {/* NOMBRE PROPIO + BARRIO */}
-                                    <a href={mapsUrl} target="_blank" rel="noreferrer" className="font-bold text-[#1A3D3D] text-[17px] hover:text-[#4DB6AC] transition-colors">
+                                    <a {...linkVeterinaria(clinica, mapsUrl)} className="font-bold text-[#1A3D3D] text-[17px] hover:text-[#4DB6AC] transition-colors">
                                       {clinica.nombrePropio || clinica.nombre}
                                       {clinica.barrio && (
                                         <span className="font-bold text-[#1A3D3D] ml-1.5" >({clinica.barrio})</span>
@@ -1400,7 +1454,7 @@ return (
 
                                     {/* TELÉFONO → WHATSAPP */}
                                     {clinica.telefono && (
-                                      <a href={`https://wa.me/${clinica.telefono.replace(/[\s\-+()]/g, '')}`} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-[14px] text-gray-600 hover:text-[#25D366] transition-colors font-medium">
+                                      <a href={armarLinkWhatsapp(clinica.telefono, `Hola, los encontré en el perfil de ${data.nombre} en El Portal Veterinario y quería hacerles una consulta.`)} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-[14px] text-gray-600 hover:text-[#25D366] transition-colors font-medium">
                                         <Phone className="w-3.5 h-3.5 shrink-0 text-[#25D366]" />
                                         {clinica.telefono}
                                       </a>
