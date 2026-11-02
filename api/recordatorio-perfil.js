@@ -4,7 +4,7 @@ import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { calcularAvance } from './_progreso.js';
 
-const ID_PLANTILLA_PERFIL = 7; // ← poné el número real de la plantilla nueva
+const ID_PLANTILLA_PERFIL = 7;
 const DIAS_PARA_AVISAR = 7;
 const DIAS_MAXIMOS = 45;
 const AVANCE_MAXIMO = 50;
@@ -13,7 +13,7 @@ const SITIO = 'https://www.portalveterinario.ar';
 const COLECCIONES = { profesional: 'profesionales', clinica: 'clinicas' };
 
 // true = no le manda a nadie, solo te manda un resumen a vos. Pasalo a false cuando te cierre.
-const MODO_PRUEBA = true;
+const MODO_PRUEBA = false;
 const MAIL_ADMIN = 'portalveterinario.ar@gmail.com';
 
 function obtenerFirestore() {
