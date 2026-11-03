@@ -293,7 +293,7 @@ return () => {
             onClick={handleToggle}
             style={{ touchAction: 'none' }} 
             id="tour-btn-accesibilidad"
-className={`w-12 h-12 md:w-14 md:h-14 rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 ease-in-out text-white hover:scale-110 active:scale-95 cursor-grab active:cursor-grabbing
+className={`w-10 h-10 md:w-11 md:h-11 rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 ease-in-out text-white hover:scale-110 active:scale-95 cursor-grab active:cursor-grabbing
               ${isOpen ? 'bg-red-500 rotate-90' : 'bg-[#1A3D3D]'}
             `}
           >

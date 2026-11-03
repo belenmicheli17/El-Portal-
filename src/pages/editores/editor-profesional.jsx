@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { generarSlugUnico } from '../../utils/slugUnico';
+import { CajaTuPagina } from '../../components/editor/EditorComponents';
 // Si usas react-router-dom, descomenta la siguiente línea en tu entorno real:
 import { useNavigate, useLocation } from 'react-router-dom';
 import { db, storage } from '../../firebase'; // <-- Sumamos storage
@@ -722,6 +723,8 @@ tipoMatricula2: undefined,
   atiendeDomicilio: false,
   urgenciasDomicilio: false,
   atiendeVirtual: false,
+  turnoVirtualTipo: 'whatsapp',
+  turnoVirtualLink: '',
  emailContacto: '',
 emailVisibilidad: 'todos',
 instagram: '',
@@ -1574,18 +1577,10 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
 
             </nav>
 
-            {/* CAJA VER PERFIL DE EJEMPLO */}
-            <div className="mt-4 bg-[#1A3D3D]/5 border border-[#1A3D3D]/10 rounded-2xl p-4 hidden md:block">
-              <p className="text-xs font-bold text-[#1A3D3D] leading-snug mb-3">¿Querés ver cómo quedaría tu perfil público?</p>
-              <a
-                href="/profesional/mercedes-arenas"
-                target="_blank"
-                rel="noreferrer"
-                className="w-full py-2.5 px-4 bg-white border border-gray-200 rounded-xl text-[11px] font-black text-[#2D6A6A] uppercase tracking-widest hover:border-[#4DB6AC] hover:text-[#4DB6AC] transition-all flex items-center justify-center gap-1.5 group shadow-sm"
-              >
-                Ver perfil de ejemplo <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-              </a>
-            </div>
+            {/* CAJA TU PÁGINA EN EL PORTAL */}
+            <CajaTuPagina tipo="profesional" slug={currentUser.slug} urlEjemplo="/profesional/mercedes-arenas" className="mt-4 hidden md:block" />
+
+            
 
           </div>
 
@@ -2187,6 +2182,42 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
 
     <div className="mb-5">
       <ToggleSwitch label="Ofrezco consultas virtuales" checked={formData.atiendeVirtual} onChange={(v) => setFormData(p => ({ ...p, atiendeVirtual: v }))} tooltip="Aparecerá un distintivo en tu perfil y los tutores podrán encontrarte con el filtro Consulta virtual." />
+
+      {formData.atiendeVirtual && (
+        <div className="mt-4 pl-4 border-l-2 border-[#2D6A6A]/20">
+          <p className="text-sm font-bold text-[#1A3D3D] mb-2">¿Cómo sacan turno los tutores?</p>
+          <div className="flex flex-wrap gap-2 mb-3">
+            {[{ valor: 'whatsapp', texto: 'Por mi WhatsApp' }, { valor: 'link', texto: 'Con un link' }].map((op) => (
+              <button
+                key={op.valor}
+                type="button"
+                onClick={() => setFormData(p => ({ ...p, turnoVirtualTipo: op.valor }))}
+                className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 ease-in-out ${
+                  (formData.turnoVirtualTipo || 'whatsapp') === op.valor
+                    ? 'bg-[#2D6A6A] text-white shadow-md'
+                    : 'bg-[#F4F7F7] text-[#1A3D3D] hover:bg-gray-200'
+                }`}
+              >
+                {op.texto}
+              </button>
+            ))}
+          </div>
+          {formData.turnoVirtualTipo === 'link' ? (
+            <>
+              <input
+                type="text"
+                value={formData.turnoVirtualLink || ''}
+                onChange={(e) => setFormData(p => ({ ...p, turnoVirtualLink: e.target.value }))}
+                placeholder="Pegá el link de tu calendario o de tu página"
+                className="w-full bg-[#F4F7F7] rounded-2xl px-5 py-4 text-[#333333] outline-none border border-transparent focus:bg-white focus:border-[#2D6A6A] focus:ring-4 focus:ring-[#2D6A6A]/10 transition-all duration-300 ease-in-out"
+              />
+              <p className="text-sm text-[#666666] mt-2">Puede ser Calendly, Google Calendar, tu página o lo que uses. Si lo dejás vacío, los tutores te escriben por WhatsApp.</p>
+            </>
+          ) : (
+            <p className="text-sm text-[#666666]">Los tutores te escriben por tu WhatsApp para coordinar la consulta.</p>
+          )}
+        </div>
+      )}
     </div>
     <ToggleSwitch label="Ofrezco consultas a domicilio" checked={formData.atiendeDomicilio} onChange={(v) => {
   if (v) {
@@ -3077,18 +3108,10 @@ ref={(el) => {
             {/* ========================================================================= */}
             {/* LINK INFERIOR PARA VER PERFIL */}
             {/* ========================================================================= */}
-            {/* CAJA VER PERFIL DE EJEMPLO — solo móvil */}
-            <div className="md:hidden mt-6 bg-[#1A3D3D]/5 border border-[#1A3D3D]/10 rounded-2xl p-4">
-              <p className="text-xs font-bold text-[#1A3D3D] leading-snug mb-3">¿Querés ver cómo quedaría tu perfil público?</p>
-<a
-  href="/profesional/mercedes-arenas"
-  target="_blank"
-  rel="noreferrer"
-  className="w-full py-2.5 px-4 bg-white border border-gray-200 rounded-xl text-[11px] font-black text-[#2D6A6A] uppercase tracking-widest hover:border-[#4DB6AC] hover:text-[#4DB6AC] transition-all flex items-center justify-center gap-1.5 group shadow-sm"
->
-  Ver perfil de ejemplo <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-</a>
-            </div>
+            {/* CAJA TU PÁGINA EN EL PORTAL — solo móvil */}
+            <CajaTuPagina tipo="profesional" slug={currentUser.slug} urlEjemplo="/profesional/mercedes-arenas" className="md:hidden mt-6" />
+
+            
 
             <div className="flex flex-col md:flex-row items-center justify-center gap-3 mt-8 pb-4">
               <button

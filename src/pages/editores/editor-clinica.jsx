@@ -17,7 +17,7 @@ import {
   Tooltip, InputGroup, ToggleSwitch, Accordion, PuntoAlerta, CampoWhatsapp, RecortadorImagen,
   BuscadorDireccionGoogle, SelectorServicios, normalizarServicios, contarServicios,
   soloDigitos, generarSlug, esEmailValido, esDataUrl, whatsappCompleto, usuarioDeInstagram,
-  instagramAURL, normalizarWeb, leerArchivoComoDataURL, comprimirImagen, RecortadorPortada
+  instagramAURL, normalizarWeb, leerArchivoComoDataURL, comprimirImagen, RecortadorPortada, CajaTuPagina
 } from '../../components/editor/EditorComponents';
 import {
   Camera, Info, AlertCircle, Save, X, Plus, Trash2, Crown,
@@ -1245,7 +1245,9 @@ export default function EditorClinico() {
             </nav>
 
             {/* CAJA VER PERFIL DE EJEMPLO */}
-            <CajaPerfilEjemplo className="mt-4 hidden md:block" />
+            <CajaTuPagina tipo="clinica" slug={docSistema.slug} urlEjemplo={PERFIL_EJEMPLO_URL} className="mt-4 hidden md:block" />
+
+            
 
           </div>
 
@@ -2099,7 +2101,7 @@ export default function EditorClinico() {
             )}
 
             {/* CAJA VER PERFIL DE EJEMPLO — solo celular */}
-            <CajaPerfilEjemplo className="md:hidden mt-6" />
+            <CajaTuPagina tipo="clinica" slug={docSistema.slug} urlEjemplo={PERFIL_EJEMPLO_URL} className="md:hidden mt-6" />
 
             {/* BOTONES INFERIORES */}
             <div className="flex flex-col md:flex-row items-center justify-center gap-3 mt-8 pb-4">

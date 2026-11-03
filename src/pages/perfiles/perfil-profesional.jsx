@@ -380,6 +380,40 @@ const mobileTabs = [
   ...(tieneCasos ? ['casos'] : []),
 ];
 
+  // "Domicilio": abre WhatsApp con mensaje; si no hay WhatsApp público, baja a contacto como antes
+  const consultarDomicilio = (e) => {
+    const wpVisible = data.whatsappActivo && data.whatsappNum && (data.whatsappVisibilidad === 'todos' || !data.whatsappVisibilidad || currentUser);
+    if (wpVisible) {
+      window.open(armarLinkWhatsapp(data.whatsappNum, `Hola ${data.nombre}, vi tu perfil en El Portal Veterinario y quería consultarte por una visita a domicilio.`), '_blank', 'noopener');
+    } else {
+      scrollToContacto(e);
+    }
+  };
+
+  // "Urgencias a domicilio": abre WhatsApp con mensaje de urgencia; si no hay WhatsApp público, baja a contacto
+  const consultarUrgencia = (e) => {
+    const wpVisible = data.whatsappActivo && data.whatsappNum && (data.whatsappVisibilidad === 'todos' || !data.whatsappVisibilidad || currentUser);
+    if (wpVisible) {
+      window.open(armarLinkWhatsapp(data.whatsappNum, `Hola ${data.nombre}, vi tu perfil en El Portal Veterinario y necesito una consulta de urgencia a domicilio.`), '_blank', 'noopener');
+    } else {
+      scrollToContacto(e);
+    }
+  };
+
+    // "Virtual": abre el link de turnos si lo cargó; si no, WhatsApp con mensaje; si no hay nada, baja a contacto
+  const consultarVirtual = (e) => {
+    const wpVisible = data.whatsappActivo && data.whatsappNum && (data.whatsappVisibilidad === 'todos' || !data.whatsappVisibilidad || currentUser);
+    const link = (data.turnoVirtualLink || '').trim();
+    if (data.turnoVirtualTipo === 'link' && link) {
+      const url = /^https?:\/\//i.test(link) ? link : `https://${link}`;
+      window.open(url, '_blank', 'noopener');
+    } else if (wpVisible) {
+      window.open(armarLinkWhatsapp(data.whatsappNum, `Hola ${data.nombre}, vi tu perfil en El Portal Veterinario y quería coordinar una consulta virtual.`), '_blank', 'noopener');
+    } else {
+      scrollToContacto(e);
+    }
+  };
+
   const scrollToContacto = (e) => {
     if (e) e.preventDefault();
     const element = document.getElementById('contacto');
@@ -720,7 +754,7 @@ const mobileTabs = [
     <p className="font-bold text-[#1A3D3D] text-[11px] uppercase tracking-wide text-center">{destacado}</p>
   </div>
   {data.atiendeDomicilio && (
-    <button type="button" onClick={scrollToContacto} className="flex flex-col items-center gap-1.5 w-[80px] active:scale-95 transition-transform">
+    <button type="button" onClick={consultarDomicilio} className="flex flex-col items-center gap-1.5 w-[80px] active:scale-95 transition-transform">
       <div className="w-8 h-8 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 border border-blue-100">
         <Home className="w-4 h-4" />
       </div>
@@ -728,7 +762,7 @@ const mobileTabs = [
     </button>
   )}
   {data.urgenciasDomicilio && (
-    <button type="button" onClick={scrollToContacto} className="flex flex-col items-center gap-1.5 w-[80px] active:scale-95 transition-transform">
+    <button type="button" onClick={consultarUrgencia} className="flex flex-col items-center gap-1.5 w-[80px] active:scale-95 transition-transform">
       <div className="w-8 h-8 rounded-2xl bg-red-50 flex items-center justify-center text-red-500 border border-red-100">
         <IconoSirena className="w-4 h-4" />
       </div>
@@ -736,7 +770,7 @@ const mobileTabs = [
     </button>
   )}
   {data.atiendeVirtual && (
-    <button type="button" onClick={scrollToContacto} className="flex flex-col items-center gap-1.5 w-[80px] active:scale-95 transition-transform">
+    <button type="button" onClick={consultarVirtual} className="flex flex-col items-center gap-1.5 w-[80px] active:scale-95 transition-transform">
       <div className="w-8 h-8 rounded-2xl bg-[#2D6A6A]/10 flex items-center justify-center text-[#2D6A6A] border border-[#2D6A6A]/20">
         <IconoVideo className="w-4 h-4" />
       </div>
@@ -1180,7 +1214,7 @@ return (
                   </div>
                 </div>
                 {data.atiendeDomicilio && (
-                  <button type="button" onClick={scrollToContacto} className="flex flex-col items-center gap-3 hover:-translate-y-1 transition-transform cursor-pointer">
+                  <button type="button" onClick={consultarDomicilio} className="flex flex-col items-center gap-3 hover:-translate-y-1 transition-transform cursor-pointer">
                     <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 border border-blue-100"><Home className="w-5 h-5" /></div>
                     <div>
                       <p className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.3em] mb-2 leading-none">Modalidad</p>
@@ -1189,7 +1223,7 @@ return (
                   </button>
                 )}
                 {data.urgenciasDomicilio && (
-                  <button type="button" onClick={scrollToContacto} className="flex flex-col items-center gap-3 hover:-translate-y-1 transition-transform cursor-pointer">
+                  <button type="button" onClick={consultarUrgencia} className="flex flex-col items-center gap-3 hover:-translate-y-1 transition-transform cursor-pointer">
                     <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center text-red-500 border border-red-100"><IconoSirena className="w-5 h-5" /></div>
                     <div>
                       <p className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.3em] mb-2 leading-none">Modalidad</p>
@@ -1198,7 +1232,7 @@ return (
                   </button>
                 )}
                 {data.atiendeVirtual && (
-                  <button type="button" onClick={scrollToContacto} className="flex flex-col items-center gap-3 hover:-translate-y-1 transition-transform cursor-pointer">
+                  <button type="button" onClick={consultarVirtual} className="flex flex-col items-center gap-3 hover:-translate-y-1 transition-transform cursor-pointer">
                     <div className="w-12 h-12 rounded-2xl bg-[#2D6A6A]/10 flex items-center justify-center text-[#2D6A6A] border border-[#2D6A6A]/20"><IconoVideo className="w-5 h-5" /></div>
                     <div>
                       <p className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.3em] mb-2 leading-none">Modalidad</p>

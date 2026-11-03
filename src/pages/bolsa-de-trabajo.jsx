@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { cargarSeeds } from '../seeds'; 
 import especialidadesData from '../data/especialidades.json'; 
-import filtrosConfig from '../data/filtrosConfig.json';
+import provincias from '../data/provincias.js';
 import BarraFiltros from '../components/BarraFiltros';
 import TourGuia from '../components/TourGuia';
 // === IMPORTACIONES DE FIREBASE Y AUTH ===
@@ -21,7 +21,7 @@ import { storage } from '../firebase'; // IMPORTANTE: Asegurate de exportar 'sto
 import imageCompression from 'browser-image-compression'; // Para el paso 4
 import { useAuth } from '../context/AuthContext'; 
 
-const PROVINCIAS = filtrosConfig.provincias;
+const PROVINCIAS = ['Todas', ...provincias];
 const PUESTOS_TRABAJO_CLINICA = ["Clínico General", "Guardia / Urgencias", "Especialista (Interconsulta)", "Cirujano", "Ecografista", "Enfermero / Asistente", "Pasantía / Estudiante", "Laboratorio / Comercial", "Otro"];
 const EXPERIENCIA_REQUERIDA = ["Sin experiencia (Estudiantes/Junior)", "1 a 3 años (Semi-Senior)", "Más de 3 años (Senior)", "Especialista Certificado"];
 

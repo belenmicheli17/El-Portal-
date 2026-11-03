@@ -238,39 +238,7 @@ export default function SalaDeEspera() {
   }, []);
 
 
-  // Guarda email en Firestore colección "lista_espera"
-  const handleSubmit = async () => {
-    if (!email || !email.includes("@")) {
-      setError("Ingresá un email válido.");
-      return;
-    }
-    setEnviando(true);
-    setError("");
-    try {
-      // Verificamos si el email ya está en la lista
-      const q = query(collection(db, "lista_espera"), where("email", "==", email.toLowerCase().trim()));
-      const snap = await getDocs(q);
-      if (!snap.empty) {
-        setError("Este email ya está en la lista. ¡Te avisamos cuando lancemos!");
-        return;
-      }
-      await addDoc(collection(db, "lista_espera"), {
-        email: email.toLowerCase().trim(),
-        fecha: serverTimestamp(),
-      });
-      setEnviado(true);
-      setEmail("");
-    } catch (err) {
-      console.error("Error al guardar en Firestore:", err);
-      if (err.code === 'unavailable' || err.message?.includes('network')) {
-        setError("Error de conexión. Verificá tu internet e intentá de nuevo.");
-      } else {
-        setError("Hubo un problema. Intentá de nuevo.");
-      }
-    } finally {
-      setEnviando(false);
-    }
-  };
+
 
   return (
     <div className="min-h-screen font-['Inter',sans-serif] overflow-x-hidden snap-y snap-mandatory md:snap-none" style={{ backgroundColor: '#F9F5F0' }}>
@@ -404,22 +372,22 @@ Creá tu perfil, aparecé en búsquedas y conectate con colegas, clínicas y pro
             {/* Etiqueta "Próximamente": avisa que las herramientas de abajo se habilitan después */}
             <span className="inline-flex items-center gap-2 bg-[#2D6A6A]/10 border border-[#2D6A6A]/30 text-[#2D6A6A] text-[14px] font-bold uppercase tracking-[0.2em] px-4 py-2 rounded-full mb-3">
               <span className="w-1.5 h-1.5 rounded-full bg-[#2D6A6A] animate-pulse shrink-0" />
-              Próximamente
+              Ya disponible
             </span>
             <h2 className="font-['Montserrat'] font-semibold text-[#2D6A6A] text-[23px] md:text-[19px] mt-2 mb-2 uppercase tracking-[0.08em]">
               Exclusivo para veterinarios registrados
             </h2>
             <p className="text-[#444444] mt-1 text-[19px] md:text-[17px] font-normal leading-relaxed">
-              Herramientas diseñadas para profesionales, clínicas y proveedores del sector.
+              Lo que ya podés usar hoy en El Portal.
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pl-0 sm:pl-4">
 
             {/* — Fila 1: primeras 3 cards — se animan juntas al entrar en pantalla */}
-            <div ref={fila1Ref} className="col-span-1 sm:col-span-2 lg:col-span-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div ref={fila1Ref} className="order-2 opacity-75 col-span-1 sm:col-span-2 lg:col-span-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {[
                { icono: Package, titulo: 'Cartilla de proveedores', descripcion: 'Dedicado a mayoristas: insumos, equipamiento tecnológico y más. También para quienes ofrezcan servicios exclusivos para veterinarios.', delay: 'delay-[100ms]' },
-                { icono: BookOpen, titulo: 'Capacitaciones', descripcion: 'Acá vas a poder encontrar todas las formaciones especializadas en medicina veterinaria, la publicacion de los cursos es gratuita.', delay: 'delay-[100ms]' },
+                { icono: BookOpen, titulo: 'Capacitaciones', descripcion: 'Espacio de difusión de todas las formaciones especializadas en medicina veterinaria, la publicación es gratuita.', delay: 'delay-[100ms]' },
                 { icono: Briefcase, titulo: 'Bolsa de trabajo', descripcion: 'Las clínicas podrán publicar ofertas de empleo y los profesionales podrán marcarse como disponibles si buscan nuevas oportunidades laborales.', delay: 'delay-[200ms]' },
               ].map(({ icono, titulo, descripcion, delay }) => (
                 <div
@@ -436,10 +404,17 @@ Creá tu perfil, aparecé en búsquedas y conectate con colegas, clínicas y pro
             </div>
 
             {/* — Fila 2: últimas 2 cards — se animan al llegar a pantalla */}
+            <div className="order-1 col-span-1 sm:col-span-2 lg:col-span-3 text-center mt-6">
+              <span className="inline-flex items-center gap-2 bg-gray-100 border border-gray-200 text-gray-500 text-[13px] font-bold uppercase tracking-[0.2em] px-4 py-2 rounded-full mb-2">
+                Próximamente
+              </span>
+              <p className="text-[#666666] text-[16px] leading-relaxed">Se van habilitando de a poco.</p>
+            </div>
+
             <div ref={fila2Ref} className="col-span-1 sm:col-span-2 lg:col-span-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {[
-                { icono: FlaskConical, titulo: 'Publicaciones científicas', descripcion: 'En este espacio podrás encontrar investigaciones de todo tipo. Desde tu perfil puedes compartir papers propios para que tus colegas puedan acceder a tus estudios.', delay: 'delay-[0ms]' },
-               { icono: Users, titulo: 'Cartilla de colegas', descripcion: 'Tené los contactos siempre a mano y mantenete conectado con otros profesionales para invitaciones, derivaciones y trabajos en equipo.', delay: 'delay-[0ms]' },
+                { icono: FlaskConical, titulo: 'Publicaciones científicas', descripcion: 'Desde tu perfil puedes compartir papers propios para que tus colegas puedan acceder a tus estudios.', delay: 'delay-[0ms]' },
+               { icono: Users, titulo: 'Cartilla de colegas', descripcion: 'Tené los contactos siempre a mano y mantenete conectado con otros profesionales para trabajos en equipo.', delay: 'delay-[0ms]' },
               ].map(({ icono, titulo, descripcion, delay }) => (
                 <div
                   key={titulo}
