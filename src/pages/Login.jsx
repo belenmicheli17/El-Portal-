@@ -45,14 +45,22 @@ export default function Login() {
 
   // Si llegan desde el botón "¿Sos veterinario? Registrate" de la navbar, abrimos el registro mostrando las opciones de tipo de cuenta
   useEffect(() => {
-    if (location.state?.registro) {
+    // El aviso de "ir a registro" puede venir de dos lugares:
+    // 1) de adentro de la app (navbar, sala de espera) -> location.state.registro
+    // 2) de un link externo (WhatsApp, mail, redes) -> en la dirección: ?registro=profesional
+    const parametros = new URLSearchParams(location.search);
+    const registroDesdeLink = parametros.get('registro');
+    const registro = location.state?.registro || registroDesdeLink;
+
+    if (registro) {
       setView('register');
-      // Si ya eligieron el tipo de cuenta antes (ej. desde la sala de espera), lo saltamos
-      // y vamos directo al formulario. Si no vino un tipo válido, mostramos las opciones.
-      const tiposValidos = ['profesional', 'clinica', 'proveedor'];
-      setAccountType(tiposValidos.includes(location.state.registro) ? location.state.registro : null);
+      // Si el link trae un tipo de cuenta válido, saltamos directo al formulario.
+      // Si no trae ninguno (o no es válido), mostramos las opciones para elegir.
+      // Proveedor queda afuera porque todavía figura como "Próximamente".
+      const tiposValidos = ['profesional', 'clinica'];
+      setAccountType(tiposValidos.includes(registro) ? registro : null);
     }
-  }, [location.state]);
+  }, [location.state, location.search]);
 
   useEffect(() => {
     const link = document.createElement('link');
