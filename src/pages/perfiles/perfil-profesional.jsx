@@ -1524,7 +1524,7 @@ return (
                     {/* COLUMNA IZQUIERDA: CONTACTO */}
                     {(tieneEmail || tieneWhatsapp) && (
                       <div className="flex-1 text-left min-w-0">
-                        <div className="text-[#2D6A6A] mb-8"><MessageCircle className="w-12 h-12" strokeWidth={1.8} /></div>
+                        <div className="text-[#2D6A6A] mb-8"><MessageCircle className="w-12 h-12" strokeWidth={1.5} /></div>
                         <h2 className="text-[24px] md:text-[30px] font-extrabold font-['Montserrat'] text-[#1A3D3D] mb-6 uppercase tracking-tight leading-none">Enviar Propuesta</h2>
                         <div className="mb-8"></div>
                         <ContactoEmail
@@ -1542,7 +1542,7 @@ return (
                       <div className="w-full lg:w-[45%] flex flex-col">
                         
                         {/* HEADER */}
-                        <div className="text-[#2D6A6A] mb-8"><Images className="w-12 h-12" strokeWidth={1.7} /></div>
+                        <div className="text-[#2D6A6A] mb-8"><Images className="w-12 h-12" strokeWidth={1.5} /></div>
                         <h3 className="text-[24px] md:text-[30px] font-extrabold font-['Montserrat'] text-[#1A3D3D] mb-6 uppercase tracking-tight leading-none">Galería</h3>
 
                         {/* LAYOUT: FOTO GRANDE ARRIBA + MINIATURAS ABAJO */}

@@ -119,7 +119,7 @@ const TarjetaResultado = ({ item, onAbrir }) => {
         />
       ) : (
         <div className={`w-14 h-14 shrink-0 bg-[#FFF5EE] border border-[#FFE4D6] text-[#df803b] flex items-center justify-center ${esProfesional ? 'rounded-full' : 'rounded-[16px]'}`}>
-          {esProfesional ? <PawPrint className="w-6 h-6" strokeWidth={1.75} /> : <Hospital className="w-6 h-6" strokeWidth={1.75} />}
+          {esProfesional ? <PawPrint className="w-6 h-6" strokeWidth={1.5} /> : <Hospital className="w-6 h-6" strokeWidth={1.5} />}
         </div>
       )}
 
