@@ -203,7 +203,7 @@ export default function GestionUsuarios() {
                       <div className="flex items-center justify-end gap-2">
                         {/* Badge de estado */}
                         {user.estado === 'suspendido' && (
-                          <span className="text-[11px] font-bold uppercase tracking-widest bg-orange-50 text-orange-500 px-2.5 py-1 rounded-lg">
+                          <span className="text-[11px] font-bold uppercase tracking-widest bg-[#FF9800]/10 text-[#FF9800] px-2.5 py-1 rounded-lg">
                             Suspendido
                           </span>
                         )}
@@ -241,7 +241,7 @@ export default function GestionUsuarios() {
                         ) : (
                           <button
                             onClick={() => handleSuspender(user.uid, user.nombre)}
-                            className="p-2 text-[#666666] hover:text-orange-500 hover:bg-orange-50 rounded-xl transition-all"
+                            className="p-2 text-[#666666] hover:text-[#FF9800] hover:bg-[#FF9800]/10 rounded-xl transition-all"
                             title="Suspender temporalmente"
                           >
                             <Ban className="w-4 h-4" />

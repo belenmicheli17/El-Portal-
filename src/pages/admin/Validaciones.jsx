@@ -333,17 +333,17 @@ export default function Validaciones() {
       )}
 
       {mailsFallidos.length > 0 && (
-        <div className="bg-orange-50 border border-orange-100 rounded-[24px] p-5 mb-6 flex flex-col gap-3">
+        <div className="bg-[#FF9800]/10 border border-[#FF9800]/30 rounded-[24px] p-5 mb-6 flex flex-col gap-3">
           {mailsFallidos.map((item) => (
             <div key={item.uid} className="flex items-center justify-between gap-4 flex-wrap">
-              <p className="text-orange-700 text-[14px] font-medium">
+              <p className="text-[#e68900] text-[14px] font-medium">
                 No salió el mail de {item.tipo} a <span className="font-bold">{item.nombre}</span>.
               </p>
               <button
                 type="button"
                 onClick={() => reenviarMail(item)}
                 disabled={reenviando === item.uid}
-                className="px-4 py-2 rounded-xl bg-white border border-orange-200 text-orange-700 text-[13px] font-bold hover:bg-orange-100 transition-colors flex items-center gap-2 disabled:opacity-60"
+                className="px-4 py-2 rounded-xl bg-white border border-[#FF9800]/30 text-[#e68900] text-[13px] font-bold hover:bg-[#FF9800]/20 transition-colors flex items-center gap-2 disabled:opacity-60"
               >
                 {reenviando === item.uid && <Loader2 className="w-4 h-4 animate-spin" />} Reenviar mail
               </button>
@@ -357,7 +357,7 @@ export default function Validaciones() {
         <h1 className="text-[28px] font-black font-['Montserrat'] text-[#1A3D3D] tracking-tight mb-2 flex items-center gap-3">
           Validaciones Pendientes
           {pendientes.length > 0 && (
-            <span className="bg-orange-100 text-orange-600 text-[14px] px-3 py-1 rounded-xl font-bold">
+            <span className="bg-[#FF9800]/20 text-[#e68900] text-[14px] px-3 py-1 rounded-xl font-bold">
               {pendientes.length}
             </span>
           )}
@@ -464,9 +464,9 @@ export default function Validaciones() {
                         Ver título o carnet
                       </button>
                     ) : (
-                      <div className="bg-orange-50 border border-orange-100 rounded-xl p-3 flex items-center gap-3">
-                        <AlertTriangle className="w-5 h-5 text-orange-500 shrink-0" />
-                        <p className="text-orange-700 text-[13px] font-medium">No subió el título o carnet.</p>
+                      <div className="bg-[#FF9800]/10 border border-[#FF9800]/30 rounded-xl p-3 flex items-center gap-3">
+                        <AlertTriangle className="w-5 h-5 text-[#FF9800] shrink-0" />
+                        <p className="text-[#e68900] text-[13px] font-medium">No subió el título o carnet.</p>
                       </div>
                     )}
 

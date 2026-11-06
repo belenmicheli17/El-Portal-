@@ -1730,7 +1730,7 @@ const toggleFiltro = (categoria, valor) => {
         {roleAlert && (
           <div className="fixed inset-0 bg-[#1A3D3D]/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={() => setRoleAlert(null)}>
             <div className="bg-white rounded-[32px] p-8 md:p-10 max-w-md w-full text-center shadow-2xl animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
-              <div className="w-20 h-20 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-6">
+              <div className="w-20 h-20 bg-[#FF9800]/10 rounded-full flex items-center justify-center mx-auto mb-6">
                 <AlertTriangle className="w-10 h-10 text-[#df803b]" />
               </div>
               

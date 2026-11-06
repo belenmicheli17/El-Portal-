@@ -210,7 +210,7 @@ const clinicasActivas = clinicasSnap.docs.filter(d => d.data().visible !== false
         <StatCard titulo="Clínicas" valor={metricas.clinicasActivas} nuevosHoy={metricas.nuevosHoy.clinicas} subtitulo={`de ${metricas.clinicas} registradas`} icono={<Building className="w-6 h-6 text-[#4DB6AC]" />} color="bg-[#4DB6AC]/10 border border-[#4DB6AC]/20" />
       {/* <StatCard titulo="Alumnos" valor={metricas.alumnos} icono={<Users className="w-6 h-6 text-blue-500" />} color="bg-blue-50 border border-blue-100" /> */}
         <StatCard titulo="Proveedores" valor={metricas.proveedores} nuevosHoy={metricas.nuevosHoy.proveedores} icono={<Briefcase className="w-6 h-6 text-purple-600" />} color="bg-purple-100 border border-purple-200" />
-        <StatCard titulo="Validaciones" valor={metricas.pendientesValidacion} nuevosHoy={metricas.nuevosHoy.validaciones} icono={<FileCheck className="w-6 h-6 text-orange-600" />} color="bg-orange-100 border border-orange-200" />
+        <StatCard titulo="Validaciones" valor={metricas.pendientesValidacion} nuevosHoy={metricas.nuevosHoy.validaciones} icono={<FileCheck className="w-6 h-6 text-[#e68900]" />} color="bg-[#FF9800]/20 border border-[#FF9800]/30" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -230,8 +230,8 @@ const clinicasActivas = clinicasSnap.docs.filter(d => d.data().visible !== false
             ) : pendientes.length > 0 ? pendientes.map(u => (
               <div key={u.uid} onClick={() => navigate('/admin/validaciones')} className="flex items-center justify-between p-4 bg-[#F4F7F7] rounded-2xl border border-gray-100 hover:border-[#2D6A6A]/30 transition-colors cursor-pointer group">
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center shrink-0">
-                    <Clock className="w-5 h-5 text-orange-600" />
+                  <div className="w-10 h-10 bg-[#FF9800]/20 rounded-full flex items-center justify-center shrink-0">
+                    <Clock className="w-5 h-5 text-[#e68900]" />
                   </div>
                   <div>
                     <p className="text-[#1A3D3D] font-bold text-[14px]">{u.nombre}</p>
