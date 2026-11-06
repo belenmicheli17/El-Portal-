@@ -718,7 +718,7 @@ function RecortadorFoto({ imagen, onAplicar, onCancelar }) {
       </div>
 
       <div className="mt-8 w-full max-w-[256px]">
-        <label className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-3 flex justify-between">
+        <label className="text-sm font-bold text-[#666666] uppercase tracking-widest mb-3 flex justify-between">
           <span>Alejar</span><span>Acercar</span>
         </label>
         <input
@@ -729,7 +729,7 @@ function RecortadorFoto({ imagen, onAplicar, onCancelar }) {
       </div>
 
       <div className="flex justify-end gap-3 w-full mt-8 border-t border-gray-100 pt-6">
-        <button type="button" onClick={onCancelar} className="px-6 py-3 rounded-xl text-gray-500 font-bold hover:bg-gray-100 transition-colors text-base">Cancelar</button>
+        <button type="button" onClick={onCancelar} className="px-6 py-3 rounded-xl text-[#666666] font-bold hover:bg-gray-100 transition-colors text-base">Cancelar</button>
         <button type="button" onClick={aplicarRecorte} className="px-8 py-3 rounded-xl bg-[#1A3D3D] text-white font-bold hover:bg-[#2D6A6A] transition-colors shadow-lg flex items-center gap-2 text-base">
           <Check className="w-5 h-5" /> Aplicar
         </button>
@@ -1808,7 +1808,7 @@ export default function Onboarding() {
                     onClick={() => actualizarGaleria(item.id, 'esSensible', !item.esSensible)}
                     title={item.esSensible ? 'Quitar aviso de contenido sensible' : 'Marcar como contenido sensible'}
                     aria-label="Marcar como contenido sensible"
-                    className={`absolute top-2 left-2 p-1.5 rounded-full shadow-md ${item.esSensible ? 'bg-[#FF9800] text-white' : 'bg-white/90 text-gray-500 hover:bg-yellow-50'}`}
+                    className={`absolute top-2 left-2 p-1.5 rounded-full shadow-md ${item.esSensible ? 'bg-[#FF9800] text-white' : 'bg-white/90 text-[#666666] hover:bg-yellow-50'}`}
                   >
                     <AlertTriangle className="w-3.5 h-3.5" strokeWidth={2.5} />
                   </button>
@@ -1827,7 +1827,7 @@ export default function Onboarding() {
                       value={item.epigrafe || ''}
                       maxLength={80}
                       onChange={(e) => actualizarGaleria(item.id, 'epigrafe', e.target.value)}
-                      className="w-full text-[13px] font-medium text-gray-500 bg-transparent outline-none placeholder:text-gray-300 border-b border-gray-200 pb-1 focus:border-[#2D6A6A] transition-colors"
+                      className="w-full text-[13px] font-medium text-[#666666] bg-transparent outline-none placeholder:text-gray-300 border-b border-gray-200 pb-1 focus:border-[#2D6A6A] transition-colors"
                     />
                   </div>
                 </div>
@@ -1918,7 +1918,7 @@ export default function Onboarding() {
             <div className="p-6 border-b border-gray-100 flex justify-between items-center">
               <div>
                 <h3 className="font-bold font-['Montserrat'] text-xl text-[#1A3D3D]">Encuadre de la foto</h3>
-                <p className="text-sm text-gray-500 mt-1">Arrastrá para mover la imagen o usá el zoom.</p>
+                <p className="text-sm text-[#666666] mt-1">Arrastrá para mover la imagen o usá el zoom.</p>
               </div>
               <button onClick={() => setRecorte({ abierto: false, imagen: null })} className="p-2.5 bg-gray-100 rounded-full hover:bg-red-100 hover:text-red-500 transition-colors">
                 <X className="w-6 h-6" />

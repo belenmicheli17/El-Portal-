@@ -192,7 +192,7 @@ export default function PerfilProveedor() {
         <div className="bg-white p-8 rounded-[32px] shadow-sm text-center max-w-md border border-gray-100 reveal-on-scroll in-view">
            <Building2 className="w-16 h-16 text-gray-300 mx-auto mb-6" />
            <h2 className="text-2xl font-black text-[#1A3D3D] font-['Montserrat'] mb-3">Perfil no encontrado</h2>
-           <p className="text-gray-500 mb-8 leading-relaxed">Parece que este proveedor aún no ha guardado sus datos o la URL es incorrecta.</p>
+           <p className="text-[#666666] mb-8 leading-relaxed">Parece que este proveedor aún no ha guardado sus datos o la URL es incorrecta.</p>
            <button onClick={() => navigate('/Cartilla')} className="bg-[#1A3D3D] text-white px-6 py-3 rounded-xl font-bold text-sm hover:bg-[#2D6A6A] transition-colors">Volver a la Cartilla</button>
         </div>
       </div>
@@ -316,7 +316,7 @@ export default function PerfilProveedor() {
                         <ShieldCheck className="w-3.5 h-3.5" /> Verificado
                       </div>
                     )}
-                    <span className="text-gray-500 font-bold text-[11px] uppercase tracking-widest bg-gray-100 px-3 py-1.5 rounded-lg">{proveedor.categoria}</span>
+                    <span className="text-[#666666] font-bold text-[11px] uppercase tracking-widest bg-gray-100 px-3 py-1.5 rounded-lg">{proveedor.categoria}</span>
                   </div>
                   <h1 className="text-3xl md:text-[46px] font-black text-[#1A3D3D] leading-tight md:leading-none tracking-tight font-['Montserrat'] break-words">
                     {proveedor.nombre}
@@ -327,7 +327,7 @@ export default function PerfilProveedor() {
               {/* Bio Corta y Botones */}
               <div className="mt-8">
                 {/* CORREGIDO: proveedor.bioCorta */}
-                <p className="text-[16px] md:text-[18px] text-gray-600 font-medium leading-relaxed max-w-2xl">
+                <p className="text-[16px] md:text-[18px] text-[#666666] font-medium leading-relaxed max-w-2xl">
                   {proveedor.bioCorta}
                 </p>
                 <div className="mt-8 flex flex-wrap gap-3">
@@ -353,7 +353,7 @@ export default function PerfilProveedor() {
                 </div>
                 {/* CORREGIDO: proveedor.bioLarga */}
                 {proveedor.bioLarga && (
-                  <p className="text-gray-600 text-[15px] md:text-[16px] leading-relaxed font-medium mb-8 whitespace-pre-line">
+                  <p className="text-[#666666] text-[15px] md:text-[16px] leading-relaxed font-medium mb-8 whitespace-pre-line">
                     {proveedor.bioLarga}
                   </p>
                 )}
@@ -420,7 +420,7 @@ export default function PerfilProveedor() {
                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-3">Atención al cliente</p>
                            {proveedor.modalidadTexto && <p className="text-[#1A3D3D] font-medium text-[13px] leading-relaxed mb-3">{proveedor.modalidadTexto}</p>}
                            {proveedor.horariosAtencion && (
-                             <p className="text-gray-600 font-semibold text-[13px] leading-relaxed flex items-center gap-2">
+                             <p className="text-[#666666] font-semibold text-[13px] leading-relaxed flex items-center gap-2">
                                  <Clock className="w-4 h-4 text-[#2D6A6A]" /> {proveedor.horariosAtencion}
                              </p>
                            )}
@@ -537,7 +537,7 @@ export default function PerfilProveedor() {
                         <button 
                           key={cat}
                           onClick={() => { setCategoriaFiltro(cat); setIsFilterMenuOpen(false); }}
-                          className={`w-full text-left px-5 py-3 text-[13px] font-bold transition-colors ${categoriaFiltro === cat ? 'text-[#2D6A6A] bg-[#2D6A6A]/5' : 'text-gray-500 hover:bg-gray-50'}`}
+                          className={`w-full text-left px-5 py-3 text-[13px] font-bold transition-colors ${categoriaFiltro === cat ? 'text-[#2D6A6A] bg-[#2D6A6A]/5' : 'text-[#666666] hover:bg-gray-50'}`}
                         >
                           {cat}
                         </button>
@@ -551,7 +551,7 @@ export default function PerfilProveedor() {
             {/* Renderizado de Productos (Desktop) */}
             <div className="hidden md:block">
               {productosFiltrados.length === 0 ? (
-                <div className="py-16 text-center text-gray-500 font-medium text-[14px] bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                <div className="py-16 text-center text-[#666666] font-medium text-[14px] bg-gray-50 rounded-2xl border border-dashed border-gray-200">
                     <PackageSearch className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                    No se encontraron productos que coincidan con la búsqueda o filtro.
                 </div>
@@ -616,7 +616,7 @@ export default function PerfilProveedor() {
             {/* Renderizado de Productos (Móvil) */}
             <div className="md:hidden flex flex-col mt-4">
               {productosFiltrados.length === 0 ? (
-                  <div className="py-12 text-center text-gray-500 font-medium text-[13px] bg-gray-50 rounded-2xl border border-dashed border-gray-200">No hay resultados.</div>
+                  <div className="py-12 text-center text-[#666666] font-medium text-[13px] bg-gray-50 rounded-2xl border border-dashed border-gray-200">No hay resultados.</div>
               ) : (
                 <div className="grid grid-cols-2 gap-3 mb-5">
                   {productosFiltrados.slice(0, 4).map(prod => (
@@ -648,7 +648,7 @@ export default function PerfilProveedor() {
               
               {/* Logística (CORREGIDO: proveedor.envios) */}
               <div className="flex flex-col bg-gray-50/50 p-6 rounded-2xl border border-gray-100">
-                <h4 className="text-[13px] text-gray-500 font-bold uppercase tracking-widest mb-6 flex items-center gap-3 border-b border-gray-200 pb-4">
+                <h4 className="text-[13px] text-[#666666] font-bold uppercase tracking-widest mb-6 flex items-center gap-3 border-b border-gray-200 pb-4">
                   <div className="w-9 h-9 rounded-xl bg-[#2D6A6A]/10 flex items-center justify-center text-[#2D6A6A] shrink-0 shadow-inner border border-[#2D6A6A]/10">
                     <Truck className="w-4 h-4" />
                   </div>
@@ -659,7 +659,7 @@ export default function PerfilProveedor() {
                     {proveedor.envios.map((punto, i) => (
                       <li key={i} className="flex items-start gap-3">
                         <Check className="w-4 h-4 text-[#25D366] shrink-0 mt-0.5" />
-                        <span className="text-[15px] font-medium text-gray-800 leading-snug">{punto}</span>
+                        <span className="text-[15px] font-medium text-[#333333] leading-snug">{punto}</span>
                       </li>
                     ))}
                   </ul>
@@ -668,7 +668,7 @@ export default function PerfilProveedor() {
 
               {/* Pagos (CORREGIDO: proveedor.pagos) */}
               <div className="flex flex-col bg-gray-50/50 p-6 rounded-2xl border border-gray-100">
-                <h4 className="text-[13px] text-gray-500 font-bold uppercase tracking-widest mb-6 flex items-center gap-3 border-b border-gray-200 pb-4">
+                <h4 className="text-[13px] text-[#666666] font-bold uppercase tracking-widest mb-6 flex items-center gap-3 border-b border-gray-200 pb-4">
                   <div className="w-9 h-9 rounded-xl bg-[#2D6A6A]/10 flex items-center justify-center text-[#2D6A6A] shrink-0 shadow-inner border border-[#2D6A6A]/10">
                     <CreditCard className="w-4 h-4" />
                   </div>
@@ -679,7 +679,7 @@ export default function PerfilProveedor() {
                     {proveedor.pagos.map((punto, i) => (
                       <li key={i} className="flex items-start gap-3">
                         <Check className="w-4 h-4 text-[#25D366] shrink-0 mt-0.5" />
-                        <span className="text-[15px] font-medium text-gray-800 leading-snug">{punto}</span>
+                        <span className="text-[15px] font-medium text-[#333333] leading-snug">{punto}</span>
                       </li>
                     ))}
                   </ul>
@@ -688,7 +688,7 @@ export default function PerfilProveedor() {
 
               {/* Garantía (CORREGIDO: proveedor.garantia) */}
               <div className="flex flex-col bg-gray-50/50 p-6 rounded-2xl border border-gray-100">
-                <h4 className="text-[13px] text-gray-500 font-bold uppercase tracking-widest mb-6 flex items-center gap-3 border-b border-gray-200 pb-4">
+                <h4 className="text-[13px] text-[#666666] font-bold uppercase tracking-widest mb-6 flex items-center gap-3 border-b border-gray-200 pb-4">
                   <div className="w-9 h-9 rounded-xl bg-[#2D6A6A]/10 flex items-center justify-center text-[#2D6A6A] shrink-0 shadow-inner border border-[#2D6A6A]/10">
                     <Wrench className="w-4 h-4" />
                   </div>
@@ -699,7 +699,7 @@ export default function PerfilProveedor() {
                     {proveedor.garantia.map((punto, i) => (
                       <li key={i} className="flex items-start gap-3">
                         <Check className="w-4 h-4 text-[#25D366] shrink-0 mt-0.5" />
-                        <span className="text-[15px] font-medium text-gray-800 leading-snug">{punto}</span>
+                        <span className="text-[15px] font-medium text-[#333333] leading-snug">{punto}</span>
                       </li>
                     ))}
                   </ul>
@@ -763,7 +763,7 @@ export default function PerfilProveedor() {
                       <button 
                         key={cat}
                         onClick={() => { setCategoriaFiltro(cat); setIsFilterMenuOpen(false); }}
-                        className={`w-full text-left px-5 py-3 text-[13px] font-bold transition-colors ${categoriaFiltro === cat ? 'text-[#2D6A6A] bg-[#2D6A6A]/5' : 'text-gray-500 hover:bg-gray-50'}`}
+                        className={`w-full text-left px-5 py-3 text-[13px] font-bold transition-colors ${categoriaFiltro === cat ? 'text-[#2D6A6A] bg-[#2D6A6A]/5' : 'text-[#666666] hover:bg-gray-50'}`}
                       >
                         {cat}
                       </button>
@@ -774,7 +774,7 @@ export default function PerfilProveedor() {
 
               {/* Grid de Productos Móvil */}
              {productosFiltrados.length === 0 ? (
-                <div className="py-16 text-center text-gray-500 font-medium text-[14px] bg-white rounded-2xl border border-dashed border-gray-200">No se encontraron productos.</div>
+                <div className="py-16 text-center text-[#666666] font-medium text-[14px] bg-white rounded-2xl border border-dashed border-gray-200">No se encontraron productos.</div>
              ) : (
                <div className="grid grid-cols-2 gap-3">
                  {productosFiltrados.map(prod => (
@@ -889,7 +889,7 @@ export default function PerfilProveedor() {
                 
                 {/* Caja de Precio */}
                 <div className="mb-8 p-5 bg-[#F4F7F7] rounded-2xl border border-gray-100 flex flex-col shadow-inner">
-                  <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest block mb-1">Precio Referencial (ARS)</span>
+                  <span className="text-[10px] text-[#666666] font-bold uppercase tracking-widest block mb-1">Precio Referencial (ARS)</span>
                   <span className="font-black text-[#2D6A6A] text-3xl">{productoSeleccionado.precio ? `$${productoSeleccionado.precio}` : 'Consultar'}</span>
                 </div>
 
@@ -903,12 +903,12 @@ export default function PerfilProveedor() {
                 {/* Viñetas de Características (CORREGIDO: Mapeo directo array strings) */}
                 {productoSeleccionado.caracteristicas && productoSeleccionado.caracteristicas.length > 0 && (
                   <div className="mb-10">
-                    <h4 className="text-[11px] font-bold uppercase tracking-widest text-gray-500 mb-5 border-b border-gray-100 pb-3">
+                    <h4 className="text-[11px] font-bold uppercase tracking-widest text-[#666666] mb-5 border-b border-gray-100 pb-3">
                       Características principales
                     </h4>
                     <ul className="space-y-4">
                       {productoSeleccionado.caracteristicas.map((caracTexto, i) => (
-                        <li key={i} className="flex items-start gap-3 text-[14px] text-gray-700 font-medium leading-snug">
+                        <li key={i} className="flex items-start gap-3 text-[14px] text-[#333333] font-medium leading-snug">
                           <div className="w-5 h-5 rounded-full bg-[#25D366]/10 flex items-center justify-center shrink-0 mt-0.5 border border-[#25D366]/15">
                             <Check className="w-3.5 h-3.5 text-[#25D366]" />
                           </div>
@@ -929,7 +929,7 @@ export default function PerfilProveedor() {
                   >
                     <MessageCircle className="w-5 h-5" /> Consultar disponibilidad
                   </a>
-                  <p className="text-center text-[12px] font-medium text-gray-500 mt-4 leading-relaxed">
+                  <p className="text-center text-[12px] font-medium text-[#666666] mt-4 leading-relaxed">
                     Serás redirigido a WhatsApp para hablar directamente con el proveedor.
                   </p>
                 </div>

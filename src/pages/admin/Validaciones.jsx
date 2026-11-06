@@ -316,7 +316,7 @@ export default function Validaciones() {
             </div>
 
             <div className="p-6 pt-0 flex justify-end gap-3">
-              <button type="button" onClick={cerrarRechazo} disabled={!!procesando} className="px-6 py-3 rounded-xl text-gray-500 font-bold hover:bg-gray-100 transition-colors text-[14px] disabled:opacity-60">
+              <button type="button" onClick={cerrarRechazo} disabled={!!procesando} className="px-6 py-3 rounded-xl text-[#666666] font-bold hover:bg-gray-100 transition-colors text-[14px] disabled:opacity-60">
                 Cancelar
               </button>
               <button

@@ -405,7 +405,7 @@ Creá tu perfil, aparecé en búsquedas y conectate con colegas, clínicas y pro
 
             {/* — Fila 2: últimas 2 cards — se animan al llegar a pantalla */}
             <div className="order-1 col-span-1 sm:col-span-2 lg:col-span-3 text-center mt-6">
-              <span className="inline-flex items-center gap-2 bg-gray-100 border border-gray-200 text-gray-500 text-[13px] font-bold uppercase tracking-[0.2em] px-4 py-2 rounded-full mb-2">
+              <span className="inline-flex items-center gap-2 bg-gray-100 border border-gray-200 text-[#666666] text-[13px] font-bold uppercase tracking-[0.2em] px-4 py-2 rounded-full mb-2">
                 Próximamente
               </span>
               <p className="text-[#666666] text-[16px] leading-relaxed">Se van habilitando de a poco.</p>

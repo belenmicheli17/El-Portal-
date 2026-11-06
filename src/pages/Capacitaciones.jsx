@@ -806,11 +806,11 @@ El equipo de El Portal Veterinario`
         </div>
         <div className="flex items-center gap-3">
           {currentUser && (
-            <button id="tour-mis-cursos" onClick={() => setView('miscursos')} className="flex items-center justify-center gap-2 px-6 py-2.5 md:py-3 rounded-[16px] text-[11px] font-bold uppercase tracking-widest transition-all bg-white border border-gray-100 shadow-sm text-gray-500 hover:text-[#2D6A6A] hover:bg-[#2D6A6A]/5">
+            <button id="tour-mis-cursos" onClick={() => setView('miscursos')} className="flex items-center justify-center gap-2 px-6 py-2.5 md:py-3 rounded-[16px] text-[11px] font-bold uppercase tracking-widest transition-all bg-white border border-gray-100 shadow-sm text-[#666666] hover:text-[#2D6A6A] hover:bg-[#2D6A6A]/5">
               <BookOpen className="w-4 h-4" /> Mis Cursos
             </button>
           )}
-          <button onClick={() => setView('favoritos')} className="flex items-center justify-center gap-2 px-6 py-2.5 md:py-3 rounded-[16px] text-[11px] font-bold uppercase tracking-widest transition-all bg-white border border-gray-100 shadow-sm text-gray-500 hover:text-red-500 hover:bg-red-50">
+          <button onClick={() => setView('favoritos')} className="flex items-center justify-center gap-2 px-6 py-2.5 md:py-3 rounded-[16px] text-[11px] font-bold uppercase tracking-widest transition-all bg-white border border-gray-100 shadow-sm text-[#666666] hover:text-red-500 hover:bg-red-50">
             <Heart className="w-4 h-4" /> Mis Guardados
           </button>
         </div>
@@ -848,7 +848,7 @@ El equipo de El Portal Veterinario`
             <div className="md:hidden bg-white rounded-[24px] border border-gray-100 shadow-lg p-5 animate-in fade-in slide-in-from-top-2 duration-200">
               <div className="flex items-center justify-between mb-4">
                 <p className="text-[11px] font-black text-[#1A3D3D] uppercase tracking-widest">Filtros</p>
-                <button onClick={() => setMostrarFiltrosMobile(false)} className="text-gray-400 hover:text-gray-600"><X className="w-4 h-4" /></button>
+                <button onClick={() => setMostrarFiltrosMobile(false)} className="text-gray-400 hover:text-[#666666]"><X className="w-4 h-4" /></button>
               </div>
               {renderFiltros()}
               <button
@@ -993,7 +993,7 @@ El equipo de El Portal Veterinario`
             <div className="space-y-10 animate-in fade-in slide-in-from-bottom-2">
               <div>
                 <h3 className="text-2xl font-black font-['Montserrat'] text-[#1A3D3D] mb-4">Descripción del programa</h3>
-                <p className="text-gray-600 text-[15px] md:text-base leading-relaxed font-medium">
+                <p className="text-[#666666] text-[15px] md:text-base leading-relaxed font-medium">
                   {selectedCourse.descripcion}
                 </p>
               </div>
@@ -1026,7 +1026,7 @@ El equipo de El Portal Veterinario`
                 <div className="text-left flex-1 mt-1 md:mt-2">
                   <h3 className="text-lg md:text-2xl font-black font-['Montserrat'] text-[#1A3D3D] leading-tight">{selectedCourse.instructor}</h3>
                   <p className="text-[9px] md:text-[10px] font-bold text-[#2D6A6A] uppercase tracking-widest mb-3 md:mb-4 mt-1">Especialista Referente</p>
-                  <p className="text-gray-600 text-xs md:text-sm leading-relaxed font-medium">
+                  <p className="text-[#666666] text-xs md:text-sm leading-relaxed font-medium">
                     {selectedCourse.instructorBio || 'Este docente todavía no agregó una biografía.'}
                   </p>
                 </div>
@@ -1224,7 +1224,7 @@ El equipo de El Portal Veterinario`
       <div className="flex justify-between items-center py-4 border-b border-gray-200 mb-6 px-4 md:px-0 relative z-20">
         <button 
           onClick={() => { setView('grid'); setOpenFaq(null); window.scrollTo(0,0); }} 
-          className="flex items-center gap-2 text-gray-500 hover:text-[#1A3D3D] font-bold text-xs md:text-[11px] uppercase tracking-[0.2em] transition-colors"
+          className="flex items-center gap-2 text-[#666666] hover:text-[#1A3D3D] font-bold text-xs md:text-[11px] uppercase tracking-[0.2em] transition-colors"
         >
           <ChevronLeft className="w-4 h-4" /> Volver
         </button>
@@ -1305,17 +1305,17 @@ El equipo de El Portal Veterinario`
                 <div className="p-8 md:p-10 lg:p-12">
                   <Award className="w-8 h-8 text-[#2D6A6A] mb-5 stroke-[1.5]" aria-hidden="true" />
                   <h3 className="text-xl font-black text-[#1A3D3D] font-['Montserrat'] mb-3 tracking-tight">Visibilidad sin costo</h3>
-                  <p className="text-[15px] text-gray-500 font-medium leading-relaxed">No existen honorarios mensuales ni costos de mantenimiento. Postular y exhibir tu temario es 100% gratuito.</p>
+                  <p className="text-[15px] text-[#666666] font-medium leading-relaxed">No existen honorarios mensuales ni costos de mantenimiento. Postular y exhibir tu temario es 100% gratuito.</p>
                 </div>
                 <div className="p-8 md:p-10 lg:p-12">
                   <ShieldCheck className="w-8 h-8 text-[#2D6A6A] mb-5 stroke-[1.5]" aria-hidden="true" />
                   <h3 className="text-xl font-black text-[#1A3D3D] font-['Montserrat'] mb-3 tracking-tight">Comisión por éxito</h3>
-                  <p className="text-[15px] text-gray-500 font-medium leading-relaxed">Nuestro modelo es win-win. Retenemos comisión únicamente cuando la inscripción se concreta con éxito.</p>
+                  <p className="text-[15px] text-[#666666] font-medium leading-relaxed">Nuestro modelo es win-win. Retenemos comisión únicamente cuando la inscripción se concreta con éxito.</p>
                 </div>
                 <div className="p-8 md:p-10 lg:p-12">
                   <Activity className="w-8 h-8 text-[#2D6A6A] mb-5 stroke-[1.5]" aria-hidden="true" />
                   <h3 className="text-xl font-black text-[#1A3D3D] font-['Montserrat'] mb-3 tracking-tight">CAC Cero</h3>
-                  <p className="text-[15px] text-gray-500 font-medium leading-relaxed">Absorbemos el trabajo de marketing, dejás de arriesgar presupuesto y tiempo en anuncios.</p>
+                  <p className="text-[15px] text-[#666666] font-medium leading-relaxed">Absorbemos el trabajo de marketing, dejás de arriesgar presupuesto y tiempo en anuncios.</p>
                 </div>
               </div>
             </div>
@@ -1345,7 +1345,7 @@ El equipo de El Portal Veterinario`
             <h3 className="text-3xl md:text-4xl font-black font-['Montserrat'] text-[#1A3D3D] tracking-tight uppercase mb-4 leading-none">
               Consultas<br className="hidden lg:block"/> Frecuentes
             </h3>
-            <p className="text-gray-500 font-medium text-[15px]">Transparencia total sobre nuestro modelo de trabajo y alcance.</p>
+            <p className="text-[#666666] font-medium text-[15px]">Transparencia total sobre nuestro modelo de trabajo y alcance.</p>
           </div>
           
           <div className="lg:w-2/3 w-full text-left">
@@ -1372,7 +1372,7 @@ El equipo de El Portal Veterinario`
                         </button>
                         <div className={`grid transition-all duration-300 ease-in-out ${openFaq === faqId ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
                           <div className="overflow-hidden">
-                            <p className="pb-8 pt-2 text-gray-500 text-[15px] font-medium leading-relaxed pr-8">
+                            <p className="pb-8 pt-2 text-[#666666] text-[15px] font-medium leading-relaxed pr-8">
                               {faq.a}
                             </p>
                           </div>
@@ -1389,7 +1389,7 @@ El equipo de El Portal Veterinario`
                   <MessageCircle className="w-8 h-8 text-[#2D6A6A] shrink-0" />
                   <div className="text-left">
                     <p className="text-[16px] font-black text-[#1A3D3D]">¿Tenés alguna otra duda?</p>
-                    <p className="text-[14px] text-gray-500 font-medium">Nuestro equipo está listo para ayudarte.</p>
+                    <p className="text-[14px] text-[#666666] font-medium">Nuestro equipo está listo para ayudarte.</p>
                   </div>
               </div>
               <a href="mailto:portalveterinario.ar@gmail.com?subject=Consulta%20institucional%20sobre%20capacitaciones&body=Hola%2C%20quisiera%20consultar%20sobre..." className="w-full sm:w-auto bg-white px-6 py-3.5 rounded-xl text-[11px] font-bold text-[#1A3D3D] hover:bg-[#1A3D3D] hover:text-white border border-gray-200 transition-colors uppercase tracking-[0.2em] text-center shadow-sm whitespace-nowrap">
@@ -1406,7 +1406,7 @@ El equipo de El Portal Veterinario`
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-black font-['Montserrat'] text-[#1A3D3D] mb-6 tracking-tight leading-[1.1]">
               ¿Comenzamos?
             </h2>
-            <p className="text-gray-500 font-medium text-[16px] md:text-[18px] mb-12 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-[#666666] font-medium text-[16px] md:text-[18px] mb-12 max-w-2xl mx-auto leading-relaxed">
               Postulá tu programa académico hoy y expandí el alcance de tu conocimiento sin riesgos operativos.
             </p>
             <div className="relative inline-block">
@@ -1421,7 +1421,7 @@ El equipo de El Portal Veterinario`
                 Publicar mi curso ahora
               </button>
             </div>
-            <p className="mt-8 text-gray-500 text-[10px] font-bold uppercase tracking-[0.2em] flex items-center justify-center gap-2">
+            <p className="mt-8 text-[#666666] text-[10px] font-bold uppercase tracking-[0.2em] flex items-center justify-center gap-2">
               <ShieldCheck className="w-4 h-4 text-[#2D6A6A]" /> Postular tu temario es 100% gratis
             </p>
           </div>
@@ -1499,7 +1499,7 @@ El equipo de El Portal Veterinario`
             <div className="space-y-6 animate-in fade-in">
               <div>
                 <h2 className="text-2xl font-black font-['Montserrat'] text-[#1A3D3D] mb-1">Información Básica</h2>
-                <p className="text-gray-500 text-base md:text-sm font-medium">Atraé a tus colegas con un título claro y conciso.</p>
+                <p className="text-[#666666] text-base md:text-sm font-medium">Atraé a tus colegas con un título claro y conciso.</p>
               </div>
               <div className="space-y-4">
 
@@ -1550,7 +1550,7 @@ El equipo de El Portal Veterinario`
                   <div>
                     <label className="block text-xs md:text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2" htmlFor="precio">Precio de lista (ARS) *</label>
                     <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">$</span>
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#666666] font-bold">$</span>
                       <input id="precio" type="number" min="0" step="1" value={courseForm.precio} onChange={(e) => { const val = e.target.value.replace(/^0+/, ''); handleWizardChange('precio', val === '' ? '' : Math.floor(Math.abs(Number(val)))); }} placeholder="45000" className={`w-full bg-gray-50 border rounded-xl pl-8 pr-4 py-3.5 text-base md:text-sm font-medium focus:outline-none focus:bg-white transition-all text-[#1A3D3D] ${errors.precio ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-[#2D6A6A]'}`} />
                     </div>
                     {errors.precio && <p className="text-red-500 text-[11px] md:text-[10px] font-bold mt-1.5 flex items-center gap-1"><AlertCircle className="w-3 h-3" />{errors.precio}</p>}
@@ -1628,7 +1628,7 @@ El equipo de El Portal Veterinario`
             <div className="space-y-6 animate-in fade-in">
               <div>
                 <h2 className="text-2xl font-black font-['Montserrat'] text-[#1A3D3D] mb-1">Detalles y Temario</h2>
-                <p className="text-gray-500 text-base md:text-sm font-medium">Contale a los colegas por qué este curso es imperdible.</p>
+                <p className="text-[#666666] text-base md:text-sm font-medium">Contale a los colegas por qué este curso es imperdible.</p>
               </div>
               <div className="space-y-6">
                 <div>
@@ -1666,7 +1666,7 @@ El equipo de El Portal Veterinario`
             <div className="space-y-6 animate-in fade-in">
               <div>
                 <h2 className="text-2xl font-black font-['Montserrat'] text-[#1A3D3D] mb-1">Docentes / Instructorxs</h2>
-                <p className="text-gray-500 text-base md:text-sm font-medium">Podés agregar uno o varios docentes a cargo del curso.</p>
+                <p className="text-[#666666] text-base md:text-sm font-medium">Podés agregar uno o varios docentes a cargo del curso.</p>
               </div>
               <div className="space-y-6">
                 {(courseForm.docentes || [{ nombre: '', bio: '', linkMas: '' }]).map((docente, idx) => (
@@ -1900,7 +1900,7 @@ El equipo de El Portal Veterinario`
       pendiente: { label: 'En revisión', clase: 'bg-yellow-100 text-yellow-700' },
       aprobado: { label: 'Publicado', clase: 'bg-green-100 text-green-700' },
       rechazado: { label: 'Necesita ajustes', clase: 'bg-red-100 text-red-600' },
-      archivado: { label: 'Dado de baja', clase: 'bg-gray-100 text-gray-500' },
+      archivado: { label: 'Dado de baja', clase: 'bg-gray-100 text-[#666666]' },
     };
 
     return (
@@ -1921,7 +1921,7 @@ El equipo de El Portal Veterinario`
           <div className="bg-white rounded-[40px] border border-gray-100 p-16 text-center flex flex-col items-center justify-center shadow-sm">
             <BookOpen className="w-16 h-16 text-gray-100 mb-6" />
             <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-2xl mb-4">Todavía no publicaste cursos</h3>
-            <p className="text-gray-500 max-w-sm mx-auto mb-8 font-medium">Compartí tu conocimiento con la comunidad veterinaria.</p>
+            <p className="text-[#666666] max-w-sm mx-auto mb-8 font-medium">Compartí tu conocimiento con la comunidad veterinaria.</p>
             <div className="relative inline-block">
               <div className="absolute -top-3 -right-3 flex items-center gap-2 bg-[#4DB6AC] text-white text-[11px] font-bold uppercase tracking-[0.15em] px-3 py-1.5 rounded-full shadow-md z-10">
                 <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse shrink-0"></span>
@@ -2011,7 +2011,7 @@ El equipo de El Portal Veterinario`
           <div className="bg-white rounded-[40px] border border-gray-100 p-20 text-center flex flex-col items-center justify-center shadow-sm">
             <Heart className="w-16 h-16 text-gray-100 mb-6" />
             <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-2xl mb-4">Aún no tienes elementos guardados</h3>
-            <p className="text-gray-500 max-w-sm mx-auto mb-8 font-medium">Explora el repertorio y pulsa el corazón para guardar lo que te interese para más tarde.</p>
+            <p className="text-[#666666] max-w-sm mx-auto mb-8 font-medium">Explora el repertorio y pulsa el corazón para guardar lo que te interese para más tarde.</p>
             <button onClick={() => setView('grid')} className="bg-[#1A3D3D] text-white px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-[#2D6A6A] transition-all shadow-lg">
               Explorar Capacitaciones
             </button>

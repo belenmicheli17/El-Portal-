@@ -287,7 +287,7 @@ export default function PerfilClinica() {
       <div className="min-h-screen bg-[#F4F7F7] flex items-center justify-center px-6">
         <div className="text-center">
           <Building2 className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500 font-bold text-lg">Esta clínica aún no configuró su perfil.</p>
+          <p className="text-[#666666] font-bold text-lg">Esta clínica aún no configuró su perfil.</p>
           <p className="text-gray-400 text-sm mt-2">Guardá datos en el Editor para verlos aquí.</p>
         </div>
       </div>
@@ -473,7 +473,7 @@ export default function PerfilClinica() {
             <p className="font-bold text-[#1A3D3D] text-[13px] lg:text-sm mt-1.5 leading-snug">
               {data.guardia24hs ? 'Atención las 24 hs' : horarioSemana ? `Lun a vie · ${horarioSemana}` : 'A confirmar'}
             </p>
-            {!data.guardia24hs && horarioSabado && <p className="text-xs text-gray-500 mt-0.5">Sáb · {horarioSabado}</p>}
+            {!data.guardia24hs && horarioSabado && <p className="text-xs text-[#666666] mt-0.5">Sáb · {horarioSabado}</p>}
           </div>
           <div className="bg-[#F4F7F7] border border-gray-100 rounded-[20px] p-3.5 lg:p-5">
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 flex items-center gap-1.5"><MapPin className="w-3 h-3" /> {otrasSedes.length > 0 ? 'Ubicaciones' : 'Ubicación'}</p>
@@ -533,7 +533,7 @@ export default function PerfilClinica() {
             <h2 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[22px] lg:text-3xl tracking-tight mt-2 mb-3">Sobre nosotros</h2>
             <p
               ref={presentacionRef}
-              className="text-base lg:text-[17px] leading-relaxed text-gray-600 font-medium whitespace-pre-line"
+              className="text-base lg:text-[17px] leading-relaxed text-[#666666] font-medium whitespace-pre-line"
               style={presentacionLarga && !presentacionAbierta ? { display: '-webkit-box', WebkitBoxOrient: 'vertical', WebkitLineClamp: 5, overflow: 'hidden' } : {}}
             >
               {textoPresentacion}
@@ -557,7 +557,7 @@ export default function PerfilClinica() {
             <h2 className="font-['Montserrat'] font-black text-[#1A3D3D] text-2xl lg:text-3xl tracking-tight mt-2 mb-3.5">Servicios</h2>
             <div className="bg-[#F4F7F7] border border-gray-100 rounded-3xl p-5 flex flex-wrap gap-1.5">
               {todosLosServicios.map((s, i) => (
-                <span key={i} className="px-3.5 py-2 rounded-[10px] bg-white border border-gray-100 text-[13px] lg:text-sm font-semibold text-gray-600">{s}</span>
+                <span key={i} className="px-3.5 py-2 rounded-[10px] bg-white border border-gray-100 text-[13px] lg:text-sm font-semibold text-[#666666]">{s}</span>
               ))}
             </div>
           </section>
@@ -578,7 +578,7 @@ export default function PerfilClinica() {
                     className="w-full h-[180px] lg:h-[220px] rounded-[20px]"
                     onAbrir={() => setVisor({ fotos: galeria.map((x) => x.url), indice: i })}
                   />
-                  {g.epigrafe && <p className="text-xs text-gray-500 font-medium mt-1.5 px-1">{g.epigrafe}</p>}
+                  {g.epigrafe && <p className="text-xs text-[#666666] font-medium mt-1.5 px-1">{g.epigrafe}</p>}
                 </div>
               ))}
             </Carrusel>
@@ -601,7 +601,7 @@ export default function PerfilClinica() {
                     <ChevronDown className={`w-4 h-4 shrink-0 text-[#2D6A6A] transition-transform ${openFaq === faq.id ? 'rotate-180' : ''}`} />
                   </button>
                   {openFaq === faq.id && (
-                    <p className="px-4 pb-4 text-sm text-gray-500 font-medium leading-relaxed border-t border-gray-50 pt-3">{faq.respuesta}</p>
+                    <p className="px-4 pb-4 text-sm text-[#666666] font-medium leading-relaxed border-t border-gray-50 pt-3">{faq.respuesta}</p>
                   )}
                 </div>
               ))}
@@ -672,7 +672,7 @@ export default function PerfilClinica() {
                     const larga = m.bio.length > 110;
                     return (
                       <>
-                        <p className={`text-gray-500 text-xs leading-relaxed mt-2 ${larga && !abierta ? 'line-clamp-4' : ''}`}>{m.bio}</p>
+                        <p className={`text-[#666666] text-xs leading-relaxed mt-2 ${larga && !abierta ? 'line-clamp-4' : ''}`}>{m.bio}</p>
                         {larga && (
                           <button
                             type="button"
@@ -716,7 +716,7 @@ export default function PerfilClinica() {
                   <div className="p-4">
                     {c.patologia && <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-sm leading-snug">{c.patologia}</h3>}
                     {c.nombre && <p className="text-[#2D6A6A] text-xs font-bold mt-1">{c.nombre}</p>}
-                    {c.desc && <p className="text-gray-500 text-xs leading-relaxed mt-1.5 line-clamp-4">{c.desc}</p>}
+                    {c.desc && <p className="text-[#666666] text-xs leading-relaxed mt-1.5 line-clamp-4">{c.desc}</p>}
                   </div>
                 </article>
               ))}

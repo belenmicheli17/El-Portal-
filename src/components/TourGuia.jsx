@@ -399,7 +399,7 @@ const rectSeguro = targetRect ? (() => {
               />
             ))}
           </div>
-          <button onClick={saltar} className="p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+          <button onClick={saltar} className="p-1 rounded-lg text-gray-400 hover:text-[#666666] hover:bg-gray-100 transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>

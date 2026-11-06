@@ -108,7 +108,7 @@ const [currentPage, setCurrentPage] = useState(1);
       "Reporte de Casos": "bg-[#4DB6AC]/20 text-[#1A3D3D]", // Teal clarito
       "Diagnóstico por Imágenes": "bg-indigo-900/10 text-indigo-900" // Azul muy oscuro/noche
     };
-    return colores[categoria] || "bg-gray-100 text-gray-600";
+    return colores[categoria] || "bg-gray-100 text-[#666666]";
   };
 
       // === MATEMÁTICA DE LA PAGINACIÓN ===
@@ -126,11 +126,11 @@ const [currentPage, setCurrentPage] = useState(1);
             <h4 className="text-[#2D6A6A] font-bold uppercase tracking-widest text-[11px] flex items-center gap-2">
               <BookMarked className="w-3.5 h-3.5" /> Comunidad Veterinaria
             </h4>
-            <button onClick={() => setShowInfoBox(false)} className="md:hidden text-gray-400 hover:text-gray-600 font-bold p-1">
+            <button onClick={() => setShowInfoBox(false)} className="md:hidden text-gray-400 hover:text-[#666666] font-bold p-1">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
           </div>
-          <p className="text-gray-500 text-[12px] font-medium leading-tight md:leading-relaxed mb-3 md:mb-4">
+          <p className="text-[#666666] text-[12px] font-medium leading-tight md:leading-relaxed mb-3 md:mb-4">
             Compartí tus investigaciones subiéndolas desde el editor a tu perfil.
           </p>
           <div className="flex flex-col gap-2">
@@ -245,7 +245,7 @@ const [currentPage, setCurrentPage] = useState(1);
                     </div>
                     
                     <div className="relative">
-                      <p className={`text-gray-600 text-[14px] leading-relaxed font-medium transition-all duration-500 ${expandedId === paper.id ? '' : 'line-clamp-3'}`}>
+                      <p className={`text-[#666666] text-[14px] leading-relaxed font-medium transition-all duration-500 ${expandedId === paper.id ? '' : 'line-clamp-3'}`}>
                         {paper.desc && paper.desc.length > 50 ? paper.desc : "Sin descripción ampliada disponible."}
                       </p>
                       {paper.desc && paper.desc.length > 120 && (
@@ -285,7 +285,7 @@ const [currentPage, setCurrentPage] = useState(1);
                 >
                   Anterior
                 </button>
-                <span className="text-sm font-bold text-gray-500">
+                <span className="text-sm font-bold text-[#666666]">
                   Página {currentPage} de {totalPages}
                 </span>
                 <button 

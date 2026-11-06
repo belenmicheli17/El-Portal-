@@ -1421,7 +1421,7 @@ export default function OnboardingClinica() {
                     onClick={() => actualizarEnLista('galeria', item.id, 'esSensible', !item.esSensible)}
                     title={item.esSensible ? 'Quitar aviso de contenido sensible' : 'Marcar como contenido sensible'}
                     aria-label="Marcar como contenido sensible"
-                    className={`absolute top-2 left-2 p-1.5 rounded-full shadow-md ${item.esSensible ? 'bg-[#FF9800] text-white' : 'bg-white/90 text-gray-500 hover:bg-yellow-50'}`}
+                    className={`absolute top-2 left-2 p-1.5 rounded-full shadow-md ${item.esSensible ? 'bg-[#FF9800] text-white' : 'bg-white/90 text-[#666666] hover:bg-yellow-50'}`}
                   >
                     <AlertTriangle className="w-3.5 h-3.5" strokeWidth={2.5} />
                   </button>
@@ -1440,7 +1440,7 @@ export default function OnboardingClinica() {
                       value={item.epigrafe || ''}
                       maxLength={80}
                       onChange={(e) => actualizarEnLista('galeria', item.id, 'epigrafe', e.target.value)}
-                      className="w-full text-[13px] font-medium text-gray-500 bg-transparent outline-none placeholder:text-gray-300 border-b border-gray-200 pb-1 focus:border-[#2D6A6A] transition-colors"
+                      className="w-full text-[13px] font-medium text-[#666666] bg-transparent outline-none placeholder:text-gray-300 border-b border-gray-200 pb-1 focus:border-[#2D6A6A] transition-colors"
                     />
                   </div>
                 </div>
@@ -1580,7 +1580,7 @@ export default function OnboardingClinica() {
             <div className="p-6 border-b border-gray-100 flex justify-between items-center">
               <div>
                 <h3 className="font-bold font-['Montserrat'] text-xl text-[#1A3D3D]">Encuadre de la portada</h3>
-                <p className="text-sm text-gray-500 mt-1">El recuadro es lo que se ve en tu perfil.</p>
+                <p className="text-sm text-[#666666] mt-1">El recuadro es lo que se ve en tu perfil.</p>
               </div>
               <button onClick={() => setPortadaParaRecortar(null)} className="p-2.5 bg-gray-100 rounded-full hover:bg-red-100 hover:text-red-500 transition-colors">
                 <X className="w-6 h-6" />
@@ -1600,7 +1600,7 @@ export default function OnboardingClinica() {
             <div className="p-6 border-b border-gray-100 flex justify-between items-center">
               <div>
                 <h3 className="font-bold font-['Montserrat'] text-xl text-[#1A3D3D]">Encuadre de imagen</h3>
-                <p className="text-sm text-gray-500 mt-1">Arrastrá para mover la imagen o usá el zoom.</p>
+                <p className="text-sm text-[#666666] mt-1">Arrastrá para mover la imagen o usá el zoom.</p>
               </div>
               <button onClick={cerrarRecorte} className="p-2.5 bg-gray-100 rounded-full hover:bg-red-100 hover:text-red-500 transition-colors">
                 <X className="w-6 h-6" />

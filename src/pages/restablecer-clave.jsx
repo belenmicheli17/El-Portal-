@@ -120,7 +120,7 @@ export default function RestablecerClave() {
             {paso === 'verificando' && (
               <div className="flex flex-col items-center text-center gap-3 py-6">
                 <Loader2 className="w-8 h-8 text-[#2D6A6A] animate-spin" />
-                <p className="text-gray-500 text-[13px]">Verificando tu link...</p>
+                <p className="text-[#666666] text-[13px]">Verificando tu link...</p>
               </div>
             )}
 
@@ -130,7 +130,7 @@ export default function RestablecerClave() {
                 <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center">
                   <AlertCircle className="w-8 h-8 text-red-500" />
                 </div>
-                <p className="text-gray-500 text-[13px] leading-relaxed max-w-[280px]">
+                <p className="text-[#666666] text-[13px] leading-relaxed max-w-[280px]">
                   Este link ya no sirve: puede haber vencido o ya lo usaste. No pasa nada, pedí uno nuevo desde el inicio de sesión con la opción “¿Olvidaste tu contraseña?”.
                 </p>
                 <button
@@ -149,7 +149,7 @@ export default function RestablecerClave() {
                   <CheckCircle2 className="w-8 h-8 text-green-500" />
                 </div>
                 <h3 className="font-bold text-[#1A3D3D] text-[16px]">¡Listo!</h3>
-                <p className="text-gray-500 text-[13px] leading-relaxed max-w-[280px]">
+                <p className="text-[#666666] text-[13px] leading-relaxed max-w-[280px]">
                   Tu contraseña se cambió correctamente. Ya podés ingresar con la nueva.
                 </p>
                 <button
@@ -164,7 +164,7 @@ export default function RestablecerClave() {
             {/* FORMULARIO */}
             {paso === 'formulario' && (
               <>
-                <p className="text-center text-gray-500 text-[12px] mb-5 leading-relaxed">
+                <p className="text-center text-[#666666] text-[12px] mb-5 leading-relaxed">
                   Elegí una contraseña nueva para<br />
                   <strong className="text-[#1A3D3D]">{emailCuenta}</strong>
                 </p>

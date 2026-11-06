@@ -124,7 +124,7 @@ const Tooltip = ({ text, isSection = false }) => {
                 <span className="text-xs font-black text-[#2D6A6A] tracking-wide uppercase">Importante</span>
             </div>
           )}
-          <p className={isSection ? "text-sm text-gray-600 font-medium leading-relaxed" : ""}>{text}</p>
+          <p className={isSection ? "text-sm text-[#666666] font-medium leading-relaxed" : ""}>{text}</p>
         </div>
         <div className={`absolute top-full left-1/2 -translate-x-1/2 border-[7px] border-transparent ${isSection ? 'border-t-white' : 'border-t-[#1A3D3D]'}`}></div>
       </div>
@@ -144,7 +144,7 @@ const InputGroup = ({ label, id, type = "text", placeholder, value, onChange, to
   return (
     <div className="mb-6 w-full">
       <div className="flex justify-between items-end mb-2 ml-1">
-        <label htmlFor={id} className="flex items-center text-xs font-bold text-gray-500 uppercase tracking-widest leading-none">
+        <label htmlFor={id} className="flex items-center text-xs font-bold text-[#666666] uppercase tracking-widest leading-none">
           {label} {required && <span className="text-red-400 ml-1">*</span>}
           {tooltip && <Tooltip text={tooltip} />}
         </label>
@@ -164,12 +164,12 @@ const InputGroup = ({ label, id, type = "text", placeholder, value, onChange, to
         {type === "textarea" ? (
           <textarea
             id={id} name={id} value={value} onChange={onChange} placeholder={placeholder} maxLength={maxLength} rows={rows} disabled={disabled} readOnly={readOnly}
-            className={`w-full border ${error ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-[#2D6A6A]'} rounded-2xl px-5 py-4 text-base font-medium focus:outline-none transition-all resize-none ${readOnly ? 'bg-gray-100 text-gray-500 cursor-not-allowed focus:border-gray-200' : 'bg-gray-50/50 text-[#1A3D3D] disabled:opacity-50'}`}
+            className={`w-full border ${error ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-[#2D6A6A]'} rounded-2xl px-5 py-4 text-base font-medium focus:outline-none transition-all resize-none ${readOnly ? 'bg-gray-100 text-[#666666] cursor-not-allowed focus:border-gray-200' : 'bg-gray-50/50 text-[#1A3D3D] disabled:opacity-50'}`}
           />
         ) : (
           <input
             id={id} name={id} type={currentType} value={value} onChange={onChange} placeholder={placeholder} maxLength={maxLength} disabled={disabled} readOnly={readOnly}
-            className={`w-full border ${error ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-[#2D6A6A]'} rounded-2xl px-5 py-3.5 text-base font-medium focus:outline-none transition-all ${readOnly ? 'bg-gray-100 text-gray-500 cursor-not-allowed focus:border-gray-200' : 'bg-gray-50/50 text-[#1A3D3D] disabled:opacity-50'} ${(canTest || isPassword) ? 'pr-12' : ''}`}
+            className={`w-full border ${error ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-[#2D6A6A]'} rounded-2xl px-5 py-3.5 text-base font-medium focus:outline-none transition-all ${readOnly ? 'bg-gray-100 text-[#666666] cursor-not-allowed focus:border-gray-200' : 'bg-gray-50/50 text-[#1A3D3D] disabled:opacity-50'} ${(canTest || isPassword) ? 'pr-12' : ''}`}
           />
         )}
         
@@ -189,7 +189,7 @@ const InputGroup = ({ label, id, type = "text", placeholder, value, onChange, to
             href={value ? (value.startsWith('http') ? value : `https://${value}`) : '#'} 
             target="_blank" 
             rel="noreferrer"
-            className={`absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-lg border transition-all shadow-sm z-10 ${value ? 'bg-white border-gray-200 text-gray-500 hover:text-[#4DB6AC] hover:border-[#4DB6AC] cursor-pointer' : 'bg-gray-50 border-gray-100 text-gray-300 pointer-events-none'}`}
+            className={`absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-lg border transition-all shadow-sm z-10 ${value ? 'bg-white border-gray-200 text-[#666666] hover:text-[#4DB6AC] hover:border-[#4DB6AC] cursor-pointer' : 'bg-gray-50 border-gray-100 text-gray-300 pointer-events-none'}`}
             title="Probar enlace"
           >
             <ExternalLink className="w-4 h-4" />
@@ -203,7 +203,7 @@ const InputGroup = ({ label, id, type = "text", placeholder, value, onChange, to
 const SelectGroup = ({ label, id, value, onChange, options, tooltip, required }) => (
   <div className="mb-6 w-full">
     <div className="flex justify-between items-end mb-2 ml-1">
-      <label htmlFor={id} className="flex items-center text-xs font-bold text-gray-500 uppercase tracking-widest leading-none">
+      <label htmlFor={id} className="flex items-center text-xs font-bold text-[#666666] uppercase tracking-widest leading-none">
         {label} {required && <span className="text-red-400 ml-1">*</span>}
         {tooltip && <Tooltip text={tooltip} />}
       </label>
@@ -233,7 +233,7 @@ const Accordion = ({ title, icon: Icon, children, isOpen, onToggle, tooltip, has
           <div className={`p-2.5 rounded-xl transition-all duration-300 ease-in-out ${isOpen ? 'bg-[#1A3D3D] text-white' : 'bg-transparent text-[#2D6A6A]'}`}>
             {Icon && <Icon className="w-5 h-5" />}
           </div>
-          <h3 className={`font-black text-sm md:text-base uppercase tracking-wider transition-colors duration-300 ${isOpen ? 'text-[#1A3D3D]' : 'text-gray-500 md:text-[#1A3D3D]'}`}>
+          <h3 className={`font-black text-sm md:text-base uppercase tracking-wider transition-colors duration-300 ${isOpen ? 'text-[#1A3D3D]' : 'text-[#666666] md:text-[#1A3D3D]'}`}>
             {title}
           </h3>
           {hasError && !isOpen && (
@@ -332,11 +332,11 @@ const SimpleCropper = ({ imageSrc, onCrop, onCancel, type }) => {
         </div>
       </div>
       <div className="mt-8 w-full max-w-[256px]">
-        <label className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-3 flex justify-between"><span>Alejar</span><span>Acercar</span></label>
+        <label className="text-sm font-bold text-[#666666] uppercase tracking-widest mb-3 flex justify-between"><span>Alejar</span><span>Acercar</span></label>
         <input type="range" min="1" max="3" step="0.1" value={zoom} onChange={(e) => setZoom(parseFloat(e.target.value))} className="w-full accent-[#2D6A6A] h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" />
       </div>
       <div className="flex justify-end gap-3 w-full mt-8 border-t border-gray-100 pt-6">
-        <button onClick={onCancel} className="px-6 py-3 rounded-xl text-gray-500 font-bold hover:bg-gray-100 transition-colors text-base">Cancelar</button>
+        <button onClick={onCancel} className="px-6 py-3 rounded-xl text-[#666666] font-bold hover:bg-gray-100 transition-colors text-base">Cancelar</button>
         <button onClick={handleCropClick} className="px-8 py-3 rounded-xl bg-[#1A3D3D] text-white font-bold hover:bg-[#2D6A6A] transition-colors shadow-lg flex items-center gap-2 text-base"><Check className="w-5 h-5" /> Aplicar Recorte</button>
       </div>
     </div>
@@ -881,7 +881,7 @@ const location = useLocation();
               <div className="p-6 border-b border-gray-100 flex justify-between items-center">
                 <div>
                   <h3 className="font-bold font-['Montserrat'] text-xl text-[#1A3D3D]">Encuadre de Imagen</h3>
-                  <p className="text-sm text-gray-500 mt-1">Arrastra para mover la imagen o utiliza el zoom.</p>
+                  <p className="text-sm text-[#666666] mt-1">Arrastra para mover la imagen o utiliza el zoom.</p>
                 </div>
                 <button onClick={() => setCropModal({ isOpen: false })} className="p-2.5 bg-gray-100 rounded-full hover:bg-red-100 hover:text-red-500 transition-colors"><X className="w-6 h-6" /></button>
               </div>
@@ -906,7 +906,7 @@ const location = useLocation();
                 </div>
               )}
               <h3 className="font-bold font-['Montserrat'] text-2xl text-[#1A3D3D] mb-3">{modalConfig.title}</h3>
-              <p className="text-base text-gray-500 mb-8">{modalConfig.message}</p>
+              <p className="text-base text-[#666666] mb-8">{modalConfig.message}</p>
               <button 
                 onClick={() => setModalConfig({ isOpen: false })} 
                 className={`px-8 py-3.5 rounded-xl font-bold text-white transition-colors shadow-lg text-base w-full ${modalConfig.type === 'error' ? 'bg-red-500 hover:bg-red-600' : 'bg-[#1A3D3D] hover:bg-[#2D6A6A]'}`}
@@ -926,12 +926,12 @@ const location = useLocation();
                   <div className="w-10 h-10 rounded-full bg-[#009EE3]/10 flex items-center justify-center"><CreditCard className="w-5 h-5 text-[#009EE3]" /></div>
                   <h3 className="font-bold font-['Montserrat'] text-xl text-[#1A3D3D]">Facturación</h3>
                 </div>
-                <button onClick={() => setIsSubModalOpen(false)} className="p-2.5 bg-white rounded-full hover:bg-gray-100 transition-colors border border-gray-200"><X className="w-5 h-5 text-gray-500" /></button>
+                <button onClick={() => setIsSubModalOpen(false)} className="p-2.5 bg-white rounded-full hover:bg-gray-100 transition-colors border border-gray-200"><X className="w-5 h-5 text-[#666666]" /></button>
               </div>
               
               <div className="p-8">
                 <div className="text-center mb-8">
-                  <p className="text-sm text-gray-500 font-bold uppercase tracking-widest mb-2">Plan Actual</p>
+                  <p className="text-sm text-[#666666] font-bold uppercase tracking-widest mb-2">Plan Actual</p>
                   <h2 className="text-4xl font-black text-[#1A3D3D] font-['Montserrat']">Proveedor PRO</h2>
                   <div className={`inline-flex items-center gap-2 mt-3 px-3 py-1.5 rounded-full text-xs font-bold border ${isSubscriptionActive ? 'bg-[#4DB6AC]/10 text-[#4DB6AC] border-[#4DB6AC]/30' : 'bg-red-500/10 text-red-500 border-red-500/30'}`}>
                     <span className={`w-2 h-2 rounded-full ${isSubscriptionActive ? 'bg-[#4DB6AC]' : 'bg-red-500'}`}></span>
@@ -955,7 +955,7 @@ const location = useLocation();
                       setIsSubscriptionActive(false);
                       setIsSubModalOpen(false);
                     }}
-                    className="w-full py-4 rounded-xl font-bold text-sm text-gray-500 hover:bg-gray-50 transition-all border border-transparent hover:border-gray-200"
+                    className="w-full py-4 rounded-xl font-bold text-sm text-[#666666] hover:bg-gray-50 transition-all border border-transparent hover:border-gray-200"
                   >
                     Simular Vencimiento
                   </button>
@@ -1021,13 +1021,13 @@ const location = useLocation();
               </div>
               
               <nav className="flex flex-col gap-1.5 pb-2 md:pb-0 bg-white md:bg-transparent p-2 md:p-0 rounded-2xl md:rounded-none border md:border-none border-gray-100 shadow-sm md:shadow-none">
-                <button onClick={() => setActiveTab('cuenta')} className={`flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap outline-none ${activeTab === 'cuenta' ? 'bg-[#2D6A6A]/10 text-[#1A3D3D]' : 'text-gray-500 hover:bg-white hover:text-[#4DB6AC]'}`}>
+                <button onClick={() => setActiveTab('cuenta')} className={`flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap outline-none ${activeTab === 'cuenta' ? 'bg-[#2D6A6A]/10 text-[#1A3D3D]' : 'text-[#666666] hover:bg-white hover:text-[#4DB6AC]'}`}>
                   <User className={`w-5 h-5 ${activeTab === 'cuenta' ? 'text-[#2D6A6A]' : 'text-gray-400'}`} /> Sobre mi cuenta
                 </button>
-                <button onClick={() => setActiveTab('perfil')} className={`flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap outline-none ${activeTab === 'perfil' ? 'bg-[#2D6A6A]/10 text-[#1A3D3D]' : 'text-gray-500 hover:bg-white hover:text-[#4DB6AC]'}`}>
+                <button onClick={() => setActiveTab('perfil')} className={`flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap outline-none ${activeTab === 'perfil' ? 'bg-[#2D6A6A]/10 text-[#1A3D3D]' : 'text-[#666666] hover:bg-white hover:text-[#4DB6AC]'}`}>
                   <Building className={`w-5 h-5 ${activeTab === 'perfil' ? 'text-[#2D6A6A]' : 'text-gray-400'}`} /> Mi perfil público
                 </button>
-                <button onClick={() => setActiveTab('catalogo')} className={`flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap outline-none ${activeTab === 'catalogo' ? 'bg-[#2D6A6A]/10 text-[#1A3D3D]' : 'text-gray-500 hover:bg-white hover:text-[#4DB6AC]'}`}>
+                <button onClick={() => setActiveTab('catalogo')} className={`flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap outline-none ${activeTab === 'catalogo' ? 'bg-[#2D6A6A]/10 text-[#1A3D3D]' : 'text-[#666666] hover:bg-white hover:text-[#4DB6AC]'}`}>
                   <Box className={`w-5 h-5 ${activeTab === 'catalogo' ? 'text-[#2D6A6A]' : 'text-gray-400'}`} /> Catálogo de productos
                 </button>
               </nav>
@@ -1066,7 +1066,7 @@ const location = useLocation();
               {activeTab === 'cuenta' && (
                 <div className="w-full bg-white rounded-[32px] shadow-sm border border-gray-100 p-6 md:p-10 min-h-[500px]">
                   <h3 className="text-2xl font-black text-[#1A3D3D] mb-8 font-['Montserrat']">Sobre mi cuenta</h3>
-                  <p className="text-sm text-gray-500 mb-8">Información privada para el acceso a la plataforma y facturación. Esto no será visible para los usuarios.</p>
+                  <p className="text-sm text-[#666666] mb-8">Información privada para el acceso a la plataforma y facturación. Esto no será visible para los usuarios.</p>
 
                   <div className="max-w-2xl">
                     <div className="mb-8 pb-8 border-b border-gray-100">
@@ -1091,10 +1091,10 @@ const location = useLocation();
                             <p className={`font-bold text-lg ${isSubscriptionActive ? 'text-[#1A3D3D]' : 'text-red-800'}`}>Plan Proveedor PRO</p>
                             <div className="flex items-center gap-2 mt-1">
                               <span className={`w-2 h-2 rounded-full ${isSubscriptionActive ? 'bg-[#4DB6AC]' : 'bg-red-500'}`}></span>
-                              <p className={`text-sm font-medium ${isSubscriptionActive ? 'text-gray-600' : 'text-red-600'}`}>{isSubscriptionActive ? 'Suscripción activa' : 'Suspendida por falta de pago'}</p>
+                              <p className={`text-sm font-medium ${isSubscriptionActive ? 'text-[#666666]' : 'text-red-600'}`}>{isSubscriptionActive ? 'Suscripción activa' : 'Suspendida por falta de pago'}</p>
                             </div>
                          </div>
-                         <button onClick={() => setIsSubModalOpen(true)} className={`text-sm font-bold px-4 py-2.5 rounded-xl transition-colors shadow-sm border ${isSubscriptionActive ? 'text-gray-500 hover:text-[#4DB6AC] border-gray-200 bg-white hover:border-[#4DB6AC]' : 'bg-red-600 text-white border-red-600 hover:bg-red-700'}`}>
+                         <button onClick={() => setIsSubModalOpen(true)} className={`text-sm font-bold px-4 py-2.5 rounded-xl transition-colors shadow-sm border ${isSubscriptionActive ? 'text-[#666666] hover:text-[#4DB6AC] border-gray-200 bg-white hover:border-[#4DB6AC]' : 'bg-red-600 text-white border-red-600 hover:bg-red-700'}`}>
                            {isSubscriptionActive ? 'Gestionar pagos' : 'Regularizar pago'}
                          </button>
                        </div>
@@ -1147,7 +1147,7 @@ const location = useLocation();
                   <div className="w-full bg-white rounded-[32px] shadow-sm border border-gray-100 mb-6">
                     <div className="pt-6 px-6 md:px-10 pb-4">
                       <h3 className="text-xl font-black text-[#1A3D3D] mb-1 font-['Montserrat']">Mi perfil público</h3>
-                      <p className="text-xs text-gray-500 mb-0">Toda la info que cargues aquí será la que las clínicas verán en la Cartilla.</p>
+                      <p className="text-xs text-[#666666] mb-0">Toda la info que cargues aquí será la que las clínicas verán en la Cartilla.</p>
                     </div>
 
                     <div className="border-t border-gray-100">
@@ -1155,7 +1155,7 @@ const location = useLocation();
                       <Accordion title="Identidad Visual e Info" icon={Building2} isOpen={openSection === 'identidad'} onToggle={() => setOpenSection(openSection === 'identidad' ? null : 'identidad')} hasError={camposFaltantes.some(f => ['Nombre de la Empresa', 'CUIT', 'Categoría Principal', 'Descripción (mínimo 20 caracteres)'].includes(f))}>
                         <div className="flex flex-col sm:flex-row gap-6 mb-8 mt-2 md:mt-0">
                           <div className="relative shrink-0 text-left">
-                            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 block ml-1">Logo Empresa</label>
+                            <label className="text-xs font-bold text-[#666666] uppercase tracking-widest mb-2 block ml-1">Logo Empresa</label>
                             <div onClick={() => triggerFileInput(logoInputRef)} className="w-32 h-32 rounded-[28px] overflow-hidden border-2 border-dashed border-gray-200 transition-all flex items-center justify-center bg-gray-50 block cursor-pointer relative group/img shadow-sm hover:border-[#2D6A6A]">
                               {formData.foto ? (
                                 <>
@@ -1176,7 +1176,7 @@ const location = useLocation();
                           </div>
                           
                           <div className="flex-1 relative text-left">
-                            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 block ml-1">Banner de Portada</label>
+                            <label className="text-xs font-bold text-[#666666] uppercase tracking-widest mb-2 block ml-1">Banner de Portada</label>
                             <div onClick={() => triggerFileInput(bannerInputRef)} className="w-full h-32 rounded-[28px] overflow-hidden border-2 border-dashed border-gray-200 transition-all flex items-center justify-center bg-gray-50 block cursor-pointer relative group/img shadow-sm hover:border-[#2D6A6A]">
                               {formData.banner ? (
                                 <>
@@ -1263,7 +1263,7 @@ const location = useLocation();
                                   <div className={`w-5 h-5 rounded-[6px] border flex items-center justify-center transition-colors shrink-0 ${formData.logistica[item.id] ? 'bg-[#4DB6AC] border-[#4DB6AC]' : 'bg-white border-gray-300 group-hover:border-[#4DB6AC]'}`}>
                                     {formData.logistica[item.id] && <Check className="w-3.5 h-3.5 text-white" />}
                                   </div>
-                                  <span className={`text-[13px] font-bold ${formData.logistica[item.id] ? 'text-[#1A3D3D]' : 'text-gray-500'}`}>{item.label}</span>
+                                  <span className={`text-[13px] font-bold ${formData.logistica[item.id] ? 'text-[#1A3D3D]' : 'text-[#666666]'}`}>{item.label}</span>
                                 </div>
                               ))}
                             </div>
@@ -1286,7 +1286,7 @@ const location = useLocation();
                                   <div className={`w-5 h-5 rounded-[6px] border flex items-center justify-center transition-colors shrink-0 ${formData.pagos[item.id] ? 'bg-[#4DB6AC] border-[#4DB6AC]' : 'bg-white border-gray-300 group-hover:border-[#4DB6AC]'}`}>
                                     {formData.pagos[item.id] && <Check className="w-3.5 h-3.5 text-white" />}
                                   </div>
-                                  <span className={`text-[13px] font-bold ${formData.pagos[item.id] ? 'text-[#1A3D3D]' : 'text-gray-500'}`}>{item.label}</span>
+                                  <span className={`text-[13px] font-bold ${formData.pagos[item.id] ? 'text-[#1A3D3D]' : 'text-[#666666]'}`}>{item.label}</span>
                                 </div>
                               ))}
                             </div>
@@ -1308,7 +1308,7 @@ const location = useLocation();
                                   <div className={`w-5 h-5 rounded-[6px] border flex items-center justify-center transition-colors shrink-0 ${formData.garantia[item.id] ? 'bg-[#4DB6AC] border-[#4DB6AC]' : 'bg-white border-gray-300 group-hover:border-[#4DB6AC]'}`}>
                                     {formData.garantia[item.id] && <Check className="w-3.5 h-3.5 text-white" />}
                                   </div>
-                                  <span className={`text-[13px] font-bold ${formData.garantia[item.id] ? 'text-[#1A3D3D]' : 'text-gray-500'}`}>{item.label}</span>
+                                  <span className={`text-[13px] font-bold ${formData.garantia[item.id] ? 'text-[#1A3D3D]' : 'text-[#666666]'}`}>{item.label}</span>
                                 </div>
                               ))}
                             </div>
@@ -1319,7 +1319,7 @@ const location = useLocation();
                       {/* CONTACTO Y UBICACIÓN */}
                       <Accordion title="Ubicación, Contacto y Redes" icon={MapPin} isOpen={openSection === 'contacto'} onToggle={() => setOpenSection(openSection === 'contacto' ? null : 'contacto')} hasError={camposFaltantes.some(f => ['Zona de Cobertura', 'Email Comercial'].includes(f))}>
                         <div className="mb-8 w-full">
-                          <label className="flex items-center text-xs font-bold text-gray-500 uppercase tracking-widest leading-none mb-3">
+                          <label className="flex items-center text-xs font-bold text-[#666666] uppercase tracking-widest leading-none mb-3">
                             Provincias donde operan <span className="text-red-400 ml-1">*</span>
                           </label>
                           <p className="text-[13px] text-gray-400 font-medium mb-3">Seleccioná las provincias donde estan presentes.</p>
@@ -1387,7 +1387,7 @@ const location = useLocation();
                            <h4 className="flex items-center gap-2 text-xs font-bold text-[#1A3D3D] uppercase tracking-widest leading-none mb-5 mt-6"><Building2 className="w-4 h-4 text-[#2D6A6A]" /> Sede Central y Atención</h4>
                            {/* DIRECCIÓN CON AUTOCOMPLETE DE GOOGLE MAPS */}
                            <div className="mb-6 w-full">
-                             <label className="flex items-center text-xs font-bold text-gray-500 uppercase tracking-widest leading-none mb-2 ml-1">
+                             <label className="flex items-center text-xs font-bold text-[#666666] uppercase tracking-widest leading-none mb-2 ml-1">
                                Dirección Física <span className="text-gray-400 font-normal normal-case tracking-normal ml-1">(opcional)</span>
                              </label>
                              <div className="relative">
@@ -1436,7 +1436,7 @@ const location = useLocation();
                            <InputGroup label="Horarios de Atención" id="horariosAtencion" value={formData.horariosAtencion} onChange={handleChange} placeholder="Ej: Lunes a Viernes de 9 a 18 hs" />
                            
                            <div className="mt-2 mb-6 flex flex-col gap-4">
-                            <label className="flex items-center text-xs font-bold text-gray-500 uppercase tracking-widest leading-none ml-1">Modalidad de Atención</label>
+                            <label className="flex items-center text-xs font-bold text-[#666666] uppercase tracking-widest leading-none ml-1">Modalidad de Atención</label>
                             <ToggleSwitch label="Venta Online" checked={formData.modalidad.ventaOnline} onChange={() => handleNestedChange('modalidad', 'ventaOnline')} />
                             <ToggleSwitch label="Showroom con cita previa" checked={formData.modalidad.showroom} onChange={() => handleNestedChange('modalidad', 'showroom')} />
                             <ToggleSwitch label="Local a la calle" checked={formData.modalidad.local} onChange={() => handleNestedChange('modalidad', 'local')} />
@@ -1486,7 +1486,7 @@ const location = useLocation();
                 <div className="w-full bg-white rounded-[32px] shadow-sm border border-gray-100 relative custom-scrollbar min-h-[500px]">
                  <div className="pt-6 px-6 md:px-10 pb-4">
                     <h3 className="text-xl font-black text-[#1A3D3D] font-['Montserrat'] mb-1">Catálogo</h3>
-                    <p className="text-xs text-gray-500">Configurá tu información comercial y los productos que querés mostrar.</p>
+                    <p className="text-xs text-[#666666]">Configurá tu información comercial y los productos que querés mostrar.</p>
                   </div>
 
                   <div className="border-t border-gray-100">
@@ -1502,7 +1502,7 @@ const location = useLocation();
                       <InputGroup label="Marcas que representan (Separadas por coma)" id="marcasRepresentadas" value={formData.marcasRepresentadas} onChange={handleChange} placeholder="Ej: Zoetis, Mindray..." />
 
                       <div className="pt-2">
-                        <label className="flex items-center text-xs font-bold text-gray-500 uppercase tracking-widest leading-none mb-4 ml-1">
+                        <label className="flex items-center text-xs font-bold text-[#666666] uppercase tracking-widest leading-none mb-4 ml-1">
                           Rubros principales que comercializan
                         </label>
                         <div className="flex flex-wrap gap-2.5">
@@ -1518,7 +1518,7 @@ const location = useLocation();
                             return (
                               <button
                                 key={item.id} type="button" onClick={() => handleNestedChange('categorias', item.id)}
-                                className={`px-4 py-2.5 rounded-full text-[13px] font-bold border transition-all flex items-center gap-2 shadow-sm ${isChecked ? 'bg-[#1A3D3D] text-white border-[#1A3D3D]' : 'bg-white text-gray-600 border-gray-200 hover:border-[#4DB6AC]'}`}
+                                className={`px-4 py-2.5 rounded-full text-[13px] font-bold border transition-all flex items-center gap-2 shadow-sm ${isChecked ? 'bg-[#1A3D3D] text-white border-[#1A3D3D]' : 'bg-white text-[#666666] border-gray-200 hover:border-[#4DB6AC]'}`}
                               >
                                 {isChecked && <Check className="w-3.5 h-3.5" />} {item.label}
                               </button>
@@ -1536,7 +1536,7 @@ const location = useLocation();
                       onToggle={() => setOpenSection(openSection === 'productos-vidriera' ? null : 'productos-vidriera')}
                     >
                       <div className="flex justify-between items-center mb-6">
-                        <p className="text-sm text-gray-500 font-medium">El primer producto de la lista es el que aparece destacado en la Cartilla.</p>
+                        <p className="text-sm text-[#666666] font-medium">El primer producto de la lista es el que aparece destacado en la Cartilla.</p>
                         {!productoEnEdicion && (
                           <button onClick={iniciarNuevoProducto} className="hidden sm:flex bg-[#1A3D3D] text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-[#2D6A6A] transition-all items-center gap-2 shadow-md hover:-translate-y-0.5">
                             <Plus className="w-4 h-4" /> Añadir Producto
@@ -1546,7 +1546,7 @@ const location = useLocation();
 
                   {productoEnEdicion ? (
                     <div className="w-full">
-                      <button onClick={() => setProductoEnEdicion(null)} className="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-[#4DB6AC] mb-6 transition-colors bg-gray-50 px-4 py-2 rounded-full border border-gray-200 shadow-sm w-fit hover:-translate-x-1">
+                      <button onClick={() => setProductoEnEdicion(null)} className="flex items-center gap-2 text-sm font-bold text-[#666666] hover:text-[#4DB6AC] mb-6 transition-colors bg-gray-50 px-4 py-2 rounded-full border border-gray-200 shadow-sm w-fit hover:-translate-x-1">
                         <ArrowLeft className="w-4 h-4" /> Volver al listado
                       </button>
 
@@ -1591,7 +1591,7 @@ const location = useLocation();
                          </div>
 
                          <div className="mb-8 w-full bg-gray-50/50 p-6 rounded-3xl border border-gray-100">
-                            <label className="flex items-center text-xs font-bold text-gray-500 uppercase tracking-widest leading-none mb-4">Imágenes del Producto (Máx 4)</label>
+                            <label className="flex items-center text-xs font-bold text-[#666666] uppercase tracking-widest leading-none mb-4">Imágenes del Producto (Máx 4)</label>
                             <div className="flex flex-wrap gap-4">
                                {productoEnEdicion.imagenes.map((imgUrl, idx) => (
                                  <div key={idx} className="relative w-24 h-24 rounded-2xl overflow-hidden border border-gray-200 group shadow-sm bg-white">
@@ -1616,7 +1616,7 @@ const location = useLocation();
                          <InputGroup type="textarea" rows="4" label="Descripción Comercial" id="descripcionLarga" value={productoEnEdicion.descripcionLarga} onChange={handleProductoChange} placeholder="Detallá los beneficios y especificaciones principales..." />
 
                          <div className="mb-8 w-full bg-gray-50 border border-gray-200 rounded-3xl p-6 shadow-sm">
-                            <label className="flex items-center text-xs font-bold text-gray-500 uppercase tracking-widest leading-none mb-4">Viñetas Destacadas (Características)</label>
+                            <label className="flex items-center text-xs font-bold text-[#666666] uppercase tracking-widest leading-none mb-4">Viñetas Destacadas (Características)</label>
                             
                             <div className="flex items-center gap-2 mb-5">
                               <input 
@@ -1638,7 +1638,7 @@ const location = useLocation();
                                   <div key={caract.id} className="flex justify-between items-start gap-3 bg-white px-4 py-3 rounded-xl border border-gray-100 group shadow-sm">
                                     <div className="flex items-start gap-2 mt-0.5">
                                       <Check className="w-4 h-4 text-[#4DB6AC] shrink-0" />
-                                      <span className="text-sm font-medium text-gray-700 leading-snug">{caract.texto}</span>
+                                      <span className="text-sm font-medium text-[#333333] leading-snug">{caract.texto}</span>
                                     </div>
                                     <button onClick={() => eliminarCaracteristica(idx)} className="text-gray-400 hover:text-red-500 transition-colors p-1 opacity-0 group-hover:opacity-100 shrink-0">
                                       <X className="w-4 h-4" />
@@ -1652,7 +1652,7 @@ const location = useLocation();
                          </div>
 
                          <div className="flex justify-end gap-3 mt-8 pt-6 border-t border-gray-100">
-                           <button onClick={() => setProductoEnEdicion(null)} className="px-6 py-3 rounded-xl text-gray-500 font-bold hover:bg-gray-100 transition-colors text-sm">Cancelar</button>
+                           <button onClick={() => setProductoEnEdicion(null)} className="px-6 py-3 rounded-xl text-[#666666] font-bold hover:bg-gray-100 transition-colors text-sm">Cancelar</button>
                            <button onClick={guardarProducto} className="px-8 py-3 rounded-xl bg-[#1A3D3D] text-white font-bold hover:bg-[#2D6A6A] transition-colors shadow-lg text-sm flex items-center gap-2">
                              <Save className="w-4 h-4" /> Guardar
                            </button>
@@ -1673,7 +1673,7 @@ const location = useLocation();
                               <Box className="w-10 h-10 text-gray-300" />
                            </div>
                            <h5 className="font-bold text-[#1A3D3D] text-lg mb-2">Aún no cargaste productos</h5>
-                           <p className="text-sm text-gray-500 mb-6 max-w-sm">El catálogo es la mejor forma de mostrarle a las clínicas qué equipos tenés disponibles.</p>
+                           <p className="text-sm text-[#666666] mb-6 max-w-sm">El catálogo es la mejor forma de mostrarle a las clínicas qué equipos tenés disponibles.</p>
                            <button onClick={iniciarNuevoProducto} className="bg-[#1A3D3D] text-white px-8 py-4 rounded-xl font-bold text-sm hover:bg-[#2D6A6A] transition-all flex items-center gap-2 shadow-md">
                              <Plus className="w-4 h-4" /> Empezar a cargar
                            </button>
@@ -1683,13 +1683,13 @@ const location = useLocation();
                           <div className="flex flex-col gap-3 mb-2">
                             <div className="bg-[#4DB6AC]/10 border border-[#4DB6AC]/20 rounded-2xl p-4 flex items-start gap-3">
                               <Info className="w-5 h-5 text-[#4DB6AC] shrink-0 mt-0.5" />
-                              <p className="text-[13px] text-gray-600 font-medium leading-relaxed">
+                              <p className="text-[13px] text-[#666666] font-medium leading-relaxed">
                                 <strong className="text-[#1A3D3D]">Tip para tu perfil:</strong> Podés reorganizar los productos arrastrándolos desde los puntitos de la izquierda.
                               </p>
                             </div>
                             <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-4 flex items-start gap-3">
                               <Crown className="w-5 h-5 text-yellow-500 shrink-0 mt-0.5" />
-                              <p className="text-[13px] text-gray-600 font-medium leading-relaxed">
+                              <p className="text-[13px] text-[#666666] font-medium leading-relaxed">
                                 <strong className="text-[#1A3D3D]">Producto destacado en la Cartilla:</strong> El primer producto de tu lista es el que aparece en la entrada de la Cartilla de Proveedores. Usá el orden para elegir cuál mostrar.
               </p>
                             </div>

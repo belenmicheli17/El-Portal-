@@ -281,7 +281,7 @@ export const Tooltip = ({ text, isSection = false }) => {
               <span className="text-xs font-black text-[#2D6A6A] tracking-wide uppercase">Importante</span>
             </div>
           )}
-          <p className={isSection ? 'text-sm text-gray-600 font-medium leading-relaxed' : ''}>{text}</p>
+          <p className={isSection ? 'text-sm text-[#666666] font-medium leading-relaxed' : ''}>{text}</p>
         </div>
         <div className={`absolute top-full left-1/2 -translate-x-1/2 border-[7px] border-transparent ${isSection ? 'border-t-white' : 'border-t-[#1A3D3D]'}`}></div>
       </div>
@@ -299,7 +299,7 @@ export const InputGroup = ({ label, id, type = 'text', placeholder, value, onCha
   return (
     <div className="mb-6 w-full">
       <div className="flex justify-between items-end mb-2 ml-1">
-        <label htmlFor={id} className="flex items-center text-xs font-bold text-gray-500 uppercase tracking-widest leading-none">
+        <label htmlFor={id} className="flex items-center text-xs font-bold text-[#666666] uppercase tracking-widest leading-none">
           {label} {required && <span className="text-red-400 ml-1">*</span>}
           {tooltip && <Tooltip text={tooltip} />}
         </label>
@@ -316,14 +316,14 @@ export const InputGroup = ({ label, id, type = 'text', placeholder, value, onCha
             id={id} name={id} value={value} onChange={onChange} placeholder={placeholder} maxLength={maxLength} rows={rows} disabled={disabled} readOnly={readOnly}
             spellCheck="true"
             lang="es"
-            className={`w-full border ${error ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-[#2D6A6A]'} rounded-2xl px-5 py-4 text-base font-medium focus:outline-none transition-all resize-none ${readOnly ? 'bg-gray-100 text-gray-500 cursor-not-allowed focus:border-gray-200' : 'bg-gray-50/50 text-[#1A3D3D] disabled:opacity-50'}`}
+            className={`w-full border ${error ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-[#2D6A6A]'} rounded-2xl px-5 py-4 text-base font-medium focus:outline-none transition-all resize-none ${readOnly ? 'bg-gray-100 text-[#666666] cursor-not-allowed focus:border-gray-200' : 'bg-gray-50/50 text-[#1A3D3D] disabled:opacity-50'}`}
           />
         ) : (
           <input
             id={id} name={id} type={currentType} value={value} onChange={onChange} placeholder={placeholder} maxLength={maxLength} disabled={disabled} readOnly={readOnly}
             spellCheck="true"
             lang="es"
-            className={`w-full border ${error ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-[#2D6A6A]'} rounded-2xl px-5 py-3.5 text-base font-medium focus:outline-none transition-all ${readOnly ? 'bg-gray-100 text-gray-500 cursor-not-allowed focus:border-gray-200' : 'bg-gray-50/50 text-[#1A3D3D] disabled:opacity-50'} ${(canTest || isPassword) ? 'pr-12' : ''}`}
+            className={`w-full border ${error ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-[#2D6A6A]'} rounded-2xl px-5 py-3.5 text-base font-medium focus:outline-none transition-all ${readOnly ? 'bg-gray-100 text-[#666666] cursor-not-allowed focus:border-gray-200' : 'bg-gray-50/50 text-[#1A3D3D] disabled:opacity-50'} ${(canTest || isPassword) ? 'pr-12' : ''}`}
           />
         )}
 
@@ -343,7 +343,7 @@ export const InputGroup = ({ label, id, type = 'text', placeholder, value, onCha
             href={value.startsWith('http') ? value : `https://${value}`}
             target="_blank"
             rel="noreferrer"
-            className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-lg border transition-all shadow-sm z-10 bg-white border-gray-200 text-gray-500 hover:text-[#4DB6AC] hover:border-[#4DB6AC] cursor-pointer"
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-lg border transition-all shadow-sm z-10 bg-white border-gray-200 text-[#666666] hover:text-[#4DB6AC] hover:border-[#4DB6AC] cursor-pointer"
             title="Probar enlace"
           >
             <ExternalLink className="w-4 h-4" />
@@ -384,7 +384,7 @@ export const Accordion = ({ title, icon: Icon, children, isOpen, onToggle, toolt
           <div className={`p-2.5 rounded-xl transition-all duration-300 ease-in-out ${isOpen ? 'bg-[#1A3D3D] text-white' : 'bg-transparent text-[#2D6A6A]'}`}>
             {Icon && <Icon className="w-5 h-5" />}
           </div>
-          <h3 className={`font-black text-sm md:text-base uppercase tracking-wider transition-colors duration-300 flex items-center gap-2 ${isOpen ? 'text-[#1A3D3D]' : 'text-gray-500 md:text-[#1A3D3D]'}`}>
+          <h3 className={`font-black text-sm md:text-base uppercase tracking-wider transition-colors duration-300 flex items-center gap-2 ${isOpen ? 'text-[#1A3D3D]' : 'text-[#666666] md:text-[#1A3D3D]'}`}>
             {title}
             {alerta && !isOpen && <PuntoAlerta />}
           </h3>
@@ -426,7 +426,7 @@ export function CampoWhatsapp({ id, label, requerido, valor, onCambio, tooltip, 
   return (
     <div className="mb-6 w-full">
       {label && (
-        <label htmlFor={id} className="flex items-center text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">
+        <label htmlFor={id} className="flex items-center text-xs font-bold text-[#666666] uppercase tracking-widest mb-2 ml-1">
           {label} {requerido && <span className="text-red-400 ml-1">*</span>}
           {tooltip && <Tooltip text={tooltip} />}
         </label>
@@ -446,7 +446,7 @@ export function CampoWhatsapp({ id, label, requerido, valor, onCambio, tooltip, 
           className="flex-1 bg-transparent px-4 py-3.5 text-base font-medium focus:outline-none text-[#1A3D3D]"
         />
       </div>
-      {ayuda && <p className="text-xs text-gray-500 font-medium mt-2 ml-1 leading-relaxed">{ayuda}</p>}
+      {ayuda && <p className="text-xs text-[#666666] font-medium mt-2 ml-1 leading-relaxed">{ayuda}</p>}
     </div>
   );
 }
@@ -549,7 +549,7 @@ export function RecortadorImagen({ imagen, forma = 'cuadrado', tamanoSalida = 51
       </div>
 
       <div className="mt-8 w-full max-w-[256px]">
-        <label className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-3 flex justify-between">
+        <label className="text-sm font-bold text-[#666666] uppercase tracking-widest mb-3 flex justify-between">
           <span>Alejar</span><span>Acercar</span>
         </label>
         <input
@@ -573,7 +573,7 @@ export function RecortadorImagen({ imagen, forma = 'cuadrado', tamanoSalida = 51
       </div>
 
       <div className="flex justify-end gap-3 w-full mt-8 border-t border-gray-100 pt-6">
-        <button type="button" onClick={onCancelar} className="px-6 py-3 rounded-xl text-gray-500 font-bold hover:bg-gray-100 transition-colors text-base">Cancelar</button>
+        <button type="button" onClick={onCancelar} className="px-6 py-3 rounded-xl text-[#666666] font-bold hover:bg-gray-100 transition-colors text-base">Cancelar</button>
         <button type="button" onClick={aplicarRecorte} className="px-8 py-3 rounded-xl bg-[#1A3D3D] text-white font-bold hover:bg-[#2D6A6A] transition-colors shadow-lg flex items-center gap-2 text-base">
           <Check className="w-5 h-5" /> Aplicar
         </button>
@@ -682,7 +682,7 @@ export function SelectorServicios({ servicios, setFormData, grupos, iconosGrupo 
         <div className="fixed inset-0 bg-[#1A3D3D]/40 backdrop-blur-md z-[300] flex items-center justify-center p-4">
           <div className="bg-white rounded-[28px] w-full max-w-sm p-6 shadow-2xl animate-in fade-in zoom-in duration-200">
             <h3 className="font-black text-[#1A3D3D] text-lg font-['Montserrat'] mb-1">¿A qué grupo pertenece?</h3>
-            <p className="text-sm text-gray-500 mb-5">
+            <p className="text-sm text-[#666666] mb-5">
               Vas a agregar: <span className="font-bold text-[#1A3D3D]">"{modalPropio.texto}"</span>
             </p>
             <div className="flex flex-col gap-2 max-h-[50vh] overflow-y-auto pr-1">
@@ -691,7 +691,7 @@ export function SelectorServicios({ servicios, setFormData, grupos, iconosGrupo 
                   key={grupo.id}
                   type="button"
                   onClick={() => setGrupoElegido(grupo.id)}
-                  className={`w-full text-left px-4 py-3 rounded-xl text-sm font-bold border transition-colors ${grupoElegido === grupo.id ? 'bg-[#1A3D3D] text-white border-[#1A3D3D]' : 'bg-white text-gray-600 border-gray-200 hover:border-[#2D6A6A]'}`}
+                  className={`w-full text-left px-4 py-3 rounded-xl text-sm font-bold border transition-colors ${grupoElegido === grupo.id ? 'bg-[#1A3D3D] text-white border-[#1A3D3D]' : 'bg-white text-[#666666] border-gray-200 hover:border-[#2D6A6A]'}`}
                 >
                   {grupo.grupo}
                 </button>
@@ -701,7 +701,7 @@ export function SelectorServicios({ servicios, setFormData, grupos, iconosGrupo 
               <button
                 type="button"
                 onClick={() => { setModalPropio({ abierto: false, texto: '' }); setGrupoElegido(''); }}
-                className="flex-1 px-4 py-3 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition-colors border border-gray-200"
+                className="flex-1 px-4 py-3 rounded-xl text-sm font-bold text-[#666666] hover:bg-gray-100 transition-colors border border-gray-200"
               >
                 Cancelar
               </button>
@@ -731,7 +731,7 @@ export function SelectorServicios({ servicios, setFormData, grupos, iconosGrupo 
           className="w-full pl-11 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-medium text-[#1A3D3D] focus:outline-none focus:border-[#2D6A6A] focus:bg-white transition-all"
         />
         {busqueda && (
-          <button type="button" onClick={() => setBusqueda('')} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500">
+          <button type="button" onClick={() => setBusqueda('')} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 hover:text-[#666666]">
             <X className="w-4 h-4" />
           </button>
         )}
@@ -756,7 +756,7 @@ export function SelectorServicios({ servicios, setFormData, grupos, iconosGrupo 
                       className={`w-full flex items-center justify-between px-4 py-3.5 text-left transition-colors ${seleccionada ? 'bg-[#1A3D3D]/5' : 'hover:bg-white'}`}
                     >
                       <div>
-                        <p className={`text-sm font-bold ${seleccionada ? 'text-[#1A3D3D]' : 'text-gray-700'}`}>{opcion}</p>
+                        <p className={`text-sm font-bold ${seleccionada ? 'text-[#1A3D3D]' : 'text-[#333333]'}`}>{opcion}</p>
                         <p className="text-[11px] text-gray-400 font-medium mt-0.5">{grupoNombre}</p>
                       </div>
                       <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 ml-4 transition-colors ${seleccionada ? 'bg-[#1A3D3D] border-[#1A3D3D]' : 'border-gray-300'}`}>
@@ -777,7 +777,7 @@ export function SelectorServicios({ servicios, setFormData, grupos, iconosGrupo 
             </>
           ) : (
             <div className="px-4 py-5 flex flex-col gap-3">
-              <p className="text-sm text-gray-500 font-medium">
+              <p className="text-sm text-[#666666] font-medium">
                 No encontramos "<span className="font-bold text-[#1A3D3D]">{busqueda}</span>" entre las especialidades predefinidas.
               </p>
               <button
@@ -816,14 +816,14 @@ export function SelectorServicios({ servicios, setFormData, grupos, iconosGrupo 
                 className="p-4 flex items-center gap-3 cursor-pointer select-none"
                 onClick={() => setExpandidos((prev) => ({ ...prev, [grupo.id]: !expandido }))}
               >
-                <IconoGrupo className={`w-5 h-5 shrink-0 transition-colors duration-300 ${resaltado ? 'text-[#2D6A6A]' : 'text-gray-500'}`} />
-                <span className={`flex-1 text-sm font-black ${resaltado ? 'text-[#1A3D3D]' : 'text-gray-500'}`}>{grupo.grupo}</span>
+                <IconoGrupo className={`w-5 h-5 shrink-0 transition-colors duration-300 ${resaltado ? 'text-[#2D6A6A]' : 'text-[#666666]'}`} />
+                <span className={`flex-1 text-sm font-black ${resaltado ? 'text-[#1A3D3D]' : 'text-[#666666]'}`}>{grupo.grupo}</span>
                 {!expandido && totalSeleccionadas > 0 && (
                   <span className="text-[11px] font-bold text-[#2D6A6A] bg-[#2D6A6A]/10 px-2.5 py-1 rounded-full shrink-0">
                     {totalSeleccionadas} seleccionada{totalSeleccionadas !== 1 ? 's' : ''}
                   </span>
                 )}
-                <ChevronDown strokeWidth={2.5} className={`w-5 h-5 transition-transform duration-300 shrink-0 ${expandido ? 'rotate-180 text-[#2D6A6A]' : 'text-gray-500'}`} />
+                <ChevronDown strokeWidth={2.5} className={`w-5 h-5 transition-transform duration-300 shrink-0 ${expandido ? 'rotate-180 text-[#2D6A6A]' : 'text-[#666666]'}`} />
               </div>
 
               {/* Resumen de lo elegido cuando el grupo está cerrado */}
@@ -845,7 +845,7 @@ export function SelectorServicios({ servicios, setFormData, grupos, iconosGrupo 
                           key={opcion}
                           type="button"
                           onClick={() => alternarOpcion(grupo.id, opcion)}
-                          className={`w-full justify-start px-4 py-2.5 rounded-xl text-[13px] font-bold border transition-colors flex items-center gap-3 ${isChecked ? 'bg-[#1A3D3D] text-white border-[#1A3D3D]' : 'bg-white text-gray-600 border-gray-200 hover:border-[#2D6A6A]'}`}
+                          className={`w-full justify-start px-4 py-2.5 rounded-xl text-[13px] font-bold border transition-colors flex items-center gap-3 ${isChecked ? 'bg-[#1A3D3D] text-white border-[#1A3D3D]' : 'bg-white text-[#666666] border-gray-200 hover:border-[#2D6A6A]'}`}
                         >
                           <div className={`w-4 h-4 rounded-[4px] border flex items-center justify-center shrink-0 ${isChecked ? 'bg-white border-white' : 'border-gray-300'}`}>
                             {isChecked && <Check className="w-3 h-3 text-[#1A3D3D]" />}
@@ -992,7 +992,7 @@ export function RecortadorPortada({ imagen, onAplicar, onCancelar }) {
           <div className="absolute top-2/3 left-0 right-0 h-px bg-white/40" />
         </div>
       </div>
-      <p className="text-xs text-gray-500 mt-3 text-center leading-relaxed max-w-[420px]">
+      <p className="text-xs text-[#666666] mt-3 text-center leading-relaxed max-w-[420px]">
         Arrastrá para mover. En el celular los costados se ven más recortados: dejá lo importante en el centro.
       </p>
 
@@ -1004,7 +1004,7 @@ export function RecortadorPortada({ imagen, onAplicar, onCancelar }) {
           <IconoGiroDer className="w-5 h-5" />
         </button>
         <div className="flex-1">
-          <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 flex justify-between">
+          <label className="text-xs font-bold text-[#666666] uppercase tracking-widest mb-2 flex justify-between">
             <span>Alejar</span><span>Acercar</span>
           </label>
           <input type="range" min="1" max="3" step="0.05" value={zoom} onChange={(e) => setZoom(parseFloat(e.target.value))} className="w-full accent-[#2D6A6A] h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" />
@@ -1012,7 +1012,7 @@ export function RecortadorPortada({ imagen, onAplicar, onCancelar }) {
       </div>
 
       <div className="flex justify-end gap-3 w-full mt-6 border-t border-gray-100 pt-5">
-        <button type="button" onClick={onCancelar} className="px-6 py-3 rounded-xl text-gray-500 font-bold hover:bg-gray-100 transition-colors text-base">Cancelar</button>
+        <button type="button" onClick={onCancelar} className="px-6 py-3 rounded-xl text-[#666666] font-bold hover:bg-gray-100 transition-colors text-base">Cancelar</button>
         <button type="button" onClick={aplicar} className="px-8 py-3 rounded-xl bg-[#1A3D3D] text-white font-bold hover:bg-[#2D6A6A] transition-colors shadow-lg flex items-center gap-2 text-base">
           <IconoListo className="w-5 h-5" /> Aplicar
         </button>

@@ -308,10 +308,10 @@ className={`w-10 h-10 md:w-11 md:h-11 rounded-full shadow-2xl flex items-center 
     return (
       <button onClick={onClick} className="w-full flex items-center justify-between p-3 hover:bg-gray-50 rounded-xl transition-all border border-transparent hover:border-gray-100 group gap-2 text-left">
         <div className="flex items-center gap-3 min-w-0">
-          <div className={`shrink-0 p-2 rounded-lg transition-colors ${active ? 'bg-[#1A3D3D] text-white shadow-md' : 'bg-gray-100 text-gray-400 group-hover:text-gray-600'}`}>
+          <div className={`shrink-0 p-2 rounded-lg transition-colors ${active ? 'bg-[#1A3D3D] text-white shadow-md' : 'bg-gray-100 text-gray-400 group-hover:text-[#666666]'}`}>
             {icon}
           </div>
-          <span className="text-[13px] font-bold text-gray-700 leading-tight truncate">{label}</span>
+          <span className="text-[13px] font-bold text-[#333333] leading-tight truncate">{label}</span>
         </div>
         <ToggleSwitch active={active} />
       </button>

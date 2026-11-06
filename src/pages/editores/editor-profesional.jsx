@@ -106,7 +106,7 @@ const Tooltip = ({ text, isSection = false }) => {
                 <span className="text-xs font-black text-[#2D6A6A] tracking-wide uppercase">Importante</span>
             </div>
           )}
-          <p className={isSection ? "text-sm text-gray-600 font-medium leading-relaxed" : ""}>{text}</p>
+          <p className={isSection ? "text-sm text-[#666666] font-medium leading-relaxed" : ""}>{text}</p>
         </div>
 
         {/* Triangulito inferior (Fuera de la caja de texto para que no se mueva) */}
@@ -126,7 +126,7 @@ const InputGroup = ({ label, id, type = "text", placeholder, value, onChange, to
   return (
     <div className="mb-6 w-full">
       <div className="flex justify-between items-end mb-2 ml-1">
-        <label htmlFor={id} className="flex items-center text-xs font-bold text-gray-500 uppercase tracking-widest leading-none">
+        <label htmlFor={id} className="flex items-center text-xs font-bold text-[#666666] uppercase tracking-widest leading-none">
           {label} {required && <span className="text-red-400 ml-1">*</span>}
           {tooltip && <Tooltip text={tooltip} />}
         </label>
@@ -143,14 +143,14 @@ const InputGroup = ({ label, id, type = "text", placeholder, value, onChange, to
             id={id} name={id} value={value} onChange={onChange} placeholder={placeholder} maxLength={maxLength} rows={rows} disabled={disabled} readOnly={readOnly}
             spellCheck="true"
 lang="es"
-className={`w-full border ${error ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-[#2D6A6A]'} rounded-2xl px-5 py-4 text-base font-medium focus:outline-none transition-all resize-none ${readOnly ? 'bg-gray-100 text-gray-500 cursor-not-allowed focus:border-gray-200' : 'bg-gray-50/50 text-[#1A3D3D] disabled:opacity-50'}`}
+className={`w-full border ${error ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-[#2D6A6A]'} rounded-2xl px-5 py-4 text-base font-medium focus:outline-none transition-all resize-none ${readOnly ? 'bg-gray-100 text-[#666666] cursor-not-allowed focus:border-gray-200' : 'bg-gray-50/50 text-[#1A3D3D] disabled:opacity-50'}`}
           />
         ) : (
           <input
             id={id} name={id} type={currentType} value={value} onChange={onChange} placeholder={placeholder} maxLength={maxLength} disabled={disabled} readOnly={readOnly}
             spellCheck="true"
 lang="es"
-className={`w-full border ${error ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-[#2D6A6A]'} rounded-2xl px-5 py-3.5 text-base font-medium focus:outline-none transition-all ${readOnly ? 'bg-gray-100 text-gray-500 cursor-not-allowed focus:border-gray-200' : 'bg-gray-50/50 text-[#1A3D3D] disabled:opacity-50'} ${(canTest || isPassword) ? 'pr-12' : ''}`}
+className={`w-full border ${error ? 'border-red-300 focus:border-red-500' : 'border-gray-200 focus:border-[#2D6A6A]'} rounded-2xl px-5 py-3.5 text-base font-medium focus:outline-none transition-all ${readOnly ? 'bg-gray-100 text-[#666666] cursor-not-allowed focus:border-gray-200' : 'bg-gray-50/50 text-[#1A3D3D] disabled:opacity-50'} ${(canTest || isPassword) ? 'pr-12' : ''}`}
           />
         )}
         
@@ -170,7 +170,7 @@ className={`w-full border ${error ? 'border-red-300 focus:border-red-500' : 'bor
             href={value.startsWith('http') ? value : `https://${value}`} 
             target="_blank" 
             rel="noreferrer"
-            className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-lg border transition-all shadow-sm z-10 bg-white border-gray-200 text-gray-500 hover:text-[#4DB6AC] hover:border-[#4DB6AC] cursor-pointer"
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-lg border transition-all shadow-sm z-10 bg-white border-gray-200 text-[#666666] hover:text-[#4DB6AC] hover:border-[#4DB6AC] cursor-pointer"
             title="Probar enlace"
           >
             <ExternalLink className="w-4 h-4" />
@@ -208,7 +208,7 @@ const Accordion = ({ title, icon: Icon, children, isOpen, onToggle, tooltip, isB
           <div className={`p-2.5 rounded-xl transition-all duration-300 ease-in-out ${isOpen ? 'bg-[#1A3D3D] text-white' : 'bg-transparent text-[#2D6A6A]'}`}>
             {Icon && <Icon className="w-5 h-5" />}
           </div>
-          <h3 className={`font-black text-sm md:text-base uppercase tracking-wider transition-colors duration-300 flex items-center gap-2 ${isOpen ? 'text-[#1A3D3D]' : 'text-gray-500 md:text-[#1A3D3D]'}`}>
+          <h3 className={`font-black text-sm md:text-base uppercase tracking-wider transition-colors duration-300 flex items-center gap-2 ${isOpen ? 'text-[#1A3D3D]' : 'text-[#666666] md:text-[#1A3D3D]'}`}>
   {title}
   {alerta && !isOpen && <span className="w-2 h-2 rounded-full bg-[#FF9800] shrink-0 animate-pulse" />}
 </h3>
@@ -332,7 +332,7 @@ const SimpleCropper = ({ imageSrc, onCrop, onCancel, type }) => {
         </div>
       </div>
       <div className="mt-8 w-full max-w-[256px]">
-        <label className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-3 flex justify-between">
+        <label className="text-sm font-bold text-[#666666] uppercase tracking-widest mb-3 flex justify-between">
           <span>Alejar</span><span>Acercar</span>
         </label>
         <input
@@ -346,7 +346,7 @@ const SimpleCropper = ({ imageSrc, onCrop, onCancel, type }) => {
         />
       </div>
       <div className="flex justify-end gap-3 w-full mt-8 border-t border-gray-100 pt-6">
-        <button onClick={onCancel} className="px-6 py-3 rounded-xl text-gray-500 font-bold hover:bg-gray-100 transition-colors text-base">Cancelar</button>
+        <button onClick={onCancel} className="px-6 py-3 rounded-xl text-[#666666] font-bold hover:bg-gray-100 transition-colors text-base">Cancelar</button>
         <button onClick={handleCropClick} className="px-8 py-3 rounded-xl bg-[#1A3D3D] text-white font-bold hover:bg-[#2D6A6A] transition-colors shadow-lg flex items-center gap-2 text-base">
           <Check className="w-5 h-5" /> Aplicar
         </button>
@@ -420,7 +420,7 @@ function BuscadorEspecialidades({ formData, setFormData, especialidadesData }) {
         <div className="fixed inset-0 bg-[#1A3D3D]/40 backdrop-blur-md z-[300] flex items-center justify-center p-4">
           <div className="bg-white rounded-[28px] w-full max-w-sm p-6 shadow-2xl animate-in fade-in zoom-in duration-200">
             <h3 className="font-black text-[#1A3D3D] text-lg font-['Montserrat'] mb-1">¿A qué grupo pertenece?</h3>
-            <p className="text-sm text-gray-500 mb-5">
+            <p className="text-sm text-[#666666] mb-5">
               Vas a agregar: <span className="font-bold text-[#1A3D3D]">"{modalAgregar.texto}"</span>
             </p>
             <div className="flex flex-col gap-2 max-h-[50vh] overflow-y-auto pr-1">
@@ -429,7 +429,7 @@ function BuscadorEspecialidades({ formData, setFormData, especialidadesData }) {
                   key={grupo.id}
                   type="button"
                   onClick={() => setGrupoElegido(grupo.id)}
-                  className={`w-full text-left px-4 py-3 rounded-xl text-sm font-bold border transition-colors ${grupoElegido === grupo.id ? 'bg-[#1A3D3D] text-white border-[#1A3D3D]' : 'bg-white text-gray-600 border-gray-200 hover:border-[#2D6A6A]'}`}
+                  className={`w-full text-left px-4 py-3 rounded-xl text-sm font-bold border transition-colors ${grupoElegido === grupo.id ? 'bg-[#1A3D3D] text-white border-[#1A3D3D]' : 'bg-white text-[#666666] border-gray-200 hover:border-[#2D6A6A]'}`}
                 >
                   {grupo.grupo}
                 </button>
@@ -439,7 +439,7 @@ function BuscadorEspecialidades({ formData, setFormData, especialidadesData }) {
               <button
                 type="button"
                 onClick={() => { setModalAgregar({ abierto: false, texto: '' }); setGrupoElegido(''); }}
-                className="flex-1 px-4 py-3 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition-colors border border-gray-200"
+                className="flex-1 px-4 py-3 rounded-xl text-sm font-bold text-[#666666] hover:bg-gray-100 transition-colors border border-gray-200"
               >
                 Cancelar
               </button>
@@ -472,7 +472,7 @@ function BuscadorEspecialidades({ formData, setFormData, especialidadesData }) {
           <button
             type="button"
             onClick={() => setBusqueda('')}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500"
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 hover:text-[#666666]"
           >
             <X className="w-4 h-4" />
           </button>
@@ -498,7 +498,7 @@ function BuscadorEspecialidades({ formData, setFormData, especialidadesData }) {
                       className={`w-full flex items-center justify-between px-4 py-3.5 text-left transition-colors ${seleccionada ? 'bg-[#1A3D3D]/5' : 'hover:bg-white'}`}
                     >
                       <div>
-                        <p className={`text-sm font-bold ${seleccionada ? 'text-[#1A3D3D]' : 'text-gray-700'}`}>{opcion}</p>
+                        <p className={`text-sm font-bold ${seleccionada ? 'text-[#1A3D3D]' : 'text-[#333333]'}`}>{opcion}</p>
                         <p className="text-[11px] text-gray-400 font-medium mt-0.5">{grupoNombre}</p>
                       </div>
                       <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 ml-4 transition-colors ${seleccionada ? 'bg-[#1A3D3D] border-[#1A3D3D]' : 'border-gray-300'}`}>
@@ -519,7 +519,7 @@ function BuscadorEspecialidades({ formData, setFormData, especialidadesData }) {
             </>
           ) : (
             <div className="px-4 py-5 flex flex-col gap-3">
-              <p className="text-sm text-gray-500 font-medium">
+              <p className="text-sm text-[#666666] font-medium">
                 No encontramos "<span className="font-bold text-[#1A3D3D]">{busqueda}</span>" entre las especialidades predefinidas.
               </p>
               <button
@@ -1245,7 +1245,7 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
               <AlertTriangle className="w-8 h-8 text-yellow-500" />
             </div>
             <h3 className="font-bold font-['Montserrat'] text-xl text-[#1A3D3D] mb-2">Tenés cambios sin guardar</h3>
-            <p className="text-sm text-gray-500 mb-8 leading-relaxed">Si salís ahora, los cambios que hiciste se van a perder.</p>
+            <p className="text-sm text-[#666666] mb-8 leading-relaxed">Si salís ahora, los cambios que hiciste se van a perder.</p>
             <div className="flex flex-col gap-3">
               <button
                 onClick={async () => {
@@ -1290,7 +1290,7 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
               </div>
             )}
             <h3 className="font-bold font-['Montserrat'] text-2xl text-[#1A3D3D] mb-3">{modalConfig.title}</h3>
-            <p className="text-base text-gray-500 mb-8">{modalConfig.message}</p>
+            <p className="text-base text-[#666666] mb-8">{modalConfig.message}</p>
             <button 
               onClick={() => setModalConfig({ isOpen: false })} 
               className={`px-8 py-3.5 rounded-xl font-bold text-white transition-colors shadow-lg text-base w-full ${modalConfig.type === 'error' ? 'bg-red-500 hover:bg-red-600' : 'bg-[#1A3D3D] hover:bg-[#2D6A6A]'}`}
@@ -1307,7 +1307,7 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
               <div className="p-6 border-b border-gray-100 flex justify-between items-center">
                 <div>
                   <h3 className="font-bold font-['Montserrat'] text-xl text-[#1A3D3D]">Encuadre de Imagen</h3>
-                  <p className="text-sm text-gray-500 mt-1">Arrastra para mover la imagen o utiliza el zoom.</p>
+                  <p className="text-sm text-[#666666] mt-1">Arrastra para mover la imagen o utiliza el zoom.</p>
                 </div>
                 <button onClick={() => setCropModal({ isOpen: false })} className="p-2.5 bg-gray-100 rounded-full hover:bg-red-100 hover:text-red-500 transition-colors"><X className="w-6 h-6" /></button>
               </div>
@@ -1331,9 +1331,9 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
               <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 shrink-0">
                 <div>
                   <h3 className="font-bold font-['Montserrat'] text-2xl text-[#1A3D3D]">Elegí tu Plan</h3>
-                  <p className="text-sm text-gray-500 mt-1">Podés mejorar o pausar tu suscripción en cualquier momento.</p>
+                  <p className="text-sm text-[#666666] mt-1">Podés mejorar o pausar tu suscripción en cualquier momento.</p>
                 </div>
-                <button onClick={() => setIsPlanModalOpen(false)} className="p-2.5 bg-white rounded-full hover:bg-red-50 hover:text-red-500 transition-colors border border-gray-200"><X className="w-5 h-5 text-gray-500" /></button>
+                <button onClick={() => setIsPlanModalOpen(false)} className="p-2.5 bg-white rounded-full hover:bg-red-50 hover:text-red-500 transition-colors border border-gray-200"><X className="w-5 h-5 text-[#666666]" /></button>
               </div>
               
               <div className="p-6 md:p-8 bg-[#F4F7F7]">
@@ -1349,13 +1349,13 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
                           <Check className="w-3 h-3" /> Seleccionado
                         </div>
                       )}
-                      <h4 className="text-xl font-black text-gray-800 font-['Montserrat'] mb-1">Plan Básico</h4>
+                      <h4 className="text-xl font-black text-[#333333] font-['Montserrat'] mb-1">Plan Básico</h4>
                       <p className="text-3xl font-black text-[#1A3D3D] font-['Montserrat'] my-4">$0 <span className="text-sm text-gray-400 font-medium">/mes</span></p>
-                      <p className="text-sm text-gray-500 mb-6 flex-1">Ideal para tener presencia en la Cartilla y que te encuentren fácilmente.</p>
+                      <p className="text-sm text-[#666666] mb-6 flex-1">Ideal para tener presencia en la Cartilla y que te encuentren fácilmente.</p>
                       
                       <ul className="space-y-3 mb-6">
-                        <li className="flex items-start gap-2 text-sm text-gray-600 font-medium"><Check className="w-4 h-4 text-[#2D6A6A] shrink-0 mt-0.5" /> Perfil profesional básico</li>
-                        <li className="flex items-start gap-2 text-sm text-gray-600 font-medium"><Check className="w-4 h-4 text-[#2D6A6A] shrink-0 mt-0.5" /> Biografía y Trayectoria</li>
+                        <li className="flex items-start gap-2 text-sm text-[#666666] font-medium"><Check className="w-4 h-4 text-[#2D6A6A] shrink-0 mt-0.5" /> Perfil profesional básico</li>
+                        <li className="flex items-start gap-2 text-sm text-[#666666] font-medium"><Check className="w-4 h-4 text-[#2D6A6A] shrink-0 mt-0.5" /> Biografía y Trayectoria</li>
                         <li className="flex items-start gap-2 text-sm text-gray-400 opacity-50 line-through"><X className="w-4 h-4 shrink-0 mt-0.5" /> Listado de Servicios</li>
                         <li className="flex items-start gap-2 text-sm text-gray-400 opacity-50 line-through"><X className="w-4 h-4 shrink-0 mt-0.5" /> Casos Clínicos con fotos</li>
                       </ul>
@@ -1375,13 +1375,13 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
                          Profesional PRO <Zap className="w-5 h-5 text-[#4DB6AC] fill-[#4DB6AC]" />
                       </h4>
                       <p className="text-3xl font-black text-[#1A3D3D] font-['Montserrat'] my-4">$8.500 <span className="text-sm text-gray-400 font-medium">/mes</span></p>
-                      <p className="text-sm text-gray-500 mb-6 flex-1">Generá confianza mostrando tus servicios y el éxito de tus casos clínicos.</p>
+                      <p className="text-sm text-[#666666] mb-6 flex-1">Generá confianza mostrando tus servicios y el éxito de tus casos clínicos.</p>
                       
                       <ul className="space-y-3 mb-6">
-                        <li className="flex items-start gap-2 text-sm text-gray-700 font-bold"><Check className="w-4 h-4 text-[#4DB6AC] shrink-0 mt-0.5" /> Todo lo del Plan Básico</li>
-                        <li className="flex items-start gap-2 text-sm text-gray-700 font-bold"><Check className="w-4 h-4 text-[#4DB6AC] shrink-0 mt-0.5" /> Listado de Servicios Médicos</li>
-                        <li className="flex items-start gap-2 text-sm text-gray-700 font-bold"><Check className="w-4 h-4 text-[#4DB6AC] shrink-0 mt-0.5" /> Galería de Casos de Éxito</li>
-                        <li className="flex items-start gap-2 text-sm text-gray-700 font-bold"><Check className="w-4 h-4 text-[#4DB6AC] shrink-0 mt-0.5" /> Soporte prioritario</li>
+                        <li className="flex items-start gap-2 text-sm text-[#333333] font-bold"><Check className="w-4 h-4 text-[#4DB6AC] shrink-0 mt-0.5" /> Todo lo del Plan Básico</li>
+                        <li className="flex items-start gap-2 text-sm text-[#333333] font-bold"><Check className="w-4 h-4 text-[#4DB6AC] shrink-0 mt-0.5" /> Listado de Servicios Médicos</li>
+                        <li className="flex items-start gap-2 text-sm text-[#333333] font-bold"><Check className="w-4 h-4 text-[#4DB6AC] shrink-0 mt-0.5" /> Galería de Casos de Éxito</li>
+                        <li className="flex items-start gap-2 text-sm text-[#333333] font-bold"><Check className="w-4 h-4 text-[#4DB6AC] shrink-0 mt-0.5" /> Soporte prioritario</li>
                       </ul>
                    </div>
 
@@ -1389,7 +1389,7 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
               </div>
 
               <div className="p-6 border-t border-gray-100 bg-white flex justify-end gap-3 shrink-0">
-                 <button onClick={() => setIsPlanModalOpen(false)} className="px-6 py-3 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition-colors">Cancelar</button>
+                 <button onClick={() => setIsPlanModalOpen(false)} className="px-6 py-3 rounded-xl text-sm font-bold text-[#666666] hover:bg-gray-100 transition-colors">Cancelar</button>
                  <button onClick={handleConfirmChangePlan} className="px-8 py-3 rounded-xl text-sm font-bold bg-[#1A3D3D] text-white hover:bg-[#2D6A6A] shadow-md transition-all flex items-center gap-2">Confirmar Cambio <ArrowRight className="w-4 h-4" /></button>
               </div>
             </div>
@@ -1408,12 +1408,12 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
                   <div className="w-10 h-10 rounded-full bg-[#009EE3]/10 flex items-center justify-center"><CreditCard className="w-5 h-5 text-[#009EE3]" /></div>
                   <h3 className="font-bold font-['Montserrat'] text-xl text-[#1A3D3D]">Facturación</h3>
                 </div>
-                <button onClick={() => setIsSubModalOpen(false)} className="p-2.5 bg-white rounded-full hover:bg-gray-100 transition-colors border border-gray-200"><X className="w-5 h-5 text-gray-500" /></button>
+                <button onClick={() => setIsSubModalOpen(false)} className="p-2.5 bg-white rounded-full hover:bg-gray-100 transition-colors border border-gray-200"><X className="w-5 h-5 text-[#666666]" /></button>
               </div>
               
               <div className="p-6 md:p-8 bg-white">
                 <div className="text-center mb-8">
-                  <p className="text-sm text-gray-500 font-bold uppercase tracking-widest mb-2">Plan Actual</p>
+                  <p className="text-sm text-[#666666] font-bold uppercase tracking-widest mb-2">Plan Actual</p>
                   <h2 className="text-4xl font-black text-[#1A3D3D] font-['Montserrat']">Profesional PRO</h2>
                   <div className={`inline-flex items-center gap-2 mt-3 px-3 py-1.5 rounded-full text-xs font-bold border ${isSubscriptionActive ? 'bg-[#4DB6AC]/10 text-[#4DB6AC] border-[#4DB6AC]/30' : 'bg-red-500/10 text-red-500 border-red-500/30'}`}>
                     <span className={`w-2 h-2 rounded-full ${isSubscriptionActive ? 'bg-[#4DB6AC]' : 'bg-red-500'}`}></span>
@@ -1424,11 +1424,11 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
                 {isSubscriptionActive && (
                   <div className="bg-gray-50 rounded-2xl p-5 border border-gray-100 mb-8">
                     <div className="flex justify-between items-center mb-3">
-                      <span className="text-sm text-gray-500 font-medium">Próximo cobro</span>
+                      <span className="text-sm text-[#666666] font-medium">Próximo cobro</span>
                       <span className="text-sm font-bold text-[#1A3D3D]">15 de Junio, 2026</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-500 font-medium">Método de pago</span>
+                      <span className="text-sm text-[#666666] font-medium">Método de pago</span>
                       <span className="text-sm font-bold text-[#1A3D3D] flex items-center gap-2">Visa terminada en 4242</span>
                     </div>
                   </div>
@@ -1443,7 +1443,7 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
                   </button>
                   <button 
                     onClick={() => { setIsSubscriptionActive(false); setIsSubModalOpen(false); }}
-                    className="w-full py-4 rounded-xl font-bold text-sm text-gray-500 hover:bg-gray-50 transition-all border border-transparent hover:border-gray-200"
+                    className="w-full py-4 rounded-xl font-bold text-sm text-[#666666] hover:bg-gray-50 transition-all border border-transparent hover:border-gray-200"
                   >
                     Simular Vencimiento
                   </button>
@@ -1537,11 +1537,11 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
             
             <nav className="flex flex-col gap-1.5 pb-2 md:pb-0 bg-white md:bg-transparent p-2 md:p-0 rounded-2xl md:rounded-none border md:border-none border-gray-100 shadow-sm md:shadow-none">
               
-              <button onClick={() => setActiveTab('cuenta')} className={`flex items-center justify-between px-4 py-3.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap outline-none ${activeTab === 'cuenta' ? 'bg-[#2D6A6A]/10 text-[#1A3D3D]' : 'text-gray-500 hover:bg-white hover:text-[#4DB6AC]'}`}>
+              <button onClick={() => setActiveTab('cuenta')} className={`flex items-center justify-between px-4 py-3.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap outline-none ${activeTab === 'cuenta' ? 'bg-[#2D6A6A]/10 text-[#1A3D3D]' : 'text-[#666666] hover:bg-white hover:text-[#4DB6AC]'}`}>
                 <div className="flex items-center gap-3"><User className={`w-5 h-5 ${activeTab === 'cuenta' ? 'text-[#2D6A6A]' : 'text-gray-400'}`} /> Sobre mi plan</div>
               </button>
               
-              <button onClick={() => setActiveTab('perfil')} className={`flex items-center justify-between px-4 py-3.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap outline-none ${activeTab === 'perfil' ? 'bg-[#2D6A6A]/10 text-[#1A3D3D]' : 'text-gray-500 hover:bg-white hover:text-[#4DB6AC]'}`}>
+              <button onClick={() => setActiveTab('perfil')} className={`flex items-center justify-between px-4 py-3.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap outline-none ${activeTab === 'perfil' ? 'bg-[#2D6A6A]/10 text-[#1A3D3D]' : 'text-[#666666] hover:bg-white hover:text-[#4DB6AC]'}`}>
   <div className="flex items-center gap-3"><LayoutGrid className={`w-5 h-5 ${activeTab === 'perfil' ? 'text-[#2D6A6A]' : 'text-gray-400'}`} /> Mi perfil público</div>
   {(() => {
     const inc = seccionesIncompletas();
@@ -1560,7 +1560,7 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
               <button 
                 onClick={() => isPro && setActiveTab('casos')} disabled={!isPro}
                 className={`flex items-center justify-between px-4 py-3.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap outline-none
-                  ${!isPro ? 'opacity-50 grayscale cursor-not-allowed text-gray-400' : activeTab === 'casos' ? 'bg-[#2D6A6A]/10 text-[#1A3D3D]' : 'text-gray-500 hover:bg-white hover:text-[#4DB6AC]'}`}
+                  ${!isPro ? 'opacity-50 grayscale cursor-not-allowed text-gray-400' : activeTab === 'casos' ? 'bg-[#2D6A6A]/10 text-[#1A3D3D]' : 'text-[#666666] hover:bg-white hover:text-[#4DB6AC]'}`}
               >
                 <div className="flex items-center gap-3"><Camera className={`w-5 h-5 ${activeTab === 'casos' ? 'text-[#2D6A6A]' : 'text-gray-400'}`} /> Casos Clínicos</div>
                 {!isPro && <Lock className="w-3.5 h-3.5 text-gray-400" />}
@@ -1569,7 +1569,7 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
               <button 
                 onClick={() => isPro && setActiveTab('papers')} disabled={!isPro}
                 className={`flex items-center justify-between px-4 py-3.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap outline-none
-                  ${!isPro ? 'opacity-50 grayscale cursor-not-allowed text-gray-400' : activeTab === 'papers' ? 'bg-[#2D6A6A]/10 text-[#1A3D3D]' : 'text-gray-500 hover:bg-white hover:text-[#4DB6AC]'}`}
+                  ${!isPro ? 'opacity-50 grayscale cursor-not-allowed text-gray-400' : activeTab === 'papers' ? 'bg-[#2D6A6A]/10 text-[#1A3D3D]' : 'text-[#666666] hover:bg-white hover:text-[#4DB6AC]'}`}
               >
                 <div className="flex items-center gap-3"><BookOpen className={`w-5 h-5 ${activeTab === 'papers' ? 'text-[#2D6A6A]' : 'text-gray-400'}`} /> Investigaciones</div>
                 {!isPro && <Lock className="w-3.5 h-3.5 text-gray-400" />}
@@ -1614,7 +1614,7 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
               <div className="w-full bg-white rounded-[32px] shadow-sm border border-gray-100 p-6 md:p-10 animate-in fade-in duration-300">
                 
                 <h3 className="text-2xl font-black text-[#1A3D3D] mb-2 font-['Montserrat']">Sobre mi plan</h3>
-                <p className="text-sm text-gray-500 mb-6">Información privada para la facturación.</p>
+                <p className="text-sm text-[#666666] mb-6">Información privada para la facturación.</p>
 
                 <div className="max-w-2xl">
                   
@@ -1658,7 +1658,7 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
                            </div>
                            <div className="flex items-center gap-2 mt-2">
                              <span className={`w-2 h-2 rounded-full ${isPro && !isSubscriptionActive ? 'bg-red-500' : 'bg-[#4DB6AC]'}`}></span>
-                             <p className={`text-sm font-medium ${isPro && !isSubscriptionActive ? 'text-red-600' : 'text-gray-600'}`}>
+                             <p className={`text-sm font-medium ${isPro && !isSubscriptionActive ? 'text-red-600' : 'text-[#666666]'}`}>
                                {isPro ? (isSubscriptionActive ? 'Suscripción activa y al día' : 'Suspendida por falta de pago') : 'Suscripción activa (Gratuita)'}
                              </p>
                            </div>
@@ -1666,7 +1666,7 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
                          
                          <div className="flex flex-col sm:flex-row sm:items-center gap-3 shrink-0">
                             {/* Botón de pagos oculto hasta tener pagos reales */}
-                            <button onClick={openPlanModal} className="px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm border bg-white border-gray-200 text-gray-700 hover:border-[#4DB6AC] hover:text-[#4DB6AC] w-full sm:w-auto text-center">
+                            <button onClick={openPlanModal} className="px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm border bg-white border-gray-200 text-[#333333] hover:border-[#4DB6AC] hover:text-[#4DB6AC] w-full sm:w-auto text-center">
                               Cambiar de plan
                             </button>
                          </div>
@@ -1707,12 +1707,12 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
                   <div className="flex-1 text-center md:text-left min-w-0">
                     <h3 className="text-xl font-black font-['Montserrat'] text-[#1A3D3D] truncate leading-tight mb-1">{formData.nombre || "Nombre Profesional"}</h3>
                     <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-2">
-                      {formData.especialidad && <span className="text-gray-500 bg-gray-100 border border-gray-200 px-2.5 py-0.5 rounded-full font-bold text-[10px] uppercase tracking-wider">{formData.especialidad}</span>}
+                      {formData.especialidad && <span className="text-[#666666] bg-gray-100 border border-gray-200 px-2.5 py-0.5 rounded-full font-bold text-[10px] uppercase tracking-wider">{formData.especialidad}</span>}
                       {formData.atiendeDomicilio && <span className="text-white bg-blue-500 px-2.5 py-0.5 rounded-full font-bold text-[10px] uppercase tracking-wider flex items-center gap-1"><Home className="w-3 h-3" /> A Domicilio</span>}
                       {formData.urgenciasDomicilio && <span className="text-white bg-red-500 px-2.5 py-0.5 rounded-full font-bold text-[10px] uppercase tracking-wider flex items-center gap-1"><Siren className="w-3 h-3" /> Urgencias a domicilio</span>}
                       {formData.atiendeVirtual && <span className="text-white bg-[#2D6A6A] px-2.5 py-0.5 rounded-full font-bold text-[10px] uppercase tracking-wider flex items-center gap-1"><Video className="w-3 h-3" /> Consulta virtual</span>}
                     </div>
-                    <div className="flex items-center justify-center md:justify-start gap-3 text-xs font-medium text-gray-500">
+                    <div className="flex items-center justify-center md:justify-start gap-3 text-xs font-medium text-[#666666]">
                       <span className="flex items-center gap-1.5 truncate"><MapPin className="w-3.5 h-3.5 text-[#2D6A6A] shrink-0" /> {formData.provincia || "Provincia"}</span>
                     </div>
                   </div>
@@ -1737,7 +1737,7 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
                   
                   <div className="pt-6 px-6 md:px-10 pb-4">
                     <h3 className="text-xl font-black text-[#1A3D3D] mb-1 font-['Montserrat']">Mi perfil público</h3>
-                    <p className="text-xs text-gray-500 mb-0">Toda la info que cargues aquí será la que tus clientes verán en la Cartilla.</p>
+                    <p className="text-xs text-[#666666] mb-0">Toda la info que cargues aquí será la que tus clientes verán en la Cartilla.</p>
                   </div>
 
                   <div className="border-t border-gray-100">
@@ -1758,7 +1758,7 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
     </div>
     <div className="flex-1 min-w-0">
       <p className="text-sm font-bold text-[#1A3D3D] mb-0.5">¿Ves los íconos <span className="inline-flex items-center justify-center w-4 h-4 bg-[#2D6A6A]/15 rounded-full text-[#2D6A6A] text-[10px] font-black">i</span> junto a cada campo?</p>
-      <p className="text-sm text-gray-500 font-medium leading-relaxed">Tocálos para ver consejos y explicaciones sobre cada dato. Te ayudan a completar tu perfil de la mejor manera.</p>
+      <p className="text-sm text-[#666666] font-medium leading-relaxed">Tocálos para ver consejos y explicaciones sobre cada dato. Te ayudan a completar tu perfil de la mejor manera.</p>
     </div>
   </div>
   <button
@@ -1817,7 +1817,7 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
                             Fotografía de Perfil <span className="text-gray-400 ml-1 font-medium normal-case tracking-normal text-[11px]">(opcional)</span>
                             <Tooltip text="Usa una foto vertical o cuadrada. Tener ambo y una buena iluminación transmite más confianza a los tutores y colegas." />
                           </h3>
-                          <p className="text-xs text-gray-500 mb-4 leading-relaxed">Sube una imagen profesional. Formatos PNG o JPG. Máx 2MB.</p>
+                          <p className="text-xs text-[#666666] mb-4 leading-relaxed">Sube una imagen profesional. Formatos PNG o JPG. Máx 2MB.</p>
                           
                           {/* MINI GALERÍA DE FOTOS PREVIAS */}
                           <div className="flex flex-wrap gap-2">
@@ -1847,7 +1847,7 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
 <InputGroup label="Apellido" id="apellido" value={formData.apellido || ''} onChange={handleChange} required />
 <InputGroup label="Especialidad Principal" id="especialidad" value={formData.especialidad} onChange={handleChange} required tooltip="Tu título tal como querés que aparezca bajo tu nombre. No se usa para filtrar: para que te encuentren en los filtros de la Cartilla, marcá tus servicios en la sección Servicios Médicos." />
                         <div className="mb-6 w-full">
-  <label className="flex items-center text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">
+  <label className="flex items-center text-xs font-bold text-[#666666] uppercase tracking-widest mb-2 ml-1">
     Matrícula <span className="text-red-400 ml-1">*</span>
     <Tooltip text="Ingresá únicamente los números de tu matrícula profesional." />
   </label>
@@ -1922,13 +1922,13 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
 </div>
 </div>
                         <div className="mb-6 text-left">
-                          <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 block ml-1">Provincia Base</label>
+                          <label className="text-xs font-bold text-[#666666] uppercase tracking-widest mb-2 block ml-1">Provincia Base</label>
                           <select id="provincia" value={formData.provincia} onChange={handleChange} className="w-full bg-gray-50/50 border border-gray-200 rounded-2xl px-5 py-3.5 text-base font-medium focus:outline-none focus:border-[#2D6A6A] text-[#1A3D3D] shadow-sm transition-colors">
                             {provincias.map(p => <option key={p} value={p}>{p}</option>)}
                           </select>
                         </div>
                         <div className="mb-6 text-left">
-                          <label className="flex items-center text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">
+                          <label className="flex items-center text-xs font-bold text-[#666666] uppercase tracking-widest mb-2 ml-1">
                             Cómo te identificas
                             <Tooltip text="Elegí cómo querés que se lea tu título en Google y en tu perfil. Si no especificás, aparece como Veterinaria/o." />
                           </label>
@@ -1942,7 +1942,7 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
                                 key={op.valor || 'ninguno'}
                                 type="button"
                                 onClick={() => setFormData(prev => ({ ...prev, tituloGenero: op.valor }))}
-                                className={`px-2 py-3.5 rounded-2xl border text-[13px] font-bold transition-colors ${(formData.tituloGenero || '') === op.valor ? 'bg-[#1A3D3D] text-white border-[#1A3D3D]' : 'bg-gray-50/50 text-gray-600 border-gray-200 hover:border-[#2D6A6A]'}`}
+                                className={`px-2 py-3.5 rounded-2xl border text-[13px] font-bold transition-colors ${(formData.tituloGenero || '') === op.valor ? 'bg-[#1A3D3D] text-white border-[#1A3D3D]' : 'bg-gray-50/50 text-[#666666] border-gray-200 hover:border-[#2D6A6A]'}`}
                               >
                                 {op.texto}
                               </button>
@@ -2057,7 +2057,7 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
                                   {!expandido && totalSeleccionadas === 0 && (
                                     <span className="text-[11px] font-bold text-gray-400 bg-gray-100 px-2.5 py-1 rounded-full shrink-0">0 seleccionadas</span>
                                   )}
-                                  <ChevronDown strokeWidth={2.5} className={`w-5 h-5 transition-transform duration-300 shrink-0 ${expandido && isActive ? 'rotate-180 text-[#2D6A6A]' : 'text-gray-500'}`} />
+                                  <ChevronDown strokeWidth={2.5} className={`w-5 h-5 transition-transform duration-300 shrink-0 ${expandido && isActive ? 'rotate-180 text-[#2D6A6A]' : 'text-[#666666]'}`} />
                                 </div>
                                 {isActive && !expandido && totalSeleccionadas > 0 && (
                                   <div className="px-4 pb-3 flex flex-wrap gap-1.5">
@@ -2072,7 +2072,7 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
                                       {grupo.opciones.map(opcion => {
                                         const isChecked = seleccionadas.includes(opcion);
                                         return (
-                                          <button key={opcion} type="button" onClick={() => { const nuevas = isChecked ? seleccionadas.filter(o => o !== opcion) : [...seleccionadas, opcion]; setFormData(prev => ({ ...prev, servicios: { ...prev.servicios, [grupo.id]: { ...grupoActual, subOpcionesSeleccionadas: nuevas } } })); }} className={`w-full justify-start px-4 py-2.5 rounded-xl text-[13px] font-bold border transition-colors flex items-center gap-3 ${isChecked ? 'bg-[#1A3D3D] text-white border-[#1A3D3D]' : 'bg-white text-gray-600 border-gray-200 hover:border-[#2D6A6A]'}`}>
+                                          <button key={opcion} type="button" onClick={() => { const nuevas = isChecked ? seleccionadas.filter(o => o !== opcion) : [...seleccionadas, opcion]; setFormData(prev => ({ ...prev, servicios: { ...prev.servicios, [grupo.id]: { ...grupoActual, subOpcionesSeleccionadas: nuevas } } })); }} className={`w-full justify-start px-4 py-2.5 rounded-xl text-[13px] font-bold border transition-colors flex items-center gap-3 ${isChecked ? 'bg-[#1A3D3D] text-white border-[#1A3D3D]' : 'bg-white text-[#666666] border-gray-200 hover:border-[#2D6A6A]'}`}>
                                             <div className={`w-4 h-4 rounded-[4px] border flex items-center justify-center shrink-0 ${isChecked ? 'bg-white border-white' : 'border-gray-300'}`}>{isChecked && <Check className="w-3 h-3 text-[#1A3D3D]" />}</div>
                                             <span className="text-left">{opcion}</span>
                                           </button>
@@ -2095,7 +2095,7 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
                                                   key={animal}
                                                   type="button"
                                                   onClick={() => setFormData(prev => ({ ...prev, [campoForm]: activo ? (prev[campoForm] || []).filter(a => a !== animal) : [...(prev[campoForm] || []), animal] }))}
-                                                  className={`px-3 py-1.5 rounded-full text-[13px] font-medium border transition-colors ${activo ? 'bg-[#2D6A6A] text-white border-[#2D6A6A]' : 'bg-white text-gray-600 border-gray-200 hover:border-[#2D6A6A]'}`}
+                                                  className={`px-3 py-1.5 rounded-full text-[13px] font-medium border transition-colors ${activo ? 'bg-[#2D6A6A] text-white border-[#2D6A6A]' : 'bg-white text-[#666666] border-gray-200 hover:border-[#2D6A6A]'}`}
                                                 >
                                                   {animal}
                                                 </button>
@@ -2249,7 +2249,7 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
       </p>
     </div>
     <div className="mb-6 w-full">
-      <label className="flex items-center text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">
+      <label className="flex items-center text-xs font-bold text-[#666666] uppercase tracking-widest mb-2 ml-1">
         Tu número de WhatsApp <span className="text-red-400 ml-1">*</span>
       </label>
       <div className="flex items-center border border-gray-200 rounded-2xl bg-gray-50/50 focus-within:border-[#2D6A6A] transition-all overflow-hidden">
@@ -2406,7 +2406,7 @@ ref={(el) => {
   el.dataset.zonaId = z.id;
   el.dataset.clinicaId = c.id;
 }}
-                      className="flex-1 text-sm text-gray-500 outline-none placeholder:text-gray-300"
+                      className="flex-1 text-sm text-[#666666] outline-none placeholder:text-gray-300"
                     />
                     {(c.placeId || c.direccion) && (
   <a 
@@ -2438,7 +2438,7 @@ ref={(el) => {
                     placeholder="Teléfono o WhatsApp (opcional)"
                     value={c.telefono || ''}
                     onChange={(e) => updateClinica(z.id, c.id, 'telefono', e.target.value)}
-                    className="flex-1 text-sm text-gray-500 outline-none placeholder:text-gray-300"
+                    className="flex-1 text-sm text-[#666666] outline-none placeholder:text-gray-300"
                   />
                 </div>
               </div>
@@ -2530,7 +2530,7 @@ ref={(el) => {
                                           )
                                         }));
                                       }}
-                                      className={`absolute top-2 left-2 p-1.5 rounded-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity shadow-md z-10 ${item.esSensible ? 'bg-[#FF9800] text-white' : 'bg-white/90 text-gray-500 hover:bg-yellow-50'}`}
+                                      className={`absolute top-2 left-2 p-1.5 rounded-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity shadow-md z-10 ${item.esSensible ? 'bg-[#FF9800] text-white' : 'bg-white/90 text-[#666666] hover:bg-yellow-50'}`}
                                       title={item.esSensible ? 'Quitar aviso de contenido sensible' : 'Marcar como contenido sensible'}
                                     >
                                       <AlertTriangle className="w-3.5 h-3.5" strokeWidth={2.5} />
@@ -2565,7 +2565,7 @@ ref={(el) => {
                                             )
                                           }));
                                         }}
-                                        className="w-full text-[11px] font-medium text-gray-500 bg-transparent outline-none placeholder:text-gray-300 border-b border-gray-100 pb-1 focus:border-[#2D6A6A] transition-colors"
+                                        className="w-full text-[11px] font-medium text-[#666666] bg-transparent outline-none placeholder:text-gray-300 border-b border-gray-100 pb-1 focus:border-[#2D6A6A] transition-colors"
                                       />
                                     </div>
                                   </div>
@@ -2687,7 +2687,7 @@ ref={(el) => {
   {formData.atiendeDomicilio ? (
     <div className="flex items-start gap-3 bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3.5">
       <Phone className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />
-      <p className="text-xs font-medium text-gray-500 leading-relaxed">
+      <p className="text-xs font-medium text-[#666666] leading-relaxed">
         El WhatsApp se configura automáticamente en la sección <span className="font-black text-[#1A3D3D]">Cómo y dónde atendés</span> porque ofrecés consultas a domicilio.
       </p>
     </div>
@@ -2697,7 +2697,7 @@ ref={(el) => {
       {formData.whatsappActivo && (
     <div className="mt-4 space-y-4 animate-in slide-in-from-top-2 duration-300">
       <div className="mb-6 w-full">
-        <label className="flex items-center text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">
+        <label className="flex items-center text-xs font-bold text-[#666666] uppercase tracking-widest mb-2 ml-1">
           Tu número de WhatsApp
         </label>
         <div className="flex items-center border border-gray-200 rounded-2xl bg-gray-50/50 focus-within:border-[#2D6A6A] transition-all overflow-hidden">
@@ -2771,7 +2771,7 @@ ref={(el) => {
                       </div>
                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
   <div className="mb-6 w-full">
-    <label className="flex items-center text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">
+    <label className="flex items-center text-xs font-bold text-[#666666] uppercase tracking-widest mb-2 ml-1">
       Instagram — usuario
     </label>
     <div className="relative flex items-center border border-gray-200 rounded-2xl bg-gray-50/50 focus-within:border-[#2D6A6A] transition-all px-5 py-3.5">
@@ -2787,7 +2787,7 @@ ref={(el) => {
     </div>
   </div>
   <div className="mb-6 w-full">
-    <label className="flex items-center text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">
+    <label className="flex items-center text-xs font-bold text-[#666666] uppercase tracking-widest mb-2 ml-1">
       TikTok — usuario
     </label>
     <div className="relative flex items-center border border-gray-200 rounded-2xl bg-gray-50/50 focus-within:border-[#2D6A6A] transition-all px-5 py-3.5">
@@ -2819,7 +2819,7 @@ ref={(el) => {
                 <div className="mb-8 flex justify-between items-end">
                    <div>
                      <h3 className="text-2xl font-black text-[#1A3D3D] font-['Montserrat'] flex items-center gap-2">Casos Clínicos </h3>
-                     <p className="text-sm text-gray-500 mt-1">Sube fotos del antes y después para generar confianza en tu trabajo.</p>
+                     <p className="text-sm text-[#666666] mt-1">Sube fotos del antes y después para generar confianza en tu trabajo.</p>
                    </div>
                 </div>
 
@@ -2861,16 +2861,16 @@ ref={(el) => {
                         <div className="flex-1 space-y-3">
                           <div className="flex gap-3">
                             <div className="w-1/3">
-                              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 block ml-1">Paciente</label>
+                              <label className="text-[10px] font-bold text-[#666666] uppercase tracking-widest mb-1.5 block ml-1">Paciente</label>
                               <input type="text" placeholder="Ej: Firulais" value={item.nombre} onChange={(e) => handleArrayUpdate('casos', item.id, 'nombre', e.target.value)} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold focus:border-[#2D6A6A] outline-none" />
                             </div>
                             <div className="w-2/3">
-                              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 block ml-1">Patología o Motivo</label>
+                              <label className="text-[10px] font-bold text-[#666666] uppercase tracking-widest mb-1.5 block ml-1">Patología o Motivo</label>
                               <input type="text" placeholder="Ej: Corrección de luxación patelar" value={item.patologia} onChange={(e) => handleArrayUpdate('casos', item.id, 'patologia', e.target.value)} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm text-[#2D6A6A] font-medium focus:border-[#2D6A6A] outline-none" />
                             </div>
                           </div>
                           <div>
-                            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 block ml-1">Relato del caso</label>
+                            <label className="text-[10px] font-bold text-[#666666] uppercase tracking-widest mb-1.5 block ml-1">Relato del caso</label>
                             <div>
   <textarea 
   placeholder="Cuenta la historia clínica, tratamiento aplicado y la evolución..." 
@@ -2909,8 +2909,8 @@ ref={(el) => {
                 <div className="mb-8">
                    <h3 className="text-2xl font-black text-[#1A3D3D] font-['Montserrat'] flex items-center gap-2">Publicaciones y Papers</h3>
                   
-                   <p className="text-m text-gray-500 mt-1">Compartí tus investigaciones científicas en formato PDF de forma directa.</p>
-                   <p className="text-sm text-gray-500 mt-1">Se verán publicados en la sección de Publicaciones Cientificas para que tus colegas puedan verlos.</p>
+                   <p className="text-m text-[#666666] mt-1">Compartí tus investigaciones científicas en formato PDF de forma directa.</p>
+                   <p className="text-sm text-[#666666] mt-1">Se verán publicados en la sección de Publicaciones Cientificas para que tus colegas puedan verlos.</p>
                 </div>
 
                 <div className="space-y-6">
@@ -2951,7 +2951,7 @@ ref={(el) => {
                               </div>
                               <div className="min-w-0 flex-1">
                                 <h4 className="font-bold text-[#1A3D3D] text-sm md:text-base truncate">{item.titulo}</h4>
-                                <p className="text-xs text-gray-500 font-medium mt-0.5">{item.categoria} • {item.anio} • 📎 PDF Adjunto</p>
+                                <p className="text-xs text-[#666666] font-medium mt-0.5">{item.categoria} • {item.anio} • 📎 PDF Adjunto</p>
                               </div>
                             </div>
                             <button onClick={() => handleArrayUpdate('papers', item.id, 'isEditing', true)} className="text-sm font-bold text-[#4DB6AC] hover:text-[#2D6A6A] transition-colors bg-white px-4 py-2 rounded-xl shadow-sm border border-gray-100">
@@ -2967,7 +2967,7 @@ ref={(el) => {
                                 
                                 {/* 1. PORTADA */}
                                 <div>
-                                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 block ml-1">Portada (Opcional)</label>
+                                  <label className="text-[10px] font-bold text-[#666666] uppercase tracking-widest mb-1.5 block ml-1">Portada (Opcional)</label>
                                   <div className="relative w-full aspect-square rounded-xl overflow-hidden border-2 border-gray-200 group/img shadow-sm bg-white">
                                     {item.portada ? (
                                       <>
@@ -2990,7 +2990,7 @@ ref={(el) => {
 
                                 {/* 2. PDF CON DRAG & DROP */}
                                 <div>
-                                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 block ml-1">Archivo <span className="text-red-400 ml-1">*</span></label>
+                                  <label className="text-[10px] font-bold text-[#666666] uppercase tracking-widest mb-1.5 block ml-1">Archivo <span className="text-red-400 ml-1">*</span></label>
                                   {item.pdfUrl ? (
                                     <div className="relative w-full py-4 bg-[#4DB6AC]/10 border-2 border-[#4DB6AC] rounded-xl flex flex-col items-center justify-center text-center gap-1 shadow-sm">
                                       <FileDown className="w-6 h-6 text-[#2D6A6A]" />
@@ -3041,16 +3041,16 @@ ref={(el) => {
                               {/* CAMPOS DE TEXTO */}
                               <div className="flex-1 space-y-4">
                                 <div>
-                                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 block ml-1">Título de la Investigación <span className="text-red-400 ml-1">*</span></label>
+                                  <label className="text-[10px] font-bold text-[#666666] uppercase tracking-widest mb-1.5 block ml-1">Título de la Investigación <span className="text-red-400 ml-1">*</span></label>
                                   <input type="text" placeholder="Ej: Efectos de la dieta BARF en caninos..." value={item.titulo} onChange={(e) => handleArrayUpdate('papers', item.id, 'titulo', e.target.value)} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold focus:border-[#2D6A6A] outline-none shadow-sm" />
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                   <div>
-                                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 block ml-1">Año de Publicación <span className="text-red-400 ml-1">*</span></label>
+                                    <label className="text-[10px] font-bold text-[#666666] uppercase tracking-widest mb-1.5 block ml-1">Año de Publicación <span className="text-red-400 ml-1">*</span></label>
                                     <input type="number" max={new Date().getFullYear()} min="1950" placeholder="Ej: 2025" value={item.anio} onChange={(e) => handleArrayUpdate('papers', item.id, 'anio', e.target.value)} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-[#2D6A6A] outline-none shadow-sm" />
                                   </div>
                                   <div>
-                                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 block ml-1">Categoría / Etiqueta <span className="text-red-400 ml-1">*</span></label>
+                                    <label className="text-[10px] font-bold text-[#666666] uppercase tracking-widest mb-1.5 block ml-1">Categoría / Etiqueta <span className="text-red-400 ml-1">*</span></label>
                                     <select value={item.categoria} onChange={(e) => handleArrayUpdate('papers', item.id, 'categoria', e.target.value)} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm font-medium focus:border-[#2D6A6A] outline-none text-[#1A3D3D] shadow-sm">
                                       <option value="">Seleccionar...</option>
                                       <option value="Clínica Médica">Clínica Médica</option>
@@ -3066,7 +3066,7 @@ ref={(el) => {
                                 </div>
                                 <div>
                                   <div className="flex justify-between items-end mb-1.5 ml-1">
-                                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block">Resumen (Abstract) <span className="text-red-400 ml-1">*</span></label>
+                                    <label className="text-[10px] font-bold text-[#666666] uppercase tracking-widest block">Resumen (Abstract) <span className="text-red-400 ml-1">*</span></label>
                                     <span className={`text-[10px] font-bold transition-colors ${(item.desc?.length || 0) < 150 || (item.desc?.length || 0) > 1500 ? 'text-red-400' : 'text-gray-400'}`}>
                                       {item.desc?.length || 0} / 1500
                                     </span>

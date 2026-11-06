@@ -148,13 +148,13 @@ export default function LegalPage() {
           <div className="inline-flex p-1 bg-gray-100 rounded-2xl mb-8">
             <button 
               onClick={() => handleTabClick('privacidad')}
-              className={`px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${activeTab === 'privacidad' ? 'bg-white text-[#1A3D3D] shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+              className={`px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${activeTab === 'privacidad' ? 'bg-white text-[#1A3D3D] shadow-sm' : 'text-gray-400 hover:text-[#666666]'}`}
             >
               Privacidad
             </button>
             <button 
               onClick={() => handleTabClick('terminos')}
-              className={`px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${activeTab === 'terminos' ? 'bg-white text-[#1A3D3D] shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+              className={`px-6 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${activeTab === 'terminos' ? 'bg-white text-[#1A3D3D] shadow-sm' : 'text-gray-400 hover:text-[#666666]'}`}
             >
               Términos
             </button>
@@ -163,7 +163,7 @@ export default function LegalPage() {
           <h1 className="text-4xl md:text-5xl font-black font-['Montserrat'] text-[#1A3D3D] tracking-tight leading-tight">
             {activeTab === 'privacidad' ? 'Política de Privacidad' : 'Términos y Condiciones'}
           </h1>
-          <p className="mt-4 text-gray-500 font-medium">
+          <p className="mt-4 text-[#666666] font-medium">
             Última actualización: 14 de Marzo, 2026 • Versión 2.1
           </p>
         </div>
@@ -182,7 +182,7 @@ export default function LegalPage() {
                   <h2 className="text-xl font-bold font-['Montserrat'] text-[#1A3D3D] mb-3">
                     {section.title}
                   </h2>
-                  <p className="text-gray-600 leading-relaxed">
+                  <p className="text-[#666666] leading-relaxed">
                     {section.content}
                   </p>
                 </div>

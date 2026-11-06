@@ -191,7 +191,7 @@ const PROVINCIAS_ARG = [
           <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${soloEnvios ? 'bg-[#2D6A6A] border-[#2D6A6A]' : 'border-gray-300 group-hover:border-[#2D6A6A]'}`}>
             {soloEnvios && <Check className="w-3.5 h-3.5 text-white stroke-[3]" />}
           </div>
-          <span className={`text-[13px] font-bold transition-colors ${soloEnvios ? 'text-[#1A3D3D]' : 'text-gray-500 group-hover:text-[#1A3D3D]'}`}>
+          <span className={`text-[13px] font-bold transition-colors ${soloEnvios ? 'text-[#1A3D3D]' : 'text-[#666666] group-hover:text-[#1A3D3D]'}`}>
             Con envíos al interior
           </span>
         </label>
@@ -208,11 +208,11 @@ const PROVINCIAS_ARG = [
             <h1 className="text-2xl md:text-3xl font-black font-['Montserrat'] text-[#1A3D3D] tracking-tight uppercase leading-none">
               Cartilla de Proveedores
             </h1>
-            <p className="text-gray-500 font-medium text-sm mt-2">Productos destacados por cada proveedor. Hacé clic para ver el perfil completo.</p>
+            <p className="text-[#666666] font-medium text-sm mt-2">Productos destacados por cada proveedor. Hacé clic para ver el perfil completo.</p>
           </div>
           <button
             onClick={() => setSoloFavoritos(prev => !prev)}
-            className={`flex items-center justify-center gap-2 px-6 py-2.5 md:py-3 rounded-[16px] text-[11px] font-bold uppercase tracking-widest transition-all shrink-0 ${soloFavoritos ? 'bg-red-50 border border-red-200 text-red-500 hover:bg-red-100' : 'bg-white border border-gray-100 shadow-sm text-gray-500 hover:text-red-500 hover:bg-red-50'}`}
+            className={`flex items-center justify-center gap-2 px-6 py-2.5 md:py-3 rounded-[16px] text-[11px] font-bold uppercase tracking-widest transition-all shrink-0 ${soloFavoritos ? 'bg-red-50 border border-red-200 text-red-500 hover:bg-red-100' : 'bg-white border border-gray-100 shadow-sm text-[#666666] hover:text-red-500 hover:bg-red-50'}`}
           >
             <Heart className={`w-4 h-4 ${soloFavoritos ? 'fill-red-500 text-red-500' : ''}`} />
             {soloFavoritos ? 'Productos guardados' : 'Mis Guardados'}
@@ -254,7 +254,7 @@ const PROVINCIAS_ARG = [
             <div className="md:hidden bg-white rounded-[24px] border border-gray-100 shadow-lg p-5 animate-in fade-in slide-in-from-top-2 duration-200">
               <div className="flex items-center justify-between mb-4">
                 <p className="text-[11px] font-black text-[#1A3D3D] uppercase tracking-widest">Filtros</p>
-                <button onClick={() => setMostrarFiltrosMobile(false)} className="text-gray-400 hover:text-gray-600"><X className="w-4 h-4" /></button>
+                <button onClick={() => setMostrarFiltrosMobile(false)} className="text-gray-400 hover:text-[#666666]"><X className="w-4 h-4" /></button>
               </div>
               <div className="flex flex-col gap-3">
                 <select
@@ -296,7 +296,7 @@ const PROVINCIAS_ARG = [
 {isLoading ? (
   <div className="bg-white rounded-[32px] border border-gray-100 p-12 text-center flex flex-col items-center justify-center w-full h-64">
     <div className="w-8 h-8 border-4 border-[#2D6A6A] border-t-transparent rounded-full animate-spin mb-4"></div>
-    <p className="text-gray-500 font-medium text-sm">Cargando proveedores...</p>
+    <p className="text-[#666666] font-medium text-sm">Cargando proveedores...</p>
   </div>
 ) : proveedoresMostrados.length > 0 ? (
             <>
@@ -350,7 +350,7 @@ const PROVINCIAS_ARG = [
                       </h3>
 
                       {/* DESCRIPCIÓN CORTA */}
-                      <p className="text-gray-500 text-[12px] md:text-[13px] font-medium line-clamp-2 mb-2 flex-grow leading-relaxed">
+                      <p className="text-[#666666] text-[12px] md:text-[13px] font-medium line-clamp-2 mb-2 flex-grow leading-relaxed">
                         {prov.descripcionLarga}
                       </p>
 
@@ -371,7 +371,7 @@ const PROVINCIAS_ARG = [
                               <Building2 className="w-3 h-3 text-gray-300" />
                             )}
                           </div>
-                          <span className="text-[12px] font-bold text-gray-500 truncate max-w-[80px]">
+                          <span className="text-[12px] font-bold text-[#666666] truncate max-w-[80px]">
                             {prov.proveedorNombre}
                           </span>
                         </div>

@@ -332,13 +332,13 @@ setData({
               <h2 className="text-[22px] font-black text-[#1A3D3D] font-['Montserrat'] leading-tight">
                 Todavía no completaste tu perfil
               </h2>
-              <p className="text-gray-500 text-[15px] leading-relaxed font-medium">
+              <p className="text-[#666666] text-[15px] leading-relaxed font-medium">
                 Para que otros puedan encontrarte, necesitás completar tu información en el editor.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 w-full mt-2">
                 <button
                   onClick={() => navigate(-1)}
-                  className="flex-1 px-6 py-3 rounded-xl font-bold text-[13px] border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors"
+                  className="flex-1 px-6 py-3 rounded-xl font-bold text-[13px] border border-gray-200 text-[#666666] hover:bg-gray-50 transition-colors"
                 >
                   Volver atrás
                 </button>
@@ -355,7 +355,7 @@ setData({
               <h2 className="text-[22px] font-black text-[#1A3D3D] font-['Montserrat'] leading-tight">
                 Perfil no encontrado
               </h2>
-              <p className="text-gray-500 text-[15px] leading-relaxed font-medium">
+              <p className="text-[#666666] text-[15px] leading-relaxed font-medium">
                 El profesional que buscás no existe o el enlace es incorrecto.
               </p>
               <button
@@ -596,7 +596,7 @@ const mobileTabs = [
               <h3 className="text-[22px] font-black font-['Montserrat'] text-[#1A3D3D] mt-3 mb-2 leading-tight uppercase">{selectedCaso.nombre}</h3>
               <div className="w-10 h-[2px] bg-[#2D6A6A] rounded-full mb-4"></div>
               <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Relato del caso</h4>
-              <p className="text-[15px] text-gray-600 leading-relaxed font-medium whitespace-pre-wrap">{selectedCaso.desc}</p>
+              <p className="text-[15px] text-[#666666] leading-relaxed font-medium whitespace-pre-wrap">{selectedCaso.desc}</p>
               {data.casos.length > 1 && (
                 <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
                   <button onClick={(e) => { e.stopPropagation(); const prev = (casoIdx - 1 + data.casos.length) % data.casos.length; setCasoIdx(prev); setSelectedCaso(data.casos[prev]); setFotoIdx(0); }} className="flex items-center gap-1.5 text-[11px] font-bold text-gray-400 uppercase tracking-widest hover:text-[#2D6A6A] transition-colors">
@@ -638,7 +638,7 @@ const mobileTabs = [
 
             {/* COLUMNA DERECHA: TEXTO */}
             <div className={`${selectedCaso.fotos && selectedCaso.fotos.length > 0 ? 'w-1/2' : 'w-full'} bg-[#F4F7F7] flex flex-col h-full relative`}>
-              <button onClick={() => setSelectedCaso(null)} className="absolute top-5 right-5 z-10 p-2.5 bg-white rounded-full hover:bg-gray-100 transition-colors border border-gray-200 text-gray-500 shadow-sm">
+              <button onClick={() => setSelectedCaso(null)} className="absolute top-5 right-5 z-10 p-2.5 bg-white rounded-full hover:bg-gray-100 transition-colors border border-gray-200 text-[#666666] shadow-sm">
                 <X className="w-5 h-5" />
               </button>
               {data.casos.length > 1 && (
@@ -654,7 +654,7 @@ const mobileTabs = [
                 <div className="w-12 h-[2px] bg-[#2D6A6A] rounded-full"></div>
                 <div>
                   <h4 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-3">Relato del caso</h4>
-                  <p className="text-[16px] text-gray-600 leading-relaxed font-medium whitespace-pre-wrap">{selectedCaso.desc}</p>
+                  <p className="text-[16px] text-[#666666] leading-relaxed font-medium whitespace-pre-wrap">{selectedCaso.desc}</p>
                 </div>
               </div>
             </div>
@@ -739,7 +739,7 @@ const mobileTabs = [
           {activeTab === 'perfil' && (
             <div className="space-y-5">
               <div className="bg-white p-6 rounded-[28px] shadow-sm border border-gray-50 text-center">
-                <p className="text-gray-600 text-[16px] leading-relaxed font-medium italic">&ldquo;{data.bio}&rdquo;</p>
+                <p className="text-[#666666] text-[16px] leading-relaxed font-medium italic">&ldquo;{data.bio}&rdquo;</p>
                 <div className="flex flex-wrap justify-center items-start gap-4 mt-3 pt-3 border-t border-gray-50">
   <div className="flex flex-col items-center gap-1.5 w-[80px]">
     <div className="w-8 h-8 rounded-2xl bg-[#F4F7F7] flex items-center justify-center text-[#2D6A6A]">
@@ -881,7 +881,7 @@ const mobileTabs = [
                                 <div className="text-[#2D6A6A] shrink-0">{renderIcon(s.icono, "w-8 h-8")}</div>
                                 <div>
                                   <h4 className="font-bold font-['Montserrat'] text-[15px] text-[#1A3D3D] uppercase mb-1">{s.titulo}</h4>
-                                  <p className="text-gray-500 text-[16px] leading-snug">{s.desc}</p>
+                                  <p className="text-[#666666] text-[16px] leading-snug">{s.desc}</p>
                                 </div>
                               </div>
                             ) : (
@@ -909,7 +909,7 @@ const mobileTabs = [
                                   );
                                 })()}
                                 {s.desc && (
-                                  <p className="text-gray-500 text-[12px] leading-relaxed font-medium italic mb-3 pb-3 border-b border-gray-100">
+                                  <p className="text-[#666666] text-[12px] leading-relaxed font-medium italic mb-3 pb-3 border-b border-gray-100">
                                     {s.desc}
                                   </p>
                                 )}
@@ -947,7 +947,7 @@ const mobileTabs = [
                             </div>
                             <div className="pt-1 pb-1">
                               <h4 className="font-bold text-[#1A3D3D] text-[15px] mb-1 font-['Montserrat'] uppercase tracking-tight leading-tight">{logro.titulo} {logro.desc && <span className="font-medium normal-case tracking-normal opacity-70">— {logro.desc}</span>}</h4>
-                              {logro.extra && <p className="text-gray-500 text-[13px] font-medium italic mt-1">{logro.extra}</p>}
+                              {logro.extra && <p className="text-[#666666] text-[13px] font-medium italic mt-1">{logro.extra}</p>}
                             </div>
                           </div>
                         ))}
@@ -987,13 +987,13 @@ const mobileTabs = [
                           <h4 className="font-bold text-[#1A3D3D] text-[15px] font-['Montserrat'] leading-tight mb-2">{paper.titulo}</h4>
                           
                           <div className="flex items-center gap-2 mb-2">
-                            <span className="text-gray-500 font-bold text-[12px]">{paper.anio}</span>
+                            <span className="text-[#666666] font-bold text-[12px]">{paper.anio}</span>
                             <span className="bg-[#2D6A6A]/10 text-[#2D6A6A] text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest">
                               {paper.categoria}
                             </span>
                           </div>
                           
-                          <p className="text-gray-500 text-[12px] leading-relaxed line-clamp-2 mb-3">{paper.desc}</p>
+                          <p className="text-[#666666] text-[12px] leading-relaxed line-clamp-2 mb-3">{paper.desc}</p>
                           
                           {/* 3. BOTÓN ÚNICO MODIFICADO */}
                           <div className="mt-auto pt-3 border-t border-gray-50">
@@ -1029,7 +1029,7 @@ const mobileTabs = [
                   <div className="p-5">
                     <span className="bg-[#2D6A6A]/10 text-[#2D6A6A] text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full">{data.casos[0].patologia}</span>
                     <h4 className="text-[#1A3D3D] font-bold font-['Montserrat'] text-[17px] uppercase mt-3 mb-1.5">{data.casos[0].nombre}</h4>
-                    <p className="text-gray-500 text-[15px] leading-relaxed mb-4 line-clamp-2">{data.casos[0].desc}</p>
+                    <p className="text-[#666666] text-[15px] leading-relaxed mb-4 line-clamp-2">{data.casos[0].desc}</p>
                     <span className="text-[#4DB6AC] font-bold text-[11px] uppercase tracking-widest flex items-center gap-1">Ver caso completo <ChevronRight className="w-3 h-3" /></span>
                   </div>
                 </div>
@@ -1195,7 +1195,7 @@ return (
             <div className="relative z-20 -mt-16 md:-mt-20 bg-white px-10 pb-10 pt-12 md:px-16 md:pb-16 md:pt-16 text-center shadow-[0_-20px_60px_rgba(0,0,0,0.15)]">
               <div className="mb-14">
                 <h2 className="text-[24px] md:text-[30px] font-extrabold text-[#1A3D3D] font-['Montserrat'] mb-4 uppercase tracking-tight">Sobre mí</h2>
-                <p className="text-gray-600 text-[17px] md:text-[18px] leading-relaxed font-medium italic max-w-2xl mx-auto">"{data.bio}"</p>
+                <p className="text-[#666666] text-[17px] md:text-[18px] leading-relaxed font-medium italic max-w-2xl mx-auto">"{data.bio}"</p>
               </div>
               
               <div className="flex flex-wrap justify-center gap-8 pt-1 border-t border-gray-50">
@@ -1268,7 +1268,7 @@ return (
                       <div id="actualmente" className="bg-[#F4F7F7]/60 p-10 md:p-16 border-t border-b border-gray-50">
                         <div className="mb-10 text-left">
                           <h2 className="text-[24px] md:text-[30px] font-extrabold text-[#1A3D3D] font-['Montserrat'] mb-2 uppercase tracking-tight">Actualmente</h2>
-                          <p className="text-gray-500 text-[17px] font-bold uppercase tracking-[0.2em] opacity-80 leading-none">¿En qué me especializo hoy en día?</p>
+                          <p className="text-[#666666] text-[17px] font-bold uppercase tracking-[0.2em] opacity-80 leading-none">¿En qué me especializo hoy en día?</p>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                           {serviciosNormalizados.map((s, i) => (
@@ -1278,7 +1278,7 @@ return (
                                 <div key={i} className="bg-white p-8 rounded-[36px] border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group">
                                   <div className="text-[#2D6A6A] mb-6 group-hover:text-[#1A3D3D] transition-colors">{renderIcon(s.icono, "w-10 h-10")}</div>
                                   <h4 className="font-bold font-['Montserrat'] text-[17px] text-[#1A3D3D] mb-3 uppercase tracking-wider">{s.titulo}</h4>
-                                  <p className="text-gray-600 font-medium text-[17px] leading-relaxed">{s.desc}</p>
+                                  <p className="text-[#666666] font-medium text-[17px] leading-relaxed">{s.desc}</p>
                                 </div>
                               ) : (
                                 // Formato nuevo: una tarjeta por grupo con título y pills
@@ -1305,7 +1305,7 @@ return (
                                     );
                                   })()}
                                   {s.desc && (
-                                    <p className="text-gray-500 text-[14px] leading-relaxed font-medium italic mb-4 pb-4 border-b border-gray-100">
+                                    <p className="text-[#666666] text-[14px] leading-relaxed font-medium italic mb-4 pb-4 border-b border-gray-100">
                                       {s.desc}
                                     </p>
                                   )}
@@ -1332,7 +1332,7 @@ return (
                   <div id="trayectoria" className="p-10 md:p-16 text-left bg-white">
                     <div className="mb-12">
                       <h2 className="text-[24px] md:text-[30px] font-extrabold text-[#1A3D3D] font-['Montserrat'] mb-2 uppercase tracking-tight">Trayectoria Académica</h2>
-                      <p className="text-gray-500 text-[17px] font-bold uppercase tracking-[0.2em] opacity-80 leading-none">Formación y Logros</p>
+                      <p className="text-[#666666] text-[17px] font-bold uppercase tracking-[0.2em] opacity-80 leading-none">Formación y Logros</p>
                     </div>
                     <div className="relative">
                       <div className="absolute left-[20px] md:left-[23px] top-6 bottom-6 w-[1.5px] bg-gray-100"></div>
@@ -1344,7 +1344,7 @@ return (
                             </div>
                             <div className="flex-1">
                               <h4 className="font-bold text-[#1A3D3D] text-[17px] mb-1 font-['Montserrat'] uppercase tracking-tight">{logro.titulo} {logro.desc && <span className="font-medium normal-case tracking-normal opacity-70">— {logro.desc}</span>}</h4>
-                              {logro.extra && <p className="text-gray-500 text-[15px] font-medium italic mt-1">{logro.extra}</p>}
+                              {logro.extra && <p className="text-[#666666] text-[15px] font-medium italic mt-1">{logro.extra}</p>}
                             </div>
                           </div>
                         ))}
@@ -1379,7 +1379,7 @@ return (
                           </div>
                           <div className="p-5">
                             <h3 className="text-[20px] font-black font-['Montserrat'] text-[#1A3D3D] mb-2 uppercase">{caso.nombre}</h3>
-                            <p className="text-gray-600 text-[17px] leading-relaxed mb-4 font-medium line-clamp-3">{caso.desc}</p>
+                            <p className="text-[#666666] text-[17px] leading-relaxed mb-4 font-medium line-clamp-3">{caso.desc}</p>
                             <span className="text-[#4DB6AC] font-bold text-[12px] uppercase tracking-widest flex items-center gap-1 transition-all group-hover:text-[13px] group-hover:gap-2">Leer caso completo <ChevronRight className="w-4 h-4" /></span>
                           </div>
                         </div>
@@ -1393,7 +1393,7 @@ return (
                   <div id="investigaciones" className="p-10 md:p-16 bg-[#F4F7F7]/30 border-t border-b border-gray-50 text-left">
                     <div className="flex flex-col items-start mb-10 text-left">
                       <h2 className="text-[24px] md:text-[30px] font-extrabold text-[#1A3D3D] font-['Montserrat'] uppercase tracking-tight">Investigaciones</h2>
-                      <p className="text-gray-500 text-[17px] font-bold uppercase tracking-[0.2em] opacity-80 leading-none mt-2">Publicaciones y Papers Científicos</p>
+                      <p className="text-[#666666] text-[17px] font-bold uppercase tracking-[0.2em] opacity-80 leading-none mt-2">Publicaciones y Papers Científicos</p>
                       <div className="w-14 h-1 bg-[#2D6A6A] rounded-full mt-4"></div>
                     </div>
                     
@@ -1416,12 +1416,12 @@ return (
                             <h3 className="text-[17px] font-black font-['Montserrat'] text-[#1A3D3D] mb-2.5 leading-tight group-hover:text-[#2D6A6A] transition-colors line-clamp-2">{paper.titulo}</h3>
                             
                             <div className="flex items-center gap-2 mb-3">
-                              <span className="text-gray-500 font-bold text-[13px]">{paper.anio}</span>
+                              <span className="text-[#666666] font-bold text-[13px]">{paper.anio}</span>
                               <span className="w-1 h-1 rounded-full bg-gray-200"></span>
                               <span className="bg-[#2D6A6A]/10 text-[#2D6A6A] text-[9px] font-bold px-2.5 py-1 rounded-full uppercase tracking-widest">{paper.categoria}</span>
                             </div>
                             
-                            <p className="text-gray-600 text-[14px] leading-relaxed font-medium line-clamp-3 mb-4">{paper.desc}</p>
+                            <p className="text-[#666666] text-[14px] leading-relaxed font-medium line-clamp-3 mb-4">{paper.desc}</p>
                             
                             {/* 3. BOTÓN ÚNICO MÁS ELEGANTE */}
                             <div className="mt-auto pt-4 border-t border-gray-50">
@@ -1442,7 +1442,7 @@ return (
                   <div id="zonas" className="p-10 md:p-16 bg-white border-b border-gray-50">
                     <div className="mb-12 text-center">
                       <h2 className="text-[24px] md:text-[30px] font-extrabold text-[#1A3D3D] font-['Montserrat'] uppercase tracking-tight mb-4">Lugares de Atención</h2>
-                      <p className="text-gray-600 font-medium text-[17px]">Dónde encontrarme para consultas</p>
+                      <p className="text-[#666666] font-medium text-[17px]">Dónde encontrarme para consultas</p>
                       <p className="text-[#4DB6AC] font-bold text-[15px] mt-2 uppercase tracking-widest">Actualmente en {data.provincia}</p>
                     </div>
                     
@@ -1480,7 +1480,7 @@ return (
 
                                     {/* DIRECCIÓN CLICKEABLE */}
                                     {clinica.direccion && (
-                                      <a href={mapsUrl} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-[15px] text-gray-600 hover:text-[#4DB6AC] transition-colors">
+                                      <a href={mapsUrl} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-[15px] text-[#666666] hover:text-[#4DB6AC] transition-colors">
                                         <MapPin className="w-3.5 h-3.5 text-[#2D6A6A] shrink-0" />
                                         {clinica.direccion}
                                       </a>
@@ -1488,7 +1488,7 @@ return (
 
                                     {/* TELÉFONO → WHATSAPP */}
                                     {clinica.telefono && (
-                                      <a href={armarLinkWhatsapp(clinica.telefono, `Hola, los encontré en el perfil de ${data.nombre} en El Portal Veterinario y quería hacerles una consulta.`)} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-[14px] text-gray-600 hover:text-[#25D366] transition-colors font-medium">
+                                      <a href={armarLinkWhatsapp(clinica.telefono, `Hola, los encontré en el perfil de ${data.nombre} en El Portal Veterinario y quería hacerles una consulta.`)} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-[14px] text-[#666666] hover:text-[#25D366] transition-colors font-medium">
                                         <Phone className="w-3.5 h-3.5 shrink-0 text-[#25D366]" />
                                         {clinica.telefono}
                                       </a>

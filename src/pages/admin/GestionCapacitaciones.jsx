@@ -326,7 +326,7 @@ const handleAbrirEdicion = (curso) => {
           <button
             key={f.key}
             onClick={() => setFiltroPeriodo(f.key)}
-            className={`px-4 py-2 rounded-full text-[11px] font-bold uppercase tracking-widest transition-all ${filtroPeriodo === f.key ? 'bg-[#2D6A6A] text-white' : 'bg-white border border-gray-200 text-gray-500 hover:border-[#2D6A6A] hover:text-[#2D6A6A]'}`}
+            className={`px-4 py-2 rounded-full text-[11px] font-bold uppercase tracking-widest transition-all ${filtroPeriodo === f.key ? 'bg-[#2D6A6A] text-white' : 'bg-white border border-gray-200 text-[#666666] hover:border-[#2D6A6A] hover:text-[#2D6A6A]'}`}
           >
             {f.label}
           </button>

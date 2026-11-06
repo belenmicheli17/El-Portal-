@@ -848,7 +848,7 @@ export default function EditorClinico() {
         <div className="bg-white rounded-[32px] p-12 shadow-sm border border-gray-100 text-center max-w-sm">
           <AlertTriangle className="w-8 h-8 text-gray-400 mx-auto mb-4" />
           <h3 className="font-bold font-['Montserrat'] text-xl text-[#1A3D3D] mb-2">No pudimos cargar tu perfil</h3>
-          <p className="text-sm text-gray-500 mb-6 leading-relaxed">Revisá tu conexión. ¿Probamos de nuevo?</p>
+          <p className="text-sm text-[#666666] mb-6 leading-relaxed">Revisá tu conexión. ¿Probamos de nuevo?</p>
           <button
             type="button"
             onClick={() => setIntentoCarga((n) => n + 1)}
@@ -926,7 +926,7 @@ export default function EditorClinico() {
               <AlertTriangle className="w-8 h-8 text-yellow-500" />
             </div>
             <h3 className="font-bold font-['Montserrat'] text-xl text-[#1A3D3D] mb-2">Tenés cambios sin guardar</h3>
-            <p className="text-sm text-gray-500 mb-8 leading-relaxed">Si salís ahora, los cambios que hiciste se van a perder.</p>
+            <p className="text-sm text-[#666666] mb-8 leading-relaxed">Si salís ahora, los cambios que hiciste se van a perder.</p>
             <div className="flex flex-col gap-3">
               <button
                 onClick={async () => {
@@ -972,7 +972,7 @@ export default function EditorClinico() {
               </div>
             )}
             <h3 className="font-bold font-['Montserrat'] text-2xl text-[#1A3D3D] mb-3">{modalConfig.title}</h3>
-            <p className="text-base text-gray-500 mb-8">{modalConfig.message}</p>
+            <p className="text-base text-[#666666] mb-8">{modalConfig.message}</p>
             <button
               onClick={() => setModalConfig({ isOpen: false, title: '', message: '', type: 'info' })}
               className={`px-8 py-3.5 rounded-xl font-bold text-white transition-colors shadow-lg text-base w-full ${modalConfig.type === 'error' ? 'bg-red-500 hover:bg-red-600' : 'bg-[#1A3D3D] hover:bg-[#2D6A6A]'}`}
@@ -990,7 +990,7 @@ export default function EditorClinico() {
             <div className="p-6 border-b border-gray-100 flex justify-between items-center">
               <div>
                 <h3 className="font-bold font-['Montserrat'] text-xl text-[#1A3D3D]">Encuadre de imagen</h3>
-                <p className="text-sm text-gray-500 mt-1">Arrastrá para mover la imagen o usá el zoom.</p>
+                <p className="text-sm text-[#666666] mt-1">Arrastrá para mover la imagen o usá el zoom.</p>
               </div>
               <button onClick={cerrarRecorte} className="p-2.5 bg-gray-100 rounded-full hover:bg-red-100 hover:text-red-500 transition-colors"><X className="w-6 h-6" /></button>
             </div>
@@ -1016,9 +1016,9 @@ export default function EditorClinico() {
               <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 shrink-0">
                 <div>
                   <h3 className="font-bold font-['Montserrat'] text-2xl text-[#1A3D3D]">Elegí tu plan</h3>
-                  <p className="text-sm text-gray-500 mt-1">Podés mejorar o pausar tu suscripción en cualquier momento.</p>
+                  <p className="text-sm text-[#666666] mt-1">Podés mejorar o pausar tu suscripción en cualquier momento.</p>
                 </div>
-                <button onClick={() => setIsPlanModalOpen(false)} className="p-2.5 bg-white rounded-full hover:bg-red-50 hover:text-red-500 transition-colors border border-gray-200"><X className="w-5 h-5 text-gray-500" /></button>
+                <button onClick={() => setIsPlanModalOpen(false)} className="p-2.5 bg-white rounded-full hover:bg-red-50 hover:text-red-500 transition-colors border border-gray-200"><X className="w-5 h-5 text-[#666666]" /></button>
               </div>
 
               <div className="p-6 md:p-8 bg-[#F4F7F7]">
@@ -1034,13 +1034,13 @@ export default function EditorClinico() {
                         <Check className="w-3 h-3" /> Seleccionado
                       </div>
                     )}
-                    <h4 className="text-xl font-black text-gray-800 font-['Montserrat'] mb-1">Plan Básico</h4>
+                    <h4 className="text-xl font-black text-[#333333] font-['Montserrat'] mb-1">Plan Básico</h4>
                     <p className="text-3xl font-black text-[#1A3D3D] font-['Montserrat'] my-4">$0 <span className="text-sm text-gray-400 font-medium">/mes</span></p>
-                    <p className="text-sm text-gray-500 mb-6 flex-1">Ideal para tener presencia en la Cartilla y que te encuentren fácilmente.</p>
+                    <p className="text-sm text-[#666666] mb-6 flex-1">Ideal para tener presencia en la Cartilla y que te encuentren fácilmente.</p>
                     <ul className="space-y-3 mb-6">
-                      <li className="flex items-start gap-2 text-sm text-gray-600 font-medium"><Check className="w-4 h-4 text-[#2D6A6A] shrink-0 mt-0.5" /> Perfil público de tu clínica</li>
-                      <li className="flex items-start gap-2 text-sm text-gray-600 font-medium"><Check className="w-4 h-4 text-[#2D6A6A] shrink-0 mt-0.5" /> Enlace a redes sociales y WhatsApp</li>
-                      <li className="flex items-start gap-2 text-sm text-gray-600 font-medium"><Check className="w-4 h-4 text-[#2D6A6A] shrink-0 mt-0.5" /> Galería de hasta {LIMITE_GALERIA.gratis} fotos</li>
+                      <li className="flex items-start gap-2 text-sm text-[#666666] font-medium"><Check className="w-4 h-4 text-[#2D6A6A] shrink-0 mt-0.5" /> Perfil público de tu clínica</li>
+                      <li className="flex items-start gap-2 text-sm text-[#666666] font-medium"><Check className="w-4 h-4 text-[#2D6A6A] shrink-0 mt-0.5" /> Enlace a redes sociales y WhatsApp</li>
+                      <li className="flex items-start gap-2 text-sm text-[#666666] font-medium"><Check className="w-4 h-4 text-[#2D6A6A] shrink-0 mt-0.5" /> Galería de hasta {LIMITE_GALERIA.gratis} fotos</li>
                       <li className="flex items-start gap-2 text-sm text-gray-400 opacity-50 line-through"><X className="w-4 h-4 shrink-0 mt-0.5" /> Sección de Staff Médico</li>
                       <li className="flex items-start gap-2 text-sm text-gray-400 opacity-50 line-through"><X className="w-4 h-4 shrink-0 mt-0.5" /> Detalle de Especialidades y Servicios</li>
                       <li className="flex items-start gap-2 text-sm text-gray-400 opacity-50 line-through"><X className="w-4 h-4 shrink-0 mt-0.5" /> Casos clínicos con fotos</li>
@@ -1061,13 +1061,13 @@ export default function EditorClinico() {
                       Clínica PRO <Zap className="w-5 h-5 text-[#4DB6AC] fill-[#4DB6AC]" />
                     </h4>
                     <p className="text-3xl font-black text-[#1A3D3D] font-['Montserrat'] my-4">$15.000 <span className="text-sm text-gray-400 font-medium">/mes</span></p>
-                    <p className="text-sm text-gray-500 mb-6 flex-1">Mostrá todo el potencial de tu centro médico y generá máxima confianza.</p>
+                    <p className="text-sm text-[#666666] mb-6 flex-1">Mostrá todo el potencial de tu centro médico y generá máxima confianza.</p>
                     <ul className="space-y-3 mb-6">
-                      <li className="flex items-start gap-2 text-sm text-gray-700 font-bold"><Check className="w-4 h-4 text-[#4DB6AC] shrink-0 mt-0.5" /> Todo lo del Plan Básico</li>
-                      <li className="flex items-start gap-2 text-sm text-gray-700 font-bold"><Check className="w-4 h-4 text-[#4DB6AC] shrink-0 mt-0.5" /> Sección completa de Staff Médico</li>
-                      <li className="flex items-start gap-2 text-sm text-gray-700 font-bold"><Check className="w-4 h-4 text-[#4DB6AC] shrink-0 mt-0.5" /> Catálogo de Especialidades y Equipamiento</li>
-                      <li className="flex items-start gap-2 text-sm text-gray-700 font-bold"><Check className="w-4 h-4 text-[#4DB6AC] shrink-0 mt-0.5" /> Casos clínicos y galería de hasta {LIMITE_GALERIA.pro} fotos</li>
-                      <li className="flex items-start gap-2 text-sm text-gray-700 font-bold"><Check className="w-4 h-4 text-[#4DB6AC] shrink-0 mt-0.5" /> Soporte prioritario</li>
+                      <li className="flex items-start gap-2 text-sm text-[#333333] font-bold"><Check className="w-4 h-4 text-[#4DB6AC] shrink-0 mt-0.5" /> Todo lo del Plan Básico</li>
+                      <li className="flex items-start gap-2 text-sm text-[#333333] font-bold"><Check className="w-4 h-4 text-[#4DB6AC] shrink-0 mt-0.5" /> Sección completa de Staff Médico</li>
+                      <li className="flex items-start gap-2 text-sm text-[#333333] font-bold"><Check className="w-4 h-4 text-[#4DB6AC] shrink-0 mt-0.5" /> Catálogo de Especialidades y Equipamiento</li>
+                      <li className="flex items-start gap-2 text-sm text-[#333333] font-bold"><Check className="w-4 h-4 text-[#4DB6AC] shrink-0 mt-0.5" /> Casos clínicos y galería de hasta {LIMITE_GALERIA.pro} fotos</li>
+                      <li className="flex items-start gap-2 text-sm text-[#333333] font-bold"><Check className="w-4 h-4 text-[#4DB6AC] shrink-0 mt-0.5" /> Soporte prioritario</li>
                     </ul>
                   </div>
 
@@ -1075,7 +1075,7 @@ export default function EditorClinico() {
               </div>
 
               <div className="p-6 border-t border-gray-100 bg-white flex justify-end gap-3 shrink-0">
-                <button onClick={() => setIsPlanModalOpen(false)} className="px-6 py-3 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-100 transition-colors">Cancelar</button>
+                <button onClick={() => setIsPlanModalOpen(false)} className="px-6 py-3 rounded-xl text-sm font-bold text-[#666666] hover:bg-gray-100 transition-colors">Cancelar</button>
                 <button onClick={handleConfirmChangePlan} className="px-8 py-3 rounded-xl text-sm font-bold bg-[#1A3D3D] text-white hover:bg-[#2D6A6A] shadow-md transition-all flex items-center gap-2">Confirmar cambio <ArrowRight className="w-4 h-4" /></button>
               </div>
             </div>
@@ -1093,12 +1093,12 @@ export default function EditorClinico() {
                   <div className="w-10 h-10 rounded-full bg-[#009EE3]/10 flex items-center justify-center"><CreditCard className="w-5 h-5 text-[#009EE3]" /></div>
                   <h3 className="font-bold font-['Montserrat'] text-xl text-[#1A3D3D]">Facturación</h3>
                 </div>
-                <button onClick={() => setIsSubModalOpen(false)} className="p-2.5 bg-white rounded-full hover:bg-gray-100 transition-colors border border-gray-200"><X className="w-5 h-5 text-gray-500" /></button>
+                <button onClick={() => setIsSubModalOpen(false)} className="p-2.5 bg-white rounded-full hover:bg-gray-100 transition-colors border border-gray-200"><X className="w-5 h-5 text-[#666666]" /></button>
               </div>
 
               <div className="p-6 md:p-8 bg-white">
                 <div className="text-center mb-8">
-                  <p className="text-sm text-gray-500 font-bold uppercase tracking-widest mb-2">Plan actual</p>
+                  <p className="text-sm text-[#666666] font-bold uppercase tracking-widest mb-2">Plan actual</p>
                   <h2 className="text-4xl font-black text-[#1A3D3D] font-['Montserrat']">Clínica PRO</h2>
                   <div className={`inline-flex items-center gap-2 mt-3 px-3 py-1.5 rounded-full text-xs font-bold border ${isSubscriptionActive ? 'bg-[#4DB6AC]/10 text-[#4DB6AC] border-[#4DB6AC]/30' : 'bg-red-500/10 text-red-500 border-red-500/30'}`}>
                     <span className={`w-2 h-2 rounded-full ${isSubscriptionActive ? 'bg-[#4DB6AC]' : 'bg-red-500'}`}></span>
@@ -1109,11 +1109,11 @@ export default function EditorClinico() {
                 {isSubscriptionActive && (
                   <div className="bg-gray-50 rounded-2xl p-5 border border-gray-100 mb-8">
                     <div className="flex justify-between items-center mb-3">
-                      <span className="text-sm text-gray-500 font-medium">Próximo cobro</span>
+                      <span className="text-sm text-[#666666] font-medium">Próximo cobro</span>
                       <span className="text-sm font-bold text-[#1A3D3D]">15 de Junio, 2026</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-500 font-medium">Método de pago</span>
+                      <span className="text-sm text-[#666666] font-medium">Método de pago</span>
                       <span className="text-sm font-bold text-[#1A3D3D] flex items-center gap-2">Visa terminada en 4242</span>
                     </div>
                   </div>
@@ -1128,7 +1128,7 @@ export default function EditorClinico() {
                   </button>
                   <button
                     onClick={() => { setIsSubscriptionActive(false); setIsSubModalOpen(false); }}
-                    className="w-full py-4 rounded-xl font-bold text-sm text-gray-500 hover:bg-gray-50 transition-all border border-transparent hover:border-gray-200"
+                    className="w-full py-4 rounded-xl font-bold text-sm text-[#666666] hover:bg-gray-50 transition-all border border-transparent hover:border-gray-200"
                   >
                     Simular Vencimiento
                   </button>
@@ -1206,11 +1206,11 @@ export default function EditorClinico() {
 
             <nav className="flex flex-col gap-1.5 pb-2 md:pb-0 bg-white md:bg-transparent p-2 md:p-0 rounded-2xl md:rounded-none border md:border-none border-gray-100 shadow-sm md:shadow-none">
 
-              <button onClick={() => setActiveTab('cuenta')} className={`flex items-center justify-between px-4 py-3.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap outline-none ${activeTab === 'cuenta' ? 'bg-[#2D6A6A]/10 text-[#1A3D3D]' : 'text-gray-500 hover:bg-white hover:text-[#4DB6AC]'}`}>
+              <button onClick={() => setActiveTab('cuenta')} className={`flex items-center justify-between px-4 py-3.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap outline-none ${activeTab === 'cuenta' ? 'bg-[#2D6A6A]/10 text-[#1A3D3D]' : 'text-[#666666] hover:bg-white hover:text-[#4DB6AC]'}`}>
                 <div className="flex items-center gap-3"><User className={`w-5 h-5 ${activeTab === 'cuenta' ? 'text-[#2D6A6A]' : 'text-gray-400'}`} /> Sobre mi plan</div>
               </button>
 
-              <button onClick={() => setActiveTab('perfil')} className={`flex items-center justify-between px-4 py-3.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap outline-none ${activeTab === 'perfil' ? 'bg-[#2D6A6A]/10 text-[#1A3D3D]' : 'text-gray-500 hover:bg-white hover:text-[#4DB6AC]'}`}>
+              <button onClick={() => setActiveTab('perfil')} className={`flex items-center justify-between px-4 py-3.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap outline-none ${activeTab === 'perfil' ? 'bg-[#2D6A6A]/10 text-[#1A3D3D]' : 'text-[#666666] hover:bg-white hover:text-[#4DB6AC]'}`}>
                 <div className="flex items-center gap-3"><Building2 className={`w-5 h-5 ${activeTab === 'perfil' ? 'text-[#2D6A6A]' : 'text-gray-400'}`} /> Mi perfil público</div>
                 {alertaPerfil && <PuntoAlerta />}
               </button>
@@ -1218,7 +1218,7 @@ export default function EditorClinico() {
               <button
                 onClick={() => isPro && setActiveTab('servicios')} disabled={!isPro}
                 className={`flex items-center justify-between px-4 py-3.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap outline-none
-                  ${!isPro ? 'opacity-50 grayscale cursor-not-allowed text-gray-400' : activeTab === 'servicios' ? 'bg-[#2D6A6A]/10 text-[#1A3D3D]' : 'text-gray-500 hover:bg-white hover:text-[#4DB6AC]'}`}
+                  ${!isPro ? 'opacity-50 grayscale cursor-not-allowed text-gray-400' : activeTab === 'servicios' ? 'bg-[#2D6A6A]/10 text-[#1A3D3D]' : 'text-[#666666] hover:bg-white hover:text-[#4DB6AC]'}`}
               >
                 <div className="flex items-center gap-3"><Activity className={`w-5 h-5 ${activeTab === 'servicios' ? 'text-[#2D6A6A]' : 'text-gray-400'}`} /> Especialidades</div>
                 {!isPro ? <Lock className="w-3.5 h-3.5 text-gray-400" /> : alerta('servicios') && <PuntoAlerta />}
@@ -1227,7 +1227,7 @@ export default function EditorClinico() {
               <button
                 onClick={() => isPro && setActiveTab('staff')} disabled={!isPro}
                 className={`flex items-center justify-between px-4 py-3.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap outline-none
-                  ${!isPro ? 'opacity-50 grayscale cursor-not-allowed text-gray-400' : activeTab === 'staff' ? 'bg-[#2D6A6A]/10 text-[#1A3D3D]' : 'text-gray-500 hover:bg-white hover:text-[#4DB6AC]'}`}
+                  ${!isPro ? 'opacity-50 grayscale cursor-not-allowed text-gray-400' : activeTab === 'staff' ? 'bg-[#2D6A6A]/10 text-[#1A3D3D]' : 'text-[#666666] hover:bg-white hover:text-[#4DB6AC]'}`}
               >
                 <div className="flex items-center gap-3"><Users className={`w-5 h-5 ${activeTab === 'staff' ? 'text-[#2D6A6A]' : 'text-gray-400'}`} /> Staff médico</div>
                 {!isPro ? <Lock className="w-3.5 h-3.5 text-gray-400" /> : alerta('staff') && <PuntoAlerta />}
@@ -1236,7 +1236,7 @@ export default function EditorClinico() {
               <button
                 onClick={() => isPro && setActiveTab('casos')} disabled={!isPro}
                 className={`flex items-center justify-between px-4 py-3.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap outline-none
-                  ${!isPro ? 'opacity-50 grayscale cursor-not-allowed text-gray-400' : activeTab === 'casos' ? 'bg-[#2D6A6A]/10 text-[#1A3D3D]' : 'text-gray-500 hover:bg-white hover:text-[#4DB6AC]'}`}
+                  ${!isPro ? 'opacity-50 grayscale cursor-not-allowed text-gray-400' : activeTab === 'casos' ? 'bg-[#2D6A6A]/10 text-[#1A3D3D]' : 'text-[#666666] hover:bg-white hover:text-[#4DB6AC]'}`}
               >
                 <div className="flex items-center gap-3"><Camera className={`w-5 h-5 ${activeTab === 'casos' ? 'text-[#2D6A6A]' : 'text-gray-400'}`} /> Casos clínicos</div>
                 {!isPro && <Lock className="w-3.5 h-3.5 text-gray-400" />}
@@ -1276,7 +1276,7 @@ export default function EditorClinico() {
             {activeTab === 'cuenta' && (
               <div className="w-full bg-white rounded-[32px] shadow-sm border border-gray-100 p-6 md:p-10 animate-in fade-in duration-300">
                 <h3 className="text-2xl font-black text-[#1A3D3D] mb-2 font-['Montserrat']">Sobre mi plan</h3>
-                <p className="text-sm text-gray-500 mb-6">Información privada para la facturación. Esto no lo ven los usuarios.</p>
+                <p className="text-sm text-[#666666] mb-6">Información privada para la facturación. Esto no lo ven los usuarios.</p>
 
                 <div className="max-w-2xl">
                   <h4 className="flex items-center gap-2 text-sm font-bold text-[#1A3D3D] uppercase tracking-widest leading-none mb-4">
@@ -1307,7 +1307,7 @@ export default function EditorClinico() {
                           </div>
                           <div className="flex items-center gap-2 mt-2">
                             <span className={`w-2 h-2 rounded-full ${isPro && !isSubscriptionActive ? 'bg-red-500' : 'bg-[#4DB6AC]'}`}></span>
-                            <p className={`text-sm font-medium ${isPro && !isSubscriptionActive ? 'text-red-600' : 'text-gray-600'}`}>
+                            <p className={`text-sm font-medium ${isPro && !isSubscriptionActive ? 'text-red-600' : 'text-[#666666]'}`}>
                               {isPro ? (isSubscriptionActive ? 'Suscripción activa y al día' : 'Suspendida por falta de pago') : 'Suscripción activa (gratuita)'}
                             </p>
                           </div>
@@ -1315,11 +1315,11 @@ export default function EditorClinico() {
 
                         <div className="flex flex-col sm:flex-row sm:items-center gap-3 shrink-0">
                           {isPro && (
-                            <button onClick={() => setIsSubModalOpen(true)} className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm border w-full sm:w-auto text-center ${isSubscriptionActive ? 'bg-white border-gray-200 text-gray-700 hover:border-[#4DB6AC] hover:text-[#4DB6AC]' : 'bg-red-600 text-white border-red-600 hover:bg-red-700'}`}>
+                            <button onClick={() => setIsSubModalOpen(true)} className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm border w-full sm:w-auto text-center ${isSubscriptionActive ? 'bg-white border-gray-200 text-[#333333] hover:border-[#4DB6AC] hover:text-[#4DB6AC]' : 'bg-red-600 text-white border-red-600 hover:bg-red-700'}`}>
                               {isSubscriptionActive ? 'Gestionar pagos' : 'Regularizar pago'}
                             </button>
                           )}
-                          <button onClick={openPlanModal} className="px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm border bg-white border-gray-200 text-gray-700 hover:border-[#4DB6AC] hover:text-[#4DB6AC] w-full sm:w-auto text-center">
+                          <button onClick={openPlanModal} className="px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm border bg-white border-gray-200 text-[#333333] hover:border-[#4DB6AC] hover:text-[#4DB6AC] w-full sm:w-auto text-center">
                             Cambiar de plan
                           </button>
                         </div>
@@ -1343,7 +1343,7 @@ export default function EditorClinico() {
                       <div className="p-6 border-b border-gray-100 flex justify-between items-center">
                         <div>
                           <h3 className="font-bold font-['Montserrat'] text-xl text-[#1A3D3D]">Encuadre de la portada</h3>
-                          <p className="text-sm text-gray-500 mt-1">El recuadro es lo que se ve en tu perfil.</p>
+                          <p className="text-sm text-[#666666] mt-1">El recuadro es lo que se ve en tu perfil.</p>
                         </div>
                         <button onClick={() => setPortadaParaRecortar(null)} className="p-2.5 bg-gray-100 rounded-full hover:bg-red-100 hover:text-red-500 transition-colors">
                           <X className="w-6 h-6" />
@@ -1369,9 +1369,9 @@ export default function EditorClinico() {
                     <h3 className="text-xl font-black font-['Montserrat'] text-[#1A3D3D] truncate leading-tight mb-1">{formData.nombre || 'Nombre de la clínica'}</h3>
                     <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-2">
                       {formData.guardia24hs && <span className="text-white bg-red-500 px-2.5 py-0.5 rounded-full font-bold text-[10px] uppercase tracking-wider flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> Guardia 24hs</span>}
-                      {formData.añosExperiencia && <span className="text-gray-500 bg-gray-100 border border-gray-200 px-2.5 py-0.5 rounded-full font-bold text-[10px] uppercase tracking-wider">+{formData.añosExperiencia} años exp.</span>}
+                      {formData.añosExperiencia && <span className="text-[#666666] bg-gray-100 border border-gray-200 px-2.5 py-0.5 rounded-full font-bold text-[10px] uppercase tracking-wider">+{formData.añosExperiencia} años exp.</span>}
                     </div>
-                    <div className="flex items-center justify-center md:justify-start gap-3 text-xs font-medium text-gray-500">
+                    <div className="flex items-center justify-center md:justify-start gap-3 text-xs font-medium text-[#666666]">
                       <span className="flex items-center gap-1.5 truncate"><MapPin className="w-3.5 h-3.5 text-[#2D6A6A] shrink-0" /> {ubicacionTexto || 'Ubicación sin confirmar'}</span>
                     </div>
                   </div>
@@ -1395,7 +1395,7 @@ export default function EditorClinico() {
 
                   <div className="pt-6 px-6 md:px-10 pb-4">
                     <h3 className="text-xl font-black text-[#1A3D3D] mb-1 font-['Montserrat']">Mi perfil público</h3>
-                    <p className="text-xs text-gray-500 mb-0">Toda la info que cargues acá es la que los tutores van a ver en la Cartilla.</p>
+                    <p className="text-xs text-[#666666] mb-0">Toda la info que cargues acá es la que los tutores van a ver en la Cartilla.</p>
                   </div>
 
                   <div className="border-t border-gray-100">
@@ -1416,7 +1416,7 @@ export default function EditorClinico() {
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-bold text-[#1A3D3D] mb-0.5">¿Ves los íconos <span className="inline-flex items-center justify-center w-4 h-4 bg-[#2D6A6A]/15 rounded-full text-[#2D6A6A] text-[10px] font-black">i</span> junto a cada campo?</p>
-                              <p className="text-sm text-gray-500 font-medium leading-relaxed">Tocalos para ver consejos y explicaciones sobre cada dato. Te ayudan a completar tu perfil de la mejor manera.</p>
+                              <p className="text-sm text-[#666666] font-medium leading-relaxed">Tocalos para ver consejos y explicaciones sobre cada dato. Te ayudan a completar tu perfil de la mejor manera.</p>
                             </div>
                           </div>
                           <button
@@ -1467,7 +1467,7 @@ export default function EditorClinico() {
                             Logo o foto del equipo <span className="text-red-400 ml-1">*</span>
                             <Tooltip text="Subí el logo de tu clínica en alta resolución (con fondo blanco o transparente) o una foto de tu equipo para que sepan rápido quién los atiende." />
                           </h3>
-                          <p className="text-xs text-gray-500 mb-4 leading-relaxed">Formatos PNG o JPG. Si tu logo es alargado, en el encuadre tocá "Ver la imagen entera".</p>
+                          <p className="text-xs text-[#666666] mb-4 leading-relaxed">Formatos PNG o JPG. Si tu logo es alargado, en el encuadre tocá "Ver la imagen entera".</p>
                         </div>
                       </div>
 
@@ -1476,7 +1476,7 @@ export default function EditorClinico() {
                           Foto de portada <span className="text-gray-400 ml-1.5 normal-case tracking-normal font-medium">(opcional)</span>
                           <Tooltip text="Es la foto grande que se ve arriba de todo en tu perfil. Ideal: una foto horizontal (apaisada) de tu veterinaria." />
                         </h3>
-                        <p className="text-xs text-gray-500 mb-3 leading-relaxed">Ideal: una foto horizontal de la veterinaria. Si la dejás vacía no pasa nada: tu perfil se ve igual, con la portada más chica.</p>
+                        <p className="text-xs text-[#666666] mb-3 leading-relaxed">Ideal: una foto horizontal de la veterinaria. Si la dejás vacía no pasa nada: tu perfil se ve igual, con la portada más chica.</p>
                         <div className="relative">
                           <label htmlFor="portada-upload" className={`block w-full rounded-[24px] overflow-hidden border-2 border-dashed ${formData.portada ? 'border-transparent' : 'border-gray-200 hover:border-[#2D6A6A]'} bg-gray-50 cursor-pointer transition-all ${subiendoPortada ? 'opacity-60 pointer-events-none' : ''}`}>
                             {formData.portada ? (
@@ -1585,7 +1585,7 @@ export default function EditorClinico() {
                                 onChange={(e) => handleFaqChange(faq.id, 'respuesta', e.target.value)}
                                 placeholder="Escribí la respuesta acá..."
                                 rows="2"
-                                className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm font-medium text-gray-600 focus:border-[#2D6A6A] outline-none transition-colors resize-none"
+                                className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm font-medium text-[#666666] focus:border-[#2D6A6A] outline-none transition-colors resize-none"
                               />
                               <p className={`text-right text-[10px] font-bold mt-1 ${(faq.respuesta?.length || 0) >= 360 ? 'text-red-400' : 'text-gray-300'}`}>{faq.respuesta?.length || 0} / 400</p>
                             </div>
@@ -1608,7 +1608,7 @@ export default function EditorClinico() {
                     >
                       {/* DIRECCIÓN CON GOOGLE */}
                       <div className="mb-6 w-full">
-                        <label htmlFor="direccion" className="flex items-center text-xs font-bold text-gray-500 uppercase tracking-widest leading-none mb-2 ml-1">
+                        <label htmlFor="direccion" className="flex items-center text-xs font-bold text-[#666666] uppercase tracking-widest leading-none mb-2 ml-1">
                           Dirección física <span className="text-red-400 ml-1">*</span>
                           <Tooltip text="Escribí el nombre de la clínica o la dirección y elegí una opción de la lista de Google, para que los tutores te encuentren por zona." />
                         </label>
@@ -1642,7 +1642,7 @@ export default function EditorClinico() {
                       </div>
 
                       <div className="mb-6 w-full">
-                        <label className="flex items-center text-xs font-bold text-gray-500 uppercase tracking-widest leading-none mb-2 ml-1">
+                        <label className="flex items-center text-xs font-bold text-[#666666] uppercase tracking-widest leading-none mb-2 ml-1">
                           Otras sedes (opcional)
                         </label>
                         {(formData.sedes || []).map((sede) => (
@@ -1656,7 +1656,7 @@ export default function EditorClinico() {
                                 placeholder="Nombre de la sede (opcional, si tiene distinto nombre) Ej: Sede Palermo"
                                 className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-[15px] font-medium text-[#1A3D3D] outline-none focus:border-[#2D6A6A]"
                               />
-                              <p className="text-[13px] text-gray-500 leading-snug">{sede.direccion}</p>
+                              <p className="text-[13px] text-[#666666] leading-snug">{sede.direccion}</p>
                               <p className="text-[11px] text-[#2D6A6A] font-bold">Confirmada con Google{sede.barrio ? ` · Barrio: ${sede.barrio}` : ''}</p>
                             </div>
                             <button type="button" onClick={() => quitarSede(sede.id)} className="p-1.5 text-gray-400 hover:text-red-500 transition-colors" aria-label="Quitar sede">
@@ -1719,7 +1719,7 @@ export default function EditorClinico() {
                               </div>
                               <div className="flex flex-col text-left">
                                 <span className="text-sm font-black font-['Montserrat'] leading-none mb-1">Atención continua</span>
-                                <span className="text-xs font-medium text-gray-500 leading-none">Horario cubierto por la Guardia 24hs.</span>
+                                <span className="text-xs font-medium text-[#666666] leading-none">Horario cubierto por la Guardia 24hs.</span>
                               </div>
                             </div>
                           </div>
@@ -1727,7 +1727,7 @@ export default function EditorClinico() {
 
                         <div className={`grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 transition-all duration-300 ${formData.guardia24hs ? 'opacity-40 grayscale pointer-events-none' : ''}`}>
                           <div>
-                            <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2 block ml-1">Lunes a viernes <span className="text-red-400 ml-1">*</span></label>
+                            <label className="text-[10px] font-black text-[#666666] uppercase tracking-widest mb-2 block ml-1">Lunes a viernes <span className="text-red-400 ml-1">*</span></label>
                             <div className="flex items-center gap-3">
                               <input type="text" inputMode="numeric" placeholder="09" value={formData.horarios.semanaDesde} onChange={(e) => handleHorarioChange('semanaDesde', e.target.value)} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-center text-lg font-black text-[#1A3D3D] focus:border-[#2D6A6A] outline-none transition-all shadow-sm" />
                               <span className="text-xs font-black text-gray-400 uppercase tracking-widest">hasta</span>
@@ -1737,7 +1737,7 @@ export default function EditorClinico() {
                           </div>
 
                           <div>
-                            <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2 block ml-1">Sábados <span className="text-gray-400 ml-1 normal-case text-[9px]">(opcional)</span></label>
+                            <label className="text-[10px] font-black text-[#666666] uppercase tracking-widest mb-2 block ml-1">Sábados <span className="text-gray-400 ml-1 normal-case text-[9px]">(opcional)</span></label>
                             <div className="flex items-center gap-3">
                               <input type="text" inputMode="numeric" placeholder="10" value={formData.horarios.sabadoDesde} onChange={(e) => handleHorarioChange('sabadoDesde', e.target.value)} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-center text-lg font-black text-[#1A3D3D] focus:border-[#2D6A6A] outline-none transition-all shadow-sm" />
                               <span className="text-xs font-black text-gray-400 uppercase tracking-widest">hasta</span>
@@ -1756,7 +1756,7 @@ export default function EditorClinico() {
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
                           <div className="mb-6 w-full">
-                            <label htmlFor="instagram" className="flex items-center text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">
+                            <label htmlFor="instagram" className="flex items-center text-xs font-bold text-[#666666] uppercase tracking-widest mb-2 ml-1">
                               Instagram — usuario
                             </label>
                             <div className="relative flex items-center border border-gray-200 rounded-2xl bg-gray-50/50 focus-within:border-[#2D6A6A] transition-all px-5 py-3.5">
@@ -1773,7 +1773,7 @@ export default function EditorClinico() {
                           </div>
                           <InputGroup label="Facebook" id="facebook" value={formData.redes.facebook} onChange={(e) => handleRedesChange('facebook', e.target.value)} placeholder="Link completo de tu página" canTest />
                           <div className="mb-6 w-full">
-                            <label htmlFor="tiktok" className="flex items-center text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">
+                            <label htmlFor="tiktok" className="flex items-center text-xs font-bold text-[#666666] uppercase tracking-widest mb-2 ml-1">
                               TikTok — usuario
                             </label>
                             <div className="relative flex items-center border border-gray-200 rounded-2xl bg-gray-50/50 focus-within:border-[#2D6A6A] transition-all px-5 py-3.5">
@@ -1840,7 +1840,7 @@ export default function EditorClinico() {
                                 <button
                                   type="button"
                                   onClick={() => handleArrayUpdate('galeria', item.id, 'esSensible', !item.esSensible)}
-                                  className={`absolute top-2 left-2 p-1.5 rounded-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity shadow-md z-10 ${item.esSensible ? 'bg-[#FF9800] text-white' : 'bg-white/90 text-gray-500 hover:bg-yellow-50'}`}
+                                  className={`absolute top-2 left-2 p-1.5 rounded-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity shadow-md z-10 ${item.esSensible ? 'bg-[#FF9800] text-white' : 'bg-white/90 text-[#666666] hover:bg-yellow-50'}`}
                                   title={item.esSensible ? 'Quitar aviso de contenido sensible' : 'Marcar como contenido sensible'}
                                 >
                                   <AlertTriangle className="w-3.5 h-3.5" strokeWidth={2.5} />
@@ -1861,7 +1861,7 @@ export default function EditorClinico() {
                                     value={item.epigrafe || ''}
                                     maxLength={80}
                                     onChange={(e) => handleArrayUpdate('galeria', item.id, 'epigrafe', e.target.value)}
-                                    className="w-full text-[11px] font-medium text-gray-500 bg-transparent outline-none placeholder:text-gray-300 border-b border-gray-100 pb-1 focus:border-[#2D6A6A] transition-colors"
+                                    className="w-full text-[11px] font-medium text-[#666666] bg-transparent outline-none placeholder:text-gray-300 border-b border-gray-100 pb-1 focus:border-[#2D6A6A] transition-colors"
                                   />
                                 </div>
                               </div>
@@ -1901,7 +1901,7 @@ export default function EditorClinico() {
               <div className="w-full bg-white rounded-[32px] shadow-sm border border-gray-100 p-6 md:p-10 relative animate-in fade-in duration-300 min-h-[500px]">
                 <div className="mb-8">
                   <h3 className="text-2xl font-black text-[#1A3D3D] font-['Montserrat']">Especialidades y equipamiento</h3>
-                  <p className="text-sm text-gray-500 mt-1">Seleccioná las prestaciones y el equipamiento disponibles en tu centro médico. Los tutores filtran la Cartilla con estos datos.</p>
+                  <p className="text-sm text-[#666666] mt-1">Seleccioná las prestaciones y el equipamiento disponibles en tu centro médico. Los tutores filtran la Cartilla con estos datos.</p>
                 </div>
                 <SelectorServicios
                   servicios={formData.servicios}
@@ -1919,7 +1919,7 @@ export default function EditorClinico() {
               <div className="w-full bg-white rounded-[32px] shadow-sm border border-gray-100 p-6 md:p-10 relative animate-in fade-in duration-300 min-h-[500px]">
                 <div className="mb-8">
                   <h3 className="text-2xl font-black text-[#1A3D3D] font-['Montserrat']">Staff médico</h3>
-                  <p className="text-sm text-gray-500 mt-1">Presentá a los especialistas que trabajan en tu centro. Esto genera mucha confianza en los tutores.</p>
+                  <p className="text-sm text-[#666666] mt-1">Presentá a los especialistas que trabajan en tu centro. Esto genera mucha confianza en los tutores.</p>
                 </div>
 
                 <div className="space-y-6">
@@ -1927,7 +1927,7 @@ export default function EditorClinico() {
                     <div className="bg-[#F4F7F7] rounded-[24px] p-8 text-center">
                       <Users className="w-8 h-8 text-gray-400 opacity-50 mx-auto mb-3" />
                       <p className="text-sm font-bold text-[#1A3D3D] mb-1">Todavía no cargaste a tu equipo</p>
-                      <p className="text-xs text-gray-500 font-medium">Sumá al menos un profesional para que aparezca la sección "Equipo médico" en tu perfil.</p>
+                      <p className="text-xs text-[#666666] font-medium">Sumá al menos un profesional para que aparezca la sección "Equipo médico" en tu perfil.</p>
                     </div>
                   )}
 
@@ -1955,19 +1955,19 @@ export default function EditorClinico() {
                         </label>
 
                         <div className="flex md:hidden items-center gap-2 mr-14">
-                          <button type="button" onClick={() => handleArrayMove('staff', index, 'up')} disabled={index === 0} className="p-2.5 bg-white rounded-xl border border-gray-200 text-gray-500 hover:text-[#1A3D3D] hover:border-[#4DB6AC] disabled:opacity-30 shadow-sm transition-all"><ArrowUp className="w-5 h-5" /></button>
-                          <button type="button" onClick={() => handleArrayMove('staff', index, 'down')} disabled={index === formData.staff.length - 1} className="p-2.5 bg-white rounded-xl border border-gray-200 text-gray-500 hover:text-[#1A3D3D] hover:border-[#4DB6AC] disabled:opacity-30 shadow-sm transition-all"><ArrowDown className="w-5 h-5" /></button>
+                          <button type="button" onClick={() => handleArrayMove('staff', index, 'up')} disabled={index === 0} className="p-2.5 bg-white rounded-xl border border-gray-200 text-[#666666] hover:text-[#1A3D3D] hover:border-[#4DB6AC] disabled:opacity-30 shadow-sm transition-all"><ArrowUp className="w-5 h-5" /></button>
+                          <button type="button" onClick={() => handleArrayMove('staff', index, 'down')} disabled={index === formData.staff.length - 1} className="p-2.5 bg-white rounded-xl border border-gray-200 text-[#666666] hover:text-[#1A3D3D] hover:border-[#4DB6AC] disabled:opacity-30 shadow-sm transition-all"><ArrowDown className="w-5 h-5" /></button>
                         </div>
                       </div>
 
                       <div className="flex-1 space-y-4 pt-2">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
-                            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 block ml-1">Nombre completo <span className="text-red-400 ml-1">*</span></label>
+                            <label className="text-xs font-bold text-[#666666] uppercase tracking-widest mb-2 block ml-1">Nombre completo <span className="text-red-400 ml-1">*</span></label>
                             <input type="text" placeholder="Ej: Dra. Valeria Rojas" value={item.nombre} maxLength={80} onChange={(e) => handleArrayUpdate('staff', item.id, 'nombre', e.target.value)} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-base font-bold text-[#1A3D3D] focus:border-[#2D6A6A] outline-none" />
                           </div>
                           <div>
-                            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 block ml-1">Matrícula</label>
+                            <label className="text-xs font-bold text-[#666666] uppercase tracking-widest mb-2 block ml-1">Matrícula</label>
                             <div className="flex gap-0 rounded-xl overflow-hidden border border-gray-200 bg-white focus-within:border-[#2D6A6A] transition-colors">
                               <select
                                 value={item.tipoMatricula || 'MP'}
@@ -1990,11 +1990,11 @@ export default function EditorClinico() {
                           </div>
                         </div>
                         <div>
-                          <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 block ml-1">Especialidad / cargo</label>
+                          <label className="text-xs font-bold text-[#666666] uppercase tracking-widest mb-2 block ml-1">Especialidad / cargo</label>
                           <input type="text" placeholder="Ej: Director médico, cirujano..." value={item.especialidad} maxLength={80} onChange={(e) => handleArrayUpdate('staff', item.id, 'especialidad', e.target.value)} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm font-medium text-[#2D6A6A] focus:border-[#2D6A6A] outline-none" />
                         </div>
                         <div>
-                          <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1 flex justify-between items-center">
+                          <label className="text-xs font-bold text-[#666666] uppercase tracking-widest mb-2 ml-1 flex justify-between items-center">
                             Breve descripción
                             <span className={`text-[11px] tracking-wider ${item.bio?.length >= 140 ? 'text-red-500' : 'text-gray-400'}`}>{item.bio?.length || 0} / 150</span>
                           </label>
@@ -2022,7 +2022,7 @@ export default function EditorClinico() {
               <div className="w-full bg-white rounded-[32px] shadow-sm border border-gray-100 p-6 md:p-10 relative animate-in fade-in duration-300 min-h-[500px]">
                 <div className="mb-8">
                   <h3 className="text-2xl font-black text-[#1A3D3D] font-['Montserrat'] flex items-center gap-2">Casos clínicos</h3>
-                  <p className="text-sm text-gray-500 mt-1">Subí fotos del antes y después para generar confianza en el trabajo de tu equipo.</p>
+                  <p className="text-sm text-[#666666] mt-1">Subí fotos del antes y después para generar confianza en el trabajo de tu equipo.</p>
                 </div>
 
                 <div className="space-y-6">
@@ -2053,16 +2053,16 @@ export default function EditorClinico() {
                         <div className="flex-1 space-y-3">
                           <div className="flex gap-3">
                             <div className="w-1/3">
-                              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 block ml-1">Paciente</label>
+                              <label className="text-[10px] font-bold text-[#666666] uppercase tracking-widest mb-1.5 block ml-1">Paciente</label>
                               <input type="text" placeholder="Ej: Firulais" value={item.nombre} maxLength={40} onChange={(e) => handleArrayUpdate('casos', item.id, 'nombre', e.target.value)} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold focus:border-[#2D6A6A] outline-none" />
                             </div>
                             <div className="w-2/3">
-                              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 block ml-1">Patología o motivo <span className="text-red-400 ml-1">*</span></label>
+                              <label className="text-[10px] font-bold text-[#666666] uppercase tracking-widest mb-1.5 block ml-1">Patología o motivo <span className="text-red-400 ml-1">*</span></label>
                               <input type="text" placeholder="Ej: Corrección de luxación patelar" value={item.patologia} maxLength={100} onChange={(e) => handleArrayUpdate('casos', item.id, 'patologia', e.target.value)} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm text-[#2D6A6A] font-medium focus:border-[#2D6A6A] outline-none" />
                             </div>
                           </div>
                           <div>
-                            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 block ml-1">Relato del caso</label>
+                            <label className="text-[10px] font-bold text-[#666666] uppercase tracking-widest mb-1.5 block ml-1">Relato del caso</label>
                             <textarea
                               placeholder="Contá la historia clínica, el tratamiento aplicado y la evolución..."
                               value={item.desc}

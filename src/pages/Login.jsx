@@ -337,13 +337,13 @@ export default function Login() {
                     <CheckCircle2 className="w-8 h-8 text-green-500" />
                   </div>
                   <h3 className="font-bold text-[#1A3D3D] text-[16px]">¡Revisa tu bandeja!</h3>
-                  <p className="text-gray-500 text-[13px] leading-relaxed max-w-[280px]">Hemos enviado un enlace de recuperación a <br /><strong className="text-[#1A3D3D]">{formData.email}</strong></p>
+                  <p className="text-[#666666] text-[13px] leading-relaxed max-w-[280px]">Hemos enviado un enlace de recuperación a <br /><strong className="text-[#1A3D3D]">{formData.email}</strong></p>
                   <button onClick={() => setView('login')} className="w-full mt-6 bg-[#2D6A6A] text-white font-bold rounded-xl py-4 flex items-center justify-center tracking-[0.1em] text-[12px] uppercase shadow-lg shadow-[#2D6A6A]/30 hover:bg-[#1A3D3D] transition-all">Volver al inicio</button>
                 </div>
               ) : (
                 <>
                   {view === 'forgot_password' && (
-                    <p className="text-center text-gray-500 text-[12px] mb-6 leading-relaxed">Ingresá tu correo y te enviaremos un enlace para restablecer tu contraseña.</p>
+                    <p className="text-center text-[#666666] text-[12px] mb-6 leading-relaxed">Ingresá tu correo y te enviaremos un enlace para restablecer tu contraseña.</p>
                   )}
 
                   {errorMsg && (
@@ -411,7 +411,7 @@ export default function Login() {
 
             {(view === 'login' || view === 'register') && (
               <div className="mt-8 md:mt-2 text-center shrink-0">
-                <p className="text-[12px] text-gray-500 font-medium">
+                <p className="text-[12px] text-[#666666] font-medium">
                   {view === 'login' ? '¿Aún no eres parte de la red?' : '¿Ya tienes una cuenta?'}
                 </p>
                 {view === 'login' ? (
