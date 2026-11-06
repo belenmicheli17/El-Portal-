@@ -257,7 +257,7 @@ function FormMatricula({ currentUser, onGuardado }) {
           value={matricula}
           onChange={e => setMatricula(e.target.value)}
           placeholder="Ej: 12345"
-          className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm text-[#1A3D3D] placeholder-gray-400 focus:border-[#2D6A6A] focus:ring-2 focus:ring-[#2D6A6A]/20 outline-none transition-all"
+          className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm text-[#1A3D3D] placeholder-gray-400 focus:border-[#2D6A6A] focus:ring-4 focus:ring-[#2D6A6A]/10 outline-none transition-all"
         />
       </div>
       <div>
@@ -267,7 +267,7 @@ function FormMatricula({ currentUser, onGuardado }) {
           value={facultad}
           onChange={e => setFacultad(e.target.value)}
           placeholder="Ej: UBA, UNLP, UNR..."
-          className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm text-[#1A3D3D] placeholder-gray-400 focus:border-[#2D6A6A] focus:ring-2 focus:ring-[#2D6A6A]/20 outline-none transition-all"
+          className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm text-[#1A3D3D] placeholder-gray-400 focus:border-[#2D6A6A] focus:ring-4 focus:ring-[#2D6A6A]/10 outline-none transition-all"
         />
       </div>
       <button
@@ -329,7 +329,7 @@ function FormDirectorTecnico({ currentUser, onGuardado }) {
           value={nombre}
           onChange={e => setNombre(e.target.value)}
           placeholder="Ej: María González"
-          className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm text-[#1A3D3D] placeholder-gray-400 focus:border-[#2D6A6A] focus:ring-2 focus:ring-[#2D6A6A]/20 outline-none transition-all"
+          className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm text-[#1A3D3D] placeholder-gray-400 focus:border-[#2D6A6A] focus:ring-4 focus:ring-[#2D6A6A]/10 outline-none transition-all"
         />
       </div>
       <div>
@@ -339,7 +339,7 @@ function FormDirectorTecnico({ currentUser, onGuardado }) {
           value={matricula}
           onChange={e => setMatricula(e.target.value)}
           placeholder="Ej: 12345"
-          className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm text-[#1A3D3D] placeholder-gray-400 focus:border-[#2D6A6A] focus:ring-2 focus:ring-[#2D6A6A]/20 outline-none transition-all"
+          className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm text-[#1A3D3D] placeholder-gray-400 focus:border-[#2D6A6A] focus:ring-4 focus:ring-[#2D6A6A]/10 outline-none transition-all"
         />
       </div>
       <div>
@@ -349,7 +349,7 @@ function FormDirectorTecnico({ currentUser, onGuardado }) {
           value={facultad}
           onChange={e => setFacultad(e.target.value)}
           placeholder="Ej: UBA, UNLP, UNR..."
-          className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm text-[#1A3D3D] placeholder-gray-400 focus:border-[#2D6A6A] focus:ring-2 focus:ring-[#2D6A6A]/20 outline-none transition-all"
+          className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm text-[#1A3D3D] placeholder-gray-400 focus:border-[#2D6A6A] focus:ring-4 focus:ring-[#2D6A6A]/10 outline-none transition-all"
         />
       </div>
       <button

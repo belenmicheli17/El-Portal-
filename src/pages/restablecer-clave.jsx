@@ -185,7 +185,7 @@ export default function RestablecerClave() {
                       onChange={(e) => { setPassword(e.target.value); if (errorMsg) setErrorMsg(''); }}
                       placeholder="Nueva contraseña"
                       autoComplete="new-password"
-                      className="w-full pl-11 pr-12 py-3.5 bg-[#F4F7F7] border border-transparent rounded-xl text-[13px] text-[#1A3D3D] placeholder-gray-400 focus:bg-white focus:border-[#2D6A6A] focus:ring-2 focus:ring-[#2D6A6A]/20 transition-all outline-none"
+                      className="w-full pl-11 pr-12 py-3.5 bg-[#F4F7F7] border border-transparent rounded-xl text-[13px] text-[#1A3D3D] placeholder-gray-400 focus:bg-white focus:border-[#2D6A6A] focus:ring-4 focus:ring-[#2D6A6A]/10 transition-all outline-none"
                       required
                     />
                     <button type="button" onClick={() => setVerPassword(!verPassword)} className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-[#2D6A6A] transition-colors">
@@ -201,7 +201,7 @@ export default function RestablecerClave() {
                       onChange={(e) => { setPassword2(e.target.value); if (errorMsg) setErrorMsg(''); }}
                       placeholder="Repetí la contraseña"
                       autoComplete="new-password"
-                      className="w-full pl-11 pr-4 py-3.5 bg-[#F4F7F7] border border-transparent rounded-xl text-[13px] text-[#1A3D3D] placeholder-gray-400 focus:bg-white focus:border-[#2D6A6A] focus:ring-2 focus:ring-[#2D6A6A]/20 transition-all outline-none"
+                      className="w-full pl-11 pr-4 py-3.5 bg-[#F4F7F7] border border-transparent rounded-xl text-[13px] text-[#1A3D3D] placeholder-gray-400 focus:bg-white focus:border-[#2D6A6A] focus:ring-4 focus:ring-[#2D6A6A]/10 transition-all outline-none"
                       required
                     />
                   </div>
