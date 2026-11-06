@@ -323,7 +323,7 @@ const PROVINCIAS_ARG = [
 
                       {/* ETIQUETA ESPECIAL (Nuevo / Promo) */}
                       {prov.etiqueta && (
-                        <span className={`absolute top-3 left-3 text-white text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full shadow-md ${prov.etiqueta === 'Nuevo' ? 'bg-[#E4405F]' : 'bg-amber-500'}`}>
+                        <span className={`absolute top-3 left-3 text-white text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full shadow-md ${prov.etiqueta === 'Nuevo' ? 'bg-[#E4405F]' : 'bg-yellow-500'}`}>
                           {prov.etiqueta}
                         </span>
                       )}

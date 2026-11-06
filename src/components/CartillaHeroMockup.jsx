@@ -27,7 +27,7 @@ const CartillaHeroMockup = () => {
 
       {/* 2. EL TELÉFONO: Acá aplicamos la transformación 3D (rotateX) */}
       <div 
-        className="relative z-10 bg-[#F9F5F0] rounded-[38px] border-[8px] border-[#F8F9FA] shadow-[0_20px_50px_rgba(0,0,0,0.15),inset_0_0_0_1px_rgba(0,0,0,0.05)] overflow-hidden flex flex-col h-[500px] sm:h-[550px] origin-bottom"
+        className="relative z-10 bg-[#F9F5F0] rounded-[38px] border-[8px] border-[#F4F7F7] shadow-[0_20px_50px_rgba(0,0,0,0.15),inset_0_0_0_1px_rgba(0,0,0,0.05)] overflow-hidden flex flex-col h-[500px] sm:h-[550px] origin-bottom"
         style={{
           transform: isLoaded ? 'rotateX(0deg) translateY(0) scale(1)' : 'rotateX(15deg) translateY(60px) scale(0.95)',
           opacity: isLoaded ? 1 : 0,

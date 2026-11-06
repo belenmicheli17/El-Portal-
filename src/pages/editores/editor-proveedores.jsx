@@ -1738,7 +1738,7 @@ const location = useLocation();
                                     <div className="flex items-center gap-2 mb-1.5 flex-wrap pointer-events-none">
                                         <span className="bg-[#4DB6AC]/10 text-[#4DB6AC] text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider">{prod.categoria || 'General'}</span>
                                         {prod.etiqueta && (
-                                          <span className={`text-white text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md ${prod.etiqueta === 'Nuevo' ? 'bg-[#E4405F]' : 'bg-amber-500'}`}>
+                                          <span className={`text-white text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md ${prod.etiqueta === 'Nuevo' ? 'bg-[#E4405F]' : 'bg-yellow-500'}`}>
                                             {prod.etiqueta}
                                           </span>
                                         )}

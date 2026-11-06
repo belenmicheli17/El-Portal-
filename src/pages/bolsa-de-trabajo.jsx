@@ -1046,7 +1046,7 @@ const toggleFiltro = (categoria, valor) => {
                           const text = encodeURIComponent(`Hola, vi su oferta en El Portal para el puesto de ${selectedJob.puesto}. Podés ver mi perfil acá: ${miPerfilUrl}`);
                           window.open(`https://wa.me/${num}?text=${text}`, '_blank');
                         }}
-                        className="w-full bg-[#25D366] text-white py-4 rounded-2xl font-black text-[12px] uppercase tracking-[0.2em] shadow-lg hover:bg-[#20bd5a] hover:-translate-y-1 transition-all duration-300 ease-in-out flex items-center justify-center gap-2"
+                        className="w-full bg-[#25D366] text-white py-4 rounded-2xl font-black text-[12px] uppercase tracking-[0.2em] shadow-lg hover:bg-[#20b858] hover:-translate-y-1 transition-all duration-300 ease-in-out flex items-center justify-center gap-2"
                       >
                         <MessageCircle className="w-5 h-5" /> Enviar cv por WhatsApp
                       </button>

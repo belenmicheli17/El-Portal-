@@ -102,7 +102,7 @@ export default function LegalPage() {
   };
 
   return (
-    <div className="bg-[#F8F9F9] min-h-screen font-['Inter'] antialiased flex flex-col">
+    <div className="bg-[#F4F7F7] min-h-screen font-['Inter'] antialiased flex flex-col">
       {/* NAVBAR */}
       <nav className={`fixed top-0 w-full z-50 h-[80px] flex items-center px-6 md:px-10 transition-all duration-500 ${isNavbarScrolled ? 'bg-white/90 backdrop-blur-md shadow-sm' : 'bg-white border-b border-gray-50'}`}>
         <div className="max-w-[1100px] mx-auto w-full flex justify-between items-center">

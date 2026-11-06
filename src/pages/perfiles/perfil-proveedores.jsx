@@ -212,7 +212,7 @@ export default function PerfilProveedor() {
         </div>
         {prod.etiqueta && (
           <div className="absolute top-4 right-4 z-10">
-            <span className={`text-white text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-lg shadow-sm ${prod.etiqueta === 'Nuevo' ? 'bg-[#E4405F]' : 'bg-amber-500'}`}>
+            <span className={`text-white text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-lg shadow-sm ${prod.etiqueta === 'Nuevo' ? 'bg-[#E4405F]' : 'bg-yellow-500'}`}>
               {prod.etiqueta}
             </span>
           </div>
@@ -244,7 +244,7 @@ export default function PerfilProveedor() {
     <article onClick={() => abrirModalProducto(prod)} className="bg-white rounded-[16px] shadow-sm border border-gray-100 flex flex-col overflow-hidden cursor-pointer relative h-full">
       {prod.etiqueta && (
         <div className="absolute top-2 right-2 z-10">
-          <span className={`text-white text-[8px] font-bold uppercase tracking-widest px-2 py-0.5 rounded shadow-sm ${prod.etiqueta === 'Nuevo' ? 'bg-[#E4405F]' : 'bg-amber-500'}`}>
+          <span className={`text-white text-[8px] font-bold uppercase tracking-widest px-2 py-0.5 rounded shadow-sm ${prod.etiqueta === 'Nuevo' ? 'bg-[#E4405F]' : 'bg-yellow-500'}`}>
             {prod.etiqueta}
           </span>
         </div>
@@ -381,7 +381,7 @@ export default function PerfilProveedor() {
 
             {/* ASIDE: Información de Contacto (CORREGIDO REFERENCIAS PLANAS) */}
             <aside className="lg:w-[35%] w-full">
-              <div id="contacto" className={`sticky top-[100px] bg-[#F9FBFA] p-8 border border-gray-100 flex flex-col text-left mt-4 lg:mt-16 transition-all duration-700 ease-out ${
+              <div id="contacto" className={`sticky top-[100px] bg-[#F4F7F7] p-8 border border-gray-100 flex flex-col text-left mt-4 lg:mt-16 transition-all duration-700 ease-out ${
                 highlightContacto 
                   ? 'scale-[1.02] shadow-[0_0_60px_rgba(45,106,106,0.25)] ring-4 ring-[#4DB6AC]/40 ring-offset-4 ring-offset-[#F4F7F7]/50 rounded-[32px] relative z-50' 
                   : 'scale-100 shadow-sm rounded-[32px] relative z-10 reveal-on-scroll'
@@ -395,7 +395,7 @@ export default function PerfilProveedor() {
                   
                   {/* WhatsApp (CORREGIDO: whatsappActivo y whatsappVentas) */}
                   {proveedor.whatsappActivo && proveedor.whatsappVentas && (
-                    <a href={`https://wa.me/${proveedor.whatsappVentas.replace(/[^0-9]/g, '')}`} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2.5 bg-[#25D366] text-white px-8 py-4 rounded-2xl font-black uppercase text-[11px] shadow-sm tracking-widest hover:bg-[#20bd5a] transition-colors w-full mb-2 active:scale-95">
+                    <a href={`https://wa.me/${proveedor.whatsappVentas.replace(/[^0-9]/g, '')}`} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2.5 bg-[#25D366] text-white px-8 py-4 rounded-2xl font-black uppercase text-[11px] shadow-sm tracking-widest hover:bg-[#20b858] transition-colors w-full mb-2 active:scale-95">
                       <Phone className="w-4 h-4" /> Hablar por WhatsApp
                     </a>
                   )}
@@ -814,7 +814,7 @@ export default function PerfilProveedor() {
             </button>
 
             {/* Columna Izquierda: Galería de Imágenes */}
-            <div className="md:w-1/2 bg-[#F9FBFA] p-6 md:p-8 flex flex-col h-[45vh] md:h-full relative shrink-0 border-b md:border-b-0 md:border-r border-gray-100">
+            <div className="md:w-1/2 bg-[#F4F7F7] p-6 md:p-8 flex flex-col h-[45vh] md:h-full relative shrink-0 border-b md:border-b-0 md:border-r border-gray-100">
               {/* Imagen Principal */}
               <div className="flex-1 flex items-center justify-center min-h-0 mb-6 relative w-full px-10 md:px-12">
                 {/* Flechas Navegación Imagen */}
@@ -831,7 +831,7 @@ export default function PerfilProveedor() {
                       {productoSeleccionado.categoria || 'General'}
                     </span>
                     {productoSeleccionado.etiqueta && (
-                      <span className={`text-white text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-lg shadow-sm w-fit ${productoSeleccionado.etiqueta === 'Nuevo' ? 'bg-[#E4405F]' : 'bg-amber-500'}`}>
+                      <span className={`text-white text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-lg shadow-sm w-fit ${productoSeleccionado.etiqueta === 'Nuevo' ? 'bg-[#E4405F]' : 'bg-yellow-500'}`}>
                         {productoSeleccionado.etiqueta}
                       </span>
                     )}
@@ -925,7 +925,7 @@ export default function PerfilProveedor() {
                     href={(proveedor.whatsappActivo && proveedor.whatsappVentas) ? `https://wa.me/${proveedor.whatsappVentas.replace(/[^0-9]/g, '')}?text=Hola, vi el producto "${productoSeleccionado.titulo}" en tu perfil de El Portal Veterinario y me interesa recibir más información.` : '#'}
                     target="_blank" 
                     rel="noreferrer"
-                    className={`w-full py-4 bg-[#25D366] text-white rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-lg hover:bg-[#20bd5a] transition-all flex items-center justify-center gap-3 active:scale-95 ${!(proveedor.whatsappActivo && proveedor.whatsappVentas) ? 'opacity-50 pointer-events-none' : ''}`}
+                    className={`w-full py-4 bg-[#25D366] text-white rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-lg hover:bg-[#20b858] transition-all flex items-center justify-center gap-3 active:scale-95 ${!(proveedor.whatsappActivo && proveedor.whatsappVentas) ? 'opacity-50 pointer-events-none' : ''}`}
                   >
                     <MessageCircle className="w-5 h-5" /> Consultar disponibilidad
                   </a>
