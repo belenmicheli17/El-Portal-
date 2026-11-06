@@ -102,11 +102,11 @@ const [currentPage, setCurrentPage] = useState(1);
     const colores = {
       "Cirugía": "bg-[#2D6A6A]/10 text-[#2D6A6A]", // Teal base
       "Clínica Médica": "bg-[#1A3D3D]/10 text-[#1A3D3D]", // Teal oscuro
-      "Nutrición": "bg-emerald-600/10 text-emerald-700", // Esmeralda suave
-      "Comportamiento": "bg-slate-500/10 text-slate-700", // Pizarra/Gris
-      "Farmacología": "bg-cyan-700/10 text-cyan-800", // Cian oscuro
+      "Nutrición": "bg-[#4DB6AC]/20 text-[#1A3D3D]", // Verde agua
+      "Comportamiento": "bg-[#666666]/10 text-[#666666]", // Gris
+      "Farmacología": "bg-[#2D6A6A]/10 text-[#2D6A6A]", // Esmeralda
       "Reporte de Casos": "bg-[#4DB6AC]/20 text-[#1A3D3D]", // Teal clarito
-      "Diagnóstico por Imágenes": "bg-indigo-900/10 text-indigo-900" // Azul muy oscuro/noche
+      "Diagnóstico por Imágenes": "bg-[#1A3D3D]/10 text-[#1A3D3D]" // Petróleo
     };
     return colores[categoria] || "bg-gray-100 text-[#666666]";
   };
@@ -150,9 +150,9 @@ const [currentPage, setCurrentPage] = useState(1);
         </div>
       )}
       {/* BURBUJAS DE FONDO TIPO "MESH GRADIENT" MÁS POTENTES */}
-      <div className="absolute top-0 md:top-[-5%] left-[-10%] md:left-[-5%] w-[300px] md:w-[600px] h-[300px] md:h-[600px] bg-[#4DB6AC]/40 md:bg-[#4DB6AC]/25 rounded-full blur-[120px] md:blur-[120px] pointer-events-none z-0"></div>
-      <div className="absolute top-[10%] md:top-[5%] right-[-10%] md:right-[-5%] w-[250px] md:w-[500px] h-[250px] md:h-[500px] bg-[#2D6A6A]/30 md:bg-[#2D6A6A]/15 rounded-full blur-[120px] md:blur-[120px] pointer-events-none z-0"></div>
-      <div className="absolute top-0 md:top-[-5%] left-[50%] -translate-x-1/2 w-[100vw] md:w-[800px] h-[300px] md:h-[600px] bg-white/50 md:bg-white/70 rounded-full blur-[120px] md:blur-[120px] pointer-events-none z-0"></div>
+      <div className="absolute top-0 md:top-[-5%] left-[-10%] md:left-[-5%] w-[300px] md:w-[600px] h-[300px] md:h-[600px] bg-[#4DB6AC]/40 md:bg-[#4DB6AC]/25 rounded-full blur-[120px] pointer-events-none z-0"></div>
+      <div className="absolute top-[10%] md:top-[5%] right-[-10%] md:right-[-5%] w-[250px] md:w-[500px] h-[250px] md:h-[500px] bg-[#2D6A6A]/30 md:bg-[#2D6A6A]/15 rounded-full blur-[120px] pointer-events-none z-0"></div>
+      <div className="absolute top-0 md:top-[-5%] left-[50%] -translate-x-1/2 w-[100vw] md:w-[800px] h-[300px] md:h-[600px] bg-white/50 md:bg-white/70 rounded-full blur-[120px] pointer-events-none z-0"></div>
 
       {/* HEADER / HERO */}
       <div className="pt-8 md:pt-14 pb-6 md:pb-10 px-4 md:px-10 max-w-[1300px] mx-auto flex flex-col items-center text-center relative z-[60] transition-all">
