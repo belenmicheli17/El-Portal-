@@ -391,7 +391,7 @@ function SelectorVisibilidad({ valor, onCambio }) {
             key={clave}
             type="button"
             onClick={() => onCambio(clave)}
-            className={`${CLASE_CHIP} ${valor === clave ? 'bg-[#2D6A6A] border-[#2D6A6A] text-white' : 'bg-white border-gray-200 text-[#555555] hover:border-[#2D6A6A]'}`}
+            className={`${CLASE_CHIP} ${valor === clave ? 'bg-[#2D6A6A] border-[#2D6A6A] text-white' : 'bg-white border-gray-200 text-[#666666] hover:border-[#2D6A6A]'}`}
           >
             {texto}
           </button>
@@ -421,7 +421,7 @@ function EtiquetaConVisibilidad({ id, texto, valor, onCambio }) {
             key={clave}
             type="button"
             onClick={() => onCambio(clave)}
-            className={`border rounded-lg px-3 py-1.5 text-[13px] font-semibold transition-all duration-300 ease-in-out ${valor === clave ? 'bg-[#2D6A6A] border-[#2D6A6A] text-white' : 'bg-white border-gray-200 text-[#555555] hover:border-[#2D6A6A]'}`}
+            className={`border rounded-lg px-3 py-1.5 text-[13px] font-semibold transition-all duration-300 ease-in-out ${valor === clave ? 'bg-[#2D6A6A] border-[#2D6A6A] text-white' : 'bg-white border-gray-200 text-[#666666] hover:border-[#2D6A6A]'}`}
           >
             {nombre}
           </button>
@@ -474,7 +474,7 @@ function BuscadorServicios({ seleccion, onAlternar, onAgregarPropio }) {
                 key={grupo.id}
                 type="button"
                 onClick={() => { onAgregarPropio(textoPropio, grupo.id); setTextoPropio(''); setBusqueda(''); }}
-                className={`${CLASE_CHIP} bg-white border-gray-200 text-[#555555] hover:border-[#2D6A6A]`}
+                className={`${CLASE_CHIP} bg-white border-gray-200 text-[#666666] hover:border-[#2D6A6A]`}
               >
                 {grupo.grupo}
               </button>
@@ -539,7 +539,7 @@ function BuscadorServicios({ seleccion, onAlternar, onAgregarPropio }) {
                       key={opcion}
                       type="button"
                       onClick={() => onAlternar({ nombre: opcion, grupoId: grupo.id, grupoNombre: grupo.grupo })}
-                      className={`${CLASE_CHIP} ${elegido ? 'bg-[#2D6A6A] border-[#2D6A6A] text-white' : 'bg-white border-gray-200 text-[#555555] hover:border-[#2D6A6A]'}`}
+                      className={`${CLASE_CHIP} ${elegido ? 'bg-[#2D6A6A] border-[#2D6A6A] text-white' : 'bg-white border-gray-200 text-[#666666] hover:border-[#2D6A6A]'}`}
                     >
                       {opcion}
                     </button>
@@ -753,7 +753,7 @@ function PantallaComoLlegaste({ datos, cambiar, error, guardando, onVolver, onEn
             key={opcion}
             type="button"
             onClick={() => cambiar('comoLlego', opcion)}
-            className={`${CLASE_CHIP} ${datos.comoLlego === opcion ? 'bg-[#2D6A6A] border-[#2D6A6A] text-white' : 'bg-white border-gray-200 text-[#555555] hover:border-[#2D6A6A]'}`}
+            className={`${CLASE_CHIP} ${datos.comoLlego === opcion ? 'bg-[#2D6A6A] border-[#2D6A6A] text-white' : 'bg-white border-gray-200 text-[#666666] hover:border-[#2D6A6A]'}`}
           >
             {opcion}
           </button>
@@ -1435,7 +1435,7 @@ export default function Onboarding() {
                 key={valor || 'ninguno'}
                 type="button"
                 onClick={() => cambiar('tituloGenero', valor)}
-                className={`${CLASE_CHIP} text-center px-2 ${datos.tituloGenero === valor ? 'bg-[#2D6A6A] border-[#2D6A6A] text-white' : 'bg-white border-gray-200 text-[#555555] hover:border-[#2D6A6A]'}`}
+                className={`${CLASE_CHIP} text-center px-2 ${datos.tituloGenero === valor ? 'bg-[#2D6A6A] border-[#2D6A6A] text-white' : 'bg-white border-gray-200 text-[#666666] hover:border-[#2D6A6A]'}`}
               >
                 {texto}
               </button>
@@ -1541,7 +1541,7 @@ export default function Onboarding() {
                         key={animal}
                         type="button"
                         onClick={() => cambiar(campoDatos, elegido ? datos[campoDatos].filter((a) => a !== animal) : [...datos[campoDatos], animal])}
-                        className={`${CLASE_CHIP} ${elegido ? 'bg-[#2D6A6A] border-[#2D6A6A] text-white' : 'bg-white border-gray-200 text-[#555555] hover:border-[#2D6A6A]'}`}
+                        className={`${CLASE_CHIP} ${elegido ? 'bg-[#2D6A6A] border-[#2D6A6A] text-white' : 'bg-white border-gray-200 text-[#666666] hover:border-[#2D6A6A]'}`}
                       >
                         {animal}
                       </button>

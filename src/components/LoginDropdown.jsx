@@ -97,7 +97,7 @@ export default function LoginDropdown({ onClose }) {
       {loginView === 'sent' ? (
         <div className="flex flex-col items-center text-center gap-3 py-2">
           <CheckCircle className="w-10 h-10 text-[#2D6A6A]" strokeWidth={2} />
-          <p className="text-[#555555] text-[13px] leading-relaxed">
+          <p className="text-[#666666] text-[13px] leading-relaxed">
             Te enviamos un link a<br />
             <span className="font-bold text-[#1A3D3D]">{loginEmail}</span>
           </p>

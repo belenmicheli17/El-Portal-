@@ -160,7 +160,7 @@ function QuienesSomos() {
         </span>
 
         {/* Texto en cursiva */}
-        <p className="text-[#555555] text-[16px] md:text-[17px] leading-loose font-['Inter',sans-serif] italic relative z-10">
+        <p className="text-[#666666] text-[16px] md:text-[17px] leading-loose font-['Inter',sans-serif] italic relative z-10">
           El Portal nació de una necesidad real: conectar el mundo veterinario argentino en un solo lugar, disponible en cualquier momento para todos los públicos. Lo construí con la convicción de que la salud animal merece una red profesional accesible y a la altura.
         </p>
 
@@ -315,8 +315,8 @@ export default function SalaDeEspera() {
       <h1 className="font-['Montserrat'] font-extrabold text-[#1A3D3D] text-[50px] md:text-[56px] leading-tight mb-4">
         Tu presencia digital en el mundo veterinario.
       </h1>
-      <p className="mt-4 text-[#555555] text-[23px] md:text-[19px] font-medium leading-relaxed max-w-lg">
-          <span className="text-[#555555] font-bold">El primer Portal exclusivo para Veterinarios. </span>  <br />
+      <p className="mt-4 text-[#666666] text-[23px] md:text-[19px] font-medium leading-relaxed max-w-lg">
+          <span className="text-[#666666] font-bold">El primer Portal exclusivo para Veterinarios. </span>  <br />
 Creá tu perfil, aparecé en búsquedas y conectate con colegas, clínicas y proveedores de todo el país. 
       </p>
       <div className="mt-6 flex items-center gap-2 flex-wrap">
@@ -344,7 +344,7 @@ Creá tu perfil, aparecé en búsquedas y conectate con colegas, clínicas y pro
             <h2 className="font-['Montserrat'] font-semibold text-[#2D6A6A] text-[23px] md:text-[19px] mt-2 mb-2 uppercase tracking-[0.08em]">
               Para el sector <span className="text-[#FF9800]">público</span>
             </h2>
-            <p className="text-[#444444] text-[19px] md:text-[17px] font-normal mb-8 leading-relaxed">
+            <p className="text-[#333333] text-[19px] md:text-[17px] font-normal mb-8 leading-relaxed">
               Cualquier persona puede encontrar al profesional ideal para su mascota.
             </p>
           </div>
@@ -377,7 +377,7 @@ Creá tu perfil, aparecé en búsquedas y conectate con colegas, clínicas y pro
             <h2 className="font-['Montserrat'] font-semibold text-[#2D6A6A] text-[23px] md:text-[19px] mt-2 mb-2 uppercase tracking-[0.08em]">
               Exclusivo para veterinarios registrados
             </h2>
-            <p className="text-[#444444] mt-1 text-[19px] md:text-[17px] font-normal leading-relaxed">
+            <p className="text-[#333333] mt-1 text-[19px] md:text-[17px] font-normal leading-relaxed">
               Lo que ya podés usar hoy en El Portal.
             </p>
           </div>

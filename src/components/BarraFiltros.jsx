@@ -235,7 +235,7 @@ const BarraFiltros = ({
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-1.5 px-6 py-2.5 rounded-t-[14px] text-[13px] md:text-[14px] font-semibold transition-all ${
-                  isActive ? 'bg-white text-[#1A3D3D]' : 'bg-transparent text-[#555555] hover:text-[#1A3D3D]'
+                  isActive ? 'bg-white text-[#1A3D3D]' : 'bg-transparent text-[#666666] hover:text-[#1A3D3D]'
                 }`}
               >
                 {Icon && <Icon className="w-4 h-4" />}
@@ -347,7 +347,7 @@ const BarraFiltros = ({
                         // onMouseDown + preventDefault evita que el buscador pierda el foco antes de tocar la opción
                         onMouseDown={(e) => e.preventDefault()}
                         onClick={() => elegirSugerencia(opcion)}
-                        className="w-full flex items-center gap-2 text-left px-4 py-2.5 text-[14px] font-medium text-[#555555] hover:bg-[#F4F7F7] hover:text-[#2D6A6A] transition-colors"
+                        className="w-full flex items-center gap-2 text-left px-4 py-2.5 text-[14px] font-medium text-[#666666] hover:bg-[#F4F7F7] hover:text-[#2D6A6A] transition-colors"
                       >
                         <Search className="w-4 h-4 text-[#2D6A6A] shrink-0" />
                         <span className="truncate">{opcion}</span>
@@ -408,7 +408,7 @@ const BarraFiltros = ({
                             <button
                               type="button"
                               onClick={() => elegir('')}
-                              className={`w-full text-left px-4 py-2.5 text-[13px] font-medium transition-colors ${!filtros.zonas[0] ? 'text-[#2D6A6A] bg-[#F4F7F7]' : 'text-[#555555] hover:bg-[#F4F7F7]'}`}
+                              className={`w-full text-left px-4 py-2.5 text-[13px] font-medium transition-colors ${!filtros.zonas[0] ? 'text-[#2D6A6A] bg-[#F4F7F7]' : 'text-[#666666] hover:bg-[#F4F7F7]'}`}
                             >
                               Todas las zonas
                             </button>
@@ -420,7 +420,7 @@ const BarraFiltros = ({
                                 key={`${l.tipo}-${l.valor}`}
                                 type="button"
                                 onClick={() => elegir(l.valor)}
-                                className={`w-full text-left px-4 py-2.5 text-[13px] font-medium transition-colors flex items-center justify-between gap-2 ${activo ? 'text-[#2D6A6A] bg-[#F4F7F7]' : 'text-[#555555] hover:bg-[#F4F7F7]'}`}
+                                className={`w-full text-left px-4 py-2.5 text-[13px] font-medium transition-colors flex items-center justify-between gap-2 ${activo ? 'text-[#2D6A6A] bg-[#F4F7F7]' : 'text-[#666666] hover:bg-[#F4F7F7]'}`}
                               >
                                 <span className="min-w-0">
                                   <span className="block truncate">{l.etiqueta}</span>

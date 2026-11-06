@@ -296,7 +296,7 @@ export default function Validaciones() {
                     key={texto}
                     type="button"
                     onClick={() => { setMotivo(texto); setErrorModal(''); }}
-                    className="border border-gray-200 bg-white text-[#555555] rounded-xl px-3 py-2 text-[13px] font-medium text-left transition-all duration-300 ease-in-out hover:border-[#2D6A6A]"
+                    className="border border-gray-200 bg-white text-[#666666] rounded-xl px-3 py-2 text-[13px] font-medium text-left transition-all duration-300 ease-in-out hover:border-[#2D6A6A]"
                   >
                     {texto}
                   </button>

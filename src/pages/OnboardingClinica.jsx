@@ -294,7 +294,7 @@ function SelectorHorario({ desde, hasta, onCambio, conAtajos = false }) {
               key={`${d}-${h}`}
               type="button"
               onClick={() => onCambio(d, h)}
-              className={`${CLASE_CHIP} ${desde === d && hasta === h ? 'bg-[#2D6A6A] border-[#2D6A6A] text-white' : 'bg-white border-gray-200 text-[#555555] hover:border-[#2D6A6A]'}`}
+              className={`${CLASE_CHIP} ${desde === d && hasta === h ? 'bg-[#2D6A6A] border-[#2D6A6A] text-white' : 'bg-white border-gray-200 text-[#666666] hover:border-[#2D6A6A]'}`}
             >
               {d} a {h} hs
             </button>
@@ -367,7 +367,7 @@ function PantallaComoLlegaste({ datos, cambiar, error, guardando, onVolver, onEn
             key={opcion}
             type="button"
             onClick={() => cambiar('comoLlego', opcion)}
-            className={`${CLASE_CHIP} ${datos.comoLlego === opcion ? 'bg-[#2D6A6A] border-[#2D6A6A] text-white' : 'bg-white border-gray-200 text-[#555555] hover:border-[#2D6A6A]'}`}
+            className={`${CLASE_CHIP} ${datos.comoLlego === opcion ? 'bg-[#2D6A6A] border-[#2D6A6A] text-white' : 'bg-white border-gray-200 text-[#666666] hover:border-[#2D6A6A]'}`}
           >
             {opcion}
           </button>
@@ -1276,7 +1276,7 @@ export default function OnboardingClinica() {
                     key={texto}
                     type="button"
                     onClick={() => cambiar('sabadoAbre', valor)}
-                    className={`${CLASE_CHIP} ${datos.sabadoAbre === valor ? 'bg-[#2D6A6A] border-[#2D6A6A] text-white' : 'bg-white border-gray-200 text-[#555555] hover:border-[#2D6A6A]'}`}
+                    className={`${CLASE_CHIP} ${datos.sabadoAbre === valor ? 'bg-[#2D6A6A] border-[#2D6A6A] text-white' : 'bg-white border-gray-200 text-[#666666] hover:border-[#2D6A6A]'}`}
                   >
                     {texto}
                   </button>
