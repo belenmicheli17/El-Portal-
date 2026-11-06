@@ -48,7 +48,7 @@ const CartillaHeroMockup = () => {
         {/* CABECERA DE LA APP */}
         <div className="bg-white/90 backdrop-blur-md px-4 pt-10 pb-4 border-b border-gray-100 shadow-sm relative z-10 shrink-0">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-montserrat font-black text-[#1A3D3D] text-[18px]">Ver la Cartilla completa</h3>
+            <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[18px]">Ver la Cartilla completa</h3>
             <div className="w-8 h-8 rounded-full bg-[#F4F7F7] flex items-center justify-center">
               <ExternalLink className="w-4 h-4 text-[#2D6A6A]" />
             </div>
@@ -85,7 +85,7 @@ const CartillaHeroMockup = () => {
                 </div>
               </div>
               <div className="flex-1 min-w-0 pr-2">
-                <h2 className="font-montserrat font-extrabold text-[#1A3D3D] text-[14px] sm:text-[15px] leading-[1.2] line-clamp-2">
+                <h2 className="font-['Montserrat'] font-extrabold text-[#1A3D3D] text-[14px] sm:text-[15px] leading-[1.2] line-clamp-2">
                   <span className="block truncate">Veterinaria</span>
                   <span className="block truncate">Huellitas</span>
                 </h2>
@@ -131,7 +131,7 @@ const CartillaHeroMockup = () => {
               </div>
               
               <div className="mb-2">
-                <h2 className="font-montserrat font-extrabold text-[#1A3D3D] text-[13px] leading-[1.2] line-clamp-2">
+                <h2 className="font-['Montserrat'] font-extrabold text-[#1A3D3D] text-[13px] leading-[1.2] line-clamp-2">
                   <span className="block truncate">Mercedes</span>
                   <span className="block truncate">Arenas</span>
                 </h2>
@@ -170,7 +170,7 @@ const CartillaHeroMockup = () => {
                 </div>
               </div>
               <div className="mb-2">
-                <h2 className="font-montserrat font-extrabold text-[#1A3D3D] text-[13px] leading-[1.2] line-clamp-2">
+                <h2 className="font-['Montserrat'] font-extrabold text-[#1A3D3D] text-[13px] leading-[1.2] line-clamp-2">
                   <span className="block truncate">Martín</span>
                   <span className="block truncate">Gómez</span>
                 </h2>

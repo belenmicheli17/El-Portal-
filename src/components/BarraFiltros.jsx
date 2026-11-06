@@ -504,7 +504,7 @@ const BarraFiltros = ({
                   <div className="border-b border-gray-100 lg:border-none">
                     <h3 
                       onClick={() => setOpenSection(openSection === 'especialidad' ? null : 'especialidad')}
-                      className="font-montserrat font-black text-[#1A3D3D] text-[12px] lg:text-[13px] uppercase tracking-[0.2em] py-4 lg:py-0 lg:mb-4 flex items-center justify-between cursor-pointer lg:cursor-default transition-opacity hover:opacity-80 lg:hover:opacity-100 select-none"
+                      className="font-['Montserrat'] font-black text-[#1A3D3D] text-[12px] lg:text-[13px] uppercase tracking-[0.2em] py-4 lg:py-0 lg:mb-4 flex items-center justify-between cursor-pointer lg:cursor-default transition-opacity hover:opacity-80 lg:hover:opacity-100 select-none"
                     >
                       <span className="flex items-center gap-2"><Stethoscope className="w-4 h-4 lg:w-3.5 lg:h-3.5 text-[#2D6A6A]" /> Especialidad Médica
                       {openSection !== 'especialidad' && filtros.especialidades.length > 0 && (
@@ -538,7 +538,7 @@ const BarraFiltros = ({
                   <div className="border-b border-gray-100 lg:border-none lg:pl-10">
                     <h3 
                       onClick={() => setOpenSection(openSection === 'categoria' ? null : 'categoria')}
-                      className="font-montserrat font-black text-[#1A3D3D] text-[12px] lg:text-[13px] uppercase tracking-[0.2em] py-4 lg:py-0 lg:mb-4 flex items-center justify-between cursor-pointer lg:cursor-default transition-opacity hover:opacity-80 lg:hover:opacity-100 select-none"
+                      className="font-['Montserrat'] font-black text-[#1A3D3D] text-[12px] lg:text-[13px] uppercase tracking-[0.2em] py-4 lg:py-0 lg:mb-4 flex items-center justify-between cursor-pointer lg:cursor-default transition-opacity hover:opacity-80 lg:hover:opacity-100 select-none"
                     >
                       <span className="flex items-center gap-2"><BookMarked className="w-4 h-4 lg:w-3.5 lg:h-3.5 text-[#2D6A6A]" /> Tipo de Paper
                       {openSection !== 'categoria' && filtros.categorias_papers.length > 0 && (
@@ -572,7 +572,7 @@ const BarraFiltros = ({
                   <div className="border-none lg:pl-10">
                     <h3 
                       onClick={() => setOpenSection(openSection === 'anio' ? null : 'anio')}
-                      className="font-montserrat font-black text-[#1A3D3D] text-[12px] lg:text-[13px] uppercase tracking-[0.2em] py-4 lg:py-0 lg:mb-4 flex items-center justify-between cursor-pointer lg:cursor-default transition-opacity hover:opacity-80 lg:hover:opacity-100 select-none"
+                      className="font-['Montserrat'] font-black text-[#1A3D3D] text-[12px] lg:text-[13px] uppercase tracking-[0.2em] py-4 lg:py-0 lg:mb-4 flex items-center justify-between cursor-pointer lg:cursor-default transition-opacity hover:opacity-80 lg:hover:opacity-100 select-none"
                     >
                       <span className="flex items-center gap-2"><Calendar className="w-4 h-4 lg:w-3.5 lg:h-3.5 text-[#2D6A6A]" /> Año de Publicación</span>
                       <ChevronDown className={`w-5 h-5 text-[#2D6A6A] lg:hidden transition-transform duration-300 ${openSection === 'anio' ? 'rotate-180' : ''}`} />
@@ -605,7 +605,7 @@ const BarraFiltros = ({
                   <div className="border-b border-gray-100 lg:border-none">
                     <h3 
                       onClick={() => setOpenSection(openSection === 'especialidad' ? null : 'especialidad')}
-                      className="font-montserrat font-black text-[#1A3D3D] text-[12px] lg:text-[13px] uppercase tracking-[0.2em] py-4 lg:py-0 lg:mb-4 flex items-center justify-between cursor-pointer lg:cursor-default transition-opacity hover:opacity-80 lg:hover:opacity-100 select-none"
+                      className="font-['Montserrat'] font-black text-[#1A3D3D] text-[12px] lg:text-[13px] uppercase tracking-[0.2em] py-4 lg:py-0 lg:mb-4 flex items-center justify-between cursor-pointer lg:cursor-default transition-opacity hover:opacity-80 lg:hover:opacity-100 select-none"
                     >
                       <span className="flex items-center gap-2"><Stethoscope className="w-4 h-4 lg:w-3.5 lg:h-3.5 text-[#2D6A6A]" /> Especialidad
                       {openSection !== 'especialidad' && filtros.especialidades.length > 0 && (
@@ -697,7 +697,7 @@ const BarraFiltros = ({
                       <div className="border-b border-gray-100 lg:border-none">
                         <h3 
                           onClick={() => setOpenSection(openSection === 'modalidad' ? null : 'modalidad')}
-                          className="font-montserrat font-black text-[#1A3D3D] text-[12px] lg:text-[13px] uppercase tracking-[0.2em] py-4 lg:py-0 lg:mb-4 flex items-center justify-between cursor-pointer lg:cursor-default transition-opacity hover:opacity-80 lg:hover:opacity-100 select-none"
+                          className="font-['Montserrat'] font-black text-[#1A3D3D] text-[12px] lg:text-[13px] uppercase tracking-[0.2em] py-4 lg:py-0 lg:mb-4 flex items-center justify-between cursor-pointer lg:cursor-default transition-opacity hover:opacity-80 lg:hover:opacity-100 select-none"
                         >
                           <span className="flex items-center gap-2">
                             <Layers className="w-4 h-4 lg:w-3.5 lg:h-3.5 text-[#2D6A6A]" /> Modalidad
@@ -819,7 +819,7 @@ const BarraFiltros = ({
                     <div className="border-none">
                       <h3 
                         onClick={() => setOpenSection(openSection === 'mascotas' ? null : 'mascotas')}
-                        className="font-montserrat font-black text-[#1A3D3D] text-[12px] lg:text-[13px] uppercase tracking-[0.2em] py-4 lg:py-0 lg:mb-4 flex items-center justify-between cursor-pointer lg:cursor-default transition-opacity hover:opacity-80 lg:hover:opacity-100 select-none"
+                        className="font-['Montserrat'] font-black text-[#1A3D3D] text-[12px] lg:text-[13px] uppercase tracking-[0.2em] py-4 lg:py-0 lg:mb-4 flex items-center justify-between cursor-pointer lg:cursor-default transition-opacity hover:opacity-80 lg:hover:opacity-100 select-none"
                       >
                         <span className="flex items-center gap-2">
                           <Dog className="w-4 h-4 lg:w-3.5 lg:h-3.5 text-[#2D6A6A]" /> Atención por Especie
