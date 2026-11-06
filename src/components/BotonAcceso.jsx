@@ -12,7 +12,7 @@ export default function BotonAcceso({ onRegistro, onLogin, loginAbierto = false 
         onClick={onRegistro}
         className="flex items-center gap-2 bg-[#2D6A6A] text-white px-4 md:px-5 py-2.5 text-[12px] md:text-[13px] font-bold hover:bg-[#1A3D3D] transition-all duration-300 ease-in-out"
       >
-        <Stethoscope className="w-4 h-4 hidden md:block" strokeWidth={2.3} />
+        <Stethoscope className="w-4 h-4 hidden md:block" strokeWidth={2} />
         <span className="md:hidden">Registrate</span>
         <span className="hidden md:inline">¿Sos veterinario/a? Registrate</span>
       </button>
@@ -25,7 +25,7 @@ export default function BotonAcceso({ onRegistro, onLogin, loginAbierto = false 
           loginAbierto ? 'bg-gray-200' : 'bg-[#F4F7F7] hover:bg-gray-200'
         }`}
       >
-        <LogIn className="w-4 h-4" strokeWidth={2.3} />
+        <LogIn className="w-4 h-4" strokeWidth={2} />
         <span>Iniciar sesión</span>
       </button>
     </div>

@@ -513,7 +513,7 @@ export default function PerfilProveedor() {
                     placeholder="Buscar producto..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full sm:w-56 lg:w-64 pl-10 pr-4 py-3 rounded-xl text-[13px] font-bold bg-white border border-gray-200 focus:outline-none focus:border-[#2D6A6A] focus:ring-1 focus:ring-[#2D6A6A] shadow-sm transition-all"
+                    className="w-full sm:w-56 lg:w-64 pl-10 pr-4 py-3 rounded-xl text-[13px] font-bold bg-white border border-gray-200 focus:outline-none focus:border-[#2D6A6A] focus:ring-4 focus:ring-[#2D6A6A] shadow-sm transition-all"
                   />
                 </div>
 
@@ -867,7 +867,7 @@ export default function PerfilProveedor() {
                       className={`
                         w-12 h-12 md:w-16 md:h-16 rounded-xl bg-white flex-shrink-0 flex items-center justify-center overflow-hidden transition-all duration-200 border
                         ${imagenActiva === index 
-                          ? 'border-[#2D6A6A] shadow-md ring-2 ring-[#2D6A6A]/15' 
+                          ? 'border-[#2D6A6A] shadow-md ring-2 ring-[#2D6A6A]/10' 
                           : 'border-gray-100 opacity-60 hover:opacity-100 hover:border-gray-200 hover:shadow-sm'
                         }
                       `}

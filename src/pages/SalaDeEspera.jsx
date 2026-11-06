@@ -38,7 +38,7 @@ const CardPublica = ({ icono: Icono, titulo, descripcion, highlight }) => (
 
         {/* — Columna izquierda: texto — */}
         <div className="flex flex-col gap-3 p-5 sm:p-8 flex-1">
-          <Icono size={24} className="text-[#FF9800]" strokeWidth={2.5} />
+          <Icono size={24} className="text-[#FF9800]" strokeWidth={2} />
           <div>
             <h3 className="font-['Montserrat'] font-bold text-[#FF9800] text-[19px] md:text-[18px] mb-2">{titulo}</h3>
             <p className="text-[#333333] text-[17px] md:text-[16px] font-medium leading-relaxed">{descripcion}</p>
@@ -75,7 +75,7 @@ const CardExclusiva = ({ icono: Icono, titulo, descripcion, highlight }) => (
       : 'shadow-[0_2px_8px_rgba(0,0,0,0.06)] border-gray-200'
   }`}>
     <div className="flex flex-col gap-2 sm:gap-3">
-      <Icono size={20} className="text-[#2D6A6A]" strokeWidth={2.5} />
+      <Icono size={20} className="text-[#2D6A6A]" strokeWidth={2} />
       <div>
        <h3 className="font-['Montserrat'] font-bold text-[#1A3D3D] text-[19px] md:text-[17px] mb-1 sm:mb-2">{titulo}</h3>
 <p className="text-[#333333] text-[17px] md:text-[16px] font-medium leading-relaxed">{descripcion}</p>
@@ -523,7 +523,7 @@ Creá tu perfil, aparecé en búsquedas y conectate con colegas, clínicas y pro
                 <p className="font-['Montserrat'] font-extrabold text-[#1A3D3D] text-[19px] text-center">
                   ¿Sos veterinario/a? Registrate acá
                 </p>
-                <ArrowDown className="w-6 h-6 text-[#1A3D3D] animate-bounce mb-1" strokeWidth={2.5} />
+                <ArrowDown className="w-6 h-6 text-[#1A3D3D] animate-bounce mb-1" strokeWidth={2} />
                 <SelectorTipoCuenta
                   onElegir={(valor) => navigate('/login', { state: { registro: valor } })}
                 />

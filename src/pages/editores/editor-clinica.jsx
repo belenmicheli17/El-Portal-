@@ -1843,7 +1843,7 @@ export default function EditorClinico() {
                                   className={`absolute top-2 left-2 p-1.5 rounded-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity shadow-md z-10 ${item.esSensible ? 'bg-[#FF9800] text-white' : 'bg-white/90 text-[#666666] hover:bg-yellow-50'}`}
                                   title={item.esSensible ? 'Quitar aviso de contenido sensible' : 'Marcar como contenido sensible'}
                                 >
-                                  <AlertTriangle className="w-3.5 h-3.5" strokeWidth={2.5} />
+                                  <AlertTriangle className="w-3.5 h-3.5" strokeWidth={2} />
                                 </button>
 
                                 <button

@@ -823,7 +823,7 @@ export function SelectorServicios({ servicios, setFormData, grupos, iconosGrupo 
                     {totalSeleccionadas} seleccionada{totalSeleccionadas !== 1 ? 's' : ''}
                   </span>
                 )}
-                <ChevronDown strokeWidth={2.5} className={`w-5 h-5 transition-transform duration-300 shrink-0 ${expandido ? 'rotate-180 text-[#2D6A6A]' : 'text-[#666666]'}`} />
+                <ChevronDown strokeWidth={2} className={`w-5 h-5 transition-transform duration-300 shrink-0 ${expandido ? 'rotate-180 text-[#2D6A6A]' : 'text-[#666666]'}`} />
               </div>
 
               {/* Resumen de lo elegido cuando el grupo está cerrado */}

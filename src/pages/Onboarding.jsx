@@ -1810,7 +1810,7 @@ export default function Onboarding() {
                     aria-label="Marcar como contenido sensible"
                     className={`absolute top-2 left-2 p-1.5 rounded-full shadow-md ${item.esSensible ? 'bg-[#FF9800] text-white' : 'bg-white/90 text-[#666666] hover:bg-yellow-50'}`}
                   >
-                    <AlertTriangle className="w-3.5 h-3.5" strokeWidth={2.5} />
+                    <AlertTriangle className="w-3.5 h-3.5" strokeWidth={2} />
                   </button>
                   <button
                     type="button"

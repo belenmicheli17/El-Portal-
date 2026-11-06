@@ -2057,7 +2057,7 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
                                   {!expandido && totalSeleccionadas === 0 && (
                                     <span className="text-[11px] font-bold text-gray-400 bg-gray-100 px-2.5 py-1 rounded-full shrink-0">0 seleccionadas</span>
                                   )}
-                                  <ChevronDown strokeWidth={2.5} className={`w-5 h-5 transition-transform duration-300 shrink-0 ${expandido && isActive ? 'rotate-180 text-[#2D6A6A]' : 'text-[#666666]'}`} />
+                                  <ChevronDown strokeWidth={2} className={`w-5 h-5 transition-transform duration-300 shrink-0 ${expandido && isActive ? 'rotate-180 text-[#2D6A6A]' : 'text-[#666666]'}`} />
                                 </div>
                                 {isActive && !expandido && totalSeleccionadas > 0 && (
                                   <div className="px-4 pb-3 flex flex-wrap gap-1.5">
@@ -2533,7 +2533,7 @@ ref={(el) => {
                                       className={`absolute top-2 left-2 p-1.5 rounded-full opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity shadow-md z-10 ${item.esSensible ? 'bg-[#FF9800] text-white' : 'bg-white/90 text-[#666666] hover:bg-yellow-50'}`}
                                       title={item.esSensible ? 'Quitar aviso de contenido sensible' : 'Marcar como contenido sensible'}
                                     >
-                                      <AlertTriangle className="w-3.5 h-3.5" strokeWidth={2.5} />
+                                      <AlertTriangle className="w-3.5 h-3.5" strokeWidth={2} />
                                     </button>
 
                                     {/* BOTÓN ELIMINAR */}

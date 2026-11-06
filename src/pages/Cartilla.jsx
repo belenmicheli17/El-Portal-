@@ -650,9 +650,9 @@ const Cartilla = () => {
             <section className="relative pt-9 lg:pt-20 pb-2 text-center">
               <div className="flex flex-col items-center lg:items-start">
                 <div className="flex items-center gap-3 mb-5 lg:hidden">
-                  <Dog className="w-10 h-10 text-[#FF9800]" strokeWidth={2.5} />
-                  <Heart className="w-9 h-9 text-[#FF9800]" strokeWidth={2.5} />
-                  <Cat className="w-10 h-10 text-[#FF9800]" strokeWidth={2.5} />
+                  <Dog className="w-10 h-10 text-[#FF9800]" strokeWidth={2} />
+                  <Heart className="w-9 h-9 text-[#FF9800]" strokeWidth={2} />
+                  <Cat className="w-10 h-10 text-[#FF9800]" strokeWidth={2} />
                 </div>
                 <h1 className="text-[32px] md:text-[42px] lg:text-[48px] lg:text-left font-black font-['Montserrat'] text-[#1A3D3D] tracking-tighter leading-none mb-5">
                   Encontrá especialistas<br className="hidden lg:block" /> y clínicas veterinarias cerca tuyo
