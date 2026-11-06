@@ -488,7 +488,7 @@ const handleAbrirEdicion = (curso) => {
                         <div className="flex items-center justify-between bg-white rounded-xl p-4 border border-gray-100">
                           <div>
                             <p className="text-[14px] font-black text-[#1A3D3D]">{curso.creadorNombre || 'Sin nombre registrado'}</p>
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-[#2D6A6A] bg-[#2D6A6A]/10 px-2 py-0.5 rounded-md inline-block mt-1">
+                            <span className="text-[11px] font-bold uppercase tracking-widest text-[#2D6A6A] bg-[#2D6A6A]/10 px-2 py-0.5 rounded-md inline-block mt-1">
                               {curso.creadorRol || 'rol desconocido'}
                             </span>
                           </div>
@@ -611,7 +611,7 @@ const handleAbrirEdicion = (curso) => {
               </div>
 
               <div className="border-t border-gray-100 pt-5 space-y-4">
-                <p className="text-[10px] font-black text-[#2D6A6A] uppercase tracking-widest">Docente principal</p>
+                <p className="text-[11px] font-black text-[#2D6A6A] uppercase tracking-widest">Docente principal</p>
                 <div>
                   <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Nombre del docente</label>
                   <input type="text" value={formEdicion.instructor || ''} onChange={(e) => { handleCambioEdicion('instructor', e.target.value); handleCambioEdicion('marca', e.target.value); }} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-[#2D6A6A] focus:bg-white transition-all text-[#1A3D3D]" />
@@ -623,7 +623,7 @@ const handleAbrirEdicion = (curso) => {
               </div>
 
               <div className="border-t border-gray-100 pt-5 space-y-4">
-                <p className="text-[10px] font-black text-[#2D6A6A] uppercase tracking-widest">Datos del responsable</p>
+                <p className="text-[11px] font-black text-[#2D6A6A] uppercase tracking-widest">Datos del responsable</p>
                 <div>
                   <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Nombre completo</label>
                   <input type="text" value={formEdicion.responsableNombre || ''} onChange={(e) => handleCambioEdicion('responsableNombre', e.target.value)} className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-[#2D6A6A] focus:bg-white transition-all text-[#1A3D3D]" />

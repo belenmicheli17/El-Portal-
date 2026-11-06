@@ -31,7 +31,7 @@ export default function Checkout({ checkoutData, onCancel, onSuccess }) {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <button 
           onClick={onCancel} 
-          className="flex items-center gap-2 text-gray-400 hover:text-[#1A3D3D] font-bold text-xs md:text-[10px] uppercase tracking-[0.3em] transition-colors group"
+          className="flex items-center gap-2 text-gray-400 hover:text-[#1A3D3D] font-bold text-xs md:text-[11px] uppercase tracking-[0.3em] transition-colors group"
         >
           <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Volver al Formulario
         </button>

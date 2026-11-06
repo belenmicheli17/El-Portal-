@@ -1030,7 +1030,7 @@ export default function EditorClinico() {
                       ${tempSelectedPlan === 'gratis' ? 'border-[#1A3D3D] shadow-lg scale-[1.02]' : 'border-gray-200 hover:border-[#1A3D3D]/30 opacity-70 hover:opacity-100'}`}
                   >
                     {tempSelectedPlan === 'gratis' && (
-                      <div className="absolute -top-3 right-6 bg-[#1A3D3D] text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full flex items-center gap-1 shadow-md">
+                      <div className="absolute -top-3 right-6 bg-[#1A3D3D] text-white text-[11px] font-black uppercase tracking-widest px-3 py-1 rounded-full flex items-center gap-1 shadow-md">
                         <Check className="w-3 h-3" /> Seleccionado
                       </div>
                     )}
@@ -1053,7 +1053,7 @@ export default function EditorClinico() {
                       ${tempSelectedPlan === 'pro' ? 'border-[#4DB6AC] shadow-[0_10px_30px_rgba(77,182,172,0.2)] scale-[1.02]' : 'border-gray-200 hover:border-[#4DB6AC]/50 opacity-70 hover:opacity-100'}`}
                   >
                     {tempSelectedPlan === 'pro' && (
-                      <div className="absolute -top-3 right-6 bg-[#4DB6AC] text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full flex items-center gap-1 shadow-md">
+                      <div className="absolute -top-3 right-6 bg-[#4DB6AC] text-white text-[11px] font-black uppercase tracking-widest px-3 py-1 rounded-full flex items-center gap-1 shadow-md">
                         <Check className="w-3 h-3" /> Seleccionado
                       </div>
                     )}
@@ -1162,7 +1162,7 @@ export default function EditorClinico() {
           <div className="flex items-center gap-3">
             <div className="hidden md:block text-right mr-2">
               <p className="text-[11px] font-black uppercase tracking-widest text-[#1A3D3D] truncate max-w-[150px]">{formData.nombre || 'Clínica'}</p>
-              <p className="text-[10px] font-bold text-[#4DB6AC]">Clínica</p>
+              <p className="text-[11px] font-bold text-[#4DB6AC]">Clínica</p>
             </div>
             <div className="w-9 h-9 rounded-xl overflow-hidden border-2 border-white shadow-sm bg-gray-100 shrink-0 flex items-center justify-center">
               {formData.foto ? <img src={formData.foto} className="w-full h-full object-cover" alt="Logo" /> : <Building2 className="w-4 h-4 text-gray-400" />}
@@ -1301,7 +1301,7 @@ export default function EditorClinico() {
                             <p className={`font-bold text-xl ${isPro && !isSubscriptionActive ? 'text-red-800' : 'text-[#1A3D3D]'}`}>
                               {isPro ? 'Plan Clínica PRO' : 'Plan Básico'}
                             </p>
-                            <span className={`text-white text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider ${isPro ? 'bg-[#1A3D3D]' : 'bg-gray-400'}`}>
+                            <span className={`text-white text-[11px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider ${isPro ? 'bg-[#1A3D3D]' : 'bg-gray-400'}`}>
                               {isPro ? 'Premium' : 'Gratis'}
                             </span>
                           </div>
@@ -1368,8 +1368,8 @@ export default function EditorClinico() {
                   <div className="flex-1 text-center md:text-left min-w-0">
                     <h3 className="text-xl font-black font-['Montserrat'] text-[#1A3D3D] truncate leading-tight mb-1">{formData.nombre || 'Nombre de la clínica'}</h3>
                     <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-2">
-                      {formData.guardia24hs && <span className="text-white bg-red-500 px-2.5 py-0.5 rounded-full font-bold text-[10px] uppercase tracking-wider flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> Guardia 24hs</span>}
-                      {formData.añosExperiencia && <span className="text-[#666666] bg-gray-100 border border-gray-200 px-2.5 py-0.5 rounded-full font-bold text-[10px] uppercase tracking-wider">+{formData.añosExperiencia} años exp.</span>}
+                      {formData.guardia24hs && <span className="text-white bg-red-500 px-2.5 py-0.5 rounded-full font-bold text-[11px] uppercase tracking-wider flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> Guardia 24hs</span>}
+                      {formData.añosExperiencia && <span className="text-[#666666] bg-gray-100 border border-gray-200 px-2.5 py-0.5 rounded-full font-bold text-[11px] uppercase tracking-wider">+{formData.añosExperiencia} años exp.</span>}
                     </div>
                     <div className="flex items-center justify-center md:justify-start gap-3 text-xs font-medium text-[#666666]">
                       <span className="flex items-center gap-1.5 truncate"><MapPin className="w-3.5 h-3.5 text-[#2D6A6A] shrink-0" /> {ubicacionTexto || 'Ubicación sin confirmar'}</span>
@@ -1380,7 +1380,7 @@ export default function EditorClinico() {
                     <div className="flex justify-between items-center mb-3">
                       <div className="flex items-center gap-2">
                         <div className="p-1 bg-white rounded-md shadow-sm border border-gray-100"><FileCheck className="w-3.5 h-3.5 text-[#4DB6AC]" /></div>
-                        <h4 className="text-[#1A3D3D] text-[10px] font-black uppercase tracking-[0.05em]">Estado del perfil</h4>
+                        <h4 className="text-[#1A3D3D] text-[11px] font-black uppercase tracking-[0.05em]">Estado del perfil</h4>
                       </div>
                       <span className="text-[#1A3D3D] font-black text-sm">{progress}%</span>
                     </div>
@@ -1415,7 +1415,7 @@ export default function EditorClinico() {
                               <Info className="w-4 h-4 text-[#2D6A6A]" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-bold text-[#1A3D3D] mb-0.5">¿Ves los íconos <span className="inline-flex items-center justify-center w-4 h-4 bg-[#2D6A6A]/15 rounded-full text-[#2D6A6A] text-[10px] font-black">i</span> junto a cada campo?</p>
+                              <p className="text-sm font-bold text-[#1A3D3D] mb-0.5">¿Ves los íconos <span className="inline-flex items-center justify-center w-4 h-4 bg-[#2D6A6A]/15 rounded-full text-[#2D6A6A] text-[11px] font-black">i</span> junto a cada campo?</p>
                               <p className="text-sm text-[#666666] font-medium leading-relaxed">Tocalos para ver consejos y explicaciones sobre cada dato. Te ayudan a completar tu perfil de la mejor manera.</p>
                             </div>
                           </div>
@@ -1565,7 +1565,7 @@ export default function EditorClinico() {
                               <label className="text-sm font-bold text-[#1A3D3D] mb-3 block">{faq.pregunta}</label>
                             ) : (
                               <div className="mb-4 pr-8">
-                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 block">Pregunta personalizada</label>
+                                <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-1.5 block">Pregunta personalizada</label>
                                 <input
                                   type="text"
                                   value={faq.pregunta}
@@ -1578,7 +1578,7 @@ export default function EditorClinico() {
                             )}
 
                             <div>
-                              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 block">Tu respuesta</label>
+                              <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-1.5 block">Tu respuesta</label>
                               <textarea
                                 value={faq.respuesta}
                                 maxLength={400}
@@ -1587,7 +1587,7 @@ export default function EditorClinico() {
                                 rows="2"
                                 className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm font-medium text-[#666666] focus:border-[#2D6A6A] outline-none transition-colors resize-none"
                               />
-                              <p className={`text-right text-[10px] font-bold mt-1 ${(faq.respuesta?.length || 0) >= 360 ? 'text-red-400' : 'text-gray-300'}`}>{faq.respuesta?.length || 0} / 400</p>
+                              <p className={`text-right text-[11px] font-bold mt-1 ${(faq.respuesta?.length || 0) >= 360 ? 'text-red-400' : 'text-gray-300'}`}>{faq.respuesta?.length || 0} / 400</p>
                             </div>
                           </div>
                         ))}
@@ -1629,7 +1629,7 @@ export default function EditorClinico() {
                               href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(formData.direccion)}&query_place_id=${formData.placeId}`}
                               target="_blank"
                               rel="noreferrer"
-                              className="text-[10px] font-bold text-[#2D6A6A] bg-white px-2.5 py-1 rounded-lg border border-[#2D6A6A]/20 hover:text-[#1A3D3D] transition-colors"
+                              className="text-[11px] font-bold text-[#2D6A6A] bg-white px-2.5 py-1 rounded-lg border border-[#2D6A6A]/20 hover:text-[#1A3D3D] transition-colors"
                             >
                               Ver
                             </a>
@@ -1727,7 +1727,7 @@ export default function EditorClinico() {
 
                         <div className={`grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 transition-all duration-300 ${formData.guardia24hs ? 'opacity-40 grayscale pointer-events-none' : ''}`}>
                           <div>
-                            <label className="text-[10px] font-black text-[#666666] uppercase tracking-widest mb-2 block ml-1">Lunes a viernes <span className="text-red-400 ml-1">*</span></label>
+                            <label className="text-[11px] font-black text-[#666666] uppercase tracking-widest mb-2 block ml-1">Lunes a viernes <span className="text-red-400 ml-1">*</span></label>
                             <div className="flex items-center gap-3">
                               <input type="text" inputMode="numeric" placeholder="09" value={formData.horarios.semanaDesde} onChange={(e) => handleHorarioChange('semanaDesde', e.target.value)} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-center text-lg font-black text-[#1A3D3D] focus:border-[#2D6A6A] outline-none transition-all shadow-sm" />
                               <span className="text-xs font-black text-gray-400 uppercase tracking-widest">hasta</span>
@@ -1737,7 +1737,7 @@ export default function EditorClinico() {
                           </div>
 
                           <div>
-                            <label className="text-[10px] font-black text-[#666666] uppercase tracking-widest mb-2 block ml-1">Sábados <span className="text-gray-400 ml-1 normal-case text-[9px]">(opcional)</span></label>
+                            <label className="text-[11px] font-black text-[#666666] uppercase tracking-widest mb-2 block ml-1">Sábados <span className="text-gray-400 ml-1 normal-case text-[11px]">(opcional)</span></label>
                             <div className="flex items-center gap-3">
                               <input type="text" inputMode="numeric" placeholder="10" value={formData.horarios.sabadoDesde} onChange={(e) => handleHorarioChange('sabadoDesde', e.target.value)} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-center text-lg font-black text-[#1A3D3D] focus:border-[#2D6A6A] outline-none transition-all shadow-sm" />
                               <span className="text-xs font-black text-gray-400 uppercase tracking-widest">hasta</span>
@@ -1830,7 +1830,7 @@ export default function EditorClinico() {
                                   <img src={item.url} alt={item.epigrafe || `Foto ${index + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                                   {item.esSensible && (
                                     <div className="absolute inset-0 bg-[#1A3D3D]/70 flex items-center justify-center pointer-events-none">
-                                      <span className="flex items-center gap-1.5 bg-white/90 text-[#1A3D3D] text-[9px] font-black uppercase tracking-widest px-2.5 py-1.5 rounded-full">
+                                      <span className="flex items-center gap-1.5 bg-white/90 text-[#1A3D3D] text-[11px] font-black uppercase tracking-widest px-2.5 py-1.5 rounded-full">
                                         <AlertTriangle className="w-3 h-3" /> Sensible
                                       </span>
                                     </div>
@@ -1944,7 +1944,7 @@ export default function EditorClinico() {
                             ) : (
                               <>
                                 <Camera className="w-7 h-7 text-[#2D6A6A] mb-1" />
-                                <span className="text-[9px] font-black uppercase text-[#2D6A6A] tracking-widest text-center px-1">Subir<br />foto</span>
+                                <span className="text-[11px] font-black uppercase text-[#2D6A6A] tracking-widest text-center px-1">Subir<br />foto</span>
                               </>
                             )}
                           </div>
@@ -2044,7 +2044,7 @@ export default function EditorClinico() {
                           ))}
                           <label htmlFor={`caso-img-${item.id}`} className="w-16 h-16 rounded-xl border-2 border-dashed border-[#2D6A6A]/40 flex flex-col items-center justify-center text-[#2D6A6A] hover:bg-[#2D6A6A]/5 hover:border-[#2D6A6A] cursor-pointer transition-colors bg-white">
                             <ImageIcon className="w-5 h-5 mb-0.5" />
-                            <span className="text-[8px] font-black uppercase">Foto</span>
+                            <span className="text-[11px] font-black uppercase">Foto</span>
                           </label>
                           <input type="file" id={`caso-img-${item.id}`} className="hidden" accept="image/*" onChange={(e) => handleFileSelect(e, 'caso', item.id)} />
                         </div>
@@ -2053,16 +2053,16 @@ export default function EditorClinico() {
                         <div className="flex-1 space-y-3">
                           <div className="flex gap-3">
                             <div className="w-1/3">
-                              <label className="text-[10px] font-bold text-[#666666] uppercase tracking-widest mb-1.5 block ml-1">Paciente</label>
+                              <label className="text-[11px] font-bold text-[#666666] uppercase tracking-widest mb-1.5 block ml-1">Paciente</label>
                               <input type="text" placeholder="Ej: Firulais" value={item.nombre} maxLength={40} onChange={(e) => handleArrayUpdate('casos', item.id, 'nombre', e.target.value)} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold focus:border-[#2D6A6A] outline-none" />
                             </div>
                             <div className="w-2/3">
-                              <label className="text-[10px] font-bold text-[#666666] uppercase tracking-widest mb-1.5 block ml-1">Patología o motivo <span className="text-red-400 ml-1">*</span></label>
+                              <label className="text-[11px] font-bold text-[#666666] uppercase tracking-widest mb-1.5 block ml-1">Patología o motivo <span className="text-red-400 ml-1">*</span></label>
                               <input type="text" placeholder="Ej: Corrección de luxación patelar" value={item.patologia} maxLength={100} onChange={(e) => handleArrayUpdate('casos', item.id, 'patologia', e.target.value)} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm text-[#2D6A6A] font-medium focus:border-[#2D6A6A] outline-none" />
                             </div>
                           </div>
                           <div>
-                            <label className="text-[10px] font-bold text-[#666666] uppercase tracking-widest mb-1.5 block ml-1">Relato del caso</label>
+                            <label className="text-[11px] font-bold text-[#666666] uppercase tracking-widest mb-1.5 block ml-1">Relato del caso</label>
                             <textarea
                               placeholder="Contá la historia clínica, el tratamiento aplicado y la evolución..."
                               value={item.desc}
@@ -2079,7 +2079,7 @@ export default function EditorClinico() {
                               }}
                               className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm resize-none focus:border-[#2D6A6A] outline-none text-[#1A3D3D] overflow-hidden"
                             />
-                            <p className={`text-right text-[10px] font-bold mt-1 mr-1 ${(item.desc?.length || 0) >= 550 ? 'text-red-400' : 'text-gray-400'}`}>
+                            <p className={`text-right text-[11px] font-bold mt-1 mr-1 ${(item.desc?.length || 0) >= 550 ? 'text-red-400' : 'text-gray-400'}`}>
                               {item.desc?.length || 0} / 600
                             </p>
                           </div>

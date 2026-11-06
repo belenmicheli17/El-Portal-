@@ -140,7 +140,7 @@ const PROVINCIAS_ARG = [
 
   const renderFiltros = () => (
     <div className="bg-white rounded-[32px] p-6 lg:p-8 border border-gray-100 shadow-sm sticky top-[100px] animate-in slide-in-from-left-4 duration-500">
-      <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[10px] uppercase tracking-[0.2em] mb-5 flex items-center gap-2 border-b border-gray-50 pb-2">
+      <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[11px] uppercase tracking-[0.2em] mb-5 flex items-center gap-2 border-b border-gray-50 pb-2">
         <Filter className="w-3.5 h-3.5 text-[#2D6A6A]" /> Rubros
       </h3>
       <ul className="space-y-3.5 mb-8">
@@ -156,7 +156,7 @@ const PROVINCIAS_ARG = [
 
 {/* FILTRO DE PROVINCIA */}
       <div className="mb-6 pt-6 border-t border-gray-50">
-        <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[10px] uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+        <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[11px] uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
           <MapPin className="w-3.5 h-3.5 text-[#2D6A6A]" /> Provincia
         </h3>
         <div className="relative">
@@ -323,7 +323,7 @@ const PROVINCIAS_ARG = [
 
                       {/* ETIQUETA ESPECIAL (Nuevo / Promo) */}
                       {prov.etiqueta && (
-                        <span className={`absolute top-3 left-3 text-white text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full shadow-md ${prov.etiqueta === 'Nuevo' ? 'bg-[#E4405F]' : 'bg-yellow-500'}`}>
+                        <span className={`absolute top-3 left-3 text-white text-[11px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full shadow-md ${prov.etiqueta === 'Nuevo' ? 'bg-[#E4405F]' : 'bg-yellow-500'}`}>
                           {prov.etiqueta}
                         </span>
                       )}
@@ -340,7 +340,7 @@ const PROVINCIAS_ARG = [
                     {/* CONTENIDO */}
                     <div className="p-3.5 flex flex-col flex-grow">
                       {/* CATEGORÍA DEL PRODUCTO */}
-                      <span className="text-[10px] md:text-[11px] font-bold text-[#2D6A6A] uppercase tracking-[0.2em] mb-0.5">
+                      <span className="text-[11px] md:text-[11px] font-bold text-[#2D6A6A] uppercase tracking-[0.2em] mb-0.5">
                         {prov.categoria || 'General'}
                       </span>
 

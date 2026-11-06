@@ -1797,7 +1797,7 @@ export default function Onboarding() {
                     <img src={item.url} alt={item.epigrafe || 'Foto de la galería'} className="w-full h-full object-cover" />
                     {item.esSensible && (
                       <div className="absolute inset-0 bg-[#1A3D3D]/70 flex items-center justify-center pointer-events-none">
-                        <span className="flex items-center gap-1.5 bg-white/90 text-[#1A3D3D] text-[10px] font-black uppercase tracking-widest px-2.5 py-1.5 rounded-full">
+                        <span className="flex items-center gap-1.5 bg-white/90 text-[#1A3D3D] text-[11px] font-black uppercase tracking-widest px-2.5 py-1.5 rounded-full">
                           <AlertTriangle className="w-3 h-3" /> Sensible
                         </span>
                       </div>
@@ -1874,7 +1874,7 @@ export default function Onboarding() {
               {caso.fotos.length < LIMITE_FOTOS_CASO && (
                 <label className={`w-16 h-16 rounded-xl border-2 border-dashed border-[#2D6A6A]/40 flex flex-col items-center justify-center text-[#2D6A6A] bg-white transition-colors ${subiendoCaso !== null ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:bg-[#2D6A6A]/5 hover:border-[#2D6A6A]'}`}>
                   {subiendoCaso === caso.id ? <Loader2 className="w-5 h-5 animate-spin" /> : <ImageIcon className="w-5 h-5 mb-0.5" />}
-                  <span className="text-[10px] font-black uppercase">{subiendoCaso === caso.id ? '' : 'Foto'}</span>
+                  <span className="text-[11px] font-black uppercase">{subiendoCaso === caso.id ? '' : 'Foto'}</span>
                   <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => manejarFotosCaso(e, caso.id)} disabled={subiendoCaso !== null} />
                 </label>
               )}

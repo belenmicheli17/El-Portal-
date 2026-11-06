@@ -166,7 +166,7 @@ return () => {
         body.font-size-grande h2 { font-size: 32px !important; line-height: 1.2 !important; }
         body.font-size-grande h1 { font-size: 40px !important; line-height: 1.1 !important; }
 
-        body.font-size-grande [class*="text-[8px]"], body.font-size-grande [class*="text-[9px]"], body.font-size-grande [class*="text-[10px]"] { font-size: 12px !important; }
+        body.font-size-grande [class*="text-[11px]"], body.font-size-grande [class*="text-[11px]"], body.font-size-grande [class*="text-[11px]"] { font-size: 12px !important; }
         body.font-size-grande [class*="text-[11px]"] { font-size: 14px !important; }
         body.font-size-grande [class*="text-xs"], body.font-size-grande [class*="text-[12px]"], body.font-size-grande [class*="text-[13px]"] { font-size: 16px !important; }
         body.font-size-grande [class*="text-sm"], body.font-size-grande [class*="text-[14px]"], body.font-size-grande [class*="text-[15px]"] { font-size: 18px !important; }
@@ -194,7 +194,7 @@ return () => {
         body.font-size-grande .accessibility-widget-container span,
         body.font-size-grande .accessibility-widget-container button,
         body.font-size-grande .accessibility-widget-container div { line-height: normal !important; }
-        body.font-size-grande .accessibility-widget-container [class*="text-[10px]"] { font-size: 10px !important; }
+        body.font-size-grande .accessibility-widget-container [class*="text-[11px]"] { font-size: 10px !important; }
         body.font-size-grande .accessibility-widget-container [class*="text-[13px]"] { font-size: 13px !important; }
         body.font-size-grande .accessibility-widget-container [class*="text-xs"] { font-size: 12px !important; }
 
@@ -252,8 +252,8 @@ return () => {
             `}
           >
             <div className="flex justify-between items-center mb-5 pb-2 border-b border-gray-100">
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Accesibilidad</p>
-              <button onClick={resetSettings} className="text-[10px] font-bold text-red-500 hover:text-red-700 flex items-center gap-1 transition-colors px-2 py-1 bg-red-50 rounded-lg shrink-0">
+              <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Accesibilidad</p>
+              <button onClick={resetSettings} className="text-[11px] font-bold text-red-500 hover:text-red-700 flex items-center gap-1 transition-colors px-2 py-1 bg-red-50 rounded-lg shrink-0">
                 <RotateCcw className="w-3 h-3" /> Restablecer
               </button>
             </div>
@@ -266,7 +266,7 @@ return () => {
                   </div>
                   <div className="flex items-center justify-between bg-white rounded-lg border border-gray-200 p-1 shadow-sm">
                       <button onClick={decreaseFontSize} disabled={settings.fontSizeIndex === 0} className="w-10 h-8 flex items-center justify-center text-gray-400 hover:text-[#1A3D3D] disabled:opacity-20 shrink-0"><ZoomOut className="w-4 h-4" /></button>
-                      <span className="text-[10px] font-black text-[#1A3D3D] uppercase tracking-widest">{FONT_SIZES[settings.fontSizeIndex].replace('-', ' ')}</span>
+                      <span className="text-[11px] font-black text-[#1A3D3D] uppercase tracking-widest">{FONT_SIZES[settings.fontSizeIndex].replace('-', ' ')}</span>
                       <button onClick={increaseFontSize} disabled={settings.fontSizeIndex === FONT_SIZES.length - 1} className="w-10 h-8 flex items-center justify-center text-gray-400 hover:text-[#1A3D3D] disabled:opacity-20 shrink-0"><ZoomIn className="w-4 h-4" /></button>
                   </div>
               </div>

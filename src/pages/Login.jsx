@@ -305,7 +305,7 @@ export default function Login() {
                   ].map(({ valor, label, sub, Icono, acento, proximamente }) => (
                     <div key={valor} className="relative mt-4 md:mt-2.5 first:mt-0">
                       {proximamente && (
-                        <div className="absolute -top-2.5 right-2 flex items-center gap-1.5 bg-gray-400 text-white text-[10px] font-bold uppercase tracking-[0.15em] px-2.5 py-1 rounded-full z-10">
+                        <div className="absolute -top-2.5 right-2 flex items-center gap-1.5 bg-gray-400 text-white text-[11px] font-bold uppercase tracking-[0.15em] px-2.5 py-1 rounded-full z-10">
                           <span className="w-1 h-1 rounded-full bg-white animate-pulse shrink-0"></span>
                           Próximamente
                         </div>

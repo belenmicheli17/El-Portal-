@@ -85,7 +85,7 @@ const ContactoEmail = ({ email, nombre, whatsappActivo, whatsappNum, mostrarWhat
       {email && mostrarWp && (
         <div className="flex items-center gap-3">
           <div className="flex-1 h-[1px] bg-gray-200"></div>
-          <span className="text-[10px] font-bold text-gray-300 uppercase tracking-widest">o también</span>
+          <span className="text-[11px] font-bold text-gray-300 uppercase tracking-widest">o también</span>
           <div className="flex-1 h-[1px] bg-gray-200"></div>
         </div>
       )}
@@ -536,7 +536,7 @@ const mobileTabs = [
               <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/30 hover:bg-white/40 transition-all hover:scale-110 shadow-lg">
                 <ChevronLeft className="w-6 h-6 text-white" />
               </div>
-              <span className="text-white/70 text-[10px] font-bold uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">Anterior</span>
+              <span className="text-white/70 text-[11px] font-bold uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">Anterior</span>
             </button>
           )}
           {data.casos.length > 1 && (
@@ -547,7 +547,7 @@ const mobileTabs = [
               <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/30 hover:bg-white/40 transition-all hover:scale-110 shadow-lg">
                 <ChevronRight className="w-6 h-6 text-white" />
               </div>
-              <span className="text-white/70 text-[10px] font-bold uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">Siguiente</span>
+              <span className="text-white/70 text-[11px] font-bold uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">Siguiente</span>
             </button>
           )}
 
@@ -592,10 +592,10 @@ const mobileTabs = [
 
             {/* TEXTO — mitad inferior scrolleable */}
             <div className="flex-1 overflow-y-auto p-6 bg-[#F4F7F7]">
-              <span className="bg-[#2D6A6A]/10 text-[#2D6A6A] text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-widest">{selectedCaso.patologia}</span>
+              <span className="bg-[#2D6A6A]/10 text-[#2D6A6A] text-[11px] font-bold px-3 py-1.5 rounded-full uppercase tracking-widest">{selectedCaso.patologia}</span>
               <h3 className="text-[22px] font-black font-['Montserrat'] text-[#1A3D3D] mt-3 mb-2 leading-tight uppercase">{selectedCaso.nombre}</h3>
               <div className="w-10 h-[2px] bg-[#2D6A6A] rounded-full mb-4"></div>
-              <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Relato del caso</h4>
+              <h4 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Relato del caso</h4>
               <p className="text-[15px] text-[#666666] leading-relaxed font-medium whitespace-pre-wrap">{selectedCaso.desc}</p>
               {data.casos.length > 1 && (
                 <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
@@ -671,7 +671,7 @@ const mobileTabs = [
         
         {/* BOTÓN VOLVER A La Cartilla - MÓVIL */}
         <div className="px-6 pt-6 pb-2 bg-[#1A3D3D]">
-          <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-white/70 hover:text-white font-bold text-[10px] uppercase tracking-[0.3em] transition-colors group">
+          <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-white/70 hover:text-white font-bold text-[11px] uppercase tracking-[0.3em] transition-colors group">
             <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Volver
           </button>
         </div>
@@ -695,7 +695,7 @@ const mobileTabs = [
               <h1 className="text-[24px] font-extrabold font-['Montserrat'] text-white tracking-tight uppercase leading-tight mb-2">{data.nombre} {data.apellido}</h1>
               <h2 className="text-[14px] font-black text-[#F4F7F7] uppercase tracking-[0.1em] opacity-80">{data.especialidad}</h2>
               {data.socioVitalicio === true && (
-                <span className="inline-flex items-center gap-1.5 mt-2 px-2.5 py-1.5 rounded-full bg-[#FFF6DD] text-[#8a6200] text-[10px] font-extrabold uppercase tracking-[0.08em]">
+                <span className="inline-flex items-center gap-1.5 mt-2 px-2.5 py-1.5 rounded-full bg-[#FFF6DD] text-[#8a6200] text-[11px] font-extrabold uppercase tracking-[0.08em]">
                   <Star className="w-3 h-3 fill-current" /> {data.numeroFundador ? `Socio fundador n° ${data.numeroFundador}` : 'Socio fundador'}
                 </span>
               )}
@@ -988,7 +988,7 @@ const mobileTabs = [
                           
                           <div className="flex items-center gap-2 mb-2">
                             <span className="text-[#666666] font-bold text-[12px]">{paper.anio}</span>
-                            <span className="bg-[#2D6A6A]/10 text-[#2D6A6A] text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest">
+                            <span className="bg-[#2D6A6A]/10 text-[#2D6A6A] text-[11px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest">
                               {paper.categoria}
                             </span>
                           </div>
@@ -997,7 +997,7 @@ const mobileTabs = [
                           
                           {/* 3. BOTÓN ÚNICO MODIFICADO */}
                           <div className="mt-auto pt-3 border-t border-gray-50">
-                            <a href={`https://docs.google.com/viewer?url=${encodeURIComponent(paper.pdfUrl)}&embedded=true`} target="_blank" rel="noreferrer" className="w-full bg-[#2D6A6A] text-white font-bold py-2.5 rounded-xl flex items-center justify-center gap-1.5 hover:bg-[#1A3D3D] transition-colors text-[10px] uppercase tracking-widest">
+                            <a href={`https://docs.google.com/viewer?url=${encodeURIComponent(paper.pdfUrl)}&embedded=true`} target="_blank" rel="noreferrer" className="w-full bg-[#2D6A6A] text-white font-bold py-2.5 rounded-xl flex items-center justify-center gap-1.5 hover:bg-[#1A3D3D] transition-colors text-[11px] uppercase tracking-widest">
                               <FileDown className="w-3.5 h-3.5" /> Leer Investigación
                             </a>
                           </div>
@@ -1027,7 +1027,7 @@ const mobileTabs = [
                     )}
                   </div>
                   <div className="p-5">
-                    <span className="bg-[#2D6A6A]/10 text-[#2D6A6A] text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full">{data.casos[0].patologia}</span>
+                    <span className="bg-[#2D6A6A]/10 text-[#2D6A6A] text-[11px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full">{data.casos[0].patologia}</span>
                     <h4 className="text-[#1A3D3D] font-bold font-['Montserrat'] text-[17px] uppercase mt-3 mb-1.5">{data.casos[0].nombre}</h4>
                     <p className="text-[#666666] text-[15px] leading-relaxed mb-4 line-clamp-2">{data.casos[0].desc}</p>
                     <span className="text-[#4DB6AC] font-bold text-[11px] uppercase tracking-widest flex items-center gap-1">Ver caso completo <ChevronRight className="w-3 h-3" /></span>
@@ -1105,13 +1105,13 @@ return (
               {data.emailContacto && (
   <a href={`mailto:${data.emailContacto}`} target="_blank" rel="noreferrer" className="bg-[#1A3D3D] text-white font-bold rounded-xl flex flex-col items-center justify-center gap-1 py-3 px-2 shadow-lg hover:bg-[#2D6A6A] transition-colors text-center">
     <Mail size={18} />
-    <span className="text-[9px] font-black uppercase tracking-wider leading-tight">Contactar por Email</span>
+    <span className="text-[11px] font-black uppercase tracking-wider leading-tight">Contactar por Email</span>
   </a>
 )}
               {mostrarWp && (
                 <a href={armarLinkWhatsapp(data.whatsappNum, `Hola ${data.nombre}, vi tu perfil en El Portal Veterinario y quería hacerte una consulta.`)} target="_blank" rel="noreferrer" className="bg-[#25D366] text-white font-bold rounded-xl flex flex-col items-center justify-center gap-1 py-3 px-2 shadow-lg shadow-[#25D366]/20 hover:bg-[#20b858] transition-colors text-center">
                   <Phone size={18} />
-                  <span className="text-[9px] font-black uppercase tracking-wider leading-tight">Chatear por WhatsApp</span>
+                  <span className="text-[11px] font-black uppercase tracking-wider leading-tight">Chatear por WhatsApp</span>
                 </a>
               )}
             </div>
@@ -1132,7 +1132,7 @@ return (
           
           {/* BOTÓN VOLVER AL Cartilla - ESCRITORIO */}
           <div className="w-full flex justify-start">
-            <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-gray-400 hover:text-[#1A3D3D] font-bold text-[10px] md:text-[12px] uppercase tracking-[0.3em] mb-8 transition-colors group">
+            <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-gray-400 hover:text-[#1A3D3D] font-bold text-[11px] md:text-[12px] uppercase tracking-[0.3em] mb-8 transition-colors group">
               <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Volver
             </button>
           </div>
@@ -1418,7 +1418,7 @@ return (
                             <div className="flex items-center gap-2 mb-3">
                               <span className="text-[#666666] font-bold text-[13px]">{paper.anio}</span>
                               <span className="w-1 h-1 rounded-full bg-gray-200"></span>
-                              <span className="bg-[#2D6A6A]/10 text-[#2D6A6A] text-[9px] font-bold px-2.5 py-1 rounded-full uppercase tracking-widest">{paper.categoria}</span>
+                              <span className="bg-[#2D6A6A]/10 text-[#2D6A6A] text-[11px] font-bold px-2.5 py-1 rounded-full uppercase tracking-widest">{paper.categoria}</span>
                             </div>
                             
                             <p className="text-[#666666] text-[14px] leading-relaxed font-medium line-clamp-3 mb-4">{paper.desc}</p>

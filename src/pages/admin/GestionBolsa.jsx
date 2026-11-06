@@ -84,7 +84,7 @@ export default function GestionBolsa() {
               <h3 className={`font-['Montserrat'] font-black text-[18px] ${!esPausado ? 'text-[#1A3D3D]' : 'text-[#666666]'}`}>
                 {nombre}
               </h3>
-              {esPausado && <span className="bg-gray-200 text-[#666666] text-[10px] uppercase tracking-widest font-bold px-2 py-1 rounded-md">Pausado</span>}
+              {esPausado && <span className="bg-gray-200 text-[#666666] text-[11px] uppercase tracking-widest font-bold px-2 py-1 rounded-md">Pausado</span>}
             </div>
             <p className="text-[#666666] text-[14px] font-medium mb-3">{subtitulo}</p>
             <div className="flex items-center gap-4 text-[#666666] text-[12px] font-medium">

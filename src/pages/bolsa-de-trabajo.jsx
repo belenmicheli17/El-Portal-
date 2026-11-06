@@ -527,7 +527,7 @@ const toggleFiltro = (categoria, valor) => {
       <article className="max-w-[800px] mx-auto animate-in fade-in duration-500 pb-24 px-4 pt-8 md:pt-12">
         <button 
           onClick={() => setView('list')} 
-          className="flex items-center gap-2 text-[#666666] hover:text-[#1A3D3D] font-bold text-[10px] uppercase tracking-[0.3em] mb-8 transition-colors group"
+          className="flex items-center gap-2 text-[#666666] hover:text-[#1A3D3D] font-bold text-[11px] uppercase tracking-[0.3em] mb-8 transition-colors group"
         >
           <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Volver a la Bolsa
         </button>
@@ -555,7 +555,7 @@ const toggleFiltro = (categoria, valor) => {
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center justify-between mb-2">
-                            <span className={`text-[10px] font-bold uppercase tracking-widest px-2.5 py-1.5 rounded-md ${estaVencido ? 'bg-red-50 text-red-600' : 'bg-[#2D6A6A]/10 text-[#2D6A6A]'}`}>
+                            <span className={`text-[11px] font-bold uppercase tracking-widest px-2.5 py-1.5 rounded-md ${estaVencido ? 'bg-red-50 text-red-600' : 'bg-[#2D6A6A]/10 text-[#2D6A6A]'}`}>
                               {estaVencido ? 'Vencido / Oculto' : 'Activo y Visible'}
                             </span>
                             <span className="text-[#666666] text-[12px] font-semibold flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" /> {job.provincia}</span>
@@ -621,19 +621,19 @@ const toggleFiltro = (categoria, valor) => {
                           <div className="flex items-center justify-between mb-1">
                             <div className="flex items-center gap-2">
                               <h3 className="font-bold font-['Montserrat'] text-[#1A3D3D] text-[18px] md:text-[20px] leading-tight">{prof.nombre}</h3>
-                              <span className={`hidden sm:inline-block text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded-md ${estaVencido ? 'bg-red-50 text-red-600' : 'bg-[#2D6A6A]/10 text-[#2D6A6A]'}`}>
+                              <span className={`hidden sm:inline-block text-[11px] font-bold uppercase tracking-widest px-2 py-1 rounded-md ${estaVencido ? 'bg-red-50 text-red-600' : 'bg-[#2D6A6A]/10 text-[#2D6A6A]'}`}>
                                 {estaVencido ? 'Vencido' : 'Activo'}
                               </span>
                             </div>
                             <span className="text-[#666666] text-[12px] font-semibold flex items-center gap-1.5 shrink-0"><MapPin className="w-3.5 h-3.5" /> {prof.provincia}</span>
                           </div>
-                          <span className={`sm:hidden inline-block text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded-md mb-2 ${estaVencido ? 'bg-red-50 text-red-600' : 'bg-[#2D6A6A]/10 text-[#2D6A6A]'}`}>
+                          <span className={`sm:hidden inline-block text-[11px] font-bold uppercase tracking-widest px-2 py-1 rounded-md mb-2 ${estaVencido ? 'bg-red-50 text-red-600' : 'bg-[#2D6A6A]/10 text-[#2D6A6A]'}`}>
                             {estaVencido ? 'Vencido' : 'Activo'}
                           </span>
                           <div className="flex flex-wrap gap-2 mt-1 mb-3">
                             {Array.isArray(prof.especialidad) ? prof.especialidad.map((esp, idx) => (
-                              <span key={idx} className="bg-[#F4F7F7] text-[#2D6A6A] text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-lg border border-[#2D6A6A]/10">{esp}</span>
-                            )) : <span className="bg-[#F4F7F7] text-[#2D6A6A] text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-lg border border-[#2D6A6A]/10">{prof.especialidad}</span>}
+                              <span key={idx} className="bg-[#F4F7F7] text-[#2D6A6A] text-[11px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-lg border border-[#2D6A6A]/10">{esp}</span>
+                            )) : <span className="bg-[#F4F7F7] text-[#2D6A6A] text-[11px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-lg border border-[#2D6A6A]/10">{prof.especialidad}</span>}
                           </div>
                           <div className="flex flex-wrap items-center justify-between gap-2 mt-1">
                             <div className="flex gap-4 text-[12px] font-medium text-[#666666]">
@@ -838,11 +838,11 @@ const toggleFiltro = (categoria, valor) => {
                      </div>
                      <div className="flex flex-wrap gap-2 mt-1 mb-3">
                        {Array.isArray(prof.especialidad) ? prof.especialidad.map((esp, idx) => (
-                         <span key={idx} className="bg-[#F4F7F7] text-[#2D6A6A] text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-lg border border-[#2D6A6A]/10">
+                         <span key={idx} className="bg-[#F4F7F7] text-[#2D6A6A] text-[11px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-lg border border-[#2D6A6A]/10">
                            {esp}
                          </span>
                        )) : (
-                         <span className="bg-[#F4F7F7] text-[#2D6A6A] text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-lg border border-[#2D6A6A]/10">
+                         <span className="bg-[#F4F7F7] text-[#2D6A6A] text-[11px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-lg border border-[#2D6A6A]/10">
                            {prof.especialidad}
                          </span>
                        )}
@@ -882,7 +882,7 @@ const toggleFiltro = (categoria, valor) => {
                             e.stopPropagation(); 
                             navigate(`/profesional/${prof.slug || generarSlug(prof.nombre)}`); 
                           }}
-                          className="flex-1 bg-white border-2 border-[#2D6A6A] text-[#2D6A6A] px-4 py-3.5 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] transition-all duration-300 ease-in-out hover:bg-[#F4F7F7] hover:-translate-y-1 shadow-sm flex items-center justify-center gap-2 group/btn"
+                          className="flex-1 bg-white border-2 border-[#2D6A6A] text-[#2D6A6A] px-4 py-3.5 rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] transition-all duration-300 ease-in-out hover:bg-[#F4F7F7] hover:-translate-y-1 shadow-sm flex items-center justify-center gap-2 group/btn"
                         >
                           <User className="w-4 h-4" /> Ver perfil
                         </button>
@@ -892,7 +892,7 @@ const toggleFiltro = (categoria, valor) => {
                             e.stopPropagation(); 
                             navigate(`/mensajes/nuevo/${prof.creadorId}`); 
                           }}
-                          className="flex-1 bg-[#2D6A6A] text-white px-4 py-3.5 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] transition-all duration-300 ease-in-out hover:bg-[#1A3D3D] hover:-translate-y-1 hover:shadow-xl shadow-md flex items-center justify-center gap-2"
+                          className="flex-1 bg-[#2D6A6A] text-white px-4 py-3.5 rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] transition-all duration-300 ease-in-out hover:bg-[#1A3D3D] hover:-translate-y-1 hover:shadow-xl shadow-md flex items-center justify-center gap-2"
                         >
                           <MessageCircle className="w-4 h-4" /> Contactar
                         </button>
@@ -934,7 +934,7 @@ const toggleFiltro = (categoria, valor) => {
       <article className="max-w-[1000px] mx-auto animate-in fade-in duration-500 pb-24 px-4 pt-8 md:pt-12">
         <button 
           onClick={() => setView('list')} 
-          className="flex items-center gap-2 text-[#666666] hover:text-[#1A3D3D] font-bold text-[10px] uppercase tracking-[0.3em] mb-8 transition-colors group"
+          className="flex items-center gap-2 text-[#666666] hover:text-[#1A3D3D] font-bold text-[11px] uppercase tracking-[0.3em] mb-8 transition-colors group"
         >
           <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Volver a la Bolsa de Trabajo
         </button>
@@ -963,7 +963,7 @@ const toggleFiltro = (categoria, valor) => {
                   </p>
                   <button 
                     onClick={() => { window.scrollTo(0,0); navigate(`/clinica/${selectedJob.slug || generarSlug(selectedJob.clinica)}`); }}
-                    className="bg-[#F4F7F7] border border-gray-200 text-[#1A3D3D] text-[10px] uppercase font-bold tracking-widest px-3 py-1.5 rounded-lg hover:bg-gray-200 hover:-translate-y-0.5 transition-all flex items-center gap-1.5 shadow-sm"
+                    className="bg-[#F4F7F7] border border-gray-200 text-[#1A3D3D] text-[11px] uppercase font-bold tracking-widest px-3 py-1.5 rounded-lg hover:bg-gray-200 hover:-translate-y-0.5 transition-all flex items-center gap-1.5 shadow-sm"
                   >
                     <Building className="w-3 h-3" /> Ver Perfil de Clínica
                   </button>
@@ -1068,7 +1068,7 @@ const toggleFiltro = (categoria, valor) => {
                  </div>
                  
                  <div className="mt-8 pt-6 border-t border-white/10 text-left">
-                   <p className="text-white/40 text-[10px] uppercase tracking-[0.2em] font-bold mb-3 flex items-center gap-2">
+                   <p className="text-white/40 text-[11px] uppercase tracking-[0.2em] font-bold mb-3 flex items-center gap-2">
                      <Info className="w-3.5 h-3.5" /> Condiciones
                    </p>
                    <p className="text-white/70 text-[13px] font-medium leading-relaxed">
@@ -1098,7 +1098,7 @@ const toggleFiltro = (categoria, valor) => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <button 
           onClick={() => { setView('list'); setJobFormStep(1); setErrors({}); }} 
-          className="flex items-center gap-2 text-[#666666] hover:text-[#1A3D3D] font-bold text-[10px] uppercase tracking-[0.3em] transition-colors group"
+          className="flex items-center gap-2 text-[#666666] hover:text-[#1A3D3D] font-bold text-[11px] uppercase tracking-[0.3em] transition-colors group"
         >
           <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Cancelar publicación
         </button>
@@ -1128,7 +1128,7 @@ const toggleFiltro = (categoria, valor) => {
                     }`}>
                       {isCompleted ? <Check className="w-5 h-5 md:w-6 md:h-6 text-white" strokeWidth={3} /> : step}
                     </div>
-                    <span className={`text-[9px] md:text-[11px] uppercase tracking-[0.2em] font-black text-center ${isActive || isCompleted ? 'text-[#1A3D3D]' : 'text-gray-400'}`}>
+                    <span className={`text-[11px] md:text-[11px] uppercase tracking-[0.2em] font-black text-center ${isActive || isCompleted ? 'text-[#1A3D3D]' : 'text-gray-400'}`}>
                       {step === 1 ? 'Clínica' : step === 2 ? 'Puesto' : 'Contacto'}
                     </span>
                   </div>
@@ -1318,7 +1318,7 @@ const toggleFiltro = (categoria, valor) => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <button 
           onClick={() => { setView('list'); setProfFormStep(1); setErrors({}); }} 
-          className="flex items-center gap-2 text-[#666666] hover:text-[#1A3D3D] font-bold text-[10px] uppercase tracking-[0.3em] transition-colors group"
+          className="flex items-center gap-2 text-[#666666] hover:text-[#1A3D3D] font-bold text-[11px] uppercase tracking-[0.3em] transition-colors group"
         >
           <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Cancelar
         </button>
@@ -1348,7 +1348,7 @@ const toggleFiltro = (categoria, valor) => {
                     }`}>
                       {isCompleted ? <Check className="w-5 h-5 md:w-6 md:h-6 text-white" strokeWidth={3} /> : step}
                     </div>
-                    <span className={`text-[9px] md:text-[11px] uppercase tracking-[0.2em] font-black text-center ${isActive || isCompleted ? 'text-[#1A3D3D]' : 'text-gray-400'}`}>
+                    <span className={`text-[11px] md:text-[11px] uppercase tracking-[0.2em] font-black text-center ${isActive || isCompleted ? 'text-[#1A3D3D]' : 'text-gray-400'}`}>
                       {step === 1 ? 'Perfil Básico' : 'Disponibilidad'}
                     </span>
                   </div>
@@ -1541,7 +1541,7 @@ const toggleFiltro = (categoria, valor) => {
       <section className="max-w-[600px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500 pb-24 px-4 pt-12 md:pt-20">
         <button 
           onClick={() => setView('list')} 
-          className="flex items-center gap-2 text-[#666666] hover:text-[#1A3D3D] font-bold text-[10px] uppercase tracking-[0.3em] mb-8 transition-colors group"
+          className="flex items-center gap-2 text-[#666666] hover:text-[#1A3D3D] font-bold text-[11px] uppercase tracking-[0.3em] mb-8 transition-colors group"
         >
           <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Volver a la Bolsa
         </button>
@@ -1593,7 +1593,7 @@ const toggleFiltro = (categoria, valor) => {
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-2">
-                      <span className={`text-[10px] font-bold uppercase tracking-widest px-2.5 py-1.5 rounded-md ${estaVencido ? 'bg-red-50 text-red-600' : 'bg-[#2D6A6A]/10 text-[#2D6A6A]'}`}>
+                      <span className={`text-[11px] font-bold uppercase tracking-widest px-2.5 py-1.5 rounded-md ${estaVencido ? 'bg-red-50 text-red-600' : 'bg-[#2D6A6A]/10 text-[#2D6A6A]'}`}>
                         {estaVencido ? 'Vencido / Oculto' : 'Activo y Visible'}
                       </span>
                       <span className="text-[#666666] text-[12px] font-semibold flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" /> {ultimaPub.provincia}</span>
@@ -1618,22 +1618,22 @@ const toggleFiltro = (categoria, valor) => {
                     <div className="flex items-center justify-between mb-1">
                       <div className="flex items-center gap-2">
                         <h3 className="font-bold font-['Montserrat'] text-[#1A3D3D] text-[18px] md:text-[20px] leading-tight">{ultimaPub.nombre}</h3>
-                        <span className={`hidden sm:inline-block text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded-md ${estaVencido ? 'bg-red-50 text-red-600' : 'bg-[#2D6A6A]/10 text-[#2D6A6A]'}`}>
+                        <span className={`hidden sm:inline-block text-[11px] font-bold uppercase tracking-widest px-2 py-1 rounded-md ${estaVencido ? 'bg-red-50 text-red-600' : 'bg-[#2D6A6A]/10 text-[#2D6A6A]'}`}>
                           {estaVencido ? 'Vencido' : 'Activo'}
                         </span>
                       </div>
                       <span className="text-[#666666] text-[12px] font-semibold flex items-center gap-1.5 shrink-0"><MapPin className="w-3.5 h-3.5" /> {ultimaPub.provincia}</span>
                     </div>
-                    <span className={`sm:hidden inline-block text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded-md mb-2 ${estaVencido ? 'bg-red-50 text-red-600' : 'bg-[#2D6A6A]/10 text-[#2D6A6A]'}`}>
+                    <span className={`sm:hidden inline-block text-[11px] font-bold uppercase tracking-widest px-2 py-1 rounded-md mb-2 ${estaVencido ? 'bg-red-50 text-red-600' : 'bg-[#2D6A6A]/10 text-[#2D6A6A]'}`}>
                       {estaVencido ? 'Vencido' : 'Activo'}
                     </span>
                     <div className="flex flex-wrap gap-2 mt-1 mb-3">
                       {Array.isArray(ultimaPub.especialidad) ? ultimaPub.especialidad.map((esp, idx) => (
-                        <span key={idx} className="bg-[#F4F7F7] text-[#2D6A6A] text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-lg border border-[#2D6A6A]/10">
+                        <span key={idx} className="bg-[#F4F7F7] text-[#2D6A6A] text-[11px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-lg border border-[#2D6A6A]/10">
                           {esp}
                         </span>
                       )) : (
-                        <span className="bg-[#F4F7F7] text-[#2D6A6A] text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-lg border border-[#2D6A6A]/10">
+                        <span className="bg-[#F4F7F7] text-[#2D6A6A] text-[11px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-lg border border-[#2D6A6A]/10">
                           {ultimaPub.especialidad}
                         </span>
                       )}

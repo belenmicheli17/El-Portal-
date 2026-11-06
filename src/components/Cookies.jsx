@@ -78,7 +78,7 @@ export default function Cookies({ isFooterVisible = false }) {
       </div>
       <button
         onClick={handleAccept}
-        className="bg-[#2D6A6A] hover:bg-white text-white hover:text-[#1A3D3D] px-6 py-2 rounded-xl text-[10px] font-black  tracking-widest transition-all shadow-lg shrink-0"
+        className="bg-[#2D6A6A] hover:bg-white text-white hover:text-[#1A3D3D] px-6 py-2 rounded-xl text-[11px] font-black  tracking-widest transition-all shadow-lg shrink-0"
       >
         Entendido
       </button>

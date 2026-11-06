@@ -136,13 +136,13 @@ const [currentPage, setCurrentPage] = useState(1);
           <div className="flex flex-col gap-2">
             <button 
               onClick={() => navigate('/editor-profesional', { state: { tab: 'papers' } })}
-              className="w-full bg-[#1A3D3D] text-white hover:bg-[#2D6A6A] transition-colors py-2 md:py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest"
+              className="w-full bg-[#1A3D3D] text-white hover:bg-[#2D6A6A] transition-colors py-2 md:py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-widest"
             >
               Agregar Documento
             </button>
             <button 
               onClick={() => setShowInfoBox(false)}
-              className="hidden md:block w-full bg-[#F4F7F7] text-[#1A3D3D] hover:bg-gray-200 transition-colors py-2.5 rounded-xl text-[10px] font-bold uppercase tracking-widest"
+              className="hidden md:block w-full bg-[#F4F7F7] text-[#1A3D3D] hover:bg-gray-200 transition-colors py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-widest"
             >
               Cerrar
             </button>
@@ -216,7 +216,7 @@ const [currentPage, setCurrentPage] = useState(1);
                       <BookOpen className="w-10 h-10 text-gray-300" />
                     )}
                     <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-transparent"></div>
-                    <div className={`absolute top-4 left-4 ${getColorCategoria(paper.categoria)} text-[9px] font-bold px-3 py-1.5 rounded-full uppercase tracking-widest shadow-sm backdrop-blur-md bg-white/90`}>
+                    <div className={`absolute top-4 left-4 ${getColorCategoria(paper.categoria)} text-[11px] font-bold px-3 py-1.5 rounded-full uppercase tracking-widest shadow-sm backdrop-blur-md bg-white/90`}>
                       {paper.categoria}
                     </div>
                   </div>
@@ -236,7 +236,7 @@ const [currentPage, setCurrentPage] = useState(1);
                       </div>
                       <div>
                         <p className="text-[#1A3D3D] font-bold text-[13px] leading-tight hover:text-[#4DB6AC] transition-colors">{paper.autorNombre}</p>
-                        <p className="text-gray-400 font-medium text-[10px] uppercase tracking-wider">{paper.autorEspecialidad}</p>
+                        <p className="text-gray-400 font-medium text-[11px] uppercase tracking-wider">{paper.autorEspecialidad}</p>
                       </div>
                     </div>
                     

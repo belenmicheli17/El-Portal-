@@ -748,7 +748,7 @@ El equipo de El Portal Veterinario`
 
   const renderFiltros = () => (
     <div className="bg-white rounded-[32px] p-6 lg:p-8 border border-gray-100 shadow-sm sticky top-[100px] animate-in slide-in-from-left-4 duration-500">
-      <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[10px] uppercase tracking-[0.2em] mb-5 flex items-center gap-2 border-b border-gray-50 pb-2">
+      <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[11px] uppercase tracking-[0.2em] mb-5 flex items-center gap-2 border-b border-gray-50 pb-2">
         <Filter className="w-3.5 h-3.5 text-[#2D6A6A]" /> Especialidades
       </h3>
       <ul className="space-y-3.5 mb-8">
@@ -762,7 +762,7 @@ El equipo de El Portal Veterinario`
         ))}
       </ul>
 
-      <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[10px] uppercase tracking-[0.2em] mb-5 flex items-center gap-2 border-b border-gray-50 pb-2">
+      <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[11px] uppercase tracking-[0.2em] mb-5 flex items-center gap-2 border-b border-gray-50 pb-2">
         <Monitor className="w-3.5 h-3.5 text-[#2D6A6A]" /> Modalidad
       </h3>
       <div className="space-y-3.5">
@@ -778,7 +778,7 @@ El equipo de El Portal Veterinario`
         ))}
       </div>
 
-    <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[10px] uppercase tracking-[0.2em] mb-5 mt-8 flex items-center gap-2 border-b border-gray-50 pb-2">
+    <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[11px] uppercase tracking-[0.2em] mb-5 mt-8 flex items-center gap-2 border-b border-gray-50 pb-2">
         <PlayCircle className="w-3.5 h-3.5 text-[#2D6A6A]" /> Tipo de curso
       </h3>
       <div className="space-y-3.5">
@@ -868,12 +868,12 @@ El equipo de El Portal Veterinario`
             <article ref={bannerRef} className="bg-gray-400 px-5 py-4 md:px-8 md:py-5 rounded-[20px] md:rounded-[24px] text-left relative overflow-hidden shadow-md flex flex-row items-center justify-between gap-3 md:gap-6 border border-gray-300">
               <div id="tour-publicar-curso" className="relative z-10 flex flex-col items-start gap-1">
                 <h2 className="text-white font-['Montserrat'] font-black text-[13px] md:text-lg uppercase leading-none tracking-tight">¿Representás a una institución?</h2>
-                <p className="text-white/50 text-[10px] md:text-xs font-medium italic hidden sm:block mt-0.5">Publicá tu programa académico gratis y llegá a más profesionales.</p>
+                <p className="text-white/50 text-[11px] md:text-xs font-medium italic hidden sm:block mt-0.5">Publicá tu programa académico gratis y llegá a más profesionales.</p>
               </div>
               <div className="relative z-10">
                 <button
                   disabled
-                  className="bg-gray-500/40 text-white/60 px-5 py-2.5 md:px-6 md:py-3 rounded-full text-[10px] font-bold uppercase tracking-widest cursor-not-allowed whitespace-nowrap"
+                  className="bg-gray-500/40 text-white/60 px-5 py-2.5 md:px-6 md:py-3 rounded-full text-[11px] font-bold uppercase tracking-widest cursor-not-allowed whitespace-nowrap"
                 >
                   Publicar Curso
                 </button>
@@ -958,7 +958,7 @@ El equipo de El Portal Veterinario`
     if (!selectedCourse) return null; 
     return (
     <article className="max-w-[1200px] mx-auto animate-in fade-in duration-500">
-      <button onClick={() => setView('grid')} className="flex items-center gap-2 text-gray-400 hover:text-[#1A3D3D] font-bold text-[10px] uppercase tracking-[0.3em] mb-8 transition-colors group">
+      <button onClick={() => setView('grid')} className="flex items-center gap-2 text-gray-400 hover:text-[#1A3D3D] font-bold text-[11px] uppercase tracking-[0.3em] mb-8 transition-colors group">
         <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Volver al listado
       </button>
 
@@ -1025,7 +1025,7 @@ El equipo de El Portal Veterinario`
                 </div>
                 <div className="text-left flex-1 mt-1 md:mt-2">
                   <h3 className="text-lg md:text-2xl font-black font-['Montserrat'] text-[#1A3D3D] leading-tight">{selectedCourse.instructor}</h3>
-                  <p className="text-[9px] md:text-[10px] font-bold text-[#2D6A6A] uppercase tracking-widest mb-3 md:mb-4 mt-1">Especialista Referente</p>
+                  <p className="text-[11px] md:text-[11px] font-bold text-[#2D6A6A] uppercase tracking-widest mb-3 md:mb-4 mt-1">Especialista Referente</p>
                   <p className="text-[#666666] text-xs md:text-sm leading-relaxed font-medium">
                     {selectedCourse.instructorBio || 'Este docente todavía no agregó una biografía.'}
                   </p>
@@ -1047,7 +1047,7 @@ El equipo de El Portal Veterinario`
                 </h4>
                 <span className="text-gray-400 line-through text-lg font-bold">${(selectedCourse.precioOriginal || selectedCourse.precio).toLocaleString('es-AR')}</span>
               </div>
-              <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest mt-2 flex items-center gap-1.5">
+              <p className="text-[11px] font-bold text-red-500 uppercase tracking-widest mt-2 flex items-center gap-1.5">
                 <Clock className="w-3 h-3" /> Oferta por tiempo limitado
               </p>
             </div>
@@ -1061,7 +1061,7 @@ El equipo de El Portal Veterinario`
               </button>
               <button 
                 onClick={() => alert(`Iniciando descarga del programa académico en PDF de: ${selectedCourse.titulo}...`)}
-                className="w-full py-4 bg-gray-50 text-[#1A3D3D] border border-gray-200 rounded-[20px] font-black text-[10px] uppercase tracking-[0.2em] hover:bg-gray-100 transition-all flex items-center justify-center gap-2 active:scale-95"
+                className="w-full py-4 bg-gray-50 text-[#1A3D3D] border border-gray-200 rounded-[20px] font-black text-[11px] uppercase tracking-[0.2em] hover:bg-gray-100 transition-all flex items-center justify-center gap-2 active:scale-95"
               >
                 Descargar Programa <FileText className="w-4 h-4" />
               </button>
@@ -1070,20 +1070,20 @@ El equipo de El Portal Veterinario`
             <div className="space-y-5 pt-6 border-t border-gray-100">
               <div className="flex items-center gap-4">
                 <Clock className="w-6 h-6 text-[#2D6A6A] shrink-0" />
-                <div><p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Duración</p><p className="text-sm font-black text-[#1A3D3D]">{selectedCourse.duracion}</p></div>
+                <div><p className="text-[11px] text-gray-400 font-bold uppercase tracking-widest">Duración</p><p className="text-sm font-black text-[#1A3D3D]">{selectedCourse.duracion}</p></div>
               </div>
               <div className="flex items-center gap-4">
                 <Award className="w-6 h-6 text-[#2D6A6A] shrink-0" />
-                <div><p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Nivel</p><p className="text-sm font-black text-[#1A3D3D]">{selectedCourse.nivel}</p></div>
+                <div><p className="text-[11px] text-gray-400 font-bold uppercase tracking-widest">Nivel</p><p className="text-sm font-black text-[#1A3D3D]">{selectedCourse.nivel}</p></div>
               </div>
               <div className="flex items-center gap-4">
                 <Monitor className="w-6 h-6 text-[#2D6A6A] shrink-0" />
-                <div><p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Modalidad</p><p className="text-sm font-black text-[#1A3D3D]">{selectedCourse.modalidad}</p></div>
+                <div><p className="text-[11px] text-gray-400 font-bold uppercase tracking-widest">Modalidad</p><p className="text-sm font-black text-[#1A3D3D]">{selectedCourse.modalidad}</p></div>
               </div>
             </div>
 
            <div className="pt-6 border-t border-gray-100 text-center">
-              <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-4">Capacitación publicada por</p>
+              <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-4">Capacitación publicada por</p>
               {selectedCourse.creadorSlug && selectedCourse.creadorRol ? (
                 <button
                   onClick={() => navigate(`/${selectedCourse.creadorRol === 'clinica' ? 'clinica' : 'profesional'}/${selectedCourse.creadorSlug}`)}
@@ -1243,7 +1243,7 @@ El equipo de El Portal Veterinario`
         <button 
           onClick={handleDownloadPDF}
           disabled={isGeneratingPDF}
-          className="flex items-center gap-2 bg-[#2D6A6A] text-white px-5 py-2.5 font-bold text-[11px] md:text-[10px] uppercase tracking-widest rounded-xl transition-all duration-300 hover:bg-[#1A3D3D] hover:-translate-y-1 hover:shadow-lg disabled:opacity-50 disabled:cursor-wait"
+          className="flex items-center gap-2 bg-[#2D6A6A] text-white px-5 py-2.5 font-bold text-[11px] md:text-[11px] uppercase tracking-widest rounded-xl transition-all duration-300 hover:bg-[#1A3D3D] hover:-translate-y-1 hover:shadow-lg disabled:opacity-50 disabled:cursor-wait"
         >
           {isGeneratingPDF ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
           {isGeneratingPDF ? 'Generando...' : 'Guardar como PDF'}
@@ -1258,7 +1258,7 @@ El equipo de El Portal Veterinario`
           <div className="absolute top-0 right-0 -translate-y-1/4 translate-x-1/4 w-[600px] h-[600px] bg-[#2D6A6A] rounded-full blur-[120px] opacity-20 pointer-events-none z-0"></div>
 
           <div className="relative z-10">
-            <span className="text-[#2D6A6A] font-bold text-[10px] uppercase tracking-[0.3em] mb-6 block">
+            <span className="text-[#2D6A6A] font-bold text-[11px] uppercase tracking-[0.3em] mb-6 block">
               Alianzas Estratégicas - El Portal
             </span>
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-black font-['Montserrat'] leading-[1.05] tracking-tighter text-[#1A3D3D]">
@@ -1276,7 +1276,7 @@ El equipo de El Portal Veterinario`
               </div>
             </div>
             <div className="w-full md:w-1/2 text-left">
-              <span className="text-[#1A3D3D] font-bold text-[10px] uppercase tracking-[0.3em] mb-4 block">
+              <span className="text-[#1A3D3D] font-bold text-[11px] uppercase tracking-[0.3em] mb-4 block">
                 El Desafío
               </span>
               <h2 className="text-3xl md:text-4xl lg:text-5xl font-black text-[#1A3D3D] font-['Montserrat'] mb-6 tracking-tight leading-[1.1]">
@@ -1325,7 +1325,7 @@ El equipo de El Portal Veterinario`
               
               <div className="w-full md:w-1/3 flex flex-col items-center justify-center text-center border-b md:border-b-0 md:border-r border-white/10 pb-8 md:pb-0 relative z-10">
                 <span className="text-7xl md:text-8xl font-black text-[#4DB6AC] font-['Montserrat'] tracking-tighter leading-none">5%</span>
-                <p className="text-white/60 font-bold uppercase tracking-[0.2em] text-[10px] mt-4">Descuento Exclusivo</p>
+                <p className="text-white/60 font-bold uppercase tracking-[0.2em] text-[11px] mt-4">Descuento Exclusivo</p>
               </div>
               
               <div className="w-full md:w-2/3 text-left relative z-10">
@@ -1351,7 +1351,7 @@ El equipo de El Portal Veterinario`
           <div className="lg:w-2/3 w-full text-left">
             {FAQ_CATEGORIES.map((category, catIdx) => (
               <div key={catIdx} className="mb-12 last:mb-0">
-                <h4 className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#2D6A6A] mb-4 border-b border-gray-200 pb-3">
+                <h4 className="text-[11px] font-bold uppercase tracking-[0.3em] text-[#2D6A6A] mb-4 border-b border-gray-200 pb-3">
                   {category.title}
                 </h4>
                 <div className="space-y-0">
@@ -1421,7 +1421,7 @@ El equipo de El Portal Veterinario`
                 Publicar mi curso ahora
               </button>
             </div>
-            <p className="mt-8 text-[#666666] text-[10px] font-bold uppercase tracking-[0.2em] flex items-center justify-center gap-2">
+            <p className="mt-8 text-[#666666] text-[11px] font-bold uppercase tracking-[0.2em] flex items-center justify-center gap-2">
               <ShieldCheck className="w-4 h-4 text-[#2D6A6A]" /> Postular tu temario es 100% gratis
             </p>
           </div>
@@ -1448,12 +1448,12 @@ El equipo de El Portal Veterinario`
         </div>
       )}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-        <button onClick={() => { setView('grid'); setWizardStep(1); setErrors({}); }} className="flex items-center gap-2 text-gray-400 hover:text-[#1A3D3D] font-bold text-xs md:text-[10px] uppercase tracking-[0.3em] transition-colors group">
+        <button onClick={() => { setView('grid'); setWizardStep(1); setErrors({}); }} className="flex items-center gap-2 text-gray-400 hover:text-[#1A3D3D] font-bold text-xs md:text-[11px] uppercase tracking-[0.3em] transition-colors group">
           <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" aria-hidden="true" /> Cancelar
         </button>
         <div className="flex items-center gap-2 text-[#2D6A6A] bg-[#2D6A6A]/10 px-3 py-1.5 rounded-full self-start md:self-auto">
           <Save className="w-3.5 h-3.5" aria-hidden="true" />
-          <span className="text-[11px] md:text-[10px] font-bold uppercase tracking-widest">Borrador guardado localmente</span>
+          <span className="text-[11px] md:text-[11px] font-bold uppercase tracking-widest">Borrador guardado localmente</span>
         </div>
       </div>
 
@@ -1482,7 +1482,7 @@ El equipo de El Portal Veterinario`
                         {isCompleted ? <Check className="w-5 h-5" strokeWidth={3} /> : step}
                       </div>
                     </div>
-                    <span className={`text-[9px] md:text-[11px] uppercase font-black tracking-[0.2em] mt-2 hidden md:block text-center ${
+                    <span className={`text-[11px] md:text-[11px] uppercase font-black tracking-[0.2em] mt-2 hidden md:block text-center ${
                       isActive || isCompleted ? 'text-[#1A3D3D]' : 'text-gray-400'
                     }`}>
                       {['Básicos', 'Temario', 'Docente'][step - 1]}
@@ -1553,7 +1553,7 @@ El equipo de El Portal Veterinario`
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#666666] font-bold">$</span>
                       <input id="precio" type="number" min="0" step="1" value={courseForm.precio} onChange={(e) => { const val = e.target.value.replace(/^0+/, ''); handleWizardChange('precio', val === '' ? '' : Math.floor(Math.abs(Number(val)))); }} placeholder="45000" className={`w-full bg-gray-50 border rounded-xl pl-8 pr-4 py-3.5 text-base md:text-sm font-medium focus:outline-none focus:bg-white transition-all text-[#1A3D3D] ${errors.precio ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-[#2D6A6A]'}`} />
                     </div>
-                    {errors.precio && <p className="text-red-500 text-[11px] md:text-[10px] font-bold mt-1.5 flex items-center gap-1"><AlertCircle className="w-3 h-3" />{errors.precio}</p>}
+                    {errors.precio && <p className="text-red-500 text-[11px] md:text-[11px] font-bold mt-1.5 flex items-center gap-1"><AlertCircle className="w-3 h-3" />{errors.precio}</p>}
                     {courseForm.precio > 0 && (
                       <div className="mt-3 bg-[#F4F7F7] border border-gray-200 rounded-2xl p-4 space-y-2">
                         <p className="text-[11px] font-black text-[#1A3D3D] uppercase tracking-widest mb-3">💰 Resumen por alumno inscripto</p>
@@ -1634,7 +1634,7 @@ El equipo de El Portal Veterinario`
                 <div>
                   <label className="block text-xs md:text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2" htmlFor="descripcion">Descripción general *</label>
                   <textarea id="descripcion" value={courseForm.descripcion} onChange={(e) => handleWizardChange('descripcion', e.target.value)} placeholder="Escribí un resumen atrapante sobre los objetivos principales del curso..." rows="4" className={`w-full bg-gray-50 border rounded-xl px-4 py-3.5 text-base md:text-sm font-medium focus:outline-none focus:bg-white transition-all text-[#1A3D3D] resize-none ${errors.descripcion ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-[#2D6A6A]'}`} ></textarea>
-                  {errors.descripcion && <p className="text-red-500 text-[11px] md:text-[10px] font-bold mt-1.5 flex items-center gap-1"><AlertCircle className="w-3 h-3" />{errors.descripcion}</p>}
+                  {errors.descripcion && <p className="text-red-500 text-[11px] md:text-[11px] font-bold mt-1.5 flex items-center gap-1"><AlertCircle className="w-3 h-3" />{errors.descripcion}</p>}
                 </div>
                 <div>
                   <label className="block text-xs md:text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">¿Qué van a aprender? (Puntos clave) *</label>
@@ -1652,7 +1652,7 @@ El equipo de El Portal Veterinario`
                         )}
                       </div>
                     ))}
-                    {errors.incluye && <p className="text-red-500 text-[11px] md:text-[10px] font-bold mt-1.5 flex items-center gap-1"><AlertCircle className="w-3 h-3" />{errors.incluye}</p>}
+                    {errors.incluye && <p className="text-red-500 text-[11px] md:text-[11px] font-bold mt-1.5 flex items-center gap-1"><AlertCircle className="w-3 h-3" />{errors.incluye}</p>}
                     <button onClick={addIncluyeItem} className="flex items-center gap-2 text-[#2D6A6A] font-bold text-xs md:text-xs uppercase tracking-widest mt-2 hover:bg-[#2D6A6A]/10 px-4 py-2 rounded-lg transition-colors">
                       <Plus className="w-4 h-4" /> Agregar otro punto
                     </button>
@@ -1676,7 +1676,7 @@ El equipo de El Portal Veterinario`
                         <Trash2 className="w-4 h-4" />
                       </button>
                     )}
-                    <p className="text-[10px] font-black text-[#2D6A6A] uppercase tracking-widest mb-4">{idx === 0 ? 'Docente principal' : `Docente ${idx + 1}`}</p>
+                    <p className="text-[11px] font-black text-[#2D6A6A] uppercase tracking-widest mb-4">{idx === 0 ? 'Docente principal' : `Docente ${idx + 1}`}</p>
                     <div className="space-y-4">
                       
                       {/* INPUT DE FOTO SOLO PARA EL DOCENTE PRINCIPAL */}
@@ -1727,7 +1727,7 @@ El equipo de El Portal Veterinario`
 
               {/* DATOS DE CONTACTO Y LOGÍSTICA */}
               <div className="bg-gray-50 rounded-2xl p-5 border border-gray-200 space-y-4">
-                <p className="text-[10px] font-black text-[#2D6A6A] uppercase tracking-widest">Datos de contacto y logística</p>
+                <p className="text-[11px] font-black text-[#2D6A6A] uppercase tracking-widest">Datos de contacto y logística</p>
 
                 {/* EMAIL */}
                 <div>
@@ -1781,7 +1781,7 @@ El equipo de El Portal Veterinario`
 
                 {/* DATOS DEL RESPONSABLE */}
                 <div className="border-t border-gray-200 pt-4 space-y-4">
-                  <p className="text-[10px] font-black text-[#2D6A6A] uppercase tracking-widest">Datos del responsable de la publicación</p>
+                  <p className="text-[11px] font-black text-[#2D6A6A] uppercase tracking-widest">Datos del responsable de la publicación</p>
                   <p className="text-[11px] text-gray-400 font-medium -mt-2">Esta información es privada y solo la usamos para verificar la identidad de quien publica.</p>
 
                   <div>
@@ -1906,13 +1906,13 @@ El equipo de El Portal Veterinario`
     return (
       <div className="flex flex-col gap-8 animate-in fade-in duration-500 max-w-[900px] mx-auto">
         <header>
-          <button onClick={() => setView('grid')} className="flex items-center gap-2 text-gray-400 hover:text-[#1A3D3D] font-bold text-[10px] uppercase tracking-[0.3em] mb-4 transition-colors group">
+          <button onClick={() => setView('grid')} className="flex items-center gap-2 text-gray-400 hover:text-[#1A3D3D] font-bold text-[11px] uppercase tracking-[0.3em] mb-4 transition-colors group">
             <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Volver al Repertorio
           </button>
           <h1 className="text-3xl md:text-4xl font-black font-['Montserrat'] text-[#1A3D3D] tracking-tight uppercase leading-none">
             Mis Cursos
           </h1>
-          <p className="text-[#2D6A6A] text-[11px] md:text-[10px] font-bold uppercase tracking-[0.2em] mt-1.5">
+          <p className="text-[#2D6A6A] text-[11px] md:text-[11px] font-bold uppercase tracking-[0.2em] mt-1.5">
             Cursos que publicaste en El Portal ({misCursos.length})
           </p>
         </header>
@@ -1945,7 +1945,7 @@ El equipo de El Portal Veterinario`
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-1.5">
                       <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[16px] leading-tight">{curso.titulo}</h3>
-                      <span className={`text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-md shrink-0 ${badge.clase}`}>{badge.label}</span>
+                      <span className={`text-[11px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-md shrink-0 ${badge.clase}`}>{badge.label}</span>
                     </div>
                     <p className="text-[#666666] text-[13px] font-medium">{curso.modalidad} · {curso.duracion}</p>
                     {curso.estado === 'rechazado' && curso.motivoRechazo && (
@@ -1995,13 +1995,13 @@ El equipo de El Portal Veterinario`
       <div className="flex flex-col gap-8 animate-in fade-in duration-500 max-w-[1200px] mx-auto">
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
-            <button onClick={() => setView('grid')} className="flex items-center gap-2 text-gray-400 hover:text-[#1A3D3D] font-bold text-[10px] uppercase tracking-[0.3em] mb-4 transition-colors group">
+            <button onClick={() => setView('grid')} className="flex items-center gap-2 text-gray-400 hover:text-[#1A3D3D] font-bold text-[11px] uppercase tracking-[0.3em] mb-4 transition-colors group">
               <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Volver al Repertorio
             </button>
             <h1 className="text-3xl md:text-4xl font-black font-['Montserrat'] text-[#1A3D3D] tracking-tight uppercase leading-none">
               Cursos Guardados
             </h1>
-            <p className="text-[#2D6A6A] text-[11px] md:text-[10px] font-bold uppercase tracking-[0.2em] mt-1.5">
+            <p className="text-[#2D6A6A] text-[11px] md:text-[11px] font-bold uppercase tracking-[0.2em] mt-1.5">
               Tu selección personalizada ({totalFavs})
             </p>
           </div>
@@ -2038,7 +2038,7 @@ El equipo de El Portal Veterinario`
                           <Monitor className="w-3.5 h-3.5 text-[#4DB6AC]" />
                           <span className="text-[11px] font-semibold text-[#666666]">{curso.modalidad}</span>
                         </div>
-                        <button onClick={() => handleCourseClick(curso)} className="w-full py-3 bg-[#1A3D3D] text-white rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-[#2D6A6A] transition-all">Ver curso</button>
+                        <button onClick={() => handleCourseClick(curso)} className="w-full py-3 bg-[#1A3D3D] text-white rounded-xl font-bold text-[11px] uppercase tracking-widest hover:bg-[#2D6A6A] transition-all">Ver curso</button>
                       </div>
                     </article>
                   ))}

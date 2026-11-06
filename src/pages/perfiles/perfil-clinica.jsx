@@ -20,7 +20,7 @@ const URGENCIAS_FALLBACK = [
 ];
 
 // Estilos de las etiquetas de arriba (guardia, fundadora)
-const ETIQUETA = 'inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[10px] font-extrabold uppercase tracking-[0.08em]';
+const ETIQUETA = 'inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-extrabold uppercase tracking-[0.08em]';
 
 // Carrusel horizontal reutilizable (galería, equipo, casos)
 const CARRUSEL = 'flex gap-3 overflow-x-auto no-scrollbar -mx-5 px-5 pb-1 lg:mx-0 lg:px-0 snap-x snap-mandatory scroll-px-5 lg:scroll-px-0';
@@ -469,14 +469,14 @@ export default function PerfilClinica() {
         {/* ============ DATOS RÁPIDOS ============ */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 lg:gap-4 mt-4">
           <div className="bg-[#F4F7F7] border border-gray-100 rounded-[20px] p-3.5 lg:p-5">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 flex items-center gap-1.5"><Clock className="w-3 h-3" /> Horarios</p>
+            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-gray-400 flex items-center gap-1.5"><Clock className="w-3 h-3" /> Horarios</p>
             <p className="font-bold text-[#1A3D3D] text-[13px] lg:text-sm mt-1.5 leading-snug">
               {data.guardia24hs ? 'Atención las 24 hs' : horarioSemana ? `Lun a vie · ${horarioSemana}` : 'A confirmar'}
             </p>
             {!data.guardia24hs && horarioSabado && <p className="text-xs text-[#666666] mt-0.5">Sáb · {horarioSabado}</p>}
           </div>
           <div className="bg-[#F4F7F7] border border-gray-100 rounded-[20px] p-3.5 lg:p-5">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 flex items-center gap-1.5"><MapPin className="w-3 h-3" /> {otrasSedes.length > 0 ? 'Ubicaciones' : 'Ubicación'}</p>
+            <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-gray-400 flex items-center gap-1.5"><MapPin className="w-3 h-3" /> {otrasSedes.length > 0 ? 'Ubicaciones' : 'Ubicación'}</p>
             <p className="font-bold text-[#1A3D3D] text-[13px] lg:text-sm mt-1.5 leading-snug">{otrasSedes.length > 0 ? '' : (ubicacionCorta || data.provincia || 'A confirmar')}</p>
             {otrasSedes.length > 0 && (
               <ul className="mt-2 flex flex-col gap-2">
@@ -494,7 +494,7 @@ export default function PerfilClinica() {
           </div>
           {data.añosExperiencia ? (
             <div className="bg-[#F4F7F7] border border-gray-100 rounded-[20px] p-3.5 lg:p-5">
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 flex items-center gap-1.5"><Award className="w-3 h-3" /> Trayectoria</p>
+              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-gray-400 flex items-center gap-1.5"><Award className="w-3 h-3" /> Trayectoria</p>
               <p className="font-bold text-[#1A3D3D] text-[13px] lg:text-sm mt-1.5">+{data.añosExperiencia} años</p>
             </div>
           ) : null}
@@ -505,7 +505,7 @@ export default function PerfilClinica() {
               onClick={esPro ? () => document.getElementById('equipo')?.scrollIntoView({ behavior: 'smooth', block: 'start' }) : undefined}
               className={`bg-[#F4F7F7] border border-gray-100 rounded-[20px] p-3.5 lg:p-5 ${esPro ? 'cursor-pointer hover:bg-white hover:border-[#2D6A6A]/40 transition-all duration-300 ease-in-out' : ''}`}
             >
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 flex items-center gap-1.5"><Users className="w-3 h-3" /> Equipo</p>
+              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-gray-400 flex items-center gap-1.5"><Users className="w-3 h-3" /> Equipo</p>
               <p className="font-bold text-[#1A3D3D] text-[13px] lg:text-sm mt-1.5">{staff.length} profesional{staff.length !== 1 ? 'es' : ''}</p>
             </div>
           )}
@@ -517,7 +517,7 @@ export default function PerfilClinica() {
         {/* ============ ATENDEMOS ============ */}
         {atendemos.length > 0 && (
           <section className="pt-7">
-            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#2D6A6A] flex items-center gap-1.5"><Heart className="w-3 h-3" /> Atendemos</p>
+            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#2D6A6A] flex items-center gap-1.5"><Heart className="w-3 h-3" /> Atendemos</p>
             <div className="flex flex-wrap gap-2 mt-2.5">
               {atendemos.map((a, i) => (
                 <span key={i} className="px-3 py-1.5 rounded-full bg-[#E8EFEF] text-[#1A3D3D] text-xs font-bold">{a}</span>
@@ -529,7 +529,7 @@ export default function PerfilClinica() {
         {/* ============ PRESENTACIÓN ============ */}
         {textoPresentacion && (
           <section className="pt-9">
-            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#2D6A6A]">Quiénes somos</p>
+            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#2D6A6A]">Quiénes somos</p>
             <h2 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[22px] lg:text-3xl tracking-tight mt-2 mb-3">Sobre nosotros</h2>
             <p
               ref={presentacionRef}
@@ -553,7 +553,7 @@ export default function PerfilClinica() {
         {/* ============ SERVICIOS (todos en una sola caja) ============ */}
         {esPro && todosLosServicios.length > 0 && (
           <section className="pt-9">
-            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#2D6A6A]">Qué ofrecemos</p>
+            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#2D6A6A]">Qué ofrecemos</p>
             <h2 className="font-['Montserrat'] font-black text-[#1A3D3D] text-2xl lg:text-3xl tracking-tight mt-2 mb-3.5">Servicios</h2>
             <div className="bg-[#F4F7F7] border border-gray-100 rounded-3xl p-5 flex flex-wrap gap-1.5">
               {todosLosServicios.map((s, i) => (
@@ -566,7 +566,7 @@ export default function PerfilClinica() {
         {/* ============ GALERÍA ============ */}
         {galeria.length > 0 && (
           <section className="pt-9">
-            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#2D6A6A]">Galería</p>
+            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#2D6A6A]">Galería</p>
             <h2 className="font-['Montserrat'] font-black text-[#1A3D3D] text-2xl lg:text-3xl tracking-tight mt-2 mb-3.5">Conocé el lugar</h2>
             <Carrusel>
               {galeria.map((g, i) => (
@@ -588,7 +588,7 @@ export default function PerfilClinica() {
         {/* ============ PREGUNTAS FRECUENTES ============ */}
         {esPro && faqsActivas.length > 0 && (
           <section className="pt-9">
-            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#2D6A6A]">Dudas</p>
+            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#2D6A6A]">Dudas</p>
             <h2 className="font-['Montserrat'] font-black text-[#1A3D3D] text-2xl lg:text-3xl tracking-tight mt-2 mb-3.5">Preguntas frecuentes</h2>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 items-start">
               {faqsActivas.map((faq) => (
@@ -618,7 +618,7 @@ export default function PerfilClinica() {
                 className="w-full flex items-center justify-between gap-3 text-left lg:cursor-default"
               >
                 <div>
-                  <p className="text-red-600 text-[10px] font-extrabold uppercase tracking-[0.14em] flex items-center gap-1.5">
+                  <p className="text-red-600 text-[11px] font-extrabold uppercase tracking-[0.14em] flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span> Guardia 24 hs
                   </p>
                   <h2 className="font-['Montserrat'] font-black text-red-700 text-lg lg:text-3xl leading-tight mt-1.5">¿Qué hacer ante una urgencia?</h2>
@@ -651,7 +651,7 @@ export default function PerfilClinica() {
         {/* ============ EQUIPO ============ */}
         {esPro && staff.length > 0 && (
           <section id="equipo" className="pt-9 scroll-mt-24">
-            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#2D6A6A]">Nuestro equipo</p>
+            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#2D6A6A]">Nuestro equipo</p>
             <h2 className="font-['Montserrat'] font-black text-[#1A3D3D] text-2xl lg:text-3xl tracking-tight mt-2 mb-3.5">Profesionales</h2>
             <Carrusel>
               {staff.map((m, idx) => (
@@ -694,7 +694,7 @@ export default function PerfilClinica() {
         {/* ============ CASOS CLÍNICOS ============ */}
         {casos.length > 0 && (
           <section className="pt-9">
-            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#2D6A6A]">Casos clínicos</p>
+            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#2D6A6A]">Casos clínicos</p>
             <h2 className="font-['Montserrat'] font-black text-[#1A3D3D] text-2xl lg:text-3xl tracking-tight mt-2 mb-3.5">Lo que hacemos</h2>
             <Carrusel>
               {casos.map((c, idx) => (
@@ -709,7 +709,7 @@ export default function PerfilClinica() {
                         onAbrir={() => setVisor({ fotos: c.fotos, indice: 0 })}
                       />
                       {c.fotos.length > 1 && (
-                        <span className="absolute bottom-2 right-2 bg-black/60 text-white text-[10px] font-bold px-2 py-1 rounded-full pointer-events-none">{c.fotos.length} fotos</span>
+                        <span className="absolute bottom-2 right-2 bg-black/60 text-white text-[11px] font-bold px-2 py-1 rounded-full pointer-events-none">{c.fotos.length} fotos</span>
                       )}
                     </div>
                   ) : null}
@@ -731,7 +731,7 @@ export default function PerfilClinica() {
               ${highlightContacto ? 'scale-[1.02] shadow-[0_0_80px_rgba(45,106,106,0.3)] ring-4 ring-[#4DB6AC]/50' : ''}`}
           >
             <div className="lg:flex-1">
-              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#2D6A6A]">Contacto</p>
+              <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#2D6A6A]">Contacto</p>
               <h2 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[22px] lg:text-3xl leading-tight tracking-tight mt-2 mb-4">Estamos cerca tuyo</h2>
 
               {otrasSedes.length > 0 && (
@@ -758,25 +758,25 @@ export default function PerfilClinica() {
                 {data.whatsapp && (
                   <a href={linkWhatsapp} target="_blank" rel="noreferrer" className="flex items-center gap-3 bg-white rounded-2xl p-3.5  transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md ">
                     <span className="w-9 h-9 rounded-xl bg-[#25D366]/10 text-[#25D366] flex items-center justify-center shrink-0"><Phone className="w-4 h-4" /></span>
-                    <span className="min-w-0"><span className="block text-[10px] font-bold uppercase text-gray-400">WhatsApp</span><span className="block text-sm font-black text-[#1A3D3D] truncate">{whatsappLindo(data.whatsapp)}</span></span>
+                    <span className="min-w-0"><span className="block text-[11px] font-bold uppercase text-gray-400">WhatsApp</span><span className="block text-sm font-black text-[#1A3D3D] truncate">{whatsappLindo(data.whatsapp)}</span></span>
                   </a>
                 )}
                 {data.email && (
                   <a href={`mailto:${data.email}`} className="flex items-center gap-3 bg-white rounded-2xl p-3.5  transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md ">
                     <span className="w-9 h-9 rounded-xl bg-[#2D6A6A]/10 text-[#2D6A6A] flex items-center justify-center shrink-0"><Mail className="w-4 h-4" /></span>
-                    <span className="min-w-0"><span className="block text-[10px] font-bold uppercase text-gray-400">Email</span><span className="block text-sm font-black text-[#1A3D3D] truncate">{data.email}</span></span>
+                    <span className="min-w-0"><span className="block text-[11px] font-bold uppercase text-gray-400">Email</span><span className="block text-sm font-black text-[#1A3D3D] truncate">{data.email}</span></span>
                   </a>
                 )}
                 {data.telefono && (
                   <a href={`tel:${data.telefono}`} className="flex items-center gap-3 bg-white rounded-2xl p-3.5  transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md ">
                     <span className="w-9 h-9 rounded-xl bg-[#2D6A6A]/10 text-[#2D6A6A] flex items-center justify-center shrink-0"><Phone className="w-4 h-4" /></span>
-                    <span className="min-w-0"><span className="block text-[10px] font-bold uppercase text-gray-400">Teléfono fijo</span><span className="block text-sm font-black text-[#1A3D3D] truncate">{data.telefono}</span></span>
+                    <span className="min-w-0"><span className="block text-[11px] font-bold uppercase text-gray-400">Teléfono fijo</span><span className="block text-sm font-black text-[#1A3D3D] truncate">{data.telefono}</span></span>
                   </a>
                 )}
                 {data.sitioWeb && (
                   <a href={data.sitioWeb} target="_blank" rel="noreferrer" className="flex items-center gap-3 bg-white rounded-2xl p-3.5  transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md ">
                     <span className="w-9 h-9 rounded-xl bg-[#2D6A6A]/10 text-[#2D6A6A] flex items-center justify-center shrink-0"><Globe className="w-4 h-4" /></span>
-                    <span className="min-w-0"><span className="block text-[10px] font-bold uppercase text-gray-400">Sitio web</span><span className="block text-sm font-black text-[#1A3D3D] truncate">{data.sitioWeb.replace(/^https?:\/\//, '')}</span></span>
+                    <span className="min-w-0"><span className="block text-[11px] font-bold uppercase text-gray-400">Sitio web</span><span className="block text-sm font-black text-[#1A3D3D] truncate">{data.sitioWeb.replace(/^https?:\/\//, '')}</span></span>
                   </a>
                 )}
                 {data.redes && (data.redes.instagram || data.redes.facebook || data.redes.tiktok || data.redes.linkedin) && (

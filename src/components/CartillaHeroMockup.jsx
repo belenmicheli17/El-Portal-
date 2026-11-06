@@ -73,7 +73,7 @@ const CartillaHeroMockup = () => {
           {/* --- 1. TARJETA CLÍNICA --- */}
           <article className="bg-white/95 backdrop-blur-sm rounded-[24px] p-4 border border-white/50 shadow-sm relative shrink-0">
             <div className="absolute -top-2 right-4">
-              <span className="bg-red-50 text-red-600 font-bold text-[9px] uppercase tracking-wider px-2 py-1 rounded-full border border-red-100 flex items-center gap-1">
+              <span className="bg-red-50 text-red-600 font-bold text-[11px] uppercase tracking-wider px-2 py-1 rounded-full border border-red-100 flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span> Guardia 24hs
               </span>
             </div>
@@ -94,11 +94,11 @@ const CartillaHeroMockup = () => {
 
             <div className="flex mb-3 mt-1 w-full">
               <div className="flex items-center gap-1.5 flex-nowrap w-full overflow-hidden">
-                <span className="bg-[#F4F7F7] text-[#666666] px-2 py-1 rounded-[8px] text-[10px] font-medium border border-gray-100 truncate min-w-0">Ecografía</span>
-                <span className="bg-[#F4F7F7] text-[#666666] px-2 py-1 rounded-[8px] text-[10px] font-medium border border-gray-100 truncate min-w-0">Cirugía</span>
-                <span className="bg-[#F4F7F7] text-[#666666] px-2 py-1 rounded-[8px] text-[10px] font-medium border border-gray-100 truncate min-w-0">Cardiología</span>
-                <span className="bg-[#F4F7F7] text-[#666666] px-2 py-1 rounded-[8px] text-[10px] font-medium border border-gray-100 truncate min-w-0">Traumatología</span>
-                <span className="bg-gray-50 text-gray-400 px-1.5 py-1 rounded-[8px] text-[10px] font-medium shrink-0">+3</span>
+                <span className="bg-[#F4F7F7] text-[#666666] px-2 py-1 rounded-[8px] text-[11px] font-medium border border-gray-100 truncate min-w-0">Ecografía</span>
+                <span className="bg-[#F4F7F7] text-[#666666] px-2 py-1 rounded-[8px] text-[11px] font-medium border border-gray-100 truncate min-w-0">Cirugía</span>
+                <span className="bg-[#F4F7F7] text-[#666666] px-2 py-1 rounded-[8px] text-[11px] font-medium border border-gray-100 truncate min-w-0">Cardiología</span>
+                <span className="bg-[#F4F7F7] text-[#666666] px-2 py-1 rounded-[8px] text-[11px] font-medium border border-gray-100 truncate min-w-0">Traumatología</span>
+                <span className="bg-gray-50 text-gray-400 px-1.5 py-1 rounded-[8px] text-[11px] font-medium shrink-0">+3</span>
               </div>
             </div>
 
@@ -139,14 +139,14 @@ const CartillaHeroMockup = () => {
               
               <div className="mb-2">
                 <span className="inline-flex flex-col justify-center bg-[#F4F7F7] px-2 py-1.5 rounded-xl w-full">
-                  <span className="text-[#2D6A6A] text-[10px] sm:text-[11px] font-semibold leading-[1.3] truncate">
+                  <span className="text-[#2D6A6A] text-[11px] sm:text-[11px] font-semibold leading-[1.3] truncate">
                     Cirujana Traumatóloga
                   </span>
                 </span>
               </div>
               
               <div className="flex items-center justify-between pt-2 border-t border-gray-50 mt-auto">
-                <div className="flex items-center gap-1 text-[#666666] font-medium text-[10px] sm:text-[11px] min-w-0 max-w-[70%]">
+                <div className="flex items-center gap-1 text-[#666666] font-medium text-[11px] sm:text-[11px] min-w-0 max-w-[70%]">
                   <MapPin className="w-3 h-3 shrink-0" />
                   <span className="truncate font-bold text-[#1A3D3D]">Palermo</span>
                 </div>
@@ -178,14 +178,14 @@ const CartillaHeroMockup = () => {
               
               <div className="mb-2">
                 <span className="inline-flex flex-col justify-center bg-[#F4F7F7] px-2 py-1.5 rounded-xl w-full">
-                  <span className="text-[#2D6A6A] text-[10px] sm:text-[11px] font-semibold leading-[1.3] truncate">
+                  <span className="text-[#2D6A6A] text-[11px] sm:text-[11px] font-semibold leading-[1.3] truncate">
                     Clínico Médico
                   </span>
                 </span>
               </div>
               
               <div className="flex items-center justify-between pt-2 border-t border-gray-50 mt-auto">
-                <div className="flex items-center gap-1 text-[#666666] font-medium text-[10px] sm:text-[11px] min-w-0 max-w-[70%]">
+                <div className="flex items-center gap-1 text-[#666666] font-medium text-[11px] sm:text-[11px] min-w-0 max-w-[70%]">
                   <MapPin className="w-3 h-3 shrink-0" />
                   <span className="truncate font-bold text-[#1A3D3D]">GBA Norte</span>
                 </div>

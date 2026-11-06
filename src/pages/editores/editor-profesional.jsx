@@ -484,7 +484,7 @@ function BuscadorEspecialidades({ formData, setFormData, especialidadesData }) {
         <div className="mb-6 bg-gray-50 rounded-2xl border border-gray-100 overflow-hidden">
           {resultados.length > 0 ? (
             <>
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-4 pt-3 pb-2">
+              <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest px-4 pt-3 pb-2">
                 {resultados.length} resultado{resultados.length !== 1 ? 's' : ''}
               </p>
               <div className="flex flex-col divide-y divide-gray-100">
@@ -565,7 +565,7 @@ function BuscadorEspecialidades({ formData, setFormData, especialidadesData }) {
 
         return (
           <div className="mb-6 bg-[#F4F7F7] border border-gray-100 rounded-2xl px-4 py-3.5">
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2.5">Tus servicios ({elegidos.length})</p>
+            <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-2.5">Tus servicios ({elegidos.length})</p>
             <div className="flex flex-wrap gap-2">
               {elegidos.map(item => (
                 <span
@@ -1345,7 +1345,7 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
                        ${tempSelectedPlan === 'gratis' ? 'border-[#1A3D3D] shadow-lg scale-[1.02]' : 'border-gray-200 hover:border-[#1A3D3D]/30 opacity-70 hover:opacity-100'}`}
                    >
                       {tempSelectedPlan === 'gratis' && (
-                        <div className="absolute -top-3 right-6 bg-[#1A3D3D] text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full flex items-center gap-1 shadow-md">
+                        <div className="absolute -top-3 right-6 bg-[#1A3D3D] text-white text-[11px] font-black uppercase tracking-widest px-3 py-1 rounded-full flex items-center gap-1 shadow-md">
                           <Check className="w-3 h-3" /> Seleccionado
                         </div>
                       )}
@@ -1367,7 +1367,7 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
                        ${tempSelectedPlan === 'pro' ? 'border-[#4DB6AC] shadow-[0_10px_30px_rgba(77,182,172,0.2)] scale-[1.02]' : 'border-gray-200 hover:border-[#4DB6AC]/50 opacity-70 hover:opacity-100'}`}
                    >
                       {tempSelectedPlan === 'pro' && (
-                        <div className="absolute -top-3 right-6 bg-[#4DB6AC] text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full flex items-center gap-1 shadow-md">
+                        <div className="absolute -top-3 right-6 bg-[#4DB6AC] text-white text-[11px] font-black uppercase tracking-widest px-3 py-1 rounded-full flex items-center gap-1 shadow-md">
                           <Check className="w-3 h-3" /> Seleccionado
                         </div>
                       )}
@@ -1493,7 +1493,7 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
           <div className="flex items-center gap-3">
             <div className="hidden md:block text-right mr-2">
               <p className="text-[11px] font-black uppercase tracking-widest text-[#1A3D3D] truncate max-w-[150px]">{formData.nombre || 'Profesional'}</p>
-              <p className="text-[10px] font-bold text-[#4DB6AC]">Profesional</p>
+              <p className="text-[11px] font-bold text-[#4DB6AC]">Profesional</p>
             </div>
             <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-white shadow-sm bg-gray-100 shrink-0 flex items-center justify-center">
                {formData.foto ? <img src={formData.foto} className="w-full h-full object-cover" alt="Perfil" /> : <User className="w-4 h-4 text-gray-400" />}
@@ -1652,7 +1652,7 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
                              <p className={`font-bold text-xl ${isPro && !isSubscriptionActive ? 'text-red-800' : 'text-[#1A3D3D]'}`}>
                                {isPro ? 'Plan Profesional PRO' : 'Plan Básico'}
                              </p>
-                             <span className={`text-white text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider ${isPro ? 'bg-[#1A3D3D]' : 'bg-gray-400'}`}>
+                             <span className={`text-white text-[11px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider ${isPro ? 'bg-[#1A3D3D]' : 'bg-gray-400'}`}>
                                {isPro ? 'Premium' : 'Gratis'}
                              </span>
                            </div>
@@ -1707,10 +1707,10 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
                   <div className="flex-1 text-center md:text-left min-w-0">
                     <h3 className="text-xl font-black font-['Montserrat'] text-[#1A3D3D] truncate leading-tight mb-1">{formData.nombre || "Nombre Profesional"}</h3>
                     <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-2">
-                      {formData.especialidad && <span className="text-[#666666] bg-gray-100 border border-gray-200 px-2.5 py-0.5 rounded-full font-bold text-[10px] uppercase tracking-wider">{formData.especialidad}</span>}
-                      {formData.atiendeDomicilio && <span className="text-white bg-blue-500 px-2.5 py-0.5 rounded-full font-bold text-[10px] uppercase tracking-wider flex items-center gap-1"><Home className="w-3 h-3" /> A Domicilio</span>}
-                      {formData.urgenciasDomicilio && <span className="text-white bg-red-500 px-2.5 py-0.5 rounded-full font-bold text-[10px] uppercase tracking-wider flex items-center gap-1"><Siren className="w-3 h-3" /> Urgencias a domicilio</span>}
-                      {formData.atiendeVirtual && <span className="text-white bg-[#2D6A6A] px-2.5 py-0.5 rounded-full font-bold text-[10px] uppercase tracking-wider flex items-center gap-1"><Video className="w-3 h-3" /> Consulta virtual</span>}
+                      {formData.especialidad && <span className="text-[#666666] bg-gray-100 border border-gray-200 px-2.5 py-0.5 rounded-full font-bold text-[11px] uppercase tracking-wider">{formData.especialidad}</span>}
+                      {formData.atiendeDomicilio && <span className="text-white bg-blue-500 px-2.5 py-0.5 rounded-full font-bold text-[11px] uppercase tracking-wider flex items-center gap-1"><Home className="w-3 h-3" /> A Domicilio</span>}
+                      {formData.urgenciasDomicilio && <span className="text-white bg-red-500 px-2.5 py-0.5 rounded-full font-bold text-[11px] uppercase tracking-wider flex items-center gap-1"><Siren className="w-3 h-3" /> Urgencias a domicilio</span>}
+                      {formData.atiendeVirtual && <span className="text-white bg-[#2D6A6A] px-2.5 py-0.5 rounded-full font-bold text-[11px] uppercase tracking-wider flex items-center gap-1"><Video className="w-3 h-3" /> Consulta virtual</span>}
                     </div>
                     <div className="flex items-center justify-center md:justify-start gap-3 text-xs font-medium text-[#666666]">
                       <span className="flex items-center gap-1.5 truncate"><MapPin className="w-3.5 h-3.5 text-[#2D6A6A] shrink-0" /> {formData.provincia || "Provincia"}</span>
@@ -1722,7 +1722,7 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
                     <div className="flex justify-between items-center mb-3">
                       <div className="flex items-center gap-2">
                         <div className="p-1 bg-white rounded-md shadow-sm border border-gray-100"><FileCheck className="w-3.5 h-3.5 text-[#4DB6AC]" /></div>
-                        <h4 className="text-[#1A3D3D] text-[10px] font-black uppercase tracking-[0.05em]">Estado del Perfil</h4>
+                        <h4 className="text-[#1A3D3D] text-[11px] font-black uppercase tracking-[0.05em]">Estado del Perfil</h4>
                       </div>
                       <span className="text-[#1A3D3D] font-black text-sm">{progress}%</span>
                     </div>
@@ -1757,7 +1757,7 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
       <Info className="w-4 h-4 text-[#2D6A6A]" />
     </div>
     <div className="flex-1 min-w-0">
-      <p className="text-sm font-bold text-[#1A3D3D] mb-0.5">¿Ves los íconos <span className="inline-flex items-center justify-center w-4 h-4 bg-[#2D6A6A]/15 rounded-full text-[#2D6A6A] text-[10px] font-black">i</span> junto a cada campo?</p>
+      <p className="text-sm font-bold text-[#1A3D3D] mb-0.5">¿Ves los íconos <span className="inline-flex items-center justify-center w-4 h-4 bg-[#2D6A6A]/15 rounded-full text-[#2D6A6A] text-[11px] font-black">i</span> junto a cada campo?</p>
       <p className="text-sm text-[#666666] font-medium leading-relaxed">Tocálos para ver consejos y explicaciones sobre cada dato. Te ayudan a completar tu perfil de la mejor manera.</p>
     </div>
   </div>
@@ -2067,7 +2067,7 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
                                 )}
                                 {expandido && (
                                   <div className="px-4 pb-5 border-t border-gray-100 pt-4 animate-in fade-in slide-in-from-top-2 duration-200">
-                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Marcá lo que hacés</p>
+                                    <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-2">Marcá lo que hacés</p>
                                     <div className="flex flex-col gap-2 mb-4">
                                       {grupo.opciones.map(opcion => {
                                         const isChecked = seleccionadas.includes(opcion);
@@ -2086,7 +2086,7 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
                                       const elegidos = formData[campoForm] || [];
                                       return (
                                         <div key={clave} className="mb-4 bg-[#F4F7F7] rounded-xl px-4 py-3">
-                                          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">{datosAnimales.titulo} (opcional)</p>
+                                          <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-2">{datosAnimales.titulo} (opcional)</p>
                                           <div className="flex flex-wrap gap-2">
                                             {datosAnimales.opciones.map(animal => {
                                               const activo = elegidos.includes(animal);
@@ -2118,12 +2118,12 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
                                       </div>
                                     )}
                                     <div className="mt-4 border-t border-gray-100 pt-4">
-                                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 block">Nota sobre cómo trabajás en esta área (opcional)</label>
+                                      <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-1.5 block">Nota sobre cómo trabajás en esta área (opcional)</label>
                                       <textarea placeholder="Ej: cirugías complejas de columna y cadera..." value={grupoActual.desc || ''} maxLength={200} rows={2} onChange={(e) => { setFormData(prev => ({ ...prev, servicios: { ...prev.servicios, [grupo.id]: { ...grupoActual, desc: e.target.value } } })); }} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm resize-none focus:border-[#2D6A6A] outline-none text-[#1A3D3D] font-medium" />
-                                      <p className={`text-right text-[10px] font-bold mt-1 ${(grupoActual.desc?.length || 0) >= 180 ? 'text-red-400' : 'text-gray-300'}`}>{grupoActual.desc?.length || 0} / 200</p>
+                                      <p className={`text-right text-[11px] font-bold mt-1 ${(grupoActual.desc?.length || 0) >= 180 ? 'text-red-400' : 'text-gray-300'}`}>{grupoActual.desc?.length || 0} / 200</p>
                                     </div>
                                     <div className="border-t border-gray-100 pt-4 mt-2">
-                                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">¿Falta algo? Agregá otro servicio</p>
+                                      <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-2">¿Falta algo? Agregá otro servicio</p>
                                       <div className="flex gap-2">
                                         <input type="text" value={nuevoServicio} placeholder="Ej: Cirugía de columna" onChange={(e) => setNuevoServicio(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); agregarPersonalizado(); } }} className="flex-1 bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:border-[#2D6A6A] outline-none text-[#1A3D3D]" />
                                         <button type="button" onClick={agregarPersonalizado} className="bg-[#2D6A6A] text-white p-2.5 rounded-xl hover:bg-[#1A3D3D] transition-colors shrink-0"><Plus className="w-4 h-4" /></button>
@@ -2416,7 +2416,7 @@ ref={(el) => {
     } 
     target="_blank" 
     rel="noreferrer" 
-    className="shrink-0 text-[10px] font-bold text-[#2D6A6A] bg-white px-2.5 py-1.5 rounded-lg border border-[#2D6A6A]/20 hover:text-[#1A3D3D] transition-colors"
+    className="shrink-0 text-[11px] font-bold text-[#2D6A6A] bg-white px-2.5 py-1.5 rounded-lg border border-[#2D6A6A]/20 hover:text-[#1A3D3D] transition-colors"
   >
     Ver
   </a>
@@ -2512,7 +2512,7 @@ ref={(el) => {
                                       />
                                       {item.esSensible && (
                                         <div className="absolute inset-0 bg-[#1A3D3D]/70 flex items-center justify-center pointer-events-none">
-                                          <span className="flex items-center gap-1.5 bg-white/90 text-[#1A3D3D] text-[9px] font-black uppercase tracking-widest px-2.5 py-1.5 rounded-full">
+                                          <span className="flex items-center gap-1.5 bg-white/90 text-[#1A3D3D] text-[11px] font-black uppercase tracking-widest px-2.5 py-1.5 rounded-full">
                                             <AlertTriangle className="w-3 h-3" /> Sensible
                                           </span>
                                         </div>
@@ -2842,7 +2842,7 @@ ref={(el) => {
                           ))}
                           <label htmlFor={`c-img-${item.id}`} className="w-16 h-16 rounded-xl border-2 border-dashed border-[#2D6A6A]/40 flex flex-col items-center justify-center text-[#2D6A6A] hover:bg-[#2D6A6A]/5 hover:border-[#2D6A6A] cursor-pointer transition-colors bg-white">
                             <ImageIcon className="w-5 h-5 mb-0.5" />
-                            <span className="text-[8px] font-black uppercase">Foto</span>
+                            <span className="text-[11px] font-black uppercase">Foto</span>
                           </label>
                           <input type="file" id={`c-img-${item.id}`} className="hidden" accept="image/*" multiple onChange={(e) => {
   const files = Array.from(e.target.files);
@@ -2861,16 +2861,16 @@ ref={(el) => {
                         <div className="flex-1 space-y-3">
                           <div className="flex gap-3">
                             <div className="w-1/3">
-                              <label className="text-[10px] font-bold text-[#666666] uppercase tracking-widest mb-1.5 block ml-1">Paciente</label>
+                              <label className="text-[11px] font-bold text-[#666666] uppercase tracking-widest mb-1.5 block ml-1">Paciente</label>
                               <input type="text" placeholder="Ej: Firulais" value={item.nombre} onChange={(e) => handleArrayUpdate('casos', item.id, 'nombre', e.target.value)} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold focus:border-[#2D6A6A] outline-none" />
                             </div>
                             <div className="w-2/3">
-                              <label className="text-[10px] font-bold text-[#666666] uppercase tracking-widest mb-1.5 block ml-1">Patología o Motivo</label>
+                              <label className="text-[11px] font-bold text-[#666666] uppercase tracking-widest mb-1.5 block ml-1">Patología o Motivo</label>
                               <input type="text" placeholder="Ej: Corrección de luxación patelar" value={item.patologia} onChange={(e) => handleArrayUpdate('casos', item.id, 'patologia', e.target.value)} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm text-[#2D6A6A] font-medium focus:border-[#2D6A6A] outline-none" />
                             </div>
                           </div>
                           <div>
-                            <label className="text-[10px] font-bold text-[#666666] uppercase tracking-widest mb-1.5 block ml-1">Relato del caso</label>
+                            <label className="text-[11px] font-bold text-[#666666] uppercase tracking-widest mb-1.5 block ml-1">Relato del caso</label>
                             <div>
   <textarea 
   placeholder="Cuenta la historia clínica, tratamiento aplicado y la evolución..." 
@@ -2888,7 +2888,7 @@ ref={(el) => {
   rows={4}
   className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm resize-none focus:border-[#2D6A6A] outline-none text-[#1A3D3D] overflow-hidden"
 />
-  <p className={`text-right text-[10px] font-bold mt-1 mr-1 ${(item.desc?.length || 0) >= 550 ? 'text-red-400' : 'text-gray-400'}`}>
+  <p className={`text-right text-[11px] font-bold mt-1 mr-1 ${(item.desc?.length || 0) >= 550 ? 'text-red-400' : 'text-gray-400'}`}>
     {item.desc?.length || 0} / 600
   </p>
 </div>
@@ -2967,7 +2967,7 @@ ref={(el) => {
                                 
                                 {/* 1. PORTADA */}
                                 <div>
-                                  <label className="text-[10px] font-bold text-[#666666] uppercase tracking-widest mb-1.5 block ml-1">Portada (Opcional)</label>
+                                  <label className="text-[11px] font-bold text-[#666666] uppercase tracking-widest mb-1.5 block ml-1">Portada (Opcional)</label>
                                   <div className="relative w-full aspect-square rounded-xl overflow-hidden border-2 border-gray-200 group/img shadow-sm bg-white">
                                     {item.portada ? (
                                       <>
@@ -2980,7 +2980,7 @@ ref={(el) => {
                                       <>
                                         <label htmlFor={`portada-${item.id}`} className="w-full h-full flex flex-col items-center justify-center text-gray-400 hover:bg-gray-50 hover:text-[#2D6A6A] cursor-pointer transition-colors border-dashed border-2 border-transparent hover:border-[#2D6A6A]/40">
                                           <ImageIcon className="w-6 h-6 mb-1" />
-                                          <span className="text-[9px] font-black uppercase text-center px-2">Subir<br/>Imagen</span>
+                                          <span className="text-[11px] font-black uppercase text-center px-2">Subir<br/>Imagen</span>
                                         </label>
                                         <input type="file" id={`portada-${item.id}`} className="hidden" accept="image/*" onChange={(e) => handleFileSelect(e, 'paper', item.id)} />
                                       </>
@@ -2990,11 +2990,11 @@ ref={(el) => {
 
                                 {/* 2. PDF CON DRAG & DROP */}
                                 <div>
-                                  <label className="text-[10px] font-bold text-[#666666] uppercase tracking-widest mb-1.5 block ml-1">Archivo <span className="text-red-400 ml-1">*</span></label>
+                                  <label className="text-[11px] font-bold text-[#666666] uppercase tracking-widest mb-1.5 block ml-1">Archivo <span className="text-red-400 ml-1">*</span></label>
                                   {item.pdfUrl ? (
                                     <div className="relative w-full py-4 bg-[#4DB6AC]/10 border-2 border-[#4DB6AC] rounded-xl flex flex-col items-center justify-center text-center gap-1 shadow-sm">
                                       <FileDown className="w-6 h-6 text-[#2D6A6A]" />
-                                      <span className="text-[9px] font-bold text-[#1A3D3D] max-w-[120px] truncate block px-2" title={item.fileName}>{item.fileName}</span>
+                                      <span className="text-[11px] font-bold text-[#1A3D3D] max-w-[120px] truncate block px-2" title={item.fileName}>{item.fileName}</span>
                                       <button 
                                         onClick={(e) => { e.preventDefault(); handlePdfRemove(item.id, item.storagePath); }} 
                                         className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full shadow-md hover:bg-red-600"
@@ -3024,12 +3024,12 @@ ref={(el) => {
                                       {isUploadingPdf ? (
                                         <>
                                           <Loader2 className="w-5 h-5 animate-spin mb-1 text-[#4DB6AC]" />
-                                          <span className="text-[9px] font-black uppercase text-[#2D6A6A]">{pdfUploadProgress}%</span>
+                                          <span className="text-[11px] font-black uppercase text-[#2D6A6A]">{pdfUploadProgress}%</span>
                                         </>
                                       ) : (
                                         <>
                                           <UploadCloud className="w-6 h-6 mb-1" />
-                                          <span className="text-[9px] font-black uppercase tracking-widest leading-tight">Arrastrá o<br/>Subí PDF</span>
+                                          <span className="text-[11px] font-black uppercase tracking-widest leading-tight">Arrastrá o<br/>Subí PDF</span>
                                         </>
                                       )}
                                     </label>
@@ -3041,16 +3041,16 @@ ref={(el) => {
                               {/* CAMPOS DE TEXTO */}
                               <div className="flex-1 space-y-4">
                                 <div>
-                                  <label className="text-[10px] font-bold text-[#666666] uppercase tracking-widest mb-1.5 block ml-1">Título de la Investigación <span className="text-red-400 ml-1">*</span></label>
+                                  <label className="text-[11px] font-bold text-[#666666] uppercase tracking-widest mb-1.5 block ml-1">Título de la Investigación <span className="text-red-400 ml-1">*</span></label>
                                   <input type="text" placeholder="Ej: Efectos de la dieta BARF en caninos..." value={item.titulo} onChange={(e) => handleArrayUpdate('papers', item.id, 'titulo', e.target.value)} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm font-bold focus:border-[#2D6A6A] outline-none shadow-sm" />
                                 </div>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                   <div>
-                                    <label className="text-[10px] font-bold text-[#666666] uppercase tracking-widest mb-1.5 block ml-1">Año de Publicación <span className="text-red-400 ml-1">*</span></label>
+                                    <label className="text-[11px] font-bold text-[#666666] uppercase tracking-widest mb-1.5 block ml-1">Año de Publicación <span className="text-red-400 ml-1">*</span></label>
                                     <input type="number" max={new Date().getFullYear()} min="1950" placeholder="Ej: 2025" value={item.anio} onChange={(e) => handleArrayUpdate('papers', item.id, 'anio', e.target.value)} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm focus:border-[#2D6A6A] outline-none shadow-sm" />
                                   </div>
                                   <div>
-                                    <label className="text-[10px] font-bold text-[#666666] uppercase tracking-widest mb-1.5 block ml-1">Categoría / Etiqueta <span className="text-red-400 ml-1">*</span></label>
+                                    <label className="text-[11px] font-bold text-[#666666] uppercase tracking-widest mb-1.5 block ml-1">Categoría / Etiqueta <span className="text-red-400 ml-1">*</span></label>
                                     <select value={item.categoria} onChange={(e) => handleArrayUpdate('papers', item.id, 'categoria', e.target.value)} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm font-medium focus:border-[#2D6A6A] outline-none text-[#1A3D3D] shadow-sm">
                                       <option value="">Seleccionar...</option>
                                       <option value="Clínica Médica">Clínica Médica</option>
@@ -3066,8 +3066,8 @@ ref={(el) => {
                                 </div>
                                 <div>
                                   <div className="flex justify-between items-end mb-1.5 ml-1">
-                                    <label className="text-[10px] font-bold text-[#666666] uppercase tracking-widest block">Resumen (Abstract) <span className="text-red-400 ml-1">*</span></label>
-                                    <span className={`text-[10px] font-bold transition-colors ${(item.desc?.length || 0) < 150 || (item.desc?.length || 0) > 1500 ? 'text-red-400' : 'text-gray-400'}`}>
+                                    <label className="text-[11px] font-bold text-[#666666] uppercase tracking-widest block">Resumen (Abstract) <span className="text-red-400 ml-1">*</span></label>
+                                    <span className={`text-[11px] font-bold transition-colors ${(item.desc?.length || 0) < 150 || (item.desc?.length || 0) > 1500 ? 'text-red-400' : 'text-gray-400'}`}>
                                       {item.desc?.length || 0} / 1500
                                     </span>
                                   </div>

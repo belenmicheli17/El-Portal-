@@ -1360,7 +1360,7 @@ export default function OnboardingClinica() {
                     ) : (
                       <>
                         <Camera className="w-6 h-6 text-[#2D6A6A]" />
-                        <span className="text-[10px] font-black uppercase text-[#2D6A6A] mt-0.5">Foto</span>
+                        <span className="text-[11px] font-black uppercase text-[#2D6A6A] mt-0.5">Foto</span>
                       </>
                     )}
                     <input type="file" accept="image/*" className="hidden" onChange={(e) => elegirFotoParaRecortar(e, 'staff', m.id)} disabled={!!subiendoFoto} />
@@ -1410,7 +1410,7 @@ export default function OnboardingClinica() {
                     <img src={item.url} alt={item.epigrafe || 'Foto de la galería'} className="w-full h-full object-cover" />
                     {item.esSensible && (
                       <div className="absolute inset-0 bg-[#1A3D3D]/70 flex items-center justify-center pointer-events-none">
-                        <span className="flex items-center gap-1.5 bg-white/90 text-[#1A3D3D] text-[10px] font-black uppercase tracking-widest px-2.5 py-1.5 rounded-full">
+                        <span className="flex items-center gap-1.5 bg-white/90 text-[#1A3D3D] text-[11px] font-black uppercase tracking-widest px-2.5 py-1.5 rounded-full">
                           <AlertTriangle className="w-3 h-3" /> Sensible
                         </span>
                       </div>
@@ -1489,7 +1489,7 @@ export default function OnboardingClinica() {
                   {caso.fotos.length < LIMITE_FOTOS_CASO && (
                     <label className={`w-16 h-16 rounded-xl border-2 border-dashed border-[#2D6A6A]/40 flex flex-col items-center justify-center text-[#2D6A6A] bg-white transition-colors ${subiendoFoto ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:bg-[#2D6A6A]/5 hover:border-[#2D6A6A]'}`}>
                       {subiendoEste ? <Loader2 className="w-5 h-5 animate-spin" /> : <ImageIcon className="w-5 h-5 mb-0.5" />}
-                      {!subiendoEste && <span className="text-[10px] font-black uppercase">Foto</span>}
+                      {!subiendoEste && <span className="text-[11px] font-black uppercase">Foto</span>}
                       <input type="file" accept="image/*" className="hidden" onChange={(e) => elegirFotoParaRecortar(e, 'caso', caso.id)} disabled={!!subiendoFoto} />
                     </label>
                   )}

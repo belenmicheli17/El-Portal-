@@ -125,7 +125,7 @@ export default function LegalPage() {
                   <div className="fixed inset-0 z-[-1]" onClick={() => setIsMenuOpen(false)}></div>
                   <nav className="absolute right-0 mt-4 w-64 bg-white rounded-[32px] shadow-[0_20px_50px_rgba(26,61,61,0.15)] border border-gray-100 overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
                     <div className="p-3">
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] px-4 py-3 border-b border-gray-50 mb-2 text-left">Navegación</p>
+                      <p className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.2em] px-4 py-3 border-b border-gray-50 mb-2 text-left">Navegación</p>
                       <button onClick={() => { navigate('/inicio'); setIsMenuOpen(false); }} className="w-full flex items-center gap-3 px-4 py-4 hover:bg-[#F4F7F7] rounded-2xl transition-colors group"><Home className="w-4 h-4 text-gray-400 group-hover:text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Inicio</span></button>
                       <button onClick={() => { navigate('/'); setIsMenuOpen(false); }} className="w-full flex items-center gap-3 px-4 py-4 hover:bg-[#F4F7F7] rounded-2xl transition-colors group"><Info className="w-4 h-4 text-gray-400 group-hover:text-[#1A3D3D]" /><span className="text-sm font-bold text-[#1A3D3D]">Entrada</span></button>
                       <button onClick={() => { navigate('/perfil'); setIsMenuOpen(false); }} className="w-full flex items-center justify-between px-4 py-4 hover:bg-[#F4F7F7] rounded-2xl transition-colors group"><div className="flex items-center gap-3"><User className="w-4 h-4 text-[#2D6A6A]" /><span className="text-sm font-bold text-[#1A3D3D]">Mi Perfil Público</span></div><ChevronRight className="w-4 h-4 text-gray-300" /></button>
@@ -212,7 +212,7 @@ export default function LegalPage() {
             </div>
             
             <div>
-              <h4 className="text-white/40 font-bold text-[10px] uppercase tracking-[0.3em] mb-6">Navegación</h4>
+              <h4 className="text-white/40 font-bold text-[11px] uppercase tracking-[0.3em] mb-6">Navegación</h4>
               <ul className="space-y-3 text-white/70 text-sm font-medium">
                 <li><button onClick={() => navigate('/ecosistema')} className="hover:text-white cursor-pointer transition-colors">Ecosistema</button></li>
                 <li><button onClick={() => navigate('/bolsa-de-trabajo')} className="hover:text-white cursor-pointer transition-colors">Bolsa de Empleo</button></li>
@@ -221,7 +221,7 @@ export default function LegalPage() {
             </div>
 
             <div className="md:col-span-2">
-              <h4 className="text-white/40 font-bold text-[10px] uppercase tracking-[0.3em] mb-6">Legalidad Vigente</h4>
+              <h4 className="text-white/40 font-bold text-[11px] uppercase tracking-[0.3em] mb-6">Legalidad Vigente</h4>
               <div className="bg-white/5 p-5 rounded-2xl flex gap-4 items-start">
                 <ShieldCheck className="text-[#2D6A6A] shrink-0" size={20} />
                 <p className="text-white/30 text-[11px] leading-relaxed">
@@ -232,11 +232,11 @@ export default function LegalPage() {
           </div>
 
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-            <div className="flex items-center gap-2 text-white/20 text-[9px] font-bold uppercase tracking-[0.2em]">
+            <div className="flex items-center gap-2 text-white/20 text-[11px] font-bold uppercase tracking-[0.2em]">
               <Heart size={10} className="text-red-500/30" />
               Hecho con excelencia en Argentina
             </div>
-            <div className="flex items-center gap-6 text-white/40 text-[9px] font-bold uppercase tracking-[0.2em]">
+            <div className="flex items-center gap-6 text-white/40 text-[11px] font-bold uppercase tracking-[0.2em]">
               <button onClick={() => handleTabClick('privacidad')} className="hover:text-white cursor-pointer transition-colors">Privacidad</button>
               <button onClick={() => handleTabClick('terminos')} className="hover:text-white cursor-pointer transition-colors">Términos</button>
               <button className="hover:text-white cursor-pointer">Cookies</button>

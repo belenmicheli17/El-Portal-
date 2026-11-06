@@ -981,7 +981,7 @@ const location = useLocation();
             <div className="flex items-center gap-3">
               <div className="hidden md:block text-right mr-2">
                 <p className="text-[11px] font-black uppercase tracking-widest text-[#1A3D3D] truncate max-w-[150px]">{formData.nombreEmpresa || 'Proveedor'}</p>
-                <p className="text-[10px] font-bold text-[#4DB6AC]">Proveedor</p>
+                <p className="text-[11px] font-bold text-[#4DB6AC]">Proveedor</p>
               </div>
               <div className="w-9 h-9 rounded-xl overflow-hidden border-2 border-white shadow-sm bg-gray-100 shrink-0 flex items-center justify-center">
                  {formData.foto ? <img src={formData.foto} className="w-full h-full object-cover" alt="Logo" /> : <Building className="w-4 h-4 text-gray-400" />}
@@ -1125,8 +1125,8 @@ const location = useLocation();
                     <div className="flex-1 text-center md:text-left min-w-0">
                       <h3 className="text-xl font-black font-['Montserrat'] text-[#1A3D3D] truncate leading-tight mb-1">{formData.nombreEmpresa || "Nombre de Empresa"}</h3>
                       <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-2">
-                        <span className="text-[#4DB6AC] bg-[#4DB6AC]/10 px-2.5 py-0.5 rounded-full font-bold text-[10px] uppercase tracking-wider">{formData.categoria || "Categoría Principal"}</span>
-                        {formData.cuit && <span className="text-gray-400 text-[10px] font-bold uppercase tracking-wider">CUIT: {formData.cuit}</span>}
+                        <span className="text-[#4DB6AC] bg-[#4DB6AC]/10 px-2.5 py-0.5 rounded-full font-bold text-[11px] uppercase tracking-wider">{formData.categoria || "Categoría Principal"}</span>
+                        {formData.cuit && <span className="text-gray-400 text-[11px] font-bold uppercase tracking-wider">CUIT: {formData.cuit}</span>}
                       </div>
                     </div>
 
@@ -1134,7 +1134,7 @@ const location = useLocation();
                       <div className="flex justify-between items-center mb-3">
                         <div className="flex items-center gap-2">
                           <div className="p-1 bg-white rounded-md shadow-sm border border-gray-100"><FileCheck className="w-3.5 h-3.5 text-[#4DB6AC]" /></div>
-                          <h4 className="text-[#1A3D3D] text-[10px] font-black uppercase tracking-[0.05em]">Estado del Perfil</h4>
+                          <h4 className="text-[#1A3D3D] text-[11px] font-black uppercase tracking-[0.05em]">Estado del Perfil</h4>
                         </div>
                         <span className="text-[#1A3D3D] font-black text-sm">{progress}%</span>
                       </div>
@@ -1167,7 +1167,7 @@ const location = useLocation();
                               ) : (
                                 <div className="text-center">
                                   <ImagePlus className="w-8 h-8 text-gray-300 mx-auto mb-1" />
-                                  <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest leading-tight block px-2">Subir<br/>Logo</span>
+                                  <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest leading-tight block px-2">Subir<br/>Logo</span>
                                 </div>
                               )}
                               <div className="absolute inset-0 bg-black/50 opacity-0 md:group-hover/img:opacity-100 flex items-center justify-center transition-opacity pointer-events-none"><Camera className="w-8 h-8 text-white" /></div>
@@ -1188,7 +1188,7 @@ const location = useLocation();
                               ) : (
                                 <div className="text-center">
                                   <ImagePlus className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Añadir Portada</span>
+                                  <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Añadir Portada</span>
                                 </div>
                               )}
                             </div>
@@ -1230,7 +1230,7 @@ const location = useLocation();
                                    ) : (
                                       <div className="text-center">
                                         <ImagePlus className="w-6 h-6 text-gray-300 mx-auto mb-2" />
-                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block px-2 leading-tight">Foto Equipo<br/>o Sede</span>
+                                        <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest block px-2 leading-tight">Foto Equipo<br/>o Sede</span>
                                       </div>
                                    )}
                                  </div>
@@ -1605,7 +1605,7 @@ const location = useLocation();
                                  <div className="relative group cursor-pointer w-24 h-24 shrink-0">
                                    <div onClick={() => triggerFileInput(productoInputRef)} className="w-full h-full rounded-2xl overflow-hidden border-2 border-dashed border-gray-300 transition-all flex flex-col items-center justify-center bg-white hover:border-[#4DB6AC] hover:bg-[#4DB6AC]/5 shadow-sm">
                                       <Plus className="w-8 h-8 text-gray-300 group-hover:text-[#4DB6AC] transition-colors mb-1" />
-                                      <span className="text-[10px] font-bold text-gray-400 group-hover:text-[#4DB6AC] uppercase tracking-widest">Subir</span>
+                                      <span className="text-[11px] font-bold text-gray-400 group-hover:text-[#4DB6AC] uppercase tracking-widest">Subir</span>
                                    </div>
                                    <input type="file" ref={productoInputRef} className="hidden" accept="image/*" onChange={(e) => handleFileSelect(e, 'producto')} />
                                  </div>
@@ -1736,9 +1736,9 @@ const location = useLocation();
                                   
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 mb-1.5 flex-wrap pointer-events-none">
-                                        <span className="bg-[#4DB6AC]/10 text-[#4DB6AC] text-[10px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider">{prod.categoria || 'General'}</span>
+                                        <span className="bg-[#4DB6AC]/10 text-[#4DB6AC] text-[11px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider">{prod.categoria || 'General'}</span>
                                         {prod.etiqueta && (
-                                          <span className={`text-white text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md ${prod.etiqueta === 'Nuevo' ? 'bg-[#E4405F]' : 'bg-yellow-500'}`}>
+                                          <span className={`text-white text-[11px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md ${prod.etiqueta === 'Nuevo' ? 'bg-[#E4405F]' : 'bg-yellow-500'}`}>
                                             {prod.etiqueta}
                                           </span>
                                         )}

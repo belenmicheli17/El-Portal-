@@ -41,7 +41,7 @@ export default function BarraCupos({
   return (
     <div className={integrada ? 'mb-4 md:mb-2.5' : `mb-5 bg-[#1A3D3D] rounded-2xl border border-[#1A3D3D] ${ancha ? 'p-6 md:p-7' : 'p-5'}`}>
       {etiqueta && (
-        <p className="text-[10px] font-bold uppercase tracking-[0.2em] mb-1.5 md:mb-0.5" style={{ color }}>{etiqueta}</p>
+        <p className="text-[11px] font-bold uppercase tracking-[0.2em] mb-1.5 md:mb-0.5" style={{ color }}>{etiqueta}</p>
       )}
       <div className="flex items-center justify-between mb-3 md:mb-1.5">
         <p className={`${ancha ? 'text-[18px]' : 'text-[13px] md:text-[12px]'} font-black text-white leading-snug font-['Montserrat']`}>

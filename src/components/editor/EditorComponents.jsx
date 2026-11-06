@@ -742,7 +742,7 @@ export function SelectorServicios({ servicios, setFormData, grupos, iconosGrupo 
         <div className="mb-6 bg-gray-50 rounded-2xl border border-gray-100 overflow-hidden">
           {resultados.length > 0 ? (
             <>
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-4 pt-3 pb-2">
+              <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest px-4 pt-3 pb-2">
                 {resultados.length} resultado{resultados.length !== 1 ? 's' : ''}
               </p>
               <div className="flex flex-col divide-y divide-gray-100">
@@ -836,7 +836,7 @@ export function SelectorServicios({ servicios, setFormData, grupos, iconosGrupo 
 
               {expandido && (
                 <div className="px-4 pb-5 border-t border-gray-100 pt-4 animate-in fade-in slide-in-from-top-2 duration-200">
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Opciones</p>
+                  <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-2">Opciones</p>
                   <div className="flex flex-col gap-2 mb-4">
                     {grupo.opciones.map((opcion) => {
                       const isChecked = seleccionadas.includes(opcion);
@@ -873,7 +873,7 @@ export function SelectorServicios({ servicios, setFormData, grupos, iconosGrupo 
                   )}
 
                   <div className="border-t border-gray-100 pt-4 mt-2">
-                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">¿No encontrás lo que buscás? Agregá uno propio</p>
+                    <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-2">¿No encontrás lo que buscás? Agregá uno propio</p>
                     <div className="flex gap-2">
                       <input
                         type="text"
@@ -889,7 +889,7 @@ export function SelectorServicios({ servicios, setFormData, grupos, iconosGrupo 
                   </div>
 
                   <div className="mt-4">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 block">Descripción opcional del grupo</label>
+                    <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-1.5 block">Descripción opcional del grupo</label>
                     <textarea
                       placeholder="Contá brevemente cómo trabajan en esta área..."
                       value={grupoActual.desc || ''}
@@ -898,7 +898,7 @@ export function SelectorServicios({ servicios, setFormData, grupos, iconosGrupo 
                       onChange={(e) => cambiarDescripcion(grupo.id, e.target.value)}
                       className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm resize-none focus:border-[#2D6A6A] outline-none text-[#1A3D3D] font-medium"
                     />
-                    <p className={`text-right text-[10px] font-bold mt-1 ${(grupoActual.desc?.length || 0) >= 180 ? 'text-red-400' : 'text-gray-300'}`}>{grupoActual.desc?.length || 0} / 200</p>
+                    <p className={`text-right text-[11px] font-bold mt-1 ${(grupoActual.desc?.length || 0) >= 180 ? 'text-red-400' : 'text-gray-300'}`}>{grupoActual.desc?.length || 0} / 200</p>
                   </div>
                 </div>
               )}

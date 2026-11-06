@@ -36,7 +36,7 @@ export default function Footer() {
             
             {/* COLUMNA 2: Repertorio */}
             <div>
-              <h4 className="text-white font-bold text-[11px] md:text-[10px] uppercase tracking-[0.3em] mb-4 font-['Montserrat']">Ecosistema</h4>
+              <h4 className="text-white font-bold text-[11px] md:text-[11px] uppercase tracking-[0.3em] mb-4 font-['Montserrat']">Ecosistema</h4>
               <ul className="space-y-2 text-white/40 text-sm">
                 
                 <li><button onClick={() => handleNavClick('/')} className="hover:text-white transition-colors">Proveedores</button></li>
@@ -46,7 +46,7 @@ export default function Footer() {
 
             {/* COLUMNA 3: Comunidad */}
             <div>
-              <h4 className="text-white font-bold text-[11px] md:text-[10px] uppercase tracking-[0.3em] mb-4 font-['Montserrat']">Comunidad</h4>
+              <h4 className="text-white font-bold text-[11px] md:text-[11px] uppercase tracking-[0.3em] mb-4 font-['Montserrat']">Comunidad</h4>
               <ul className="space-y-2 text-white/40 text-sm">
                 <li><button onClick={() => handleNavClick('/')} className="hover:text-white transition-colors">Profesionales</button></li>
                 <li><button onClick={() => handleNavClick('/')} className="hover:text-white transition-colors">Clínicas</button></li>
@@ -57,7 +57,7 @@ export default function Footer() {
 
           {/* COLUMNA 4: Contacto */}
           <div className="md:col-span-1">
-            <h4 className="text-white font-bold text-[11px] md:text-[10px] uppercase tracking-[0.3em] mb-4 font-['Montserrat']">Soporte</h4>
+            <h4 className="text-white font-bold text-[11px] md:text-[11px] uppercase tracking-[0.3em] mb-4 font-['Montserrat']">Soporte</h4>
             <ul className="space-y-3 text-white/40 text-sm leading-none">
               <li>
                 <a href="mailto:portalveterinario.ar@gmail.com" className="flex items-start gap-3 hover:text-white transition-colors">
@@ -95,7 +95,7 @@ export default function Footer() {
           <div className="text-white/40 text-[11px] md:text-xs font-medium leading-relaxed text-center">
             <p>&copy; {new Date().getFullYear()} El Portal. Todos los derechos reservados.</p>
             {location.pathname.toLowerCase() === '/cartilla' && (
-              <p className="text-white/25 text-[9px] mt-1">
+              <p className="text-white/25 text-[11px] mt-1">
                 Ilustración de <a href="https://www.freepik.com" target="_blank" rel="noopener noreferrer" className="underline hover:text-white/40">Magnific</a>
               </p>
             )}
@@ -112,9 +112,9 @@ export default function Footer() {
         {/* BARRA INFERIOR FINAL - REDISEÑADA Y COMPACTADA */}
         <div className="pt-6 border-t border-white/5 flex flex-col items-center gap-y-1.5 text-center md:flex-row md:justify-between md:gap-x-4 md:text-left">
           
-          <p className="text-white font-bold text-[11px] md:text-[10px] uppercase tracking-[0.1em] font-['Montserrat'] md:leading-none">creado por Belén M. Arenas</p>
+          <p className="text-white font-bold text-[11px] md:text-[11px] uppercase tracking-[0.1em] font-['Montserrat'] md:leading-none">creado por Belén M. Arenas</p>
           
-          <div className="text-white text-[11px] md:text-[10px] uppercase tracking-[0.1em] font-bold flex items-center justify-center md:justify-start gap-1.5 group cursor-default font-['Montserrat']">
+          <div className="text-white text-[11px] md:text-[11px] uppercase tracking-[0.1em] font-bold flex items-center justify-center md:justify-start gap-1.5 group cursor-default font-['Montserrat']">
             <span>Hecho con</span>
             <Heart className="w-3 h-3 text-red-400/80 group-hover:text-red-400 group-hover:scale-110 transition-all duration-300 fill-current" aria-hidden="true" />
             <span>en Argentina.</span>
@@ -122,7 +122,7 @@ export default function Footer() {
           
           <div className="flex items-center justify-center md:justify-start gap-2 text-white">
             <ShieldCheck className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
-            <span className="text-[11px] md:text-[10px] font-bold uppercase tracking-[0.1em] leading-tight md:leading-none font-['Montserrat']">Única plataforma veterinaria</span>
+            <span className="text-[11px] md:text-[11px] font-bold uppercase tracking-[0.1em] leading-tight md:leading-none font-['Montserrat']">Única plataforma veterinaria</span>
           </div>
           
         </div>

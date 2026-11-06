@@ -156,7 +156,7 @@ const StackedMockups = ({ navigate }) => {
             <span className="text-[13px] font-black text-[#2D6A6A] uppercase tracking-widest flex items-center gap-2">
               <Building2 className="w-4 h-4" /> Clínicas
             </span>
-            <span className="flex items-center gap-1.5 bg-red-50 text-red-700 px-2.5 py-1 rounded-full text-[10px] md:text-[11px] font-bold border border-red-200/50">
+            <span className="flex items-center gap-1.5 bg-red-50 text-red-700 px-2.5 py-1 rounded-full text-[11px] md:text-[11px] font-bold border border-red-200/50">
               <span className="flex h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse"></span>GUARDIA 24HS
             </span>
           </div>
@@ -213,7 +213,7 @@ const StackedMockups = ({ navigate }) => {
           
           <div className="flex flex-col gap-3 w-full mt-auto mb-5">
             <div className="bg-[#F4F7F7] px-4 py-3 rounded-2xl border border-[#1A3D3D]/5 flex items-center gap-3 relative">
-              <div className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-black px-2 py-1 rounded uppercase tracking-wider shadow-sm z-10">Oferta</div>
+              <div className="absolute -top-2 -right-2 bg-red-500 text-white text-[11px] font-black px-2 py-1 rounded uppercase tracking-wider shadow-sm z-10">Oferta</div>
               <ShoppingCart className="w-6 h-6 text-[#2D6A6A] shrink-0" />
               <div className="text-left">
                 <p className="text-[11px] font-semibold text-[#1A3D3D]/60 uppercase tracking-widest leading-none mb-1">Aparatología</p>
@@ -701,10 +701,10 @@ export default function LandingPage() {
                       <Building2 className="w-6 h-6 text-[#2D6A6A] shrink-0" />
                       <div className="text-left">
                         <p className="font-bold text-[14px] text-[#1A3D3D]">Clínica San Marcos</p>
-                        <p className="text-[10px] text-[#1A3D3D]/50 uppercase tracking-widest font-semibold">Busca Especialista</p>
+                        <p className="text-[11px] text-[#1A3D3D]/50 uppercase tracking-widest font-semibold">Busca Especialista</p>
                       </div>
                     </div>
-                    <span className="bg-[#2D6A6A] text-white text-[9px] font-black px-2 py-1 rounded-lg uppercase tracking-wider text-left border border-[#2D6A6A]">NUEVO</span>
+                    <span className="bg-[#2D6A6A] text-white text-[11px] font-black px-2 py-1 rounded-lg uppercase tracking-wider text-left border border-[#2D6A6A]">NUEVO</span>
                   </div>
                   <div className="flex flex-col sm:flex-row justify-between items-end gap-4 text-left">
                     <div className="flex gap-2 text-left">
@@ -766,7 +766,7 @@ export default function LandingPage() {
                 <div className="bg-[#F4F7F7] border border-[#1A3D3D]/10 rounded-[24px] p-5 mb-6 flex items-center gap-4 shadow-sm">
                   <Truck className="w-6 h-6 text-[#2D6A6A] shrink-0" />
                   <div className="flex-1">
-                         <p className="text-[10px] font-bold text-[#1A3D3D]/50 uppercase tracking-widest text-left">En camino • Prótesis</p>
+                         <p className="text-[11px] font-bold text-[#1A3D3D]/50 uppercase tracking-widest text-left">En camino • Prótesis</p>
                     <div className="h-2 w-full bg-white rounded-full overflow-hidden border border-[#1A3D3D]/5"><div className="h-full w-[70%] bg-[#2D6A6A]"></div></div>
                   </div>
                 </div>

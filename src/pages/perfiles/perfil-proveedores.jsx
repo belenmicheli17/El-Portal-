@@ -206,13 +206,13 @@ export default function PerfilProveedor() {
     <article onClick={() => abrirModalProducto(prod)} className="bg-white border border-gray-200 rounded-[24px] hover:border-[#2D6A6A]/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-200 group flex flex-col text-left cursor-pointer overflow-hidden h-full">
       <div className="w-full h-48 relative overflow-hidden bg-white shrink-0 border-b border-gray-100">
         <div className="absolute top-4 left-4 z-10">
-          <span className="bg-[#1A3D3D]/90 backdrop-blur-sm text-white text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-lg shadow-sm">
+          <span className="bg-[#1A3D3D]/90 backdrop-blur-sm text-white text-[11px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-lg shadow-sm">
             {prod.categoria || 'General'}
           </span>
         </div>
         {prod.etiqueta && (
           <div className="absolute top-4 right-4 z-10">
-            <span className={`text-white text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-lg shadow-sm ${prod.etiqueta === 'Nuevo' ? 'bg-[#E4405F]' : 'bg-yellow-500'}`}>
+            <span className={`text-white text-[11px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-lg shadow-sm ${prod.etiqueta === 'Nuevo' ? 'bg-[#E4405F]' : 'bg-yellow-500'}`}>
               {prod.etiqueta}
             </span>
           </div>
@@ -229,7 +229,7 @@ export default function PerfilProveedor() {
         </h3>
         <div className="mt-auto flex items-end justify-between border-t border-gray-50 pt-4">
           <div>
-            <span className="text-[9px] text-gray-400 font-bold uppercase tracking-widest mb-0.5 block">Precio ARS</span>
+            <span className="text-[11px] text-gray-400 font-bold uppercase tracking-widest mb-0.5 block">Precio ARS</span>
             <span className="font-black text-[#2D6A6A] text-lg">{prod.precio ? `$${prod.precio}` : 'Consultar'}</span>
           </div>
           <div className="w-9 h-9 bg-[#F4F7F7] rounded-xl flex items-center justify-center text-[#2D6A6A] group-hover:bg-[#2D6A6A] group-hover:text-white transition-colors shadow-inner">
@@ -244,7 +244,7 @@ export default function PerfilProveedor() {
     <article onClick={() => abrirModalProducto(prod)} className="bg-white rounded-[16px] shadow-sm border border-gray-100 flex flex-col overflow-hidden cursor-pointer relative h-full">
       {prod.etiqueta && (
         <div className="absolute top-2 right-2 z-10">
-          <span className={`text-white text-[8px] font-bold uppercase tracking-widest px-2 py-0.5 rounded shadow-sm ${prod.etiqueta === 'Nuevo' ? 'bg-[#E4405F]' : 'bg-yellow-500'}`}>
+          <span className={`text-white text-[11px] font-bold uppercase tracking-widest px-2 py-0.5 rounded shadow-sm ${prod.etiqueta === 'Nuevo' ? 'bg-[#E4405F]' : 'bg-yellow-500'}`}>
             {prod.etiqueta}
           </span>
         </div>
@@ -277,7 +277,7 @@ export default function PerfilProveedor() {
         <div className="max-w-[1100px] mx-auto px-4 md:px-10 pb-16">
 
           {/* Breadcrumbs */}
-          <div className="pt-8 pb-2 flex flex-wrap items-center gap-2 text-xs md:text-[10px] uppercase tracking-[0.2em] font-bold text-gray-400">
+          <div className="pt-8 pb-2 flex flex-wrap items-center gap-2 text-xs md:text-[11px] uppercase tracking-[0.2em] font-bold text-gray-400">
              <button onClick={() => { navigate('/'); window.scrollTo(0,0); }} className="hover:text-[#2D6A6A] transition-colors">Inicio</button>
              <ChevronRight className="w-3 h-3 text-gray-300" />
              <button onClick={() => { navigate('/Cartilla'); window.scrollTo(0,0); }} className="hover:text-[#2D6A6A] transition-colors">Cartilla</button>
@@ -348,7 +348,7 @@ export default function PerfilProveedor() {
               {/* Sección Sobre Nosotros */}
               <section id="nosotros" className="w-full text-left reveal-on-scroll">
                 <div className="mb-6">
-                  <h3 className="text-[#2D6A6A] font-bold text-[10px] uppercase tracking-widest mb-1 text-left">Trayectoria y Compromiso</h3>
+                  <h3 className="text-[#2D6A6A] font-bold text-[11px] uppercase tracking-widest mb-1 text-left">Trayectoria y Compromiso</h3>
                   <h2 className="text-3xl md:text-4xl font-black text-[#1A3D3D] font-['Montserrat'] tracking-tight text-left">Sobre la Empresa</h2>
                 </div>
                 {/* CORREGIDO: proveedor.bioLarga */}
@@ -408,7 +408,7 @@ export default function PerfilProveedor() {
                           <div className="w-10 h-10 bg-[#2D6A6A]/10 rounded-xl flex items-center justify-center text-[#2D6A6A] group-hover:bg-[#2D6A6A] group-hover:text-white transition-colors shrink-0">
                             <MapPin className="w-5 h-5" />
                           </div>
-                          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none">Sede Central</p>
+                          <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest leading-none">Sede Central</p>
                         </div>
                         {proveedor.mapaUrl && <ArrowUpRight className="w-4 h-4 text-gray-300 group-hover:text-[#2D6A6A] transition-colors" />}
                       </div>
@@ -417,7 +417,7 @@ export default function PerfilProveedor() {
                       
                       {(proveedor.modalidadTexto || proveedor.horariosAtencion) && (
                         <div className="pt-4 border-t border-gray-100/60">
-                           <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-3">Atención al cliente</p>
+                           <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-3">Atención al cliente</p>
                            {proveedor.modalidadTexto && <p className="text-[#1A3D3D] font-medium text-[13px] leading-relaxed mb-3">{proveedor.modalidadTexto}</p>}
                            {proveedor.horariosAtencion && (
                              <p className="text-[#666666] font-semibold text-[13px] leading-relaxed flex items-center gap-2">
@@ -436,7 +436,7 @@ export default function PerfilProveedor() {
                         <Globe className="w-5 h-5" />
                       </div>
                       <div className="text-left flex-1 min-w-0">
-                        <p className="text-[9px] font-bold text-gray-400 uppercase leading-none mb-1.5">Sitio Web</p>
+                        <p className="text-[11px] font-bold text-gray-400 uppercase leading-none mb-1.5">Sitio Web</p>
                         <p className="text-[#1A3D3D] font-bold text-[13px] truncate">{proveedor.web.replace(/^https?:\/\//, '')}</p>
                       </div>
                       <ArrowUpRight className="w-4 h-4 text-gray-300 group-hover:text-[#2D6A6A] transition-colors shrink-0" />
@@ -450,7 +450,7 @@ export default function PerfilProveedor() {
                         <Globe className="w-5 h-5" />
                       </div>
                       <div className="text-left flex-1">
-                        <p className="text-[9px] font-bold text-gray-400 uppercase leading-none mb-2.5">Redes Sociales</p>
+                        <p className="text-[11px] font-bold text-gray-400 uppercase leading-none mb-2.5">Redes Sociales</p>
                         <div className="flex gap-2.5">
                            {proveedor.instagram && (
                              <a href={proveedor.instagram} target="_blank" rel="noreferrer" className="w-8 h-8 rounded-full bg-[#F4F7F7] flex items-center justify-center text-gray-400 hover:bg-[#E4405F] hover:text-white transition-all shadow-sm active:scale-90">
@@ -474,7 +474,7 @@ export default function PerfilProveedor() {
                         <Mail className="w-5 h-5" />
                       </div>
                       <div className="text-left flex-1 min-w-0">
-                        <p className="text-[9px] font-bold text-gray-400 uppercase leading-none mb-1.5">Email Comercial</p>
+                        <p className="text-[11px] font-bold text-gray-400 uppercase leading-none mb-1.5">Email Comercial</p>
                         <p className="text-[#1A3D3D] font-bold text-[13px] leading-snug break-words">{proveedor.emailVentas}</p>
                       </div>
                     </div>
@@ -498,7 +498,7 @@ export default function PerfilProveedor() {
             {/* Header Catálogo, Buscador y Filtro */}
             <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-8 relative">
               <div className="flex-1">
-                <h3 className="text-[#2D6A6A] font-bold text-[10px] uppercase tracking-widest mb-1 text-left">Vitrina de Productos</h3>
+                <h3 className="text-[#2D6A6A] font-bold text-[11px] uppercase tracking-widest mb-1 text-left">Vitrina de Productos</h3>
                 <h2 className="text-3xl md:text-4xl font-black text-[#1A3D3D] font-['Montserrat'] tracking-tight text-left">Catálogo Destacado</h2>
               </div>
               
@@ -640,7 +640,7 @@ export default function PerfilProveedor() {
           {/* SECCIÓN CONDICIONES COMERCIALES (CORREGIDO: Mapeo directo de arrays) */}
           <section id="condiciones" className="w-full bg-white rounded-[32px] p-8 md:p-12 shadow-sm border border-gray-100 text-left reveal-on-scroll">
             <div className="mb-8 border-b border-gray-100 pb-6">
-              <h3 className="text-[#2D6A6A] font-bold text-[10px] uppercase tracking-widest mb-1 text-left">Términos Comerciales</h3>
+              <h3 className="text-[#2D6A6A] font-bold text-[11px] uppercase tracking-widest mb-1 text-left">Términos Comerciales</h3>
               <h2 className="text-3xl md:text-4xl font-black text-[#1A3D3D] font-['Montserrat'] tracking-tight text-left">Condiciones de Venta</h2>
             </div>
             
@@ -827,11 +827,11 @@ export default function PerfilProveedor() {
                 <div className="w-full h-full relative flex items-center justify-center">
                   {/* Etiquetas en imagen */}
                   <div className="absolute top-0 left-0 z-10 flex flex-col gap-2">
-                    <span className="bg-[#1A3D3D] text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg shadow-sm">
+                    <span className="bg-[#1A3D3D] text-white text-[11px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg shadow-sm">
                       {productoSeleccionado.categoria || 'General'}
                     </span>
                     {productoSeleccionado.etiqueta && (
-                      <span className={`text-white text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-lg shadow-sm w-fit ${productoSeleccionado.etiqueta === 'Nuevo' ? 'bg-[#E4405F]' : 'bg-yellow-500'}`}>
+                      <span className={`text-white text-[11px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-lg shadow-sm w-fit ${productoSeleccionado.etiqueta === 'Nuevo' ? 'bg-[#E4405F]' : 'bg-yellow-500'}`}>
                         {productoSeleccionado.etiqueta}
                       </span>
                     )}
@@ -889,7 +889,7 @@ export default function PerfilProveedor() {
                 
                 {/* Caja de Precio */}
                 <div className="mb-8 p-5 bg-[#F4F7F7] rounded-2xl border border-gray-100 flex flex-col shadow-inner">
-                  <span className="text-[10px] text-[#666666] font-bold uppercase tracking-widest block mb-1">Precio Referencial (ARS)</span>
+                  <span className="text-[11px] text-[#666666] font-bold uppercase tracking-widest block mb-1">Precio Referencial (ARS)</span>
                   <span className="font-black text-[#2D6A6A] text-3xl">{productoSeleccionado.precio ? `$${productoSeleccionado.precio}` : 'Consultar'}</span>
                 </div>
 
