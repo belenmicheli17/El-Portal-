@@ -321,7 +321,7 @@ function SelectorHorario({ desde, hasta, onCambio, conAtajos = false }) {
 function CampoWhatsapp({ id, valor, onCambio }) {
   return (
     <div className="flex items-center bg-[#F4F7F7] rounded-2xl overflow-hidden border border-transparent transition-all duration-300 focus-within:bg-white focus-within:border-[#2D6A6A] focus-within:ring-4 focus-within:ring-[#2D6A6A]/10">
-      <span className="px-4 py-4 text-[17px] font-bold text-[#1A3D3D] bg-[#E9EEEE] select-none">+54</span>
+      <span className="px-4 py-4 text-[17px] font-bold text-[#1A3D3D] bg-[#E8EFEF] select-none">+54</span>
       <input
         id={id}
         type="tel"

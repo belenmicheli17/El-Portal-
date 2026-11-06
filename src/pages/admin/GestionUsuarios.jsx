@@ -182,7 +182,7 @@ export default function GestionUsuarios() {
                   <tr key={user.uid} className="hover:bg-[#F4F7F7]/50 transition-colors">
                     <td className="px-6 py-5">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-[#E8F0F0] flex items-center justify-center shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-[#E8EFEF] flex items-center justify-center shrink-0">
                           {iconoPorRol(user.rol)}
                         </div>
                         <div>

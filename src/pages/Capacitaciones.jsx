@@ -1122,17 +1122,17 @@ El equipo de El Portal Veterinario`
               .pdf-doc-meta { text-align: right; font-size: 8pt; color: #666666; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
               .pdf-h1 { font-family: 'Montserrat', sans-serif; font-size: 26pt; color: #1A3D3D; margin-bottom: 8px; line-height: 1.2; letter-spacing: -0.5px; font-weight: 900; flex-shrink: 0; }
               .pdf-subtitle { font-size: 13pt; color: #2D6A6A; font-weight: 600; margin-bottom: 30px; font-family: 'Inter', sans-serif; flex-shrink: 0; }
-              .pdf-h2 { font-family: 'Montserrat', sans-serif; font-size: 15pt; color: #2D6A6A; margin-top: 25px; margin-bottom: 12px; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; font-weight: 900; }
+              .pdf-h2 { font-family: 'Montserrat', sans-serif; font-size: 15pt; color: #2D6A6A; margin-top: 25px; margin-bottom: 12px; border-bottom: 1px solid #E5E7EB; padding-bottom: 6px; font-weight: 900; }
               .pdf-h3 { font-family: 'Montserrat', sans-serif; font-size: 12pt; color: #1A3D3D; margin-top: 15px; margin-bottom: 5px; font-weight: 700; }
               .pdf-p { font-family: 'Inter', sans-serif; font-size: 10pt; margin-bottom: 10px; text-align: left; color: #333333; line-height: 1.5; }
               .pdf-highlight { border-left: 3px solid #4DB6AC; padding-left: 15px; margin: 15px 0; }
               .pdf-highlight p { font-weight: 500; color: #1A3D3D; margin-bottom: 0; }
               .pdf-feature-list { display: flex; flex-direction: column; gap: 12px; margin-top: 15px; margin-bottom: 20px; }
               .pdf-community { display: flex; align-items: center; gap: 20px; margin: 20px 0 15px 0; }
-              .pdf-percent { font-family: 'Montserrat', sans-serif; font-size: 38pt; font-weight: 900; color: #4DB6AC; line-height: 1; padding-right: 20px; border-right: 2px solid #e2e8f0; }
+              .pdf-percent { font-family: 'Montserrat', sans-serif; font-size: 38pt; font-weight: 900; color: #4DB6AC; line-height: 1; padding-right: 20px; border-right: 2px solid #E5E7EB; }
               .pdf-page-number { position: absolute; bottom: 10mm; right: 20mm; font-size: 8pt; color: #666666; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; font-family: 'Inter', sans-serif; }
-              .pdf-contact-box { background-color: #F4F7F7; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-top: 25px; margin-bottom: 10px; flex-shrink: 0; }
-              .pdf-legal-footer { margin-top: auto; padding-top: 15px; border-top: 1px solid #e2e8f0; text-align: center; font-family: 'Inter', sans-serif; font-size: 7.5pt; color: #666666; line-height: 1.5; flex-shrink: 0; padding-bottom: 5mm; }
+              .pdf-contact-box { background-color: #F4F7F7; border: 1px solid #E5E7EB; border-radius: 12px; padding: 20px; margin-top: 25px; margin-bottom: 10px; flex-shrink: 0; }
+              .pdf-legal-footer { margin-top: auto; padding-top: 15px; border-top: 1px solid #E5E7EB; text-align: center; font-family: 'Inter', sans-serif; font-size: 7.5pt; color: #666666; line-height: 1.5; flex-shrink: 0; padding-bottom: 5mm; }
               .pdf-legal-footer strong { color: #666666; font-weight: 700; }
               .pdf-email { font-size: 12pt; font-weight: 700; color: #2D6A6A; text-decoration: none; font-family: 'Inter', sans-serif; }
             `}</style>

@@ -468,14 +468,14 @@ export default function PerfilClinica() {
 
         {/* ============ DATOS RÁPIDOS ============ */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 lg:gap-4 mt-4">
-          <div className="bg-[#F4F7F7] border border-[#e5eded] rounded-[20px] p-3.5 lg:p-5">
+          <div className="bg-[#F4F7F7] border border-gray-100 rounded-[20px] p-3.5 lg:p-5">
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 flex items-center gap-1.5"><Clock className="w-3 h-3" /> Horarios</p>
             <p className="font-bold text-[#1A3D3D] text-[13px] lg:text-sm mt-1.5 leading-snug">
               {data.guardia24hs ? 'Atención las 24 hs' : horarioSemana ? `Lun a vie · ${horarioSemana}` : 'A confirmar'}
             </p>
             {!data.guardia24hs && horarioSabado && <p className="text-xs text-gray-500 mt-0.5">Sáb · {horarioSabado}</p>}
           </div>
-          <div className="bg-[#F4F7F7] border border-[#e5eded] rounded-[20px] p-3.5 lg:p-5">
+          <div className="bg-[#F4F7F7] border border-gray-100 rounded-[20px] p-3.5 lg:p-5">
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 flex items-center gap-1.5"><MapPin className="w-3 h-3" /> {otrasSedes.length > 0 ? 'Ubicaciones' : 'Ubicación'}</p>
             <p className="font-bold text-[#1A3D3D] text-[13px] lg:text-sm mt-1.5 leading-snug">{otrasSedes.length > 0 ? '' : (ubicacionCorta || data.provincia || 'A confirmar')}</p>
             {otrasSedes.length > 0 && (
@@ -493,7 +493,7 @@ export default function PerfilClinica() {
             )}
           </div>
           {data.añosExperiencia ? (
-            <div className="bg-[#F4F7F7] border border-[#e5eded] rounded-[20px] p-3.5 lg:p-5">
+            <div className="bg-[#F4F7F7] border border-gray-100 rounded-[20px] p-3.5 lg:p-5">
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 flex items-center gap-1.5"><Award className="w-3 h-3" /> Trayectoria</p>
               <p className="font-bold text-[#1A3D3D] text-[13px] lg:text-sm mt-1.5">+{data.añosExperiencia} años</p>
             </div>
@@ -503,7 +503,7 @@ export default function PerfilClinica() {
               role={esPro ? 'button' : undefined}
               tabIndex={esPro ? 0 : undefined}
               onClick={esPro ? () => document.getElementById('equipo')?.scrollIntoView({ behavior: 'smooth', block: 'start' }) : undefined}
-              className={`bg-[#F4F7F7] border border-[#e5eded] rounded-[20px] p-3.5 lg:p-5 ${esPro ? 'cursor-pointer hover:bg-white hover:border-[#2D6A6A]/40 transition-all duration-300 ease-in-out' : ''}`}
+              className={`bg-[#F4F7F7] border border-gray-100 rounded-[20px] p-3.5 lg:p-5 ${esPro ? 'cursor-pointer hover:bg-white hover:border-[#2D6A6A]/40 transition-all duration-300 ease-in-out' : ''}`}
             >
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 flex items-center gap-1.5"><Users className="w-3 h-3" /> Equipo</p>
               <p className="font-bold text-[#1A3D3D] text-[13px] lg:text-sm mt-1.5">{staff.length} profesional{staff.length !== 1 ? 'es' : ''}</p>
@@ -520,7 +520,7 @@ export default function PerfilClinica() {
             <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#2D6A6A] flex items-center gap-1.5"><Heart className="w-3 h-3" /> Atendemos</p>
             <div className="flex flex-wrap gap-2 mt-2.5">
               {atendemos.map((a, i) => (
-                <span key={i} className="px-3 py-1.5 rounded-full bg-[#E8F3F2] text-[#1A3D3D] text-xs font-bold">{a}</span>
+                <span key={i} className="px-3 py-1.5 rounded-full bg-[#E8EFEF] text-[#1A3D3D] text-xs font-bold">{a}</span>
               ))}
             </div>
           </section>
@@ -555,9 +555,9 @@ export default function PerfilClinica() {
           <section className="pt-9">
             <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#2D6A6A]">Qué ofrecemos</p>
             <h2 className="font-['Montserrat'] font-black text-[#1A3D3D] text-2xl lg:text-3xl tracking-tight mt-2 mb-3.5">Servicios</h2>
-            <div className="bg-[#F4F7F7] border border-[#e5eded] rounded-3xl p-5 flex flex-wrap gap-1.5">
+            <div className="bg-[#F4F7F7] border border-gray-100 rounded-3xl p-5 flex flex-wrap gap-1.5">
               {todosLosServicios.map((s, i) => (
-                <span key={i} className="px-3.5 py-2 rounded-[10px] bg-white border border-[#dfe8e8] text-[13px] lg:text-sm font-semibold text-gray-600">{s}</span>
+                <span key={i} className="px-3.5 py-2 rounded-[10px] bg-white border border-gray-100 text-[13px] lg:text-sm font-semibold text-gray-600">{s}</span>
               ))}
             </div>
           </section>
@@ -592,7 +592,7 @@ export default function PerfilClinica() {
             <h2 className="font-['Montserrat'] font-black text-[#1A3D3D] text-2xl lg:text-3xl tracking-tight mt-2 mb-3.5">Preguntas frecuentes</h2>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 items-start">
               {faqsActivas.map((faq) => (
-                <div key={faq.id} className="border border-[#e5eded] rounded-2xl overflow-hidden bg-white">
+                <div key={faq.id} className="border border-gray-100 rounded-2xl overflow-hidden bg-white">
                   <button
                     onClick={() => setOpenFaq(openFaq === faq.id ? null : faq.id)}
                     className="w-full flex items-center justify-between gap-3 px-4 py-3.5 text-left"
@@ -655,7 +655,7 @@ export default function PerfilClinica() {
             <h2 className="font-['Montserrat'] font-black text-[#1A3D3D] text-2xl lg:text-3xl tracking-tight mt-2 mb-3.5">Profesionales</h2>
             <Carrusel>
               {staff.map((m, idx) => (
-                <div key={m.id || idx} className="shrink-0 snap-start w-[230px] lg:w-[250px] bg-[#F4F7F7] border border-[#e5eded] rounded-3xl p-5 text-center">
+                <div key={m.id || idx} className="shrink-0 snap-start w-[230px] lg:w-[250px] bg-[#F4F7F7] border border-gray-100 rounded-3xl p-5 text-center">
                   {m.foto ? (
                     <button type="button" onClick={() => setVisor({ fotos: [m.foto], indice: 0 })} className="block mx-auto w-20 h-20 rounded-full overflow-hidden mb-3 cursor-zoom-in">
                       <img src={m.foto} alt={m.nombre} className="w-full h-full object-cover" />
@@ -698,7 +698,7 @@ export default function PerfilClinica() {
             <h2 className="font-['Montserrat'] font-black text-[#1A3D3D] text-2xl lg:text-3xl tracking-tight mt-2 mb-3.5">Lo que hacemos</h2>
             <Carrusel>
               {casos.map((c, idx) => (
-                <article key={c.id || idx} className="shrink-0 snap-start w-[270px] lg:w-[300px] bg-[#F4F7F7] border border-[#e5eded] rounded-3xl overflow-hidden">
+                <article key={c.id || idx} className="shrink-0 snap-start w-[270px] lg:w-[300px] bg-[#F4F7F7] border border-gray-100 rounded-3xl overflow-hidden">
                   {c.fotos && c.fotos.length > 0 ? (
                     <div className="relative">
                       <FotoSensible
@@ -727,7 +727,7 @@ export default function PerfilClinica() {
         {/* ============ CONTACTO ============ */}
         <section id="contacto" className="pt-9 pb-12" ref={scrollRef}>
           <div
-            className={`highlight-animation bg-[#E8F3F2] rounded-[28px] lg:rounded-[36px] p-5 lg:p-9 lg:flex lg:gap-9
+            className={`highlight-animation bg-[#E8EFEF] rounded-[28px] lg:rounded-[36px] p-5 lg:p-9 lg:flex lg:gap-9
               ${highlightContacto ? 'scale-[1.02] shadow-[0_0_80px_rgba(45,106,106,0.3)] ring-4 ring-[#4DB6AC]/50' : ''}`}
           >
             <div className="lg:flex-1">
@@ -830,7 +830,7 @@ export default function PerfilClinica() {
       )}
 
       {/* ============ BARRA FIJA (celular): WhatsApp | Cómo llegar ============ */}
-      <div className="lg:hidden fixed bottom-0 inset-x-0 z-[110] px-4 pt-3 pb-4 bg-white/95 backdrop-blur border-t border-[#e5eded] shadow-[0_-10px_30px_rgba(26,61,61,0.08)]">
+      <div className="lg:hidden fixed bottom-0 inset-x-0 z-[110] px-4 pt-3 pb-4 bg-white/95 backdrop-blur border-t border-gray-100 shadow-[0_-10px_30px_rgba(26,61,61,0.08)]">
         <div className="flex rounded-2xl overflow-hidden shadow-lg">
           <a href={linkWhatsapp} target="_blank" rel="noreferrer" className="flex-1 min-h-[52px] bg-[#25D366] text-white flex items-center justify-center text-xs font-extrabold uppercase tracking-[0.1em]">
             WhatsApp
