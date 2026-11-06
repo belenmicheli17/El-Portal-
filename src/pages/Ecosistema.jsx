@@ -22,7 +22,7 @@ const TarjetaDisponible = ({ id, titulo, descripcion, icon: Icon, onClick, disti
     id={id}
     type="button"
     onClick={onClick}
-    className="group w-full h-full bg-white/80 backdrop-blur-xl border border-white/60 rounded-[24px] md:rounded-[32px] shadow-[0_8px_32px_rgba(0,0,0,0.04)] hover:bg-white/90 hover:shadow-[0_20px_40px_rgba(26,61,61,0.12)] hover:-translate-y-1 active:scale-[0.98] active:translate-y-0 transition-all duration-300 ease-in-out p-4 md:p-6 flex flex-row md:flex-col items-center gap-4 md:gap-0 text-left md:text-center md:min-h-[210px] cursor-pointer outline-none focus:ring-4 focus:ring-[#2D6A6A]/10"
+    className="group w-full h-full bg-white/80 backdrop-blur-md border border-white/60 rounded-[24px] md:rounded-[32px] shadow-[0_8px_32px_rgba(0,0,0,0.04)] hover:bg-white/90 hover:shadow-[0_20px_40px_rgba(26,61,61,0.12)] hover:-translate-y-1 active:scale-[0.98] active:translate-y-0 transition-all duration-300 ease-in-out p-4 md:p-6 flex flex-row md:flex-col items-center gap-4 md:gap-0 text-left md:text-center md:min-h-[210px] cursor-pointer outline-none focus:ring-4 focus:ring-[#2D6A6A]/10"
   >
     <Icon strokeWidth={1.5} className="w-8 h-8 md:w-10 md:h-10 shrink-0 text-[#2D6A6A] md:mb-3 group-hover:text-[#4DB6AC] md:group-hover:scale-110 md:group-hover:-translate-y-1 transition-all duration-300" />
     <div className="flex-1 min-w-0 flex flex-col md:items-center">
@@ -86,7 +86,7 @@ function TarjetaAvance({ avance, cargando, onEditar, onVerPerfil, onIrA }) {
   
 
   return (
-    <div id="tour-avance" className="w-full bg-white/80 backdrop-blur-xl border border-white/60 rounded-[24px] md:rounded-[32px] shadow-[0_8px_32px_rgba(0,0,0,0.04)] p-5 md:p-6">
+    <div id="tour-avance" className="w-full bg-white/80 backdrop-blur-md border border-white/60 rounded-[24px] md:rounded-[32px] shadow-[0_8px_32px_rgba(0,0,0,0.04)] p-5 md:p-6">
       <div className="flex justify-between items-baseline mb-3">
         <h2 className="text-[16px] md:text-[18px] font-black text-[#1A3D3D] font-['Montserrat']">Tu perfil</h2>
         {avance && !cargando && (

@@ -62,7 +62,7 @@ const StrategicCard = ({ data, isMobile, index, onSelectRole }) => {
   };
 
   return (
-    <div className={`bg-white/[0.96] backdrop-blur-2xl border border-white/80 p-6 md:px-8 md:py-8 rounded-[32px] md:rounded-[40px] transition-all flex flex-col items-start text-left relative overflow-hidden group hover:z-20 z-10 ${
+    <div className={`bg-white/[0.96] backdrop-blur-md border border-white/80 p-6 md:px-8 md:py-8 rounded-[32px] md:rounded-[40px] transition-all flex flex-col items-start text-left relative overflow-hidden group hover:z-20 z-10 ${
       isMobile 
         ? "w-[85vw] max-w-[380px] snap-center snap-always shrink-0 shadow-[0_8px_25px_rgba(0,0,0,0.4)]" 
         : `w-full duration-500 shadow-[0_12px_35px_-10px_rgba(0,0,0,0.5)] hover:-translate-y-3 hover:shadow-[0_20px_50px_-10px_rgba(0,0,0,0.7)] hover:bg-white ${getDesktopPosition(index)}`
@@ -593,7 +593,7 @@ export default function LandingPage() {
             image="/2.consultorio.png"
             isReversed={true}
             badge={
-              <div className="bg-white/10 backdrop-blur-xl p-4 rounded-[24px] shadow-[0_8px_32px_rgba(0,0,0,0.3)] flex items-center gap-4 border border-white/10 text-left">
+              <div className="bg-white/10 backdrop-blur-md p-4 rounded-[24px] shadow-[0_8px_32px_rgba(0,0,0,0.3)] flex items-center gap-4 border border-white/10 text-left">
                 <div className="flex -space-x-3">
                   <div className="w-10 h-10 rounded-full border-2 border-white/20 bg-white/20 backdrop-blur-md flex items-center justify-center text-[13px] font-bold text-white shadow-sm">+100</div>
                 </div>

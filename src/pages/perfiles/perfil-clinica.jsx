@@ -830,7 +830,7 @@ export default function PerfilClinica() {
       )}
 
       {/* ============ BARRA FIJA (celular): WhatsApp | Cómo llegar ============ */}
-      <div className="lg:hidden fixed bottom-0 inset-x-0 z-[110] px-4 pt-3 pb-4 bg-white/95 backdrop-blur border-t border-gray-100 shadow-[0_-10px_30px_rgba(26,61,61,0.08)]">
+      <div className="lg:hidden fixed bottom-0 inset-x-0 z-[110] px-4 pt-3 pb-4 bg-white/95 backdrop-blur-md border-t border-gray-100 shadow-[0_-10px_30px_rgba(26,61,61,0.08)]">
         <div className="flex rounded-2xl overflow-hidden shadow-lg">
           <a href={linkWhatsapp} target="_blank" rel="noreferrer" className="flex-1 min-h-[52px] bg-[#25D366] text-white flex items-center justify-center text-xs font-extrabold uppercase tracking-[0.1em]">
             WhatsApp

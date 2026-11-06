@@ -7,7 +7,7 @@ export default function NotificationBox({ isNotifOpen, setIsNotifOpen, userRole,
   const navigate = useNavigate();
   
   return (
-    <div className={`order-2 lg:col-span-1 bg-[#E8EFEF]/80 backdrop-blur-xl border border-[#2D6A6A]/10 rounded-[24px] md:rounded-[32px] shadow-[0_12px_40px_rgba(0,0,0,0.04)] flex flex-col overflow-hidden w-full transition-all duration-500 ease-in-out ${isNotifOpen ? 'lg:row-span-2' : ''}`}>
+    <div className={`order-2 lg:col-span-1 bg-[#E8EFEF]/80 backdrop-blur-md border border-[#2D6A6A]/10 rounded-[24px] md:rounded-[32px] shadow-[0_12px_40px_rgba(0,0,0,0.04)] flex flex-col overflow-hidden w-full transition-all duration-500 ease-in-out ${isNotifOpen ? 'lg:row-span-2' : ''}`}>
       {/* 2. NOTIFICACIONES */}
       {/* Header Notificaciones (Fijo) */}
       <div className="w-full flex items-center gap-3 p-5 md:p-6 shrink-0">
