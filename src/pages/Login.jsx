@@ -221,7 +221,7 @@ export default function Login() {
       {/* PANEL PROMOCIONAL (PC) */}
       <div className="hidden md:flex md:w-[45%] lg:w-[50%] bg-[#1A3D3D] px-12 lg:px-20 pt-[120px] pb-12 flex-col justify-between relative overflow-hidden">
         <div className="absolute top-[-20%] left-[-10%] w-[70%] h-[70%] bg-[#2D6A6A]/30 rounded-full blur-[120px] pointer-events-none"></div>
-        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-emerald-500/10 rounded-full blur-[100px] pointer-events-none"></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none"></div>
         <div className="relative z-10">
           <h2 className="text-white font-['Montserrat'] font-extrabold text-4xl lg:text-5xl tracking-tight leading-[1.1] mb-6">
             Una plataforma <br />

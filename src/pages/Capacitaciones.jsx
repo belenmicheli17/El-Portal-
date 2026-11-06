@@ -1254,7 +1254,7 @@ El equipo de El Portal Veterinario`
       <div className="px-4 md:px-0 relative z-10">
         
         <section className="text-center pb-12 md:pb-16 relative">
-          <div className="absolute top-1/2 left-0 -translate-y-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-[#4DB6AC] rounded-full blur-[100px] opacity-30 pointer-events-none z-0"></div>
+          <div className="absolute top-1/2 left-0 -translate-y-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-[#4DB6AC] rounded-full blur-[120px] opacity-30 pointer-events-none z-0"></div>
           <div className="absolute top-0 right-0 -translate-y-1/4 translate-x-1/4 w-[600px] h-[600px] bg-[#2D6A6A] rounded-full blur-[120px] opacity-20 pointer-events-none z-0"></div>
 
           <div className="relative z-10">
@@ -1321,7 +1321,7 @@ El equipo de El Portal Veterinario`
             </div>
 
             <div className="bg-[#1A3D3D] p-10 md:p-16 flex flex-col md:flex-row items-center gap-10 lg:gap-16 relative">
-              <div className="absolute top-[-20%] right-[-10%] w-[300px] h-[300px] bg-[#2D6A6A]/40 rounded-full blur-[80px] pointer-events-none"></div>
+              <div className="absolute top-[-20%] right-[-10%] w-[300px] h-[300px] bg-[#2D6A6A]/40 rounded-full blur-[120px] pointer-events-none"></div>
               
               <div className="w-full md:w-1/3 flex flex-col items-center justify-center text-center border-b md:border-b-0 md:border-r border-white/10 pb-8 md:pb-0 relative z-10">
                 <span className="text-7xl md:text-8xl font-black text-[#4DB6AC] font-['Montserrat'] tracking-tighter leading-none">5%</span>

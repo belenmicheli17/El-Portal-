@@ -639,8 +639,8 @@ const Cartilla = () => {
       <main className="min-h-screen bg-[#F9F5F0] pb-24 relative flex flex-col gap-4 sm:gap-6 animate-in fade-in duration-500 overflow-hidden">
         {/* BURBUJAS DE FONDO LIBRES */}
         <div className="absolute top-[-10%] left-[-15%] w-[600px] h-[600px] bg-[#FF9800]/20 rounded-full blur-[120px] pointer-events-none z-0"></div>
-        <div className="absolute top-[10%] right-[-10%] w-[700px] h-[700px] bg-[#4DB6AC]/30 rounded-full blur-[150px] pointer-events-none z-0"></div>
-        <div className="absolute bottom-[0%] left-[-10%] w-[500px] h-[500px] bg-[#4DB6AC]/15 rounded-full blur-[130px] pointer-events-none z-0"></div>
+        <div className="absolute top-[10%] right-[-10%] w-[700px] h-[700px] bg-[#4DB6AC]/30 rounded-full blur-[120px] pointer-events-none z-0"></div>
+        <div className="absolute bottom-[0%] left-[-10%] w-[500px] h-[500px] bg-[#4DB6AC]/15 rounded-full blur-[120px] pointer-events-none z-0"></div>
 
         {/* HEADER B2C + ILUSTRACIÓN (dos columnas en PC) */}
         <div className="relative z-20 max-w-6xl mx-auto w-full px-4 lg:flex lg:items-center lg:gap-10">

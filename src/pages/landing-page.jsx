@@ -295,7 +295,7 @@ const ZigZagSection = ({ title, subtitle, text, image, customMockup, isReversed,
     <section className={`${paddingClass} relative overflow-hidden ${bgClass}`}>
       {!isDark && (
         <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
-           <div className={`absolute top-0 ${isReversed ? 'right-[-10%]' : 'left-[-10%]'} w-[40vw] h-[40vw] bg-[#2D6A6A]/5 rounded-full blur-[100px]`}></div>
+           <div className={`absolute top-0 ${isReversed ? 'right-[-10%]' : 'left-[-10%]'} w-[40vw] h-[40vw] bg-[#2D6A6A]/5 rounded-full blur-[120px]`}></div>
         </div>
       )}
       
@@ -494,7 +494,7 @@ export default function LandingPage() {
       {/* Background Ambience burbujas */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-[#2D6A6A]/10 rounded-full blur-[120px]"></div>
-        <div className="absolute bottom-[20%] right-[-10%] w-[60vw] h-[60vw] bg-[#4DB6AC]/15 rounded-full blur-[150px]"></div>
+        <div className="absolute bottom-[20%] right-[-10%] w-[60vw] h-[60vw] bg-[#4DB6AC]/15 rounded-full blur-[120px]"></div>
       </div>
       <div className="fixed inset-0 pointer-events-none z-[9999] opacity-[0.025] mix-blend-overlay" 
             style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}>
@@ -505,7 +505,7 @@ export default function LandingPage() {
         <div className="relative w-full bg-transparent">
           <div className="absolute inset-0 pointer-events-none z-0" style={{ background: 'linear-gradient(to bottom, transparent 70%, #F4F7F7 100%)' }}></div>
           <div className="absolute inset-0 pointer-events-none z-0">
-            <div className="absolute top-[25%] md:top-[35%] right-[-20%] w-[100vw] md:w-[60vw] h-[100vw] md:h-[60vw] bg-[#1A3D3D]/[0.12] rounded-full blur-[150px] mix-blend-multiply"></div>
+            <div className="absolute top-[25%] md:top-[35%] right-[-20%] w-[100vw] md:w-[60vw] h-[100vw] md:h-[60vw] bg-[#1A3D3D]/[0.12] rounded-full blur-[120px] mix-blend-multiply"></div>
             <div className="absolute top-[45%] md:top-[50%] right-[-10%] w-[80vw] md:w-[45vw] h-[80vw] md:h-[45vw] bg-[#2D6A6A]/[0.12] rounded-full blur-[120px] mix-blend-multiply"></div>
           </div>
 

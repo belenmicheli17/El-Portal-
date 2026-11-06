@@ -150,9 +150,9 @@ const [currentPage, setCurrentPage] = useState(1);
         </div>
       )}
       {/* BURBUJAS DE FONDO TIPO "MESH GRADIENT" MÁS POTENTES */}
-      <div className="absolute top-0 md:top-[-5%] left-[-10%] md:left-[-5%] w-[300px] md:w-[600px] h-[300px] md:h-[600px] bg-[#4DB6AC]/40 md:bg-[#4DB6AC]/25 rounded-full blur-[70px] md:blur-[120px] pointer-events-none z-0"></div>
-      <div className="absolute top-[10%] md:top-[5%] right-[-10%] md:right-[-5%] w-[250px] md:w-[500px] h-[250px] md:h-[500px] bg-[#2D6A6A]/30 md:bg-[#2D6A6A]/15 rounded-full blur-[80px] md:blur-[150px] pointer-events-none z-0"></div>
-      <div className="absolute top-0 md:top-[-5%] left-[50%] -translate-x-1/2 w-[100vw] md:w-[800px] h-[300px] md:h-[600px] bg-white/50 md:bg-white/70 rounded-full blur-[60px] md:blur-[120px] pointer-events-none z-0"></div>
+      <div className="absolute top-0 md:top-[-5%] left-[-10%] md:left-[-5%] w-[300px] md:w-[600px] h-[300px] md:h-[600px] bg-[#4DB6AC]/40 md:bg-[#4DB6AC]/25 rounded-full blur-[120px] md:blur-[120px] pointer-events-none z-0"></div>
+      <div className="absolute top-[10%] md:top-[5%] right-[-10%] md:right-[-5%] w-[250px] md:w-[500px] h-[250px] md:h-[500px] bg-[#2D6A6A]/30 md:bg-[#2D6A6A]/15 rounded-full blur-[120px] md:blur-[120px] pointer-events-none z-0"></div>
+      <div className="absolute top-0 md:top-[-5%] left-[50%] -translate-x-1/2 w-[100vw] md:w-[800px] h-[300px] md:h-[600px] bg-white/50 md:bg-white/70 rounded-full blur-[120px] md:blur-[120px] pointer-events-none z-0"></div>
 
       {/* HEADER / HERO */}
       <div className="pt-8 md:pt-14 pb-6 md:pb-10 px-4 md:px-10 max-w-[1300px] mx-auto flex flex-col items-center text-center relative z-[60] transition-all">

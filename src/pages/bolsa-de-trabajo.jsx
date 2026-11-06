@@ -687,8 +687,8 @@ const toggleFiltro = (categoria, valor) => {
       {/* BURBUJAS DE FONDO LIBRES HERO*/}
       <section className="relative bg-white pt-16 pb-20 overflow-hidden rounded-b-[40px] md:rounded-b-[60px] shadow-[0_10px_30px_rgba(26,61,61,0.05)] z-10 text-center">
         <div className="absolute top-[-10%] left-[-15%] w-[600px] h-[600px] bg-[#4DB6AC]/20 rounded-full blur-[120px] pointer-events-none z-0"></div>
-        <div className="absolute bottom-[0%] left-[-10%] w-[500px] h-[500px] bg-[#4DB6AC]/15 rounded-full blur-[130px] pointer-events-none z-0"></div>
-        <div className="absolute top-[10%] right-[-10%] w-[550px] h-[550px] bg-[#1A3D3D]/10 rounded-full blur-[140px] pointer-events-none z-0"></div>
+        <div className="absolute bottom-[0%] left-[-10%] w-[500px] h-[500px] bg-[#4DB6AC]/15 rounded-full blur-[120px] pointer-events-none z-0"></div>
+        <div className="absolute top-[10%] right-[-10%] w-[550px] h-[550px] bg-[#1A3D3D]/10 rounded-full blur-[120px] pointer-events-none z-0"></div>
         
         <div className="relative z-10 max-w-4xl mx-auto flex flex-col items-center px-4">
           <Briefcase className="w-10 h-10 text-[#1A3D3D] mb-6 relative z-10" />
@@ -941,7 +941,7 @@ const toggleFiltro = (categoria, valor) => {
 
         <div className="bg-white rounded-[40px] border border-gray-100 shadow-xl overflow-hidden mb-12 relative">
           <div className="bg-[#F4F7F7] p-8 md:p-12 border-b border-gray-100 flex flex-col md:flex-row gap-8 items-start relative overflow-hidden">
-             <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-[#2D6A6A]/5 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+             <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-[#2D6A6A]/5 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
              <div className="w-24 h-24 md:w-32 md:h-32 bg-white rounded-[24px] border border-gray-100 shadow-sm p-3 shrink-0 z-10">
                <img src={selectedJob.logoClinica} alt={selectedJob.clinica} className="w-full h-full object-contain rounded-xl" />
              </div>

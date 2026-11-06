@@ -246,9 +246,9 @@ export default function SalaDeEspera() {
       {/* Burbujas decorativas de fondo — cubren toda la página */}
       <div className="absolute inset-0 pointer-events-none" style={{ zIndex: -1 }}>
         {/* Burbuja naranja — esquina superior derecha, zona pública */}
-        <div className="absolute top-[15%] right-[27%] w-[60vw] h-[60vw] bg-[#FF9800]/15 rounded-full blur-[80px]"></div>
+        <div className="absolute top-[15%] right-[27%] w-[60vw] h-[60vw] bg-[#FF9800]/15 rounded-full blur-[120px]"></div>
         {/* Burbuja esmeralda — zona media, cerca del título profesional */}
-        <div className="absolute top-[35%] left-[-10%] w-[50vw] h-[50vw] bg-[#4DB6AC]/30 rounded-full blur-[130px]"></div>
+        <div className="absolute top-[35%] left-[-10%] w-[50vw] h-[50vw] bg-[#4DB6AC]/30 rounded-full blur-[120px]"></div>
       </div>
 
       
@@ -305,10 +305,10 @@ export default function SalaDeEspera() {
       {/* ── HERO ──────────────────────────────────────────────────────────── */}
     <section className="snap-start pt-10 md:pt-15 md:pb-48 pb-55 relative z-10 overflow-hidden">
   {/* Burbuja naranja */}
-  <div className="bubble-orange absolute top-[-80px] right-[-120px] md:top-[-60px] md:right-[-80px] w-[420px] h-[420px] bg-[#FF9800]/40 rounded-full blur-[90px] pointer-events-none z-[-1]" />
+  <div className="bubble-orange absolute top-[-80px] right-[-120px] md:top-[-60px] md:right-[-80px] w-[420px] h-[420px] bg-[#FF9800]/40 rounded-full blur-[120px] pointer-events-none z-[-1]" />
 
   {/* Burbuja esmeralda */}
-  <div className="bubble-teal absolute bottom-[-80px] left-[-120px] md:bottom-[-40px] md:left-[-60px] w-[350px] h-[350px] bg-[#4DB6AC]/45 rounded-full blur-[100px] pointer-events-none z-[-1]" />
+  <div className="bubble-teal absolute bottom-[-80px] left-[-120px] md:bottom-[-40px] md:left-[-60px] w-[350px] h-[350px] bg-[#4DB6AC]/45 rounded-full blur-[120px] pointer-events-none z-[-1]" />
 
   <div className="max-w-5xl mx-auto px-6 relative">
     <div className="max-w-2xl">

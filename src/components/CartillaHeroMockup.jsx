@@ -35,7 +35,7 @@ const CartillaHeroMockup = () => {
         }}
       >
         
-        <div className="absolute top-[10%] right-[-20%] w-[500px] h-[400px] bg-[#FF9800]/25 rounded-full blur-[70px] pointer-events-none z-0"></div>
+        <div className="absolute top-[10%] right-[-20%] w-[500px] h-[400px] bg-[#FF9800]/25 rounded-full blur-[120px] pointer-events-none z-0"></div>
         
         {/* --- HARDWARE: ISLA DINÁMICA --- */}
         <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-[90px] h-[24px] bg-black rounded-full z-50 flex items-center justify-end px-2 shadow-sm border border-black/90">
