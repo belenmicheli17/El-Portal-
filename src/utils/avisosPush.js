@@ -36,7 +36,9 @@ export const activarAvisos = async () => {
     const permiso = await Notification.requestPermission();
     if (permiso !== 'granted') return { ok: false, motivo: 'denegado' };
 
-    const registro = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+    // Registramos el ayudante y esperamos a que esté realmente activo antes de pedir el token
+    await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+    const registro = await navigator.serviceWorker.ready;
     const messaging = getMessaging(getApp());
     const token = await getToken(messaging, { vapidKey: CLAVE_VAPID, serviceWorkerRegistration: registro });
     if (!token) return { ok: false, motivo: 'sin-token' };
