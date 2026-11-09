@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getAuth, signOut } from 'firebase/auth';
+import BotonAvisosPush from '../../components/admin/BotonAvisosPush';
 import { 
   LayoutDashboard, Users, CheckSquare, Briefcase, 
   Settings, LogOut, Menu, X, ShieldAlert, BookOpen, MessageCircle,
@@ -150,6 +151,7 @@ export default function AdminLayout() {
           </div>
 
           <div className="flex items-center gap-4">
+            <BotonAvisosPush />
             <div className="text-right hidden sm:block">
               <p className="text-[13px] font-bold text-[#1A3D3D]">Hola, Belén</p>
               <p className="text-[11px] font-semibold text-[#2D6A6A] uppercase tracking-widest">Super Admin</p>

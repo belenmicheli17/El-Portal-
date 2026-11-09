@@ -271,9 +271,7 @@ const clinicasActivas = clinicasSnap.docs.filter(d => d.data().visible !== false
                     </div>
                   );
                 })}
-                <p className="pt-4 border-t border-white/10 text-white/50 text-[12px] font-medium leading-relaxed">
-                  "Sin dato": cuentas anteriores al cuestionario o que todavía no lo terminaron.
-                </p>
+               
               </>
             ) : (
               <p className="text-white/70 text-[13px] font-medium">Todavía no hay datos.</p>

@@ -1,6 +1,7 @@
 import { useState as useEstado, useRef as useReferencia } from 'react';
 import { RotateCcw as IconoGiroIzq, RotateCw as IconoGiroDer, Check as IconoListo, Copy as IconoCopiar, ArrowRight as IconoFlecha } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
+import { BotonCompartirPerfil } from '../CompartirPerfil';
 import {
   Info, ExternalLink, Eye, EyeOff, ChevronDown, Crop, Check, Search, X, Plus, MapPin, Maximize2, Stethoscope
 } from 'lucide-react';
@@ -1020,76 +1021,20 @@ export function RecortadorPortada({ imagen, onAplicar, onCancelar }) {
     </div>
   );
 }
-// Caja "Tu página en El Portal": link público para copiar + acceso al perfil de ejemplo
-export function CajaTuPagina({ tipo, slug, urlEjemplo = '', className = '' }) {
-  const [copiado, setCopiado] = useState(false);
-  const esClinica = tipo === 'clinica';
-  const link = slug ? `https://www.portalveterinario.ar/${esClinica ? 'clinica' : 'profesional'}/${slug}` : '';
-
-  const copiar = async () => {
-    try {
-      await navigator.clipboard.writeText(link);
-    } catch {
-      const temporal = document.createElement('textarea');
-      temporal.value = link;
-      document.body.appendChild(temporal);
-      temporal.select();
-      document.execCommand('copy');
-      document.body.removeChild(temporal);
-    }
-    setCopiado(true);
-    setTimeout(() => setCopiado(false), 2000);
-  };
-
+// Caja "Tu página en El Portal": solo el botón que abre el cartel para compartir el perfil
+export function CajaTuPagina({ tipo, slug, className = '', datosCompartir = null }) {
   return (
     <div className={`bg-[#1A3D3D]/5 border border-[#1A3D3D]/10 rounded-2xl p-5 ${className}`}>
-      <p className="text-sm font-bold text-[#1A3D3D] leading-snug mb-1">Tu página en El Portal</p>
-      {link ? (
-        <>
-          <p className="text-sm text-[#666666] leading-snug mb-3">
-            {esClinica
-              ? 'Ponelo como sitio web en la ficha de Google de tu clínica: así quien te busca llega directo a tu perfil.'
-              : 'Ponelo en la bio de tu Instagram y de tus redes: así quien te busca llega directo a tu perfil.'}
-          </p>
-          <div className="w-full px-3 py-2.5 mb-2 bg-white border border-gray-200 rounded-xl text-sm text-[#333333] break-all select-all">
-            {link}
-          </div>
-          <button
-            type="button"
-            onClick={copiar}
-            className="w-full py-3 px-4 bg-[#2D6A6A] text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-[#1A3D3D] transition-all duration-300 ease-in-out flex items-center justify-center gap-1.5"
-          >
-            {copiado ? <IconoListo className="w-4 h-4" /> : <IconoCopiar className="w-4 h-4" />}
-            {copiado ? 'Copiado' : 'Copiar link'}
-          </button>
-        </>
-      ) : (
-        <p className="text-sm text-[#666666] leading-snug">
-          Guardá tu perfil por primera vez y acá vas a tener el link de tu página.
-        </p>
+      <p className="text-sm font-bold text-[#1A3D3D] leading-snug mb-3">Tu página en El Portal</p>
+      {datosCompartir && (
+        <BotonCompartirPerfil
+          tipo={tipo}
+          slug={slug}
+          variante="principal"
+          className="w-full"
+          {...datosCompartir}
+        />
       )}
-
-      <div className="mt-4 pt-4 border-t border-[#1A3D3D]/10">
-        <p className="text-sm font-bold text-[#1A3D3D] leading-snug mb-3">¿Querés ver cómo quedaría tu perfil público?</p>
-        {urlEjemplo ? (
-          <a
-            href={urlEjemplo}
-            target="_blank"
-            rel="noreferrer"
-            className="w-full py-3 px-4 bg-white border border-gray-200 rounded-xl text-xs font-black text-[#2D6A6A] uppercase tracking-widest hover:border-[#4DB6AC] hover:text-[#4DB6AC] transition-all flex items-center justify-center gap-1.5 group shadow-sm"
-          >
-            Ver perfil de ejemplo <IconoFlecha className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </a>
-        ) : (
-          <button
-            type="button"
-            title="Muy pronto"
-            className="w-full py-3 px-4 bg-white border border-gray-200 rounded-xl text-xs font-black text-[#2D6A6A] uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 shadow-sm cursor-default"
-          >
-            Ver perfil de ejemplo <IconoFlecha className="w-4 h-4" />
-          </button>
-        )}
-      </div>
     </div>
   );
 }

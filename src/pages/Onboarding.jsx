@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { db, storage } from '../firebase';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytesResumable, uploadString, getDownloadURL, deleteObject } from 'firebase/storage';
+import { BotonCompartirPerfil } from '../components/CompartirPerfil';
 import {
   Camera, Check, Loader2, Search, MapPin, Trash2, X, Plus, Clock,
   Stethoscope, Home, Crop, ChevronRight, FileCheck, Upload, CheckCircle2,
@@ -1986,9 +1987,6 @@ export default function Onboarding() {
               <p className="min-h-[20px] text-sm font-medium text-red-500 mt-4" role="alert">{error}</p>
 
               <div className="flex flex-col gap-3 mt-6">
-                {paso >= PRIMER_PASO_OPCIONAL && (
-                  <button type="button" onClick={completarDespues} disabled={guardando || hayAlgoSubiendo} className={`${CLASE_BTN_VOLVER} w-full`}>Completar después</button>
-                )}
                 <div className={`grid gap-3 ${paso > 0 ? 'grid-cols-2' : 'grid-cols-1'}`}>
                   {paso > 0 && (
                     <button type="button" onClick={volver} disabled={guardando} className={CLASE_BTN_VOLVER}>Volver</button>
@@ -1998,6 +1996,16 @@ export default function Onboarding() {
                     Siguiente
                   </button>
                 </div>
+                {paso >= PRIMER_PASO_OPCIONAL && (
+                  <button
+                    type="button"
+                    onClick={completarDespues}
+                    disabled={guardando || hayAlgoSubiendo}
+                    className="mx-auto mt-1 text-[13px] font-semibold text-[#666666] hover:text-[#1A3D3D] underline underline-offset-4 transition-colors disabled:opacity-50"
+                  >
+                    Omitir
+                  </button>
+                )}
               </div>
             </>
           ) : (
@@ -2015,7 +2023,17 @@ export default function Onboarding() {
               <div className="bg-[#F4F7F7] rounded-2xl px-4 py-3.5 my-6 text-left text-[15px] font-medium text-[#1A3D3D] leading-relaxed">
                 Mientras esperás, podés seguir completando tu perfil, por ejemplo con tus investigaciones. Apenas te verifiquemos, sale publicado.
               </div>
-              <button type="button" onClick={() => navigate('/ecosistema')} className={`${CLASE_BTN_PRIMARIO} w-full`}>
+              <BotonCompartirPerfil
+                tipo="profesional"
+                slug={currentUser?.slug}
+                nombre={`${datos.nombre || ''} ${datos.apellido || ''}`.trim()}
+                subtitulo={datos.esp || ''}
+                foto={datos.foto || ''}
+                variante="principal"
+                texto="Compartir mi perfil"
+                className="w-full"
+              />
+              <button type="button" onClick={() => navigate('/ecosistema')} className="mt-4 text-[14px] font-bold text-[#2D6A6A] hover:text-[#1A3D3D] underline underline-offset-4 transition-colors">
                 Ir a mi perfil
               </button>
             </div>

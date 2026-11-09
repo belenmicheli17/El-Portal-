@@ -1578,7 +1578,7 @@ await updateDoc(doc(db, 'profesionales', currentUser.uid), {
             </nav>
 
             {/* CAJA TU PÁGINA EN EL PORTAL */}
-            <CajaTuPagina tipo="profesional" slug={currentUser.slug} urlEjemplo="/profesional/mercedes-arenas" className="mt-4 hidden md:block" />
+            <CajaTuPagina tipo="profesional" slug={currentUser.slug} urlEjemplo="/profesional/mercedes-arenas" className="mt-4 hidden md:block" datosCompartir={{ nombre: `${formData.nombre || ''} ${formData.apellido || ''}`.trim(), subtitulo: formData.especialidad || '', foto: formData.foto || '', sinGuardar: haycambiosSinGuardar }} />
 
             
 
@@ -3109,7 +3109,7 @@ ref={(el) => {
             {/* LINK INFERIOR PARA VER PERFIL */}
             {/* ========================================================================= */}
             {/* CAJA TU PÁGINA EN EL PORTAL — solo móvil */}
-            <CajaTuPagina tipo="profesional" slug={currentUser.slug} urlEjemplo="/profesional/mercedes-arenas" className="md:hidden mt-6" />
+            <CajaTuPagina tipo="profesional" slug={currentUser.slug} urlEjemplo="/profesional/mercedes-arenas" className="md:hidden mt-6" datosCompartir={{ nombre: `${formData.nombre || ''} ${formData.apellido || ''}`.trim(), subtitulo: formData.especialidad || '', foto: formData.foto || '', sinGuardar: haycambiosSinGuardar }} />
 
             
 

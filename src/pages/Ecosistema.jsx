@@ -12,7 +12,7 @@ import {
 import FooterSimple from '../components/FooterSimple';
 import TourGuia from '../components/TourGuia';
 import PantallaCarga from '../components/PantallaCarga';
-import { calcularProgresoPerfil, calcularProgresoClinica } from '../utils/progresoPerfil';
+import { BotonCompartirPerfil } from '../components/CompartirPerfil';
 
 // ── Tarjeta de una herramienta que ya funciona ─────────────────────────────
 // En celular se ve como renglón (ícono a la izquierda, flecha a la derecha).
@@ -82,7 +82,7 @@ const TarjetaProximamente = ({ id, titulo, descripcion, icon: Icon, onClick }) =
 
 // ── Tarjeta de avance del perfil (va en el encabezado) ─────────────────────
 // avance: { porcentaje, faltantes } o null si ese tipo de cuenta no tiene cálculo
-function TarjetaAvance({ avance, cargando, onEditar, onVerPerfil, onIrA }) {
+function TarjetaAvance({ avance, cargando, onEditar, onVerPerfil, onIrA, compartir = null }) {
   
 
   return (
@@ -145,6 +145,8 @@ function TarjetaAvance({ avance, cargando, onEditar, onVerPerfil, onIrA }) {
           <Eye className="w-4 h-4 text-[#2D6A6A]" /> Ver mi perfil
         </button>
       </div>
+
+      {compartir && <div className="mt-2">{compartir}</div>}
     </div>
   );
 }
@@ -617,7 +619,8 @@ export default function Ecosistema() {
 
   // Avance del perfil (por ahora solo existe el cálculo para profesionales)
   const [avance, setAvance] = useState(null);
-  const [cargandoAvance, setCargandoAvance] = useState(true);
+  // Datos que usa el cartel de "Compartir mi perfil" (nombre, especialidad o ubicación, foto)
+  const [datosCompartir, setDatosCompartir] = useState(null);
 
   useEffect(() => {
     if (!currentUser) return;
@@ -659,7 +662,9 @@ export default function Ecosistema() {
         const snap = await getDoc(doc(db, coleccion, currentUser.uid));
         if (cancelado) return;
         const datos = snap.exists() ? snap.data() : {};
-        setTituloGenero(datos.tituloGenero || '');
+        setDatosCompartir(currentUser.rol === 'clinica'
+          ? { nombre: datos.nombre || '', subtitulo: [datos.localidad, datos.provincia].filter(Boolean).join(', '), foto: datos.foto || '' }
+          : { nombre: `${datos.nombre || ''} ${datos.apellido || ''}`.trim(), subtitulo: datos.especialidad || '', foto: datos.foto || '' });
         if (currentUser.rol === 'clinica') {
           const esPro = currentUser.socioVitalicio === true || datos.socioVitalicio === true || datos.planActual === 'pro';
           setAvance(calcularProgresoClinica(datos, esPro));
@@ -838,6 +843,16 @@ export default function Ecosistema() {
                 onEditar={() => navigate(rutaEditor)}
                 onVerPerfil={() => navigate(rutaPerfilPublico)}
                 onIrA={(clave) => navigate(rutaEditor, { state: { seccion: clave } })}
+                compartir={datosCompartir && currentUser.slug ? (
+                  <BotonCompartirPerfil
+                    tipo={activeRole === 'clinica' ? 'clinica' : 'profesional'}
+                    slug={currentUser.slug}
+                    variante="secundario"
+                    texto={activeRole === 'clinica' ? 'Compartir mi página' : 'Compartir mi perfil'}
+                    className="w-full !py-2.5 !px-3 !text-[13px] !normal-case !tracking-normal"
+                                        {...datosCompartir}
+                  />
+                ) : null}
               />
             </div>
           </div>

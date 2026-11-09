@@ -4,7 +4,7 @@ import { armarLinkWhatsapp } from '../../utils/whatsapp';
 import { db } from '../../firebase';
 import { useAuth } from '../../context/AuthContext';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
-
+import { BotonCompartirPerfil, BotonCompartirLink, armarLinkPerfil } from '../../components/CompartirPerfil';
 import {
   ChevronLeft, ChevronRight, ChevronDown, MapPin, Phone, Mail, Globe,
   Clock, Star, AlertTriangle, Building2, Instagram, Facebook, Users,
@@ -370,6 +370,31 @@ export default function PerfilClinica() {
     document.getElementById('contacto')?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  // Botón de compartir: la dueña del perfil ve el cartel completo; quien visita, un botón simple
+  const esPerfilPropio = currentUser?.slug === slug;
+  const slugCompartir = data.slug || slug;
+  const botonCompartirClinica = esPerfilPropio ? (
+    <BotonCompartirPerfil
+      tipo="clinica"
+      slug={slugCompartir}
+      nombre={data.nombre || ''}
+      subtitulo={ubicacionCorta}
+      foto={data.foto || ''}
+      variante="secundario"
+      texto="Compartir página"
+      className="w-full"
+    />
+  ) : (
+    <BotonCompartirLink
+      titulo={data.nombre || ''}
+      texto={`Mirá el perfil de ${data.nombre || 'esta clínica'} en la Cartilla Veterinaria 🐾`}
+      url={armarLinkPerfil('clinica', slugCompartir)}
+      variante="secundario"
+      etiqueta="Compartir"
+      className="w-full"
+    />
+  );
+
   return (
     <div className="font-['Inter'] bg-white min-h-screen pb-28 lg:pb-0 text-[#333]">
 
@@ -455,6 +480,9 @@ export default function PerfilClinica() {
             )}
           </div>
 
+          {/* Compartir (celular) */}
+          <div className="lg:hidden mt-4">{botonCompartirClinica}</div>
+
           {/* Botones de la tarjeta: solo en PC (en el celular van en la barra fija de abajo) */}
           <div className="hidden lg:flex flex-col gap-2.5 w-[240px] shrink-0">
             <a href={linkWhatsapp} target="_blank" rel="noreferrer" className="flex items-center justify-center min-h-[48px] rounded-[14px] bg-[#25D366] text-white text-xs font-extrabold uppercase tracking-[0.1em] hover:brightness-95 transition">
@@ -463,6 +491,7 @@ export default function PerfilClinica() {
             <a href="#contacto" onClick={irAContacto} className="flex items-center justify-center min-h-[48px] rounded-[14px] bg-[#1A3D3D] text-white text-xs font-extrabold uppercase tracking-[0.1em] hover:bg-[#2D6A6A] transition">
               Cómo llegar
             </a>
+            {botonCompartirClinica}
           </div>
         </div>
 

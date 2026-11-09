@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import {
   CheckCircle, XCircle, User, Calendar, Mail, AlertTriangle, Loader2,
-  Hash, MapPin, FileText, ExternalLink, X, Megaphone
+  Hash, MapPin, FileText, ExternalLink, X, Megaphone, MessageCircle
 } from 'lucide-react';
+import { armarLinkWhatsapp } from '../../utils/whatsapp';
+import { armarLinkPerfil } from '../../components/CompartirPerfil';
 import { db, storage, auth } from '../../firebase';
 import { collection, getDocs, getDoc, getCountFromServer, doc, query, where, writeBatch, serverTimestamp } from 'firebase/firestore';
 import { ref, getDownloadURL } from 'firebase/storage';
@@ -35,6 +37,8 @@ export default function Validaciones() {
   const [tituloVisor, setTituloVisor] = useState(null);
   const [mailsFallidos, setMailsFallidos] = useState([]);
   const [reenviando, setReenviando] = useState(null);
+  // Avisos de WhatsApp pendientes de enviar (uno por cada persona recién aprobada con número)
+  const [avisosWp, setAvisosWp] = useState([]);
 
   // Ventana para escribir el motivo del rechazo: guarda a quién se está rechazando
   const [modalRechazo, setModalRechazo] = useState(null);
@@ -153,6 +157,25 @@ export default function Validaciones() {
         tipo: 'aprobación',
         cuerpo: { tipo: 'aprobacion', email: req.email, nombre: req.nombrePila || req.nombre }
       }]);
+    }
+
+    // Aviso por WhatsApp: solo si dejó un número y no lo marcó como "nadie"
+    try {
+      const esClin = req.tipo === 'clinica';
+      const snapPerfil = await getDoc(doc(db, esClin ? 'clinicas' : 'profesionales', req.uid));
+      const perfilAprobado = snapPerfil.exists() ? snapPerfil.data() : {};
+      const numero = esClin ? perfilAprobado.whatsapp : perfilAprobado.whatsappNum;
+      if (numero && req.slug && perfilAprobado.whatsappVisibilidad !== 'nadie') {
+        const link = armarLinkPerfil(esClin ? 'clinica' : 'profesional', req.slug);
+        const primerNombre = (req.nombrePila || req.nombre || '').split(' ')[0];
+        const nombreClinica = perfilAprobado.nombre || req.nombre;
+        const texto = esClin
+          ? `Hola equipo de ${nombreClinica}! Soy Belén, del Portal Veterinario 🐾 Ya revisé el perfil de ${nombreClinica} y está publicado en la cartilla: ${link}. Para que los encuentren más fácil les recomiendo sumar el link en dos lugares: en su ficha de Google (la que aparece en Maps y en el buscador) y en la bio de su Instagram. Así cualquier tutor o colega ve toda la info al día y los puede contactar desde ahí. Además, desde su editor tienen un botón "Compartir el perfil de la clínica" que les arma una imagen lista para publicar. Si tienen dudas de cómo hacerlo, escribanme y los ayudo. Gracias por ser parte!`
+          : `Hola ${primerNombre}! Soy Belén, del Portal Veterinario 🐾 Ya revisé tu perfil y está publicado en la cartilla: ${link}. Un consejo para que te encuentren más fácil: poné el link en la bio de tu Instagram. Así quien te busque ve todo lo que ofrecés y te puede contactar desde ahí. Además, desde tu editor tenés un botón "Compartir mi perfil" que te arma una imagen lista para tus historias. Si tenés dudas de cómo hacerlo, escribime y te ayudo. Gracias por ser parte!`;
+        setAvisosWp((prev) => [...prev, { uid: req.uid, nombre: req.nombre, url: armarLinkWhatsapp(numero, texto) }]);
+      }
+    } catch (error) {
+      console.error('No se pudo armar el aviso de WhatsApp:', error);
     }
 
     setPendientes((prev) => prev.filter((u) => u.uid !== req.uid));
@@ -347,6 +370,37 @@ export default function Validaciones() {
               >
                 {reenviando === item.uid && <Loader2 className="w-4 h-4 animate-spin" />} Reenviar mail
               </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Aviso por WhatsApp a quienes recién aprobaste */}
+      {avisosWp.length > 0 && (
+        <div className="mb-6 flex flex-col gap-3">
+          {avisosWp.map((aviso) => (
+            <div key={aviso.uid} className="bg-[#25D366]/10 border border-[#25D366]/30 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <p className="text-[14px] font-medium text-[#1A3D3D] leading-snug">
+                Aprobaste a <span className="font-bold">{aviso.nombre}</span>. ¿Querés avisarle por WhatsApp?
+              </p>
+              <div className="flex items-center gap-2">
+                <a
+                  href={aviso.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={() => setAvisosWp((prev) => prev.filter((a) => a.uid !== aviso.uid))}
+                  className="px-4 py-2 rounded-xl bg-[#25D366] text-white text-[13px] font-bold hover:bg-[#20b858] transition-colors flex items-center gap-2"
+                >
+                  <MessageCircle className="w-4 h-4" /> Avisarle
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setAvisosWp((prev) => prev.filter((a) => a.uid !== aviso.uid))}
+                  className="px-3 py-2 rounded-xl text-[13px] font-bold text-[#666666] hover:bg-white transition-colors"
+                >
+                  Ahora no
+                </button>
+              </div>
             </div>
           ))}
         </div>

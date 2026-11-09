@@ -24,7 +24,7 @@ import {
   ArrowUp, ArrowDown, MapPin, ShieldCheck, Check, ArrowLeft, ArrowRight,
   Lock, Zap, Clock, User, Users, Building2, AlertTriangle, Activity, Microscope,
   Stethoscope, Sparkles, Loader2, CreditCard, ArrowUpRight, MessageSquare,
-  Image as ImageIcon, FileCheck, FileText, Heart, Brain, RefreshCw
+  Image as ImageIcon, FileCheck, FileText, Heart, Brain, RefreshCw, ChevronDown
 } from 'lucide-react';
 
 // Ícono propio de bisturí (Lucide no lo tiene)
@@ -79,6 +79,14 @@ const PREGUNTAS_SUGERIDAS = [
   '¿Puedo llamar para preguntar cómo está mi mascota internada?'
 ];
 
+// Junta las preguntas guardadas con todas las sugeridas: las que faltan quedan vacías, listas para completar
+const faqsConSugeridas = (guardadas) => {
+  const lista = Array.isArray(guardadas) ? guardadas : [];
+  const usadas = lista.map((f) => (f.pregunta || '').trim());
+  const faltantes = ['¿Qué incluye la internación?', ...PREGUNTAS_SUGERIDAS].filter((p) => !usadas.includes(p));
+  return [...lista, ...faltantes.map((p, i) => ({ id: `sug-${i}`, pregunta: p, respuesta: '', isDefault: true }))];
+};
+
 // Cómo se recorta cada tipo de foto
 const CONFIG_RECORTE = {
   logo: { forma: 'cuadrado', tamanoSalida: 512, formato: 'png' },
@@ -114,7 +122,7 @@ const DATOS_INICIALES = {
   horarios: { semanaDesde: '', semanaHasta: '', sabadoDesde: '', sabadoHasta: '' },
   servicios: {},
   staff: [],
-  faqs: [{ id: 1, pregunta: '¿Qué incluye la internación?', respuesta: '', isDefault: true }],
+  faqs: faqsConSugeridas([]),
   casos: [],
   galeria: [],
   // Temporal hasta integrar Mercado Pago: el cambio de plan se guarda desde el editor
@@ -177,7 +185,7 @@ const prepararDatosCargados = (data) => ({
     foto: m.foto || '',
     profesionalUid: m.profesionalUid || ''
   })) : [],
-  faqs: Array.isArray(data.faqs) && data.faqs.length > 0 ? data.faqs : DATOS_INICIALES.faqs,
+  faqs: faqsConSugeridas(data.faqs),
   casos: Array.isArray(data.casos) ? data.casos.map((c) => ({
     id: c.id || Date.now() + Math.random(),
     nombre: c.nombre || '',
@@ -238,7 +246,7 @@ export default function EditorClinico() {
   const [textoSede, setTextoSede] = useState('');
   const [subiendoPortada, setSubiendoPortada] = useState(false);
   const [portadaParaRecortar, setPortadaParaRecortar] = useState(null);
-  const [docSistema, setDocSistema] = useState({ existe: false, slug: '', slugLegado: null, socioVitalicio: false, visibleLegado: undefined });
+  const [faqAbierta, setFaqAbierta] = useState(null);
 
   const formData = _formData;
   const setFormData = (action) => {
@@ -469,11 +477,9 @@ export default function EditorClinico() {
   };
 
   const addCustomFaq = () => {
-    setFormData((prev) => {
-      const usadas = prev.faqs.map((f) => f.pregunta.trim());
-      const siguiente = PREGUNTAS_SUGERIDAS.find((p) => !usadas.includes(p));
-      return { ...prev, faqs: [...prev.faqs, { id: Date.now(), pregunta: siguiente || '', respuesta: '', isDefault: false }] };
-    });
+    const id = Date.now();
+    setFormData((prev) => ({ ...prev, faqs: [...prev.faqs, { id, pregunta: '', respuesta: '', isDefault: false }] }));
+    setFaqAbierta(id);
   };
 
   const removeFaq = (id) => {
@@ -1553,47 +1559,66 @@ export default function EditorClinico() {
                           <span>Te sugerimos algunas preguntas clave. Si no completás la respuesta, esa pregunta simplemente se oculta en tu perfil público.</span>
                         </div>
 
-                        {formData.faqs.map((faq) => (
-                          <div key={faq.id} className="bg-white border border-gray-200 p-5 rounded-[20px] shadow-sm relative group text-left">
-                            {!faq.isDefault && (
-                              <button onClick={() => removeFaq(faq.id)} className="absolute top-4 right-4 p-1.5 text-gray-300 hover:text-red-500 rounded-lg hover:bg-red-50 transition-colors">
-                                <Trash2 className="w-4 h-4" />
+                                                {formData.faqs.map((faq) => {
+                          const abierta = faqAbierta === faq.id;
+                          const respondida = !!faq.respuesta?.trim();
+                          return (
+                            <div key={faq.id} className="bg-white border border-gray-200 rounded-[20px] shadow-sm text-left overflow-hidden">
+                              <button
+                                type="button"
+                                onClick={() => setFaqAbierta(abierta ? null : faq.id)}
+                                className="w-full flex items-center justify-between gap-3 px-5 py-4 text-left"
+                              >
+                                <span className="text-sm font-bold text-[#1A3D3D] leading-snug">{faq.pregunta || 'Pregunta personalizada'}</span>
+                                <span className="flex items-center gap-2 shrink-0">
+                                  {respondida && (
+                                    <span className="flex items-center gap-1 text-[11px] font-bold text-[#2D6A6A]">
+                                      <Check className="w-3.5 h-3.5" /> Respondida
+                                    </span>
+                                  )}
+                                  <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform duration-300 ${abierta ? 'rotate-180 text-[#2D6A6A]' : ''}`} />
+                                </span>
                               </button>
-                            )}
 
-                            {faq.isDefault ? (
-                              <label className="text-sm font-bold text-[#1A3D3D] mb-3 block">{faq.pregunta}</label>
-                            ) : (
-                              <div className="mb-4 pr-8">
-                                <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-1.5 block">Pregunta personalizada</label>
-                                <input
-                                  type="text"
-                                  value={faq.pregunta}
-                                  maxLength={150}
-                                  onChange={(e) => handleFaqChange(faq.id, 'pregunta', e.target.value)}
-                                  placeholder="Podés escribir tu propia pregunta acá..."
-                                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-bold text-[#1A3D3D] focus:border-[#2D6A6A] outline-none transition-colors"
-                                />
-                              </div>
-                            )}
+                              {abierta && (
+                                <div className="px-5 pb-5 pt-4 border-t border-gray-100">
+                                  {!faq.isDefault && (
+                                    <div className="mb-4">
+                                      <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-1.5 block">Pregunta personalizada</label>
+                                      <div className="flex items-center gap-2">
+                                        <input
+                                          type="text"
+                                          value={faq.pregunta}
+                                          maxLength={150}
+                                          onChange={(e) => handleFaqChange(faq.id, 'pregunta', e.target.value)}
+                                          placeholder="Podés escribir tu propia pregunta acá..."
+                                          className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-bold text-[#1A3D3D] focus:border-[#2D6A6A] outline-none transition-colors"
+                                        />
+                                        <button type="button" onClick={() => removeFaq(faq.id)} aria-label="Borrar pregunta" className="p-2 text-gray-300 hover:text-red-500 rounded-lg hover:bg-red-50 transition-colors shrink-0">
+                                          <Trash2 className="w-4 h-4" />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  )}
 
-                            <div>
-                              <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-1.5 block">Tu respuesta</label>
-                              <textarea
-                                value={faq.respuesta}
-                                maxLength={400}
-                                onChange={(e) => handleFaqChange(faq.id, 'respuesta', e.target.value)}
-                                placeholder="Escribí la respuesta acá..."
-                                rows="2"
-                                className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm font-medium text-[#666666] focus:border-[#2D6A6A] outline-none transition-colors resize-none"
-                              />
-                              <p className={`text-right text-[11px] font-bold mt-1 ${(faq.respuesta?.length || 0) >= 360 ? 'text-red-400' : 'text-gray-300'}`}>{faq.respuesta?.length || 0} / 400</p>
+                                  <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest mb-1.5 block">Tu respuesta</label>
+                                  <textarea
+                                    value={faq.respuesta}
+                                    maxLength={400}
+                                    onChange={(e) => handleFaqChange(faq.id, 'respuesta', e.target.value)}
+                                    placeholder="Escribí la respuesta acá..."
+                                    rows="2"
+                                    className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm font-medium text-[#666666] focus:border-[#2D6A6A] outline-none transition-colors resize-none"
+                                  />
+                                  <p className={`text-right text-[11px] font-bold mt-1 ${(faq.respuesta?.length || 0) >= 360 ? 'text-red-400' : 'text-gray-300'}`}>{faq.respuesta?.length || 0} / 400</p>
+                                </div>
+                              )}
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
 
                         <button type="button" onClick={addCustomFaq} className="w-full py-3.5 border-2 border-dashed border-[#2D6A6A]/30 bg-white rounded-xl text-[#2D6A6A] text-xs font-bold hover:bg-[#2D6A6A]/5 hover:border-[#2D6A6A] transition-colors flex items-center justify-center gap-2">
-                          <Plus className="w-4 h-4" /> Agregar otra pregunta sugerida
+                          <Plus className="w-4 h-4" /> Agregar una pregunta propia
                         </button>
                       </div>
                     </Accordion>
@@ -2101,7 +2126,7 @@ export default function EditorClinico() {
             )}
 
             {/* CAJA VER PERFIL DE EJEMPLO — solo celular */}
-            <CajaTuPagina tipo="clinica" slug={docSistema.slug} urlEjemplo={PERFIL_EJEMPLO_URL} className="md:hidden mt-6" />
+            <CajaTuPagina tipo="clinica" slug={docSistema.slug} className="md:hidden mt-6" datosCompartir={{ nombre: formData.nombre || '', subtitulo: [formData.localidad, formData.provincia].filter(Boolean).join(', '), foto: formData.foto || '', sinGuardar: haycambiosSinGuardar }} />
 
             {/* BOTONES INFERIORES */}
             <div className="flex flex-col md:flex-row items-center justify-center gap-3 mt-8 pb-4">

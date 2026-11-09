@@ -3,11 +3,12 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { db, storage } from '../firebase';
 import { doc, getDoc, setDoc, getDocs, collection, query, where, serverTimestamp } from 'firebase/firestore';
+import { BotonCompartirPerfil } from '../components/CompartirPerfil';
 import { ref, uploadBytesResumable, uploadString, getDownloadURL, deleteObject } from 'firebase/storage';
 import {
   Camera, Check, Loader2, X, Clock, Building2, FileCheck, Upload,
   CheckCircle2, AlertCircle, Plus, Trash2, ArrowUp, ArrowDown, AlertTriangle,
-  Users, Image as ImageIcon
+  Users, Image as ImageIcon, ChevronDown
 } from 'lucide-react';
 import especialidadesData from '../data/especialidades.json';
 import equipamientoData from '../data/equipamientoClinicas.json';
@@ -57,7 +58,6 @@ const CONFIG_RECORTE = {
 };
 
 // Pregunta fija y sugeridas (las mismas del editor de clínicas)
-const FAQ_INICIAL = [{ id: 1, pregunta: '¿Qué incluye la internación?', respuesta: '', isDefault: true }];
 const PREGUNTAS_SUGERIDAS = [
   '¿Atienden feriados y fines de semana?',
   '¿Puedo visitar a mi mascota si está internada?',
@@ -68,6 +68,15 @@ const PREGUNTAS_SUGERIDAS = [
   '¿Cómo me avisan si el estado de mi mascota cambia durante la internación?',
   '¿Puedo llamar para preguntar cómo está mi mascota internada?'
 ];
+
+// Junta las preguntas guardadas con todas las sugeridas: las que faltan quedan vacías, listas para completar
+const faqsConSugeridas = (guardadas) => {
+  const lista = Array.isArray(guardadas) ? guardadas : [];
+  const usadas = lista.map((f) => (f.pregunta || '').trim());
+  const faltantes = ['¿Qué incluye la internación?', ...PREGUNTAS_SUGERIDAS].filter((p) => !usadas.includes(p));
+  return [...lista, ...faltantes.map((p, i) => ({ id: `sug-${i}`, pregunta: p, respuesta: '', isDefault: true }))];
+};
+const FAQ_INICIAL = faqsConSugeridas([]);
 
 // Opciones de la pregunta "¿Cómo llegaron hasta acá?"
 const OPCIONES_LLEGADA = [
@@ -428,7 +437,7 @@ export default function OnboardingClinica() {
   const [motivoRechazo, setMotivoRechazo] = useState('');
   // Si está en la pantalla de la pregunta "¿Cómo llegaron?" (antes de enviar)
   const [enEncuesta, setEnEncuesta] = useState(false);
-  const [textoSede, setTextoSede] = useState('');
+  const [faqAbierta, setFaqAbierta] = useState(null);
 
   // Datos del sistema de la clínica (no los edita la persona): si el documento ya existe y cuál es su slug
   const sistema = useRef({ existe: false, slug: '' });
@@ -525,7 +534,7 @@ export default function OnboardingClinica() {
             nombre: c.nombre || '', patologia: c.patologia || '', desc: c.desc || '',
             fotos: Array.isArray(c.fotos) ? c.fotos : [], esSensible: c.esSensible === true
           })) : [],
-          faqs: Array.isArray(clinica.faqs) && clinica.faqs.length > 0 ? clinica.faqs : FAQ_INICIAL,
+          faqs: faqsConSugeridas(clinica.faqs),
           comoLlego: currentUser.comoLlego || '',
           comoLlegoOtro: currentUser.comoLlegoOtro || ''
         });
@@ -758,11 +767,9 @@ export default function OnboardingClinica() {
 
   // Suma la siguiente pregunta sugerida que todavía no esté cargada
   const agregarPregunta = () => {
-    setDatos((previo) => {
-      const usadas = previo.faqs.map((f) => f.pregunta.trim());
-      const siguiente = PREGUNTAS_SUGERIDAS.find((p) => !usadas.includes(p));
-      return { ...previo, faqs: [...previo.faqs, { id: Date.now(), pregunta: siguiente || '', respuesta: '', isDefault: false }] };
-    });
+    const id = Date.now();
+    setDatos((previo) => ({ ...previo, faqs: [...previo.faqs, { id, pregunta: '', respuesta: '', isDefault: false }] }));
+    setFaqAbierta(id);
   };
 
   // ----- Galería: las fotos se achican y se suben directo a Storage -----
@@ -1532,37 +1539,57 @@ export default function OnboardingClinica() {
     // paso === 8: preguntas frecuentes
     return (
       <>
-        <p className={`${CLASE_AYUDA} mt-5`}>Las preguntas sin respuesta no se muestran en el perfil, también podes editarlas para agregar tus propias preguntas.</p>
+        <p className={`${CLASE_AYUDA} mt-5`}>Tocá una pregunta para responderla. Las preguntas sin respuesta no se muestran en el perfil.</p>
 
-        {datos.faqs.map((faq) => (
-          <div key={faq.id} className="border border-gray-200 rounded-2xl p-4 mt-4">
-            <div className="flex items-start gap-2">
-              <div className="flex-1 min-w-0">
-                {faq.isDefault ? (
-                  <p className="text-[15px] font-semibold text-[#1A3D3D]">{faq.pregunta}</p>
-                ) : (
-                  <input aria-label="Pregunta" value={faq.pregunta} maxLength={150} onChange={(e) => actualizarEnLista('faqs', faq.id, 'pregunta', e.target.value)} placeholder="Escribí la pregunta" autoComplete="off" className={CLASE_INPUT} />
-                )}
-              </div>
-              {!faq.isDefault && (
-                <button type="button" aria-label="Quitar pregunta" onClick={() => quitarDeLista('faqs', faq.id)} className="p-1.5 text-gray-400 hover:text-red-500 transition-colors"><Trash2 className="w-[18px] h-[18px]" /></button>
+                {datos.faqs.map((faq) => {
+          const abierta = faqAbierta === faq.id;
+          const respondida = !!faq.respuesta.trim();
+          return (
+            <div key={faq.id} className="border border-gray-200 rounded-2xl mt-4 overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setFaqAbierta(abierta ? null : faq.id)}
+                className="w-full flex items-center justify-between gap-3 px-4 py-3.5 text-left"
+              >
+                <span className="text-[15px] font-semibold text-[#1A3D3D] leading-snug">{faq.pregunta || 'Pregunta propia'}</span>
+                <span className="flex items-center gap-2 shrink-0">
+                  {respondida && (
+                    <span className="flex items-center gap-1 text-[13px] font-bold text-[#2D6A6A]">
+                      <Check className="w-4 h-4" /> Lista
+                    </span>
+                  )}
+                  <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform duration-300 ${abierta ? 'rotate-180 text-[#2D6A6A]' : ''}`} />
+                </span>
+              </button>
+
+              {abierta && (
+                <div className="px-4 pb-4 pt-3 border-t border-gray-100">
+                  {!faq.isDefault && (
+                    <div className="flex items-start gap-2 mb-2.5">
+                      <div className="flex-1 min-w-0">
+                        <input aria-label="Pregunta" value={faq.pregunta} maxLength={150} onChange={(e) => actualizarEnLista('faqs', faq.id, 'pregunta', e.target.value)} placeholder="Escribí la pregunta" autoComplete="off" className={CLASE_INPUT} />
+                      </div>
+                      <button type="button" aria-label="Quitar pregunta" onClick={() => quitarDeLista('faqs', faq.id)} className="p-1.5 text-gray-400 hover:text-red-500 transition-colors"><Trash2 className="w-[18px] h-[18px]" /></button>
+                    </div>
+                  )}
+                  <textarea
+                    aria-label="Respuesta"
+                    rows={2}
+                    maxLength={400}
+                    value={faq.respuesta}
+                    onChange={(e) => actualizarEnLista('faqs', faq.id, 'respuesta', e.target.value)}
+                    placeholder="Escribí la respuesta…"
+                    className={`${CLASE_INPUT} resize-none`}
+                  />
+                  <p className="text-right text-sm text-[#666666] mt-1.5">{faq.respuesta.length} / 400</p>
+                </div>
               )}
             </div>
-            <textarea
-              aria-label="Respuesta"
-              rows={2}
-              maxLength={400}
-              value={faq.respuesta}
-              onChange={(e) => actualizarEnLista('faqs', faq.id, 'respuesta', e.target.value)}
-              placeholder="Escribí la respuesta…"
-              className={`${CLASE_INPUT} resize-none mt-2.5`}
-            />
-            <p className="text-right text-sm text-[#666666] mt-1.5">{faq.respuesta.length} / 400</p>
-          </div>
-        ))}
+          );
+        })}
 
         <button type="button" onClick={agregarPregunta} className={`${CLASE_BTN_SECUNDARIO} mt-4 inline-flex items-center gap-2`}>
-          <Plus className="w-4 h-4" /> Agregar otra pregunta
+          <Plus className="w-4 h-4" /> Agregar una pregunta propia
         </button>
       </>
     );
@@ -1671,9 +1698,6 @@ export default function OnboardingClinica() {
               <p className="min-h-[20px] text-sm font-medium text-red-500 mt-4" role="alert">{error}</p>
 
               <div className="flex flex-col gap-3 mt-6">
-                {paso >= PRIMER_PASO_OPCIONAL && (
-                  <button type="button" onClick={completarDespues} disabled={guardando || hayAlgoSubiendo} className={`${CLASE_BTN_VOLVER} w-full`}>Completar después</button>
-                )}
                 <div className={`grid gap-3 ${paso > 0 ? 'grid-cols-2' : 'grid-cols-1'}`}>
                   {paso > 0 && (
                     <button type="button" onClick={volver} disabled={guardando} className={CLASE_BTN_VOLVER}>Volver</button>
@@ -1683,6 +1707,16 @@ export default function OnboardingClinica() {
                     Siguiente
                   </button>
                 </div>
+                {paso >= PRIMER_PASO_OPCIONAL && (
+                  <button
+                    type="button"
+                    onClick={completarDespues}
+                    disabled={guardando || hayAlgoSubiendo}
+                    className="mx-auto mt-1 text-[13px] font-semibold text-[#666666] hover:text-[#1A3D3D] underline underline-offset-4 transition-colors disabled:opacity-50"
+                  >
+                    Omitir
+                  </button>
+                )}
               </div>
             </>
           ) : (
@@ -1700,7 +1734,18 @@ export default function OnboardingClinica() {
               <div className="bg-[#F4F7F7] rounded-2xl px-4 py-3.5 my-6 text-left text-[15px] font-medium text-[#1A3D3D] leading-relaxed">
                 Mientras esperan, pueden seguir completando el perfil desde el editor. Apenas verifiquemos, sale publicado.
               </div>
-              <button type="button" onClick={() => navigate('/ecosistema')} className={`${CLASE_BTN_PRIMARIO} w-full`}>
+
+                          <BotonCompartirPerfil
+                tipo="clinica"
+                slug={currentUser?.slug}
+                nombre={datos.nombre || ''}
+                subtitulo={[datos.localidad, datos.provincia].filter(Boolean).join(', ')}
+                foto={datos.foto || ''}
+                variante="principal"
+                texto="Compartir la página de la clínica"
+                className="w-full"
+              />
+              <button type="button" onClick={() => navigate('/ecosistema')} className="mt-4 text-[14px] font-bold text-[#2D6A6A] hover:text-[#1A3D3D] underline underline-offset-4 transition-colors">
                 Ir a mi perfil
               </button>
             </div>

@@ -6,6 +6,8 @@ const { onCall, HttpsError } = require("firebase-functions/v2/https");
 const { initializeApp } = require("firebase-admin/app");
 const { getAuth } = require("firebase-admin/auth");
 const { getFirestore } = require("firebase-admin/firestore");
+const { onDocumentWritten } = require("firebase-functions/v2/firestore");
+const { getMessaging } = require("firebase-admin/messaging");
 
 initializeApp();
 
@@ -89,4 +91,77 @@ exports.volverDeCuentaPrueba = onCall({ region: "us-central1" }, async (request)
 
   const token = await getAuth().createCustomToken(UID_ADMIN);
   return { token };
+});
+// ------------------------------------------------------------
+// 3. AVISOS PUSH A LA ADMIN
+// Manda una notificación a todos los dispositivos que la admin activó
+// (compu, celular). Los guarda el botón "Activar avisos" del panel.
+// ------------------------------------------------------------
+const URL_VALIDACIONES = "https://www.portalveterinario.ar/admin/validaciones";
+
+async function mandarAvisoALaAdmin(titulo, cuerpo) {
+  const db = getFirestore();
+  const dispositivos = await db.collection(`usuarios/${UID_ADMIN}/dispositivosPush`).get();
+  const tokens = dispositivos.docs.map((d) => d.data().token).filter(Boolean);
+  if (tokens.length === 0) return { enviados: 0 };
+
+  const respuesta = await getMessaging().sendEachForMulticast({
+    tokens,
+    notification: { title: titulo, body: cuerpo },
+    webpush: {
+      // El aviso espera hasta 2 semanas si la compu o el celular están apagados
+      headers: { TTL: "1209600", Urgency: "high" },
+      fcmOptions: { link: URL_VALIDACIONES },
+    },
+  });
+
+  // Los dispositivos que ya no existen (se desinstaló, se borraron los datos) se sacan de la lista
+  const limpieza = [];
+  respuesta.responses.forEach((r, i) => {
+    const codigo = (r.error && r.error.code) || "";
+    if (!r.success && (codigo.includes("registration-token-not-registered") || codigo.includes("invalid-registration-token"))) {
+      limpieza.push(db.doc(`usuarios/${UID_ADMIN}/dispositivosPush/${tokens[i]}`).delete());
+    }
+  });
+  await Promise.all(limpieza);
+
+  return { enviados: respuesta.successCount };
+}
+
+// Se dispara sola cuando una solicitud pasa a "pendiente" (alguien termina el onboarding
+// o reenvía sus datos después de un rechazo)
+exports.avisarNuevaSolicitud = onDocumentWritten(
+  { document: "verificaciones/{uid}", region: "us-central1" },
+  async (event) => {
+    try {
+      const antes = event.data && event.data.before ? event.data.before.data() : null;
+      const despues = event.data && event.data.after ? event.data.after.data() : null;
+      if (!despues || despues.estado !== "pendiente") return;
+      if (antes && antes.estado === "pendiente") return; // ya estaba pendiente: no avisamos de nuevo
+
+      const usuario = (await getFirestore().doc(`usuarios/${event.params.uid}`).get()).data() || {};
+      const nombre =
+        (despues.datosEnviados && despues.datosEnviados.nombreCompleto) ||
+        usuario.nombreCompleto ||
+        usuario.nombre ||
+        "Alguien";
+      const esClinica = usuario.rol === "clinica";
+
+      await mandarAvisoALaAdmin(
+        esClinica ? "Nueva clínica para validar" : "Nuevo profesional para validar",
+        `${nombre} terminó su registro.`
+      );
+    } catch (error) {
+      console.error("No se pudo mandar el aviso de nueva solicitud:", error);
+    }
+  }
+);
+
+// Botón "Probar" del panel: manda un aviso de prueba (solo la admin)
+exports.enviarAvisoPrueba = onCall({ region: "us-central1" }, async (request) => {
+  if (!request.auth || request.auth.uid !== UID_ADMIN) {
+    throw new HttpsError("permission-denied", "Solo la administradora puede hacer esto.");
+  }
+  const resultado = await mandarAvisoALaAdmin("Aviso de prueba", "Si ves esto, las notificaciones funcionan 🐾");
+  return resultado;
 });
