@@ -85,7 +85,7 @@ export default function FormularioDisponible({ currentUser, onVolver, onGuardada
             provincia: datosPerfil.provincia || '',
             whatsapp: conPrefijo54(datosPerfil.whatsappNum),
             email: datosPerfil.emailContacto || '',
-            tipoContacto: datosPerfil.whatsappNum ? ['whatsapp'] : ['perfil']
+            tipoContacto: ['whatsapp']
           });
         }
       } catch (e) {

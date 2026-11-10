@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Users, Building, Briefcase, FileCheck, 
   Activity, ChevronRight, Clock, AlertCircle, Loader2,
-  Repeat, ChevronDown, Stethoscope, Store
+  Repeat, Stethoscope, Store
 } from 'lucide-react';
 import { db, auth, functions } from '../../firebase';
 import { collection, getDocs, query, where } from 'firebase/firestore';
@@ -34,7 +34,6 @@ export default function DashboardAdmin() {
   const [pendientes, setPendientes] = useState([]);
   const [llegaronPor, setLlegaronPor] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [menuCuentasAbierto, setMenuCuentasAbierto] = useState(false);
   const [rolEntrando, setRolEntrando] = useState(null); // rol de la cuenta de prueba a la que se está entrando
   const [errorCuenta, setErrorCuenta] = useState('');
 
@@ -119,8 +118,12 @@ const clinicasActivas = clinicasSnap.docs.filter(d => d.data().visible !== false
     }
   };
 
-  const StatCard = ({ titulo, valor, icono, color, alerta, subtitulo, nuevosHoy }) => (
-    <div className="bg-white p-6 rounded-[24px] border border-gray-100 shadow-sm flex items-start gap-4 transition-all hover:shadow-md">
+  const StatCard = ({ titulo, valor, icono, color, alerta, subtitulo, nuevosHoy, onClick }) => (
+    <div
+      onClick={onClick}
+      role={onClick ? 'button' : undefined}
+      className={`bg-white p-6 rounded-[24px] border border-gray-100 shadow-sm flex items-start gap-4 transition-all hover:shadow-md ${onClick ? 'cursor-pointer hover:border-[#2D6A6A]/30 hover:-translate-y-0.5' : ''}`}
+    >
       <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${color}`}>
         {icono}
       </div>
@@ -162,46 +165,33 @@ const clinicasActivas = clinicasSnap.docs.filter(d => d.data().visible !== false
           </p>
         </div>
 
-        {/* Botón para entrar a las cuentas de prueba sin cerrar sesión */}
-        <div className="relative">
-          <button
-            onClick={() => setMenuCuentasAbierto(!menuCuentasAbierto)}
-            className="bg-[#2D6A6A] text-white hover:bg-[#1A3D3D] rounded-2xl px-5 py-3 text-[13px] font-bold flex items-center gap-2 transition-all duration-300 ease-in-out hover:-translate-y-1 hover:shadow-xl"
-          >
-            <Repeat className="w-4 h-4" />
-            Cambiar de cuenta
-            <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${menuCuentasAbierto ? 'rotate-180' : ''}`} />
-          </button>
-
-          {menuCuentasAbierto && (
-            <div className="absolute right-0 mt-3 w-72 bg-white rounded-[24px] border border-gray-100 shadow-xl p-2 z-30">
-              <p className="px-4 pt-3 pb-2 text-[11px] font-bold text-[#2D6A6A] uppercase tracking-[0.2em]">
-                Cuentas de prueba
-              </p>
-              {[
-                { rol: 'profesional', etiqueta: 'Profesional', Icono: Stethoscope },
-                { rol: 'clinica', etiqueta: 'Clínica', Icono: Building },
-                { rol: 'proveedor', etiqueta: 'Proveedor', Icono: Store },
-              ].map(({ rol, etiqueta, Icono }) => (
-                <button
-                  key={rol}
-                  onClick={() => handleCambiarCuenta(rol)}
-                  disabled={rolEntrando !== null}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-left text-[#1A3D3D] font-bold text-[14px] hover:bg-[#F4F7F7] transition-all duration-300 ease-in-out disabled:opacity-60"
-                >
-                  {rolEntrando === rol ? (
-                    <Loader2 className="w-5 h-5 text-[#2D6A6A] animate-spin" />
-                  ) : (
-                    <Icono className="w-5 h-5 text-[#2D6A6A]" strokeWidth={1.5} />
-                  )}
-                  {etiqueta}
-                </button>
-              ))}
-              {errorCuenta && (
-                <p className="px-4 pt-2 pb-3 text-[12px] text-red-500 font-medium">{errorCuenta}</p>
-              )}
-            </div>
-          )}
+        {/* Entrar a las cuentas de prueba sin cerrar sesión: un botón por rol, a la vista */}
+        <div className="flex flex-col items-start md:items-end gap-2">
+          <p className="text-[11px] font-bold text-[#2D6A6A] uppercase tracking-[0.2em] flex items-center gap-1.5">
+            <Repeat className="w-3.5 h-3.5" /> Entrar como
+          </p>
+          <div className="bg-white p-1.5 rounded-2xl border border-gray-100 shadow-sm inline-flex gap-1">
+            {[
+              { rol: 'profesional', etiqueta: 'Profesional', Icono: Stethoscope },
+              { rol: 'clinica', etiqueta: 'Clínica', Icono: Building },
+              { rol: 'proveedor', etiqueta: 'Proveedor', Icono: Store },
+            ].map(({ rol, etiqueta, Icono }) => (
+              <button
+                key={rol}
+                onClick={() => handleCambiarCuenta(rol)}
+                disabled={rolEntrando !== null}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[#1A3D3D] font-bold text-[13px] hover:bg-[#2D6A6A] hover:text-white transition-all duration-300 ease-in-out disabled:opacity-60 group"
+              >
+                {rolEntrando === rol ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Icono className="w-4 h-4 text-[#2D6A6A] group-hover:text-white" strokeWidth={1.75} />
+                )}
+                {etiqueta}
+              </button>
+            ))}
+          </div>
+          {errorCuenta && <p className="text-[12px] text-red-500 font-medium">{errorCuenta}</p>}
         </div>
       </div>
 
@@ -210,7 +200,7 @@ const clinicasActivas = clinicasSnap.docs.filter(d => d.data().visible !== false
         <StatCard titulo="Clínicas" valor={metricas.clinicasActivas} nuevosHoy={metricas.nuevosHoy.clinicas} subtitulo={`de ${metricas.clinicas} registradas`} icono={<Building className="w-6 h-6 text-[#4DB6AC]" />} color="bg-[#4DB6AC]/10 border border-[#4DB6AC]/20" />
       {/* <StatCard titulo="Alumnos" valor={metricas.alumnos} icono={<Users className="w-6 h-6 text-blue-500" />} color="bg-blue-50 border border-blue-100" /> */}
         <StatCard titulo="Proveedores" valor={metricas.proveedores} nuevosHoy={metricas.nuevosHoy.proveedores} icono={<Briefcase className="w-6 h-6 text-purple-600" />} color="bg-purple-100 border border-purple-200" />
-        <StatCard titulo="Validaciones" valor={metricas.pendientesValidacion} nuevosHoy={metricas.nuevosHoy.validaciones} icono={<FileCheck className="w-6 h-6 text-[#e68900]" />} color="bg-[#FF9800]/20 border border-[#FF9800]/30" />
+        <StatCard titulo="Validaciones" onClick={() => navigate('/admin/validaciones')} valor={metricas.pendientesValidacion} nuevosHoy={metricas.nuevosHoy.validaciones} icono={<FileCheck className="w-6 h-6 text-[#e68900]" />} color="bg-[#FF9800]/20 border border-[#FF9800]/30" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

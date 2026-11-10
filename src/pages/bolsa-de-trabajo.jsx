@@ -1,11 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore';
-import { Search, X, Briefcase, User, Layers, MapPin, ChevronRight, ClipboardList, Plus, CheckCircle2, SlidersHorizontal } from 'lucide-react';
+import { Search, X, Briefcase, User, Layers, MapPin, ChevronRight, ClipboardList, Plus, CheckCircle2, SlidersHorizontal, Stethoscope } from 'lucide-react';
 import { db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
 import provincias from '../data/provincias.js';
-import { ROLES, JORNADAS } from '../data/bolsaOpciones';
+import { ROLES, JORNADAS, HORARIOS, EXPERIENCIAS, GRUPOS_AREAS } from '../data/bolsaOpciones';
 import { estaVigente, permisosBolsa, tituloPuesto, aMilisegundos } from '../utils/bolsa';
 import { coincideBusqueda } from '../utils/busquedaTolerante';
 import { TarjetaOferta, TarjetaDisponible } from '../components/bolsa/TarjetasBolsa';
@@ -35,6 +35,9 @@ export default function BolsaTrabajo() {
   const provincia = params.get('prov') || '';
   const jornada = params.get('jornada') || '';
   const area = params.get('area') || '';
+  const rol = params.get('rol') || '';
+  const horario = params.get('horario') || '';
+  const experiencia = params.get('exp') || '';
   const [busqueda, setBusqueda] = useState('');
   const [verFiltros, setVerFiltros] = useState(false);
 
@@ -149,13 +152,14 @@ export default function BolsaTrabajo() {
   const pasaFiltros = useCallback((item, tipo) => {
     if (provincia && item.provincia !== provincia) return false;
     if (jornada && !(item.jornada || []).includes(jornada)) return false;
-    if (area) {
-      const esRol = ROLES.some((r) => r.id === area);
-      if (esRol ? item.rol !== area : !(item.areas || []).includes(area)) return false;
-    }
+    if (area && !(item.areas || []).includes(area)) return false;
+    // Los disponibles son siempre veterinarios/as
+    if (rol && (tipo === 'oferta' ? item.rol !== rol : rol !== 'veterinario')) return false;
+    if (horario && !(item.horario || []).includes(horario)) return false;
+    if (experiencia && item.experiencia !== experiencia) return false;
     if (busqueda.trim() && !coincideBusqueda(busqueda, textoDe(item, tipo))) return false;
     return true;
-  }, [provincia, jornada, area, busqueda]);
+  }, [provincia, jornada, area, rol, horario, experiencia, busqueda]);
 
   const ofertasFiltradas = useMemo(() => ofertas.filter((o) => pasaFiltros(o, 'oferta')), [ofertas, pasaFiltros]);
   const disponiblesFiltrados = useMemo(() => disponibles.filter((d) => pasaFiltros(d, 'disponible')), [disponibles, pasaFiltros]);
@@ -167,7 +171,7 @@ export default function BolsaTrabajo() {
     if (pestana !== 'disponibles') ofertas.forEach((o) => (o.rol === 'veterinario' ? (o.areas || []).forEach(sumar) : sumar(o.rol)));
     if (pestana !== 'ofertas') disponibles.forEach((d) => (d.areas || []).forEach(sumar));
     return Object.entries(cuenta)
-      .map(([id, cantidad]) => ({ id, label: ROLES.find((r) => r.id === id)?.label || id, cantidad }))
+      .map(([id, cantidad]) => ({ id, label: ROLES.find((r) => r.id === id)?.label || id, cantidad, esRol: ROLES.some((r) => r.id === id) }))
       .sort((a, b) => b.cantidad - a.cantidad)
       .slice(0, 12);
   }, [ofertas, disponibles, pestana]);
@@ -177,10 +181,11 @@ export default function BolsaTrabajo() {
     return provincias.filter((p) => set.has(p));
   }, [ofertas, disponibles]);
 
-  const hayFiltros = !!(provincia || jornada || area || busqueda.trim());
+  const cantidadFiltrosVentana = [provincia, jornada, area, rol, horario, experiencia].filter(Boolean).length;
+  const hayFiltros = !!(cantidadFiltrosVentana || busqueda.trim());
   const limpiarFiltros = () => {
     const nuevos = new URLSearchParams(params);
-    ['prov', 'jornada', 'area'].forEach((k) => nuevos.delete(k));
+    ['prov', 'jornada', 'area', 'rol', 'horario', 'exp'].forEach((k) => nuevos.delete(k));
     setParams(nuevos, { replace: true });
     setBusqueda('');
   };
@@ -311,8 +316,8 @@ export default function BolsaTrabajo() {
             {busqueda && <button type="button" onClick={() => setBusqueda('')} aria-label="Borrar búsqueda"><X className="w-4 h-4 text-gray-400" /></button>}
           </div>
 
-          <button type="button" onClick={() => setVerFiltros(true)} className={`shrink-0 px-6 py-3 md:py-2.5 rounded-[20px] md:rounded-full text-[14px] font-semibold flex items-center justify-center gap-2 transition-all ${provincia || jornada ? 'bg-[#1A3D3D] text-white' : 'bg-[#F4F7F7] text-[#1A3D3D] hover:bg-gray-200'}`}>
-            <SlidersHorizontal className="w-4 h-4" /> Filtros{provincia || jornada ? ` · ${[provincia, jornada].filter(Boolean).length}` : ''}
+          <button type="button" onClick={() => setVerFiltros(true)} className={`shrink-0 px-6 py-3 md:py-2.5 rounded-[20px] md:rounded-full text-[14px] font-semibold flex items-center justify-center gap-2 transition-all ${cantidadFiltrosVentana ? 'bg-[#1A3D3D] text-white' : 'bg-[#F4F7F7] text-[#1A3D3D] hover:bg-gray-200'}`}>
+            <SlidersHorizontal className="w-4 h-4" /> Filtros{cantidadFiltrosVentana ? ` · ${cantidadFiltrosVentana}` : ''}
           </button>
         </div>
       </div>
@@ -323,9 +328,9 @@ export default function BolsaTrabajo() {
           <p className="text-[14px] font-bold text-[#1A3D3D] mb-3 px-1">Explorá por área</p>
           <div className="flex gap-2 overflow-x-auto -mx-4 px-4 pb-1 lg:mx-0 lg:px-0 lg:flex-wrap lg:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {pastillas.map((p) => {
-              const activa = area === p.id;
+              const activa = p.esRol ? rol === p.id : area === p.id;
               return (
-                <button key={p.id} type="button" onClick={() => cambiarFiltro('area', activa ? '' : p.id)} className={`shrink-0 inline-flex items-center gap-2 rounded-full px-4 py-2 text-[13px] font-semibold border shadow-sm transition-all duration-300 ease-in-out text-[#1A3D3D] ${activa ? 'bg-[#2D6A6A]/10 border-[#2D6A6A]' : 'bg-white border-gray-200 hover:border-[#2D6A6A]/60 hover:-translate-y-0.5'}`}>
+                <button key={p.id} type="button" onClick={() => cambiarFiltro(p.esRol ? 'rol' : 'area', activa ? '' : p.id)} className={`shrink-0 inline-flex items-center gap-2 rounded-full px-4 py-2 text-[13px] font-semibold border shadow-sm transition-all duration-300 ease-in-out text-[#1A3D3D] ${activa ? 'bg-[#2D6A6A]/10 border-[#2D6A6A]' : 'bg-white border-gray-200 hover:border-[#2D6A6A]/60 hover:-translate-y-0.5'}`}>
                   {p.label} <span className="text-[#666666] font-medium">· {p.cantidad}</span>
                 </button>
               );
@@ -340,9 +345,12 @@ export default function BolsaTrabajo() {
           <span className="text-[14px] font-bold text-[#1A3D3D]">{PESTANAS.find((t) => t.id === pestana)?.label}</span>
           <ChevronRight className="w-4 h-4 text-gray-300" />
           {busqueda.trim() && <button type="button" onClick={() => setBusqueda('')} className={claseChip}><Search className="w-3.5 h-3.5 text-[#2D6A6A]" /> {busqueda.trim()} <X className="w-3.5 h-3.5 text-gray-400" /></button>}
-          {area && <button type="button" onClick={() => cambiarFiltro('area', '')} className={claseChip}>{ROLES.find((r) => r.id === area)?.label || area} <X className="w-3.5 h-3.5 text-gray-400" /></button>}
+          {rol && <button type="button" onClick={() => cambiarFiltro('rol', '')} className={claseChip}><Briefcase className="w-3.5 h-3.5 text-[#2D6A6A]" /> {ROLES.find((x) => x.id === rol)?.label} <X className="w-3.5 h-3.5 text-gray-400" /></button>}
+          {area && <button type="button" onClick={() => cambiarFiltro('area', '')} className={claseChip}><Stethoscope className="w-3.5 h-3.5 text-[#2D6A6A]" /> {area} <X className="w-3.5 h-3.5 text-gray-400" /></button>}
           {provincia && <button type="button" onClick={() => cambiarFiltro('prov', '')} className={claseChip}><MapPin className="w-3.5 h-3.5 text-[#2D6A6A]" /> {provincia} <X className="w-3.5 h-3.5 text-gray-400" /></button>}
           {jornada && <button type="button" onClick={() => cambiarFiltro('jornada', '')} className={claseChip}>{jornada} <X className="w-3.5 h-3.5 text-gray-400" /></button>}
+          {horario && <button type="button" onClick={() => cambiarFiltro('horario', '')} className={claseChip}>{horario} <X className="w-3.5 h-3.5 text-gray-400" /></button>}
+          {experiencia && <button type="button" onClick={() => cambiarFiltro('exp', '')} className={claseChip}>{experiencia} <X className="w-3.5 h-3.5 text-gray-400" /></button>}
           <button type="button" onClick={limpiarFiltros} className="text-[13px] font-semibold text-[#2D6A6A] underline underline-offset-2 hover:text-[#1A3D3D] px-1">Limpiar todo</button>
         </div>
       )}
@@ -387,18 +395,36 @@ export default function BolsaTrabajo() {
       {/* VENTANA DE FILTROS */}
       <VentanaBolsa abierta={verFiltros} onCerrar={() => setVerFiltros(false)}>
         <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[20px] mb-5">Filtros</h3>
+
+        <p className="text-[14px] font-bold text-[#1A3D3D] mb-2">Especialidad o área</p>
+        <select value={area} onChange={(e) => cambiarFiltro('area', e.target.value)} className={claseSelect}>
+          <option value="">Todas</option>
+          {GRUPOS_AREAS.map((g) => (
+            <optgroup key={g.id} label={g.grupo}>
+              {g.opciones.map((o) => <option key={o} value={o}>{o}</option>)}
+            </optgroup>
+          ))}
+        </select>
+
         <p className="text-[14px] font-bold text-[#1A3D3D] mb-2">Provincia</p>
-        <select value={provincia} onChange={(e) => cambiarFiltro('prov', e.target.value)} className="w-full border border-gray-200 focus:border-[#2D6A6A] rounded-2xl px-4 py-3 text-[15px] text-[#333333] focus:outline-none bg-gray-50/50 mb-6">
+        <select value={provincia} onChange={(e) => cambiarFiltro('prov', e.target.value)} className={claseSelect}>
           <option value="">Todas</option>
           {(provinciasConDatos.length ? provinciasConDatos : provincias).map((p) => <option key={p} value={p}>{p}</option>)}
         </select>
-        <p className="text-[14px] font-bold text-[#1A3D3D] mb-2">Jornada</p>
-        <div className="flex flex-wrap gap-2 mb-6">
-          {JORNADAS.map((j) => (
-            <button key={j} type="button" onClick={() => cambiarFiltro('jornada', jornada === j ? '' : j)} className={`rounded-full px-4 py-2 text-[13px] font-semibold border transition-all ${jornada === j ? 'bg-[#2D6A6A]/10 border-[#2D6A6A] text-[#1A3D3D]' : 'bg-white border-gray-200 text-[#1A3D3D] hover:border-[#2D6A6A]/60'}`}>{j}</button>
-          ))}
+
+        <GrupoFiltro titulo="Puesto" opciones={ROLES} valor={rol} onCambio={(v) => cambiarFiltro('rol', v)} />
+        <GrupoFiltro titulo="Jornada" opciones={JORNADAS} valor={jornada} onCambio={(v) => cambiarFiltro('jornada', v)} />
+        <GrupoFiltro titulo="Horario" opciones={HORARIOS} valor={horario} onCambio={(v) => cambiarFiltro('horario', v)} />
+        <GrupoFiltro titulo="Experiencia" opciones={EXPERIENCIAS} valor={experiencia} onCambio={(v) => cambiarFiltro('exp', v)} />
+
+        <div className="flex gap-2">
+          {cantidadFiltrosVentana > 0 && (
+            <button type="button" onClick={limpiarFiltros} className="flex-1 bg-[#F4F7F7] hover:bg-gray-200 text-[#1A3D3D] py-3.5 rounded-2xl text-[14px] font-semibold">Limpiar</button>
+          )}
+          <button type="button" onClick={() => setVerFiltros(false)} className="flex-[2] bg-[#2D6A6A] hover:bg-[#1A3D3D] text-white py-3.5 rounded-2xl text-[14px] font-semibold">
+            Ver {(mostrarOfertas ? ofertasFiltradas.length : 0) + (mostrarDisponibles ? disponiblesFiltrados.length : 0)} resultados
+          </button>
         </div>
-        <button type="button" onClick={() => setVerFiltros(false)} className="w-full bg-[#2D6A6A] hover:bg-[#1A3D3D] text-white py-3.5 rounded-2xl text-[14px] font-semibold">Ver resultados</button>
       </VentanaBolsa>
 
       <DetalleDisponible disponible={disponibleAbierto} abierto={!!disponibleAbierto} onCerrar={() => setDisponibleAbierto(null)} conSesion={permisos.conSesion} currentUser={currentUser} />
@@ -414,6 +440,25 @@ export default function BolsaTrabajo() {
         </p>
       </VentanaBolsa>
     </div>
+  );
+}
+
+const claseSelect = 'w-full border border-gray-200 focus:border-[#2D6A6A] rounded-2xl px-4 py-3 text-[15px] text-[#333333] focus:outline-none bg-gray-50/50 mb-6';
+
+// Pills de una sola opción dentro de la ventana de filtros (tocar de nuevo la saca)
+function GrupoFiltro({ titulo, opciones, valor, onCambio }) {
+  const lista = opciones.map((o) => (typeof o === 'string' ? { id: o, label: o } : o));
+  return (
+    <>
+      <p className="text-[14px] font-bold text-[#1A3D3D] mb-2">{titulo}</p>
+      <div className="flex flex-wrap gap-2 mb-6">
+        {lista.map((o) => (
+          <button key={o.id} type="button" onClick={() => onCambio(valor === o.id ? '' : o.id)} className={`rounded-full px-4 py-2 text-[13px] font-semibold border transition-all ${valor === o.id ? 'bg-[#2D6A6A]/10 border-[#2D6A6A] text-[#1A3D3D]' : 'bg-white border-gray-200 text-[#1A3D3D] hover:border-[#2D6A6A]/60'}`}>
+            {o.label}
+          </button>
+        ))}
+      </div>
+    </>
   );
 }
 
