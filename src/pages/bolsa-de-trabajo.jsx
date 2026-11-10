@@ -293,7 +293,7 @@ export default function BolsaTrabajo() {
       </section>
 
         <div className="hidden lg:flex lg:w-[42%] items-end justify-center pt-12">
-          <img src="/bolsa-hero-ilustracion.svg" alt="" className="w-full max-w-[440px] h-auto" />
+          <img src="/bolsa-hero-ilustracion.png" alt="" className="w-full max-w-[440px] h-auto" />
         </div>
       </div>
 
