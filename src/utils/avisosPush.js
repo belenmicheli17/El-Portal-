@@ -6,7 +6,7 @@
 // Va en: src/utils/avisosPush.js
 // ============================================================
 import { getApp } from 'firebase/app';
-import { getMessaging, getToken, isSupported } from 'firebase/messaging';
+import { getMessaging, getToken, isSupported, onMessage } from 'firebase/messaging';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db, auth } from '../firebase';
 
@@ -22,6 +22,24 @@ export const avisosSoportados = async () => {
     return 'Notification' in window && 'serviceWorker' in navigator && (await isSupported());
   } catch (e) {
     return false;
+  }
+};
+// Muestra el aviso cuando el Portal está abierto y a la vista
+// (en ese caso Firebase no lo muestra solo, hay que hacerlo a mano)
+export const escucharAvisosEnPrimerPlano = () => {
+  try {
+    const messaging = getMessaging(getApp());
+    return onMessage(messaging, async (mensaje) => {
+      const titulo = mensaje.notification?.title || 'El Portal';
+      const cuerpo = mensaje.notification?.body || '';
+      const link = mensaje.fcmOptions?.link || mensaje.data?.link || '/admin/validaciones';
+      const registro = await navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js');
+      if (registro) {
+        registro.showNotification(titulo, { body: cuerpo, icon: '/favicon.ico', data: { link } });
+      }
+    });
+  } catch (e) {
+    return () => {};
   }
 };
 

@@ -3,7 +3,7 @@ import { Bell, BellRing, Loader2, Send } from 'lucide-react';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../../firebase';
 import { useAuth } from '../../context/AuthContext';
-import { ADMIN_UID, avisosSoportados, activarAvisos } from '../../utils/avisosPush';
+import { ADMIN_UID, avisosSoportados, activarAvisos, escucharAvisosEnPrimerPlano } from '../../utils/avisosPush';
 
 // ============================================================
 // Botón del panel de admin: activa las notificaciones en este dispositivo.
@@ -19,6 +19,12 @@ export default function BotonAvisosPush() {
   const [mensaje, setMensaje] = useState('');
 
   const esAdmin = currentUser?.uid === ADMIN_UID;
+
+  // Mientras el panel esté abierto, escucha los avisos para mostrarlos
+  useEffect(() => {
+    const dejarDeEscuchar = escucharAvisosEnPrimerPlano();
+    return () => dejarDeEscuchar();
+  }, []);
 
   // Al entrar: si el permiso ya estaba dado, renovamos el dispositivo en silencio (sin preguntar)
   useEffect(() => {
