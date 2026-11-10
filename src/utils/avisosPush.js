@@ -70,6 +70,6 @@ export const activarAvisos = async () => {
     return { ok: true };
   } catch (error) {
     console.error('No se pudieron activar los avisos:', error);
-    return { ok: false, motivo: 'error' };
+    return { ok: false, motivo: 'error', detalle: String(error?.code || error?.message || error).slice(0, 90) };
   }
 };

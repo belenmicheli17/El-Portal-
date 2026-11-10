@@ -39,6 +39,7 @@ export default function BotonAvisosPush() {
       if (Notification.permission === 'granted') {
         const r = await activarAvisos();
         if (!cancelado && r.ok) setActivo(true);
+        else if (!cancelado && r.detalle) setMensaje(`No se pudo activar: ${r.detalle}`);
       }
     })();
     return () => { cancelado = true; };
@@ -53,7 +54,7 @@ export default function BotonAvisosPush() {
     setCargando(false);
     if (r.ok) { setActivo(true); setBloqueado(false); return; }
     if (r.motivo === 'denegado') { setBloqueado(true); return; }
-    setMensaje('No se pudo activar. Probá de nuevo.');
+    setMensaje(`No se pudo activar: ${r.detalle || r.motivo}`);
   };
 
   const probar = async () => {
