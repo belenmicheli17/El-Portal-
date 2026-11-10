@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { db } from '../../firebase';
 import { collection, getDocs, doc, updateDoc, deleteDoc, query, orderBy } from 'firebase/firestore';
+import { tituloPuesto } from '../../utils/bolsa';
 
 export default function GestionBolsa() {
   const [tabActiva, setTabActiva] = useState('ofertas');
@@ -54,6 +55,8 @@ export default function GestionBolsa() {
   const handleEliminar = async (coleccion, id, nombre) => {
     if (!window.confirm(`¿Eliminar "${nombre}" de la base de datos? Esta acción no se puede deshacer.`)) return;
     try {
+      // Primero el contacto privado, después la publicación
+      await deleteDoc(doc(db, coleccion, id, 'privado', 'contacto')).catch(() => {});
       await deleteDoc(doc(db, coleccion, id));
       if (coleccion === 'ofertasEmpleo') {
         setOfertas(prev => prev.filter(o => o.id !== id));
@@ -163,8 +166,8 @@ export default function GestionBolsa() {
                 key={oferta.id}
                 item={oferta}
                 coleccion="ofertasEmpleo"
-                nombre={oferta.puesto}
-                subtitulo={oferta.clinica}
+                nombre={tituloPuesto(oferta)}
+                subtitulo={oferta.clinicaNombre}
               />
             )) : (
               <p className="text-center text-[#666666] py-10 bg-white rounded-[24px] border border-gray-100">No hay ofertas publicadas.</p>
@@ -177,7 +180,7 @@ export default function GestionBolsa() {
                 item={prof}
                 coleccion="profesionalesDisponibles"
                 nombre={prof.nombre}
-                subtitulo={Array.isArray(prof.especialidad) ? prof.especialidad.join(', ') : prof.especialidad}
+                subtitulo={(prof.areas || []).join(' · ') || prof.especialidad}
               />
             )) : (
               <p className="text-center text-[#666666] py-10 bg-white rounded-[24px] border border-gray-100">No hay profesionales disponibles.</p>

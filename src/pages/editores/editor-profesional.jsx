@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { generarSlugUnico } from '../../utils/slugUnico';
 import { CajaTuPagina } from '../../components/editor/EditorComponents';
+import CajaBolsaEditor from '../../components/bolsa/CajaBolsaEditor';
 // Si usas react-router-dom, descomenta la siguiente línea en tu entorno real:
 import { useNavigate, useLocation } from 'react-router-dom';
 import { db, storage } from '../../firebase'; // <-- Sumamos storage
@@ -2805,6 +2806,17 @@ ref={(el) => {
   <InputGroup label="LinkedIn" id="linkedin" value={formData.linkedin} onChange={handleChange} placeholder="Link completo de tu perfil" canTest />
   <InputGroup label="Facebook" id="facebook" value={formData.facebook} onChange={handleChange} placeholder="Link completo de tu perfil" canTest />
 </div>
+                    </Accordion>
+
+                    {/* BOLSA DE TRABAJO: CV y avisos por mail (se guardan solos) */}
+                    <Accordion
+                      title="Bolsa de Trabajo"
+                      icon={Briefcase}
+                      isOpen={openSection === 'bolsa'}
+                      onToggle={() => setOpenSection(openSection === 'bolsa' ? null : 'bolsa')}
+                      tooltip="Tu CV para postularte y los avisos de ofertas nuevas. Esto se guarda solo, sin tocar Guardar."
+                    >
+                      <CajaBolsaEditor uid={currentUser?.uid} />
                     </Accordion>
                  
                 </div>

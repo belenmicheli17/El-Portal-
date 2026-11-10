@@ -1,0 +1,57 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+  
+    match /clinicas/{uid}/{allPaths=**} {
+      allow read: if true;
+
+      // Solo la dueña sube a su carpeta, y tienen que ser imágenes de hasta 5 MB
+      allow create, update: if request.auth != null && request.auth.uid == uid
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+
+      allow delete: if request.auth != null && request.auth.uid == uid;
+    }
+    
+    match /papers/{uid}/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == uid;
+    }
+    
+        match /profesionales/{uid}/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // Títulos y carnets para verificar la matrícula: privados.
+    // Solo los ve la propia persona y la admin; nunca son públicos.
+    match /titulos/{uid}/{allPaths=**} {
+      allow read: if request.auth != null &&
+        (request.auth.uid == uid || request.auth.uid == 'JDiu4lkVyJXeoyZ3eAxuBfvc5bZ2');
+
+      // Solo puede subir su propio título, y tiene que ser imagen o PDF de hasta 10 MB
+      allow create: if request.auth != null && request.auth.uid == uid &&
+        request.resource.size < 10 * 1024 * 1024 &&
+        (request.resource.contentType.matches('image/.*') || request.resource.contentType == 'application/pdf');
+
+      // Puede borrar el suyo (cuando lo reemplaza por otro), y la admin cualquiera
+      allow delete: if request.auth != null &&
+        (request.auth.uid == uid || request.auth.uid == 'JDiu4lkVyJXeoyZ3eAxuBfvc5bZ2');
+    }
+
+    // CV de la Bolsa de Trabajo: solo PDF de hasta 5 MB.
+    // Las clínicas lo abren con el link que les llega en la postulación (ese link funciona sin sesión).
+    match /cvs/{uid}/{archivo} {
+      allow read: if request.auth != null &&
+        (request.auth.uid == uid || request.auth.uid == 'JDiu4lkVyJXeoyZ3eAxuBfvc5bZ2');
+
+      allow create, update: if request.auth != null && request.auth.uid == uid &&
+        request.resource.size < 5 * 1024 * 1024 &&
+        request.resource.contentType == 'application/pdf';
+
+      allow delete: if request.auth != null &&
+        (request.auth.uid == uid || request.auth.uid == 'JDiu4lkVyJXeoyZ3eAxuBfvc5bZ2');
+    }
+
+  }
+}

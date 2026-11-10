@@ -1,0 +1,271 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─── Funciones de ayuda ───
+    function esAdmin() {
+      return request.auth != null && request.auth.uid == 'JDiu4lkVyJXeoyZ3eAxuBfvc5bZ2';
+    }
+
+    // El campo vale lo mismo antes y después de guardar (si no existe, se toma el valor por defecto)
+    function campoSinCambios(campo, porDefecto) {
+      return request.resource.data.get(campo, porDefecto) == resource.data.get(campo, porDefecto);
+    }
+
+    // ─── Perfiles de profesionales: cualquiera los lee; solo la dueña (o la admin) los escribe ───
+    match /profesionales/{uid} {
+      allow read: if true;
+
+      // Un perfil nuevo nace oculto (visible en false). Solo se crea visible si la persona ya está verificada.
+      allow create: if request.auth != null && request.auth.uid == uid
+        && (
+          request.resource.data.get('visible', true) == false
+          || (exists(/databases/$(database)/documents/verificaciones/$(uid))
+              && get(/databases/$(database)/documents/verificaciones/$(uid)).data.get('estado', '') == 'verificado')
+        );
+
+      // La dueña edita su perfil, pero no puede cambiar "visible" ni pasarse a PRO
+      allow update: if request.auth != null && request.auth.uid == uid
+        && campoSinCambios('visible', true)
+        && (request.resource.data.get('planActual', 'pro') != 'pro' || campoSinCambios('planActual', 'pro'));
+
+      allow create, update, delete: if esAdmin();
+    }
+
+       // ─── Perfiles de clínicas: cualquiera los lee; solo la dueña (o la admin) los escribe ───
+    match /clinicas/{slug} {
+      allow read: if true;
+
+      // Una clínica nueva nace oculta (visible en false) y sin cupo vitalicio regalado.
+      // Solo se crea visible si ya está verificada.
+      allow create: if request.auth != null
+        && (slug == request.auth.uid || request.resource.data.get('uid', '') == request.auth.uid)
+        && request.resource.data.get('socioVitalicio', false) == false
+        && (
+          request.resource.data.get('visible', true) == false
+          || (exists(/databases/$(database)/documents/verificaciones/$(request.auth.uid))
+              && get(/databases/$(database)/documents/verificaciones/$(request.auth.uid)).data.get('estado', '') == 'verificado')
+        );
+
+      // La dueña edita su perfil, pero no puede cambiar "visible", "socioVitalicio" ni pasarse a PRO
+      allow update: if request.auth != null
+        && (slug == request.auth.uid || resource.data.get('uid', '') == request.auth.uid)
+        && campoSinCambios('visible', true)
+        && campoSinCambios('socioVitalicio', false)
+        && (request.resource.data.get('planActual', 'pro') != 'pro' || campoSinCambios('planActual', 'pro'));
+
+      allow delete: if request.auth != null
+        && (slug == request.auth.uid || resource.data.get('uid', '') == request.auth.uid);
+
+      // La admin puede aprobar y editar cualquier clínica
+      allow create, update, delete: if esAdmin();
+    }
+
+       // ─── Papers: los lee cualquiera; solo su autor (o la admin) los crea, edita o borra ───
+    match /papers/{docId} {
+      allow read: if true;
+
+      allow create: if request.auth != null
+        && request.resource.data.get('autorId', '') == request.auth.uid;
+
+      allow update: if request.auth != null
+        && resource.data.get('autorId', '') == request.auth.uid
+        && request.resource.data.get('autorId', '') == request.auth.uid;
+
+      allow delete: if request.auth != null
+        && resource.data.get('autorId', '') == request.auth.uid;
+
+      allow create, update, delete: if esAdmin();
+    }
+
+    // ─── Capacitaciones ───
+    match /capacitaciones/{docId} {
+      allow read: if true;
+
+      // Un curso nuevo siempre nace "pendiente" y a nombre de quien lo publica
+      allow create: if request.auth != null
+        && request.resource.data.creadorId == request.auth.uid
+        && request.resource.data.estado == 'pendiente';
+
+      // Quien lo publicó lo puede editar (vuelve a revisión) o darlo de baja, pero no aprobarlo
+      allow update: if request.auth != null
+        && resource.data.creadorId == request.auth.uid
+        && request.resource.data.creadorId == resource.data.creadorId
+        && request.resource.data.estado in ['pendiente', 'archivado'];
+
+      // Cualquier persona logueada puede sumar 1 al contador de inscriptos (y nada más)
+      allow update: if request.auth != null
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['totalInscriptos'])
+        && request.resource.data.totalInscriptos == resource.data.get('totalInscriptos', 0) + 1;
+
+      allow create, update, delete: if esAdmin();
+    }
+
+    // ─── Bolsa de trabajo ───
+    // Puede publicar quien está verificada (estado "activo" en usuarios). Va de la mano con SOLO_VERIFICADOS de bolsaOpciones.js
+    function puedeUsarBolsa() {
+      return request.auth != null
+        && get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.get('estado', '') == 'activo';
+    }
+    function rolPropio() {
+      return get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.get('rol', '');
+    }
+    // Una publicación nunca puede durar más de 31 días desde hoy (renovar la vuelve a 30)
+    function vencimientoValido() {
+      return request.resource.data.get('vencimientoMillis', 0) <= request.time.toMillis() + 2678400000;
+    }
+
+    // Ofertas de las clínicas: las activas las ve cualquiera; la dueña ve también las suyas vencidas o pausadas
+    match /ofertasEmpleo/{docId} {
+      allow read: if resource.data.get('estado', '') == 'activo'
+        || (request.auth != null && resource.data.get('creadorId', '') == request.auth.uid)
+        || esAdmin();
+
+      allow create: if puedeUsarBolsa() && rolPropio() == 'clinica'
+        && request.resource.data.get('creadorId', '') == request.auth.uid
+        && request.resource.data.get('estado', '') == 'activo'
+        && request.resource.data.get('avisoEnviado', false) == false
+        && vencimientoValido();
+
+      // La dueña la edita o la renueva, pero no cambia de dueña, ni el estado (pausa de la admin), ni el aviso
+      allow update: if request.auth != null
+        && resource.data.get('creadorId', '') == request.auth.uid
+        && campoSinCambios('creadorId', '')
+        && campoSinCambios('estado', 'activo')
+        && campoSinCambios('avisoEnviado', false)
+        && vencimientoValido();
+
+      allow delete: if request.auth != null
+        && resource.data.get('creadorId', '') == request.auth.uid;
+
+      allow create, update, delete: if esAdmin();
+
+      // Contacto de la oferta (WhatsApp y mail): solo lo leen cuentas con sesión
+      match /privado/{docPrivado} {
+        allow read: if request.auth != null;
+        allow write: if request.auth != null
+          && getAfter(/databases/$(database)/documents/ofertasEmpleo/$(docId)).data.get('creadorId', '') == request.auth.uid;
+        allow read, write: if esAdmin();
+      }
+    }
+
+    // Profesionales disponibles: un documento por persona (el id es su uid)
+    match /profesionalesDisponibles/{uid} {
+      allow read: if resource.data.get('estado', '') == 'activo'
+        || (request.auth != null && request.auth.uid == uid)
+        || esAdmin();
+
+      allow create: if puedeUsarBolsa() && rolPropio() == 'profesional'
+        && request.auth.uid == uid
+        && request.resource.data.get('creadorId', '') == request.auth.uid
+        && request.resource.data.get('estado', '') == 'activo'
+        && vencimientoValido();
+
+      allow update: if request.auth != null && request.auth.uid == uid
+        && campoSinCambios('creadorId', '')
+        && campoSinCambios('estado', 'activo')
+        && vencimientoValido();
+
+      allow delete: if request.auth != null && request.auth.uid == uid;
+
+      allow create, update, delete: if esAdmin();
+
+      // Contacto y CV: solo lo leen cuentas con sesión; lo escribe la persona
+      match /privado/{docPrivado} {
+        allow read: if request.auth != null;
+        allow write: if request.auth != null && request.auth.uid == uid;
+        allow read, write: if esAdmin();
+      }
+    }
+
+    // Banners y notificaciones: solo lectura pública
+    match /banners/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+        // Notificaciones: se leen logueada; solo se crean al publicar una oferta o disponibilidad propia
+    match /notificaciones/{docId} {
+      allow read: if request.auth != null;
+
+      allow create: if request.auth != null
+        && (
+          (request.resource.data.get('tipo', '') == 'empleo'
+            && get(/databases/$(database)/documents/ofertasEmpleo/$(request.resource.data.get('referenciaId', 'x'))).data.get('creadorId', '') == request.auth.uid)
+          || (request.resource.data.get('tipo', '') == 'profesional_disponible'
+            && get(/databases/$(database)/documents/profesionalesDisponibles/$(request.resource.data.get('referenciaId', 'x'))).data.get('creadorId', '') == request.auth.uid)
+        );
+
+      allow update, delete: if esAdmin();
+    }
+
+    // Lista de espera — cualquier visitante puede anotarse
+    match /lista_espera/{docId} {
+      allow read, write: if true;
+    }
+
+    // ─── Documento privado de cada usuario ───
+    match /usuarios/{userId} {
+      allow read: if request.auth != null && (request.auth.uid == userId || esAdmin());
+
+      // Crear su propio documento al registrarse, con un rol permitido
+      allow create: if request.auth != null && request.auth.uid == userId
+        && request.resource.data.get('rol', '') in ['profesional', 'clinica', 'proveedor', 'alumnx']         && request.resource.data.get('socioVitalicio', false) == false         && request.resource.data.get('esPrueba', false) == false
+        && request.resource.data.get('estado', 'pendiente') == 'pendiente';
+
+      // Editar el propio, pero sin tocar rol, estado ni socioVitalicio
+      allow update: if request.auth != null && request.auth.uid == userId
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['rol', 'estado', 'socioVitalicio', 'esPrueba']);
+
+      allow create, update, delete: if esAdmin();
+    }
+
+    // Tour y configuración por usuario
+    match /usuarios/{userId}/{subCollection}/{subDocId} {
+      allow read, write: if request.auth != null &&
+        (request.auth.uid == userId || esAdmin());
+    }
+
+    // Comentarios beta — cualquier usuario autenticado puede crear, solo admin puede leer y borrar
+    match /comentarios/{docId} {
+      allow create: if request.auth != null;
+      allow read, delete: if esAdmin();
+    }
+
+    // Inscripciones a capacitaciones
+    match /inscripciones/{docId} {
+      allow create: if request.auth != null;
+      allow read: if esAdmin();
+    }
+
+    // Settings globales — solo lectura pública, solo admin escribe
+    match /settings/{docId} {
+      allow read: if true;
+      allow write: if esAdmin();
+    }
+
+    // ─── Verificación de matrícula: el estado vive acá, fuera del perfil que edita la persona ───
+    match /verificaciones/{userId} {
+      allow read: if request.auth != null && (request.auth.uid == userId || esAdmin());
+
+      // La persona crea su registro, pero nunca con un estado distinto de "pendiente"
+      allow create: if request.auth != null && request.auth.uid == userId &&
+        request.resource.data.get('estado', 'pendiente') == 'pendiente';
+
+         // La persona lo actualiza solo mientras está pendiente o rechazado.
+      // Puede dejarlo en "pendiente" (reenvío), o cambiar solo el archivo del título sin tocar el estado.
+      allow update: if request.auth != null && request.auth.uid == userId &&
+        resource.data.get('estado', 'pendiente') in ['pendiente', 'rechazado'] &&
+        (
+          request.resource.data.get('estado', 'pendiente') == 'pendiente'
+          || (
+            request.resource.data.get('estado', 'pendiente') == resource.data.get('estado', 'pendiente')
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['tituloPath', 'tituloNombre', 'tituloSubidoEn'])
+          )
+        );
+
+      // Solo la admin puede aprobar, rechazar o borrar
+      allow create, update, delete: if esAdmin();
+    }
+  }
+}
