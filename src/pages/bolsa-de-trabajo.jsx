@@ -263,8 +263,9 @@ export default function BolsaTrabajo() {
     <div className="relative z-10 flex flex-col gap-4 sm:gap-6 font-['Inter']">
       {aviso && <AvisoExito texto={aviso} />}
 
-      {/* ENCABEZADO */}
-      <section className="max-w-6xl mx-auto w-full px-4 pt-9 lg:pt-20 pb-2">
+      {/* ENCABEZADO: texto a la izquierda e ilustración a la derecha (solo PC), como en la Cartilla */}
+      <div className="max-w-6xl mx-auto w-full px-4 lg:flex lg:items-center lg:gap-10">
+      <section className="lg:w-[58%] pt-9 lg:pt-20 pb-2">
         <p className="text-[12px] font-bold tracking-[0.15em] uppercase text-[#2D6A6A] mb-3 text-center lg:text-left">Para profesionales y clínicas</p>
         <h1 className="text-[32px] md:text-[42px] lg:text-[48px] font-black font-['Montserrat'] text-[#1A3D3D] tracking-tighter leading-none mb-5 text-center lg:text-left">
           Encontrá trabajo o sumá<br className="hidden lg:block" /> talento a tu equipo
@@ -290,6 +291,11 @@ export default function BolsaTrabajo() {
           )}
         </div>
       </section>
+
+        <div className="hidden lg:flex lg:w-[42%] items-end justify-center pt-12">
+          <img src="/bolsa-hero-ilustracion.svg" alt="" className="w-full max-w-[440px] h-auto" />
+        </div>
+      </div>
 
       {/* BARRA DE BÚSQUEDA: pestañas tipo solapa en PC, como en la Cartilla */}
       <div className="max-w-6xl mx-auto w-full px-4">
