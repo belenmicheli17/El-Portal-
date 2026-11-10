@@ -81,7 +81,7 @@ export default function BotonAvisosPush() {
 
   return (
     <div className="flex items-center gap-2">
-      {mensaje && <span className="text-[11px] font-semibold text-[#2D6A6A] hidden md:inline">{mensaje}</span>}
+      {mensaje && <span className="text-[11px] leading-tight font-semibold text-[#2D6A6A] max-w-[110px] md:max-w-none">{mensaje}</span>}
       {activo ? (
         <>
           <span className="flex items-center gap-1.5 text-[12px] font-bold text-[#2D6A6A] bg-[#2D6A6A]/10 px-3 py-2 rounded-xl">
