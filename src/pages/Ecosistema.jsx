@@ -12,6 +12,7 @@ import {
 import FooterSimple from '../components/FooterSimple';
 import TourGuia from '../components/TourGuia';
 import PantallaCarga from '../components/PantallaCarga';
+import { calcularProgresoPerfil, calcularProgresoClinica } from '../utils/progresoPerfil';
 import { BotonCompartirPerfil } from '../components/CompartirPerfil';
 
 // ── Tarjeta de una herramienta que ya funciona ─────────────────────────────
@@ -619,6 +620,7 @@ export default function Ecosistema() {
 
   // Avance del perfil (por ahora solo existe el cálculo para profesionales)
   const [avance, setAvance] = useState(null);
+  const [cargandoAvance, setCargandoAvance] = useState(true);
   // Datos que usa el cartel de "Compartir mi perfil" (nombre, especialidad o ubicación, foto)
   const [datosCompartir, setDatosCompartir] = useState(null);
 
@@ -662,6 +664,7 @@ export default function Ecosistema() {
         const snap = await getDoc(doc(db, coleccion, currentUser.uid));
         if (cancelado) return;
         const datos = snap.exists() ? snap.data() : {};
+        setTituloGenero(datos.tituloGenero || '');
         setDatosCompartir(currentUser.rol === 'clinica'
           ? { nombre: datos.nombre || '', subtitulo: [datos.localidad, datos.provincia].filter(Boolean).join(', '), foto: datos.foto || '' }
           : { nombre: `${datos.nombre || ''} ${datos.apellido || ''}`.trim(), subtitulo: datos.especialidad || '', foto: datos.foto || '' });
