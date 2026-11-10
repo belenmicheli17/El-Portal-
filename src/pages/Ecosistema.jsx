@@ -707,7 +707,7 @@ export default function Ecosistema() {
       { targetId: 'tour-editar-perfil', titulo: 'Tu perfil profesional', desc: 'Desde acá completás tu portfolio: foto, trayectoria, servicios y casos clínicos para que te encuentren en la Cartilla.' },
       { targetId: 'tour-colegas', titulo: 'Cartilla de colegas', desc: 'Buscá especialistas para derivaciones e interconsultas. Es la misma Cartilla que usan los tutores para encontrarte.' },
       { targetId: 'tour-publicaciones', titulo: 'Publicaciones científicas', desc: 'Papers y actualizaciones de la comunidad. Podés publicar los tuyos desde tu perfil.' },
-      { targetId: 'tour-proximamente', titulo: 'Próximamente', desc: 'Bolsa de trabajo, proveedores y cursos se van a ir activando a medida que se sume más gente. A la bolsa ya podés entrar.' },
+      { targetId: 'tour-proximamente', titulo: 'Próximamente', desc: 'Bolsa de trabajo, proveedores y cursos se van a ir activando a medida que se sume más gente.' },
       { targetId: 'tour-btn-accesibilidad', titulo: 'Opciones de accesibilidad', desc: 'Este botón te permite ajustar el tamaño del texto, activar modo escala de grises, resaltar enlaces y más.', abrirAccs: true, posicion: 'derecha' },
     ],
     clinica: [
@@ -715,13 +715,13 @@ export default function Ecosistema() {
       { targetId: 'tour-editar-perfil', titulo: 'Tu perfil institucional', desc: 'Completá los datos de tu clínica: servicios, equipo, horarios y contacto para aparecer en la Cartilla.' },
       { targetId: 'tour-colegas', titulo: 'Cartilla de colegas', desc: 'Encontrá profesionales para sumar a tu equipo o para derivaciones.' },
       { targetId: 'tour-publicaciones', titulo: 'Publicaciones científicas', desc: 'Papers y actualizaciones del mundo veterinario para mantenerte al día.' },
-      { targetId: 'tour-proximamente', titulo: 'Próximamente', desc: 'Bolsa de trabajo, proveedores y cursos se van a ir activando a medida que se sume más gente. A la bolsa ya podés entrar.' },
+      { targetId: 'tour-proximamente', titulo: 'Próximamente', desc: 'Bolsa de trabajo, proveedores y cursos se van a ir activando a medida que se sume más gente.' },
       { targetId: 'tour-btn-accesibilidad', titulo: 'Opciones de accesibilidad', desc: 'Ajustá el tamaño del texto, activá modo escala de grises, resaltá enlaces y más.', abrirAccs: true, posicion: 'derecha' },
     ],
     alumnx: [
       { targetId: 'tour-avance', titulo: 'Tu perfil', desc: 'Desde acá seguís editando tu perfil o ves cómo lo ven los demás.' },
       { targetId: 'tour-editar-perfil', titulo: 'Editar tu perfil', desc: 'Completá tu perfil para aparecer en búsquedas y mostrar tu trayectoria académica.' },
-      { targetId: 'tour-proximamente', titulo: 'Próximamente', desc: 'Bolsa de trabajo, proveedores y cursos se van a ir activando a medida que se sume más gente. A la bolsa ya podés entrar.' },
+      { targetId: 'tour-proximamente', titulo: 'Próximamente', desc: 'Bolsa de trabajo, proveedores y cursos se van a ir activando a medida que se sume más gente.' },
       { targetId: 'tour-btn-accesibilidad', titulo: 'Opciones de accesibilidad', desc: 'Ajustá el tamaño del texto, activá modo escala de grises y más.', abrirAccs: true, posicion: 'derecha' },
     ],
     proveedor: [
@@ -917,7 +917,6 @@ export default function Ecosistema() {
                   titulo="Bolsa de trabajo"
                   descripcion="Ofertas de clínicas y profesionales disponibles."
                   icon={Briefcase}
-                  onClick={() => navigate('/bolsa-de-trabajo')}
                 />
               )}
               <TarjetaProximamente
