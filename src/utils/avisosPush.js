@@ -14,7 +14,7 @@ import { db, auth } from '../firebase';
 export const ADMIN_UID = 'JDiu4lkVyJXeoyZ3eAxuBfvc5bZ2';
 
 // Clave pública de Firebase Cloud Messaging (Certificados push web)
-const CLAVE_VAPID = 'BM8ZvSKV5NG9csyWP4tI3heRt8X8t6BGHMQ-1mCsCRH7122aULErwa8EiV9k52BIYV9b-MKkU7P3KS7y24Jy4Oo';
+const CLAVE_VAPID = 'BLw09fSrxz3fUMtc21Hx9kINSEvmDcy_rljcJE63d0ZdJPWeHS8OIbLNd59ZxUFsBdp9_4L7KZ-y6Tg0E_wjrD0';
 
 // ¿Este navegador sabe mostrar notificaciones push?
 export const avisosSoportados = async () => {
