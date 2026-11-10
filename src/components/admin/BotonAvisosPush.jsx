@@ -60,8 +60,11 @@ export default function BotonAvisosPush() {
     setProbando(true);
     setMensaje('');
     try {
-      await httpsCallable(functions, 'enviarAvisoPrueba')();
-      setMensaje('Aviso de prueba enviado.');
+      const r = await httpsCallable(functions, 'enviarAvisoPrueba')();
+      const d = r.data || {};
+      if (d.enviados > 0) setMensaje(`Enviado a ${d.enviados} dispositivo(s).`);
+      else if (d.errores && d.errores.length) setMensaje(`Falló: ${d.errores[0]}`);
+      else setMensaje('No hay dispositivos activados.');
     } catch (e) {
       console.error(e);
       setMensaje('No se pudo mandar la prueba.');
