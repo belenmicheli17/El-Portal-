@@ -116,6 +116,13 @@ async function mandarAvisoALaAdmin(titulo, cuerpo) {
   });
 
   // Los dispositivos que ya no existen (se desinstaló, se borraron los datos) se sacan de la lista
+  // Dejamos registro en los logs de cada envío que Google rechazó
+  respuesta.responses.forEach((r) => {
+    if (!r.success) {
+      console.error("Falló el envío a un dispositivo:", r.error && r.error.code, r.error && r.error.message);
+    }
+  });
+
   const limpieza = [];
   respuesta.responses.forEach((r, i) => {
     const codigo = (r.error && r.error.code) || "";
@@ -125,7 +132,11 @@ async function mandarAvisoALaAdmin(titulo, cuerpo) {
   });
   await Promise.all(limpieza);
 
-  return { enviados: respuesta.successCount };
+  return {
+    enviados: respuesta.successCount,
+    fallidos: respuesta.failureCount,
+    errores: respuesta.responses.filter((r) => !r.success).map((r) => (r.error && r.error.code) || "desconocido"),
+  };
 }
 
 // Se dispara sola cuando una solicitud pasa a "pendiente" (alguien termina el onboarding

@@ -67,7 +67,7 @@ export default function BotonAvisosPush() {
       setMensaje('No se pudo mandar la prueba.');
     } finally {
       setProbando(false);
-      setTimeout(() => setMensaje(''), 4000);
+      setTimeout(() => setMensaje(''), 15000);
     }
   };
 
