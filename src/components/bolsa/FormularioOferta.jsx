@@ -4,7 +4,7 @@ import { ChevronLeft, Loader2, Plus, MapPin, Check } from 'lucide-react';
 import { db, auth } from '../../firebase';
 import provincias from '../../data/provincias.js';
 import { ROLES, ROLES_VISIBLES, rolSinAreas, ZONAS_BA, JORNADAS, HORARIOS, EXPERIENCIAS, REQUISITOS, EQUIPO } from '../../data/bolsaOpciones';
-import { nuevoVencimiento, conPrefijo54 } from '../../utils/bolsa';
+import { nuevoVencimiento, conPrefijo54, permisosBolsa } from '../../utils/bolsa';
 import { BuscadorDireccionGoogle, CampoWhatsapp, esEmailValido, whatsappCompleto } from '../editor/EditorComponents';
 import { SelectorPills, SelectorAreas, CampoBolsa, irAlPrimerError } from './ElementosBolsa';
 
@@ -128,6 +128,7 @@ export default function FormularioOferta({ currentUser, ofertaExistente, onVolve
   };
 
   const sinAreas = rolSinAreas(form.rol);
+  const enEspera = permisosBolsa(currentUser).publicaEnEspera;
   const enBuenosAires = lugarElegido?.provincia === 'Buenos Aires';
 
   const validar = () => {
@@ -181,7 +182,7 @@ export default function FormularioOferta({ currentUser, ofertaExistente, onVolve
       };
       if (!editando) {
         Object.assign(datos, {
-          estado: 'activo',
+          estado: enEspera ? 'esperando' : 'activo',
           vencimientoMillis: nuevoVencimiento(),
           publicadaEn: serverTimestamp(),
           createdAt: serverTimestamp(),
@@ -198,8 +199,9 @@ export default function FormularioOferta({ currentUser, ofertaExistente, onVolve
       });
       await lote.commit();
 
-      // Aviso por mail a los profesionales que coinciden (no frena la publicación si falla)
-      if (!editando) {
+      // Aviso por mail a los profesionales que coinciden (no frena la publicación si falla).
+      // Si está en espera, el aviso sale cuando la admin verifica la cuenta.
+      if (!editando && !enEspera) {
         auth.currentUser?.getIdToken()
           .then((token) => fetch('/api/aviso-oferta', {
             method: 'POST',
@@ -209,7 +211,7 @@ export default function FormularioOferta({ currentUser, ofertaExistente, onVolve
           .catch((e) => console.error('No se pudo pedir el aviso por mail:', e));
       }
 
-      onGuardada(editando ? 'La oferta se actualizó.' : 'Tu oferta ya está publicada por 30 días.');
+      onGuardada(editando ? 'La oferta se actualizó.' : enEspera ? 'Tu oferta quedó guardada. Se publica apenas verifiquemos tu cuenta.' : 'Tu oferta ya está publicada por 30 días.');
     } catch (e) {
       console.error('Error guardando la oferta:', e);
       setErrores({ general: 'No pudimos guardar la oferta. Revisá tu conexión e intentá de nuevo.' });
@@ -236,6 +238,11 @@ export default function FormularioOferta({ currentUser, ofertaExistente, onVolve
       </h1>
       <p className="text-[15px] text-[#666666] mb-8">El logo y el nombre salen de la página de tu clínica. La oferta se ve 30 días y la podés extender gratis.</p>
 
+      {enEspera && (
+        <div className="bg-amber-50 border border-amber-200 text-amber-900 rounded-2xl px-4 py-3 text-[14px] mb-6">
+          <strong>Tu cuenta todavía está en revisión.</strong> Podés completar todo ahora: queda guardado y se publica solo apenas verifiquemos tu matrícula.
+        </div>
+      )}
       {hayErrores && (
         <div className="bg-red-50 border border-red-100 text-red-700 rounded-2xl p-4 text-[14px] font-semibold mb-5">
           {errores.general || `Faltan completar: ${faltan.join(', ')}.`}

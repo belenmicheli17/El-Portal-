@@ -55,12 +55,16 @@ export const nuevoVencimiento = () => Date.now() + DIAS_DE_VIGENCIA * UN_DIA;
 export const permisosBolsa = (currentUser) => {
   const esAdmin = currentUser?.uid === ADMIN_UID || currentUser?.rol === 'admin';
   const verificada = esAdmin || !SOLO_VERIFICADOS || currentUser?.estado === 'activo';
+  const suspendida = currentUser?.estado === 'suspendido';
   return {
     conSesion: !!currentUser,
     esAdmin,
     verificada,
-    puedePublicarOferta: !!currentUser && (currentUser.rol === 'clinica' || esAdmin) && verificada,
-    puedeMarcarseDisponible: !!currentUser && currentUser.rol === 'profesional' && verificada,
+    // Publicar se puede aunque la cuenta no esté verificada: queda "en espera" y sale cuando la verificamos
+    puedePublicarOferta: !!currentUser && (currentUser.rol === 'clinica' || esAdmin) && !suspendida,
+    puedeMarcarseDisponible: !!currentUser && currentUser.rol === 'profesional' && !suspendida,
+    publicaEnEspera: !verificada,
+    // Postularse (contactar a una clínica) sí pide la cuenta verificada
     puedePostularse: !!currentUser && currentUser.rol === 'profesional' && verificada
   };
 };

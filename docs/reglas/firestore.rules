@@ -107,6 +107,15 @@ service cloud.firestore {
       return request.auth != null
         && get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.get('estado', '') == 'activo';
     }
+    // Cuenta verificada: la publicación sale ya ('activo').
+    // Cuenta sin verificar: se guarda en espera ('esperando') y la admin la activa al verificarla. Suspendidas: nada.
+    function estadoInicialValido() {
+      let estadoCuenta = get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.get('estado', '');
+      let estadoNuevo = request.resource.data.get('estado', '');
+      return estadoCuenta != 'suspendido'
+        && ((estadoCuenta == 'activo' && estadoNuevo == 'activo')
+          || (estadoCuenta != 'activo' && estadoNuevo == 'esperando'));
+    }
     function rolPropio() {
       return get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.get('rol', '');
     }
@@ -121,9 +130,8 @@ service cloud.firestore {
         || (request.auth != null && resource.data.get('creadorId', '') == request.auth.uid)
         || esAdmin();
 
-      allow create: if puedeUsarBolsa() && rolPropio() == 'clinica'
+      allow create: if request.auth != null && rolPropio() == 'clinica' && estadoInicialValido()
         && request.resource.data.get('creadorId', '') == request.auth.uid
-        && request.resource.data.get('estado', '') == 'activo'
         && request.resource.data.get('avisoEnviado', false) == false
         && vencimientoValido();
 
@@ -155,10 +163,9 @@ service cloud.firestore {
         || (request.auth != null && request.auth.uid == uid)
         || esAdmin();
 
-      allow create: if puedeUsarBolsa() && rolPropio() == 'profesional'
+      allow create: if request.auth != null && rolPropio() == 'profesional' && estadoInicialValido()
         && request.auth.uid == uid
         && request.resource.data.get('creadorId', '') == request.auth.uid
-        && request.resource.data.get('estado', '') == 'activo'
         && vencimientoValido();
 
       allow update: if request.auth != null && request.auth.uid == uid

@@ -4,7 +4,7 @@ import { ChevronLeft, Loader2, X } from 'lucide-react';
 import { db } from '../../firebase';
 import provincias from '../../data/provincias.js';
 import { TODAS_LAS_AREAS, JORNADAS, HORARIOS, EXPERIENCIAS, FORMAS_CONTACTO_DISPONIBLE, MAX_AREAS_DISPONIBLE } from '../../data/bolsaOpciones';
-import { nuevoVencimiento, conPrefijo54, serviciosDePerfil } from '../../utils/bolsa';
+import { nuevoVencimiento, conPrefijo54, serviciosDePerfil, permisosBolsa } from '../../utils/bolsa';
 import { BuscadorDireccionGoogle, CampoWhatsapp, esEmailValido, whatsappCompleto } from '../editor/EditorComponents';
 import { SelectorPills, SelectorAreas, CampoBolsa, irAlPrimerError } from './ElementosBolsa';
 import CajaCV, { useMiCV } from './CajaCV';
@@ -132,6 +132,8 @@ export default function FormularioDisponible({ currentUser, onVolver, onGuardada
     return e;
   };
 
+  const enEspera = permisosBolsa(currentUser).publicaEnEspera;
+
   const guardar = async () => {
     const encontrados = validar();
     if (Object.keys(encontrados).length) { irAlPrimerError(ORDEN_CAMPOS, encontrados); return; }
@@ -156,7 +158,7 @@ export default function FormularioDisponible({ currentUser, onVolver, onGuardada
         actualizadaEn: serverTimestamp()
       };
       if (!existe) {
-        Object.assign(datos, { estado: 'activo', vencimientoMillis: nuevoVencimiento(), publicadaEn: serverTimestamp(), createdAt: serverTimestamp() });
+        Object.assign(datos, { estado: enEspera ? 'esperando' : 'activo', vencimientoMillis: nuevoVencimiento(), publicadaEn: serverTimestamp(), createdAt: serverTimestamp() });
       }
 
       const lote = writeBatch(db);
@@ -169,7 +171,7 @@ export default function FormularioDisponible({ currentUser, onVolver, onGuardada
         cvUrl: form.mostrarCV && cv?.url ? cv.url : ''
       });
       await lote.commit();
-      onGuardada(existe ? 'Tus datos de disponible se actualizaron.' : 'Ya figurás como disponible por 30 días.');
+      onGuardada(existe ? 'Tus datos de disponible se actualizaron.' : enEspera ? 'Quedó guardado. Vas a figurar como disponible apenas verifiquemos tu cuenta.' : 'Ya figurás como disponible por 30 días.');
     } catch (e) {
       console.error('Error guardando la disponibilidad:', e);
       setErrores({ general: 'No pudimos guardar. Revisá tu conexión e intentá de nuevo.' });
@@ -196,6 +198,11 @@ export default function FormularioDisponible({ currentUser, onVolver, onGuardada
       </h1>
       <p className="text-[15px] text-[#666666] mb-8">Tu nombre y tu foto salen de tu perfil. Figurás como disponible por 30 días y lo podés extender gratis.</p>
 
+      {enEspera && (
+        <div className="bg-amber-50 border border-amber-200 text-amber-900 rounded-2xl px-4 py-3 text-[14px] mb-6">
+          <strong>Tu cuenta todavía está en revisión.</strong> Podés completar todo ahora: queda guardado y figurás como disponible apenas verifiquemos tu matrícula.
+        </div>
+      )}
       {hayErrores && (
         <div className="bg-red-50 border border-red-100 text-red-700 rounded-2xl p-4 text-[14px] font-semibold mb-5">
           {errores.general || `Faltan completar: ${faltan.join(', ')}.`}

@@ -4,7 +4,7 @@ import equipamientoData from './equipamientoClinicas.json';
 
 // true = solo publican y se postulan las cuentas que vos aprobaste (estado "activo").
 // Si lo cambiás, cambiá también la función puedeUsarBolsa() en las reglas de Firestore.
-export const SOLO_VERIFICADOS = true;
+export const SOLO_VERIFICADOS = true; // true = postularse y que lo publicado se vea, solo con cuenta verificada
 
 // Días que dura una publicación (se renueva gratis desde "Mis publicaciones")
 export const DIAS_DE_VIGENCIA = 30;

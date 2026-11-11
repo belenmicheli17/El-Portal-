@@ -136,6 +136,32 @@ export default function Validaciones() {
       return;
     }
 
+    // Bolsa de Trabajo: lo que publicó mientras esperaba la verificación se publica ahora, por 30 días.
+    // A las ofertas nuevas les sale el aviso por mail a los profesionales que coinciden.
+    try {
+      const [ofertasEnEspera, disponible] = await Promise.all([
+        getDocs(query(collection(db, 'ofertasEmpleo'), where('creadorId', '==', req.uid), where('estado', '==', 'esperando'))),
+        getDoc(doc(db, 'profesionalesDisponibles', req.uid))
+      ]);
+      const activar = { estado: 'activo', vencimientoMillis: Date.now() + 30 * 24 * 60 * 60 * 1000, publicadaEn: serverTimestamp() };
+      const loteBolsa = writeBatch(db);
+      ofertasEnEspera.docs.forEach((d) => loteBolsa.update(d.ref, activar));
+      const disponibleEnEspera = disponible.exists() && disponible.data().estado === 'esperando';
+      if (disponibleEnEspera) loteBolsa.update(disponible.ref, activar);
+      if (ofertasEnEspera.size || disponibleEnEspera) await loteBolsa.commit();
+
+      if (ofertasEnEspera.size) {
+        const tokenBolsa = await auth.currentUser.getIdToken();
+        await Promise.all(ofertasEnEspera.docs.map((d) => fetch('/api/aviso-oferta', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tokenBolsa}` },
+          body: JSON.stringify({ ofertaId: d.id })
+        }).catch((e) => console.error('No se pudo pedir el aviso de la oferta', d.id, e))));
+      }
+    } catch (error) {
+      console.error('Error publicando lo que tenía en espera en la Bolsa:', error);
+    }
+
     // Mail de aviso (si falla, la aprobación igual queda hecha)
     try {
       const token = await auth.currentUser.getIdToken();

@@ -6,6 +6,7 @@ import { etiquetaRol, diasRestantes, estaVencida, nuevoVencimiento, zonaTexto } 
 import { VentanaConfirmar } from './ElementosBolsa';
 
 function Estado({ item }) {
+  if (item.estado === 'esperando') return <span className="bg-amber-50 text-amber-800 text-[12px] font-semibold px-2.5 py-0.5 rounded-full">Esperando la verificación de tu cuenta</span>;
   if (item.estado === 'pausado') return <span className="bg-amber-50 text-amber-800 text-[12px] font-semibold px-2.5 py-0.5 rounded-full">Pausada por el Portal</span>;
   if (estaVencida(item)) return <span className="bg-red-50 text-red-700 text-[12px] font-semibold px-2.5 py-0.5 rounded-full">Vencida</span>;
   const dias = diasRestantes(item);
@@ -62,7 +63,7 @@ function Fila({ icono: Icono, titulo, subtitulo, item, coleccion, onEditar, onCa
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          {item.estado !== 'pausado' && (
+          {!['pausado', 'esperando'].includes(item.estado) && (
             <button type="button" onClick={extender} disabled={trabajando} className="inline-flex items-center gap-1.5 bg-[#2D6A6A] hover:bg-[#1A3D3D] text-white rounded-2xl px-4 py-2.5 text-[13px] font-semibold transition-colors">
               <RefreshCw className={`w-4 h-4 ${trabajando ? 'animate-spin' : ''}`} /> {vencida ? 'Volver a publicar' : 'Extender 30 días'}
             </button>
@@ -77,7 +78,10 @@ function Fila({ icono: Icono, titulo, subtitulo, item, coleccion, onEditar, onCa
       </div>
 
       {/* Explicación de qué hace "Extender" */}
-      {item.estado !== 'pausado' && (
+      {item.estado === 'esperando' && (
+        <p className="text-[12px] text-[#666666] mt-3 md:pl-16">Todavía no se ve en la Bolsa. Se publica sola, por 30 días, apenas verifiquemos tu matrícula.</p>
+      )}
+      {!['pausado', 'esperando'].includes(item.estado) && (
         <p className="text-[12px] text-[#666666] mt-3 md:pl-16">
           {vencida
             ? 'Ya no se ve en la Bolsa. «Volver a publicar» la muestra de nuevo por 30 días, gratis.'
