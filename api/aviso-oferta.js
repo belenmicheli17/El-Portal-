@@ -7,7 +7,7 @@ import { getAuth } from 'firebase-admin/auth';
 import { firmaBaja } from './_firma.js';
 
 // Número de la plantilla en Brevo (cambialo por el # que te dé Brevo al crearla)
-const ID_PLANTILLA_AVISO_OFERTA = 0;
+const ID_PLANTILLA_AVISO_OFERTA = 8;
 const ADMIN_UID = 'JDiu4lkVyJXeoyZ3eAxuBfvc5bZ2';
 const MAIL_ADMIN = 'portalveterinario.ar@gmail.com';
 const SITIO = 'https://www.portalveterinario.ar';
