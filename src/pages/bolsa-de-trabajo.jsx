@@ -339,7 +339,8 @@ export default function BolsaTrabajo() {
       </section>
 
         <div className="hidden lg:flex lg:w-[42%] items-end justify-center pt-12">
-          <img src="/bolsa-hero-ilustracion.png" alt="" className="w-full max-w-[440px] h-auto" />
+          {/* Ilustración protegida: no se puede arrastrar ni tocar con clic derecho para guardarla */}
+          <img src="/bolsa-hero-ilustracion.png" alt="" draggable={false} onContextMenu={(e) => e.preventDefault()} className="w-full max-w-[440px] h-auto select-none pointer-events-none" />
         </div>
       </div>
 

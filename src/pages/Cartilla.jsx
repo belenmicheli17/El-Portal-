@@ -696,7 +696,9 @@ const Cartilla = () => {
             <img
               src="/cartilla-hero-ilustracion.svg"
               alt=""
-              className="w-full max-w-[500px] h-auto lg:translate-x-8"
+              draggable={false}
+              onContextMenu={(e) => e.preventDefault()}
+              className="w-full max-w-[500px] h-auto lg:translate-x-8 select-none pointer-events-none"
             />
           </div>
         </div>
