@@ -12,6 +12,7 @@ import FooterSimple from '../../components/FooterSimple';
 import especialidadesData from '../../data/especialidades.json';
 import equipamientoData from '../../data/equipamientoClinicas.json';
 import provincias from '../../data/provincias.js';
+import { ZONAS_BA } from '../../data/bolsaOpciones';
 import { analizarPerfilClinica, horaValida } from '../../utils/progresoPerfil';
 import {
   Tooltip, InputGroup, ToggleSwitch, Accordion, PuntoAlerta, CampoWhatsapp, RecortadorImagen,
@@ -109,6 +110,7 @@ const DATOS_INICIALES = {
   provincia: '',
   localidad: '',
   barrio: '',
+  zonaBA: '',
   sedes: [],
   portada: '',
   telefono: '',
@@ -163,6 +165,7 @@ const prepararDatosCargados = (data) => ({
   provincia: data.provincia || '',
   localidad: data.localidad || '',
   barrio: data.barrio || '',
+  zonaBA: data.zonaBA || '',
   sedes: Array.isArray(data.sedes) ? data.sedes : [],
     portada: data.portada || '',
   telefono: data.telefono || '',
@@ -1665,6 +1668,31 @@ export default function EditorClinico() {
                           </p>
                         ) : null}
                       </div>
+
+                      {/* ZONA DE BUENOS AIRES: en la provincia de Buenos Aires mostramos la zona en vez de la provincia */}
+                      {formData.provincia === 'Buenos Aires' && (
+                        <div className="mb-6 w-full">
+                          <label className="flex items-center text-xs font-bold text-[#666666] uppercase tracking-widest leading-none mb-2 ml-1">
+                            Zona de Buenos Aires
+                            <Tooltip text="Se muestra en la Bolsa de Trabajo en vez de «Provincia de Buenos Aires», para que se entienda mejor dónde están." />
+                          </label>
+                          <div className="flex flex-wrap gap-2">
+                            {ZONAS_BA.map((z) => {
+                              const activa = formData.zonaBA === z;
+                              return (
+                                <button
+                                  key={z}
+                                  type="button"
+                                  onClick={() => setFormData((p) => ({ ...p, zonaBA: activa ? '' : z }))}
+                                  className={`rounded-full px-4 py-2 text-[13px] font-semibold border transition-all ${activa ? 'bg-[#2D6A6A]/10 border-[#2D6A6A] text-[#1A3D3D]' : 'bg-white border-gray-200 text-[#1A3D3D] hover:border-[#2D6A6A]/60'}`}
+                                >
+                                  {z}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
 
                       <div className="mb-6 w-full">
                         <label className="flex items-center text-xs font-bold text-[#666666] uppercase tracking-widest leading-none mb-2 ml-1">

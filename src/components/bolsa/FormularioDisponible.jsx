@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { doc, getDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
-import { ChevronLeft, Loader2, X, ChevronDown } from 'lucide-react';
+import { ChevronLeft, Loader2, X } from 'lucide-react';
 import { db } from '../../firebase';
 import provincias from '../../data/provincias.js';
-import { GRUPOS_AREAS, TODAS_LAS_AREAS, JORNADAS, HORARIOS, EXPERIENCIAS, FORMAS_CONTACTO_DISPONIBLE, MAX_AREAS_DISPONIBLE } from '../../data/bolsaOpciones';
+import { TODAS_LAS_AREAS, JORNADAS, HORARIOS, EXPERIENCIAS, FORMAS_CONTACTO_DISPONIBLE, MAX_AREAS_DISPONIBLE } from '../../data/bolsaOpciones';
 import { nuevoVencimiento, conPrefijo54, serviciosDePerfil } from '../../utils/bolsa';
 import { BuscadorDireccionGoogle, CampoWhatsapp, esEmailValido, whatsappCompleto } from '../editor/EditorComponents';
-import { SelectorPills, CampoBolsa } from './ElementosBolsa';
+import { SelectorPills, SelectorAreas, CampoBolsa, irAlPrimerError } from './ElementosBolsa';
 import CajaCV, { useMiCV } from './CajaCV';
 
 const claseCaja = "bg-white p-6 md:p-8 rounded-[24px] border border-gray-100 shadow-sm mb-5";
@@ -24,7 +24,14 @@ const FORMULARIO_VACIO = {
   tipoContacto: ['whatsapp'],
   whatsapp: '',
   email: '',
-  mostrarCV: true
+  mostrarCV: false
+};
+
+// Orden de los campos en pantalla (para bajar hasta el primero que falta) y cómo se llaman en el aviso
+const ORDEN_CAMPOS = ['areas', 'provincia', 'jornada', 'experiencia', 'buscando', 'tipoContacto', 'whatsapp', 'email'];
+const NOMBRES_CAMPOS = {
+  areas: 'especialidades', provincia: 'provincia', jornada: 'jornada', experiencia: 'experiencia',
+  buscando: 'qué estás buscando', tipoContacto: 'forma de contacto', whatsapp: 'WhatsApp', email: 'mail'
 };
 
 export default function FormularioDisponible({ currentUser, onVolver, onGuardada }) {
@@ -37,7 +44,6 @@ export default function FormularioDisponible({ currentUser, onVolver, onGuardada
   const [guardando, setGuardando] = useState(false);
   const [errores, setErrores] = useState({});
   const [textoZona, setTextoZona] = useState('');
-  const [verTodas, setVerTodas] = useState(false);
 
   const cambiar = (campo, valor) => {
     setForm((prev) => ({ ...prev, [campo]: valor }));
@@ -75,7 +81,7 @@ export default function FormularioDisponible({ currentUser, onVolver, onGuardada
             tipoContacto: c.tipoContacto || ['whatsapp'],
             whatsapp: c.whatsapp || conPrefijo54(datosPerfil.whatsappNum),
             email: c.email || datosPerfil.emailContacto || '',
-            mostrarCV: c.cvUrl ? true : (c.mostrarCV ?? true)
+            mostrarCV: c.mostrarCV === true || !!c.cvUrl
           });
         } else {
           const deSuPerfil = serviciosDePerfil(datosPerfil).filter((s) => TODAS_LAS_AREAS.includes(s));
@@ -98,8 +104,8 @@ export default function FormularioDisponible({ currentUser, onVolver, onGuardada
     return () => { cancelado = true; };
   }, [uid]);
 
-  // Áreas del perfil primero; el resto, en "Ver todas"
-  const areasDelPerfil = [...new Set([...serviciosDePerfil(perfil).filter((s) => TODAS_LAS_AREAS.includes(s)), ...form.areas])];
+  // Las especialidades de su perfil aparecen primero, a mano; el resto se busca o se abre por grupo
+  const areasDelPerfil = [...new Set([perfil?.especialidad, ...serviciosDePerfil(perfil)])].filter((s) => TODAS_LAS_AREAS.includes(s));
 
   const agregarZona = (lugar) => {
     const zona = { localidad: lugar.localidad || lugar.nombre || '', barrio: lugar.barrio || '', provincia: lugar.provincia || '', placeId: lugar.placeId || '' };
@@ -114,7 +120,7 @@ export default function FormularioDisponible({ currentUser, onVolver, onGuardada
 
   const validar = () => {
     const e = {};
-    if (form.areas.length === 0) e.areas = 'Elegí al menos un área.';
+    if (form.areas.length === 0) e.areas = 'Elegí al menos una especialidad.';
     if (!form.provincia) e.provincia = 'Elegí la provincia.';
     if (form.jornada.length === 0) e.jornada = 'Elegí al menos una jornada.';
     if (!form.experiencia) e.experiencia = 'Elegí tu experiencia.';
@@ -124,11 +130,12 @@ export default function FormularioDisponible({ currentUser, onVolver, onGuardada
     if (form.tipoContacto.includes('email') && !esEmailValido(form.email)) e.email = 'Revisá el mail.';
     if (form.tipoContacto.includes('perfil') && !perfil?.slug && !currentUser.slug) e.tipoContacto = 'Tu perfil todavía no tiene link. Elegí WhatsApp o mail.';
     setErrores(e);
-    return Object.keys(e).length === 0;
+    return e;
   };
 
   const guardar = async () => {
-    if (!validar()) { window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+    const encontrados = validar();
+    if (Object.keys(encontrados).length) { irAlPrimerError(ORDEN_CAMPOS, encontrados); return; }
     setGuardando(true);
     try {
       const nombre = `${perfil?.nombre || ''} ${perfil?.apellido || ''}`.trim() || currentUser.nombre || '';
@@ -177,6 +184,7 @@ export default function FormularioDisponible({ currentUser, onVolver, onGuardada
   }
 
   const hayErrores = Object.values(errores).some(Boolean);
+  const faltan = ORDEN_CAMPOS.filter((c) => errores[c]).map((c) => NOMBRES_CAMPOS[c]);
 
   return (
     <div className="max-w-3xl mx-auto w-full px-4 pt-6 lg:pt-10 pb-16 font-['Inter'] relative z-10 animate-in fade-in duration-300">
@@ -187,49 +195,26 @@ export default function FormularioDisponible({ currentUser, onVolver, onGuardada
       <h1 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[28px] md:text-[36px] leading-tight tracking-tight mb-2">
         {existe ? 'Editar mi disponibilidad' : 'Marcarme como disponible'}
       </h1>
-      <p className="text-[15px] text-[#666666] mb-8">Tu nombre y tu foto salen de tu perfil. Figurás como disponible por 30 días y lo podés renovar gratis.</p>
+      <p className="text-[15px] text-[#666666] mb-8">Tu nombre y tu foto salen de tu perfil. Figurás como disponible por 30 días y lo podés extender gratis.</p>
 
       {hayErrores && (
         <div className="bg-red-50 border border-red-100 text-red-700 rounded-2xl p-4 text-[14px] font-semibold mb-5">
-          {errores.general || 'Faltan completar algunos datos. Revisá los campos marcados en rojo.'}
+          {errores.general || `Faltan completar: ${faltan.join(', ')}.`}
         </div>
       )}
 
       <section className={claseCaja}>
-        <CampoBolsa titulo="¿En qué áreas querés que te llamen?" requerido ayuda={`Elegí hasta ${MAX_AREAS_DISPONIBLE}, las principales. Vienen precargadas de tu perfil.`} error={errores.areas}>
-          {areasDelPerfil.length > 0 && (
-            <SelectorPills opciones={areasDelPerfil} seleccion={form.areas} onCambio={(v) => cambiar('areas', v)} maximo={MAX_AREAS_DISPONIBLE} />
-          )}
-          <button type="button" onClick={() => setVerTodas((v) => !v)} className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#2D6A6A] mt-4">
-            <ChevronDown className={`w-4 h-4 transition-transform ${verTodas ? 'rotate-180' : ''}`} /> {verTodas ? 'Ocultar el resto de las áreas' : 'Ver todas las áreas'}
-          </button>
-          {verTodas && (
-            <div className="flex flex-col gap-5 mt-4">
-              {GRUPOS_AREAS.map((g) => (
-                <div key={g.id}>
-                  <p className="text-[12px] font-bold text-[#666666] mb-2">{g.grupo}</p>
-                  <SelectorPills
-                    opciones={g.opciones}
-                    seleccion={form.areas.filter((a) => g.opciones.includes(a))}
-                    onCambio={(elegidasGrupo) => {
-                      const resto = form.areas.filter((a) => !g.opciones.includes(a));
-                      cambiar('areas', [...resto, ...elegidasGrupo].slice(0, MAX_AREAS_DISPONIBLE));
-                    }}
-                    maximo={MAX_AREAS_DISPONIBLE - form.areas.filter((a) => !g.opciones.includes(a)).length}
-                  />
-                </div>
-              ))}
-            </div>
-          )}
+        <CampoBolsa titulo="¿En qué especialidades querés que te llamen?" requerido campo="areas" ayuda={`Elegí hasta ${MAX_AREAS_DISPONIBLE}, las principales. Las de tu perfil están a mano; las demás, buscalas o abrí cada grupo.`} error={errores.areas}>
+          <SelectorAreas seleccion={form.areas} onCambio={(v) => cambiar('areas', v)} maximo={MAX_AREAS_DISPONIBLE} sugeridas={areasDelPerfil} />
         </CampoBolsa>
 
-        <CampoBolsa titulo="Nota sobre tus áreas" ayuda="Opcional. Por ejemplo: «Ecografía abdominal, no cardíaca».">
+        <CampoBolsa titulo="Nota sobre tus especialidades" ayuda="Opcional. Por ejemplo: «Ecografía abdominal, no cardíaca».">
           <input value={form.notaAreas} onChange={(e) => cambiar('notaAreas', e.target.value)} maxLength={200} className={claseInput} />
         </CampoBolsa>
       </section>
 
       <section className={claseCaja}>
-        <CampoBolsa titulo="Provincia" requerido error={errores.provincia}>
+        <CampoBolsa titulo="Provincia" requerido campo="provincia" error={errores.provincia}>
           <select value={form.provincia} onChange={(e) => cambiar('provincia', e.target.value)} className={claseInput}>
             <option value="">Elegí una provincia</option>
             {provincias.map((p) => <option key={p} value={p}>{p}</option>)}
@@ -250,7 +235,7 @@ export default function FormularioDisponible({ currentUser, onVolver, onGuardada
           )}
         </CampoBolsa>
 
-        <CampoBolsa titulo="Jornada" requerido error={errores.jornada}>
+        <CampoBolsa titulo="Jornada" requerido campo="jornada" error={errores.jornada}>
           <SelectorPills opciones={JORNADAS} seleccion={form.jornada} onCambio={(v) => cambiar('jornada', v)} />
         </CampoBolsa>
 
@@ -258,47 +243,56 @@ export default function FormularioDisponible({ currentUser, onVolver, onGuardada
           <SelectorPills opciones={HORARIOS} seleccion={form.horario} onCambio={(v) => cambiar('horario', v)} />
         </CampoBolsa>
 
-        <CampoBolsa titulo="Experiencia" requerido error={errores.experiencia}>
+        <CampoBolsa titulo="Experiencia" requerido campo="experiencia" error={errores.experiencia}>
           <SelectorPills opciones={EXPERIENCIAS} seleccion={form.experiencia} onCambio={(v) => cambiar('experiencia', v)} multiple={false} />
         </CampoBolsa>
 
-        <CampoBolsa titulo="¿Qué estás buscando?" requerido error={errores.buscando}>
+        <CampoBolsa titulo="¿Qué estás buscando?" requerido campo="buscando" error={errores.buscando}>
           <textarea value={form.buscando} onChange={(e) => cambiar('buscando', e.target.value)} rows={3} maxLength={300} placeholder="Ej: Busco guardias de fin de semana en zona oeste." className={`${claseInput} resize-none`} />
           <p className="text-[12px] text-[#666666] text-right mt-1">{form.buscando.length}/300</p>
         </CampoBolsa>
       </section>
 
       <section className={claseCaja}>
-        <CampoBolsa titulo="¿Cómo querés que te contacten?" requerido ayuda="Solo lo ven clínicas y profesionales registrados." error={errores.tipoContacto}>
+        <CampoBolsa titulo="¿Cómo querés que te contacten?" requerido campo="tipoContacto" ayuda="Solo lo ven clínicas y profesionales registrados." error={errores.tipoContacto}>
           <SelectorPills opciones={FORMAS_CONTACTO_DISPONIBLE} seleccion={form.tipoContacto} onCambio={(v) => cambiar('tipoContacto', v)} />
           <p className="text-[12px] text-[#666666] mt-2">Te recomendamos WhatsApp: es lo que más usan las clínicas.</p>
         </CampoBolsa>
 
         {form.tipoContacto.includes('whatsapp') && (
-          <div className="mb-5">
+          <div className="mb-5 scroll-mt-28" data-campo="whatsapp">
             <CampoWhatsapp id="whatsappDisponible" label="WhatsApp" requerido valor={form.whatsapp} onCambio={(v) => cambiar('whatsapp', v)} />
             {errores.whatsapp && <p className="text-[12px] font-semibold text-red-600 mt-2">{errores.whatsapp}</p>}
           </div>
         )}
         {form.tipoContacto.includes('email') && (
-          <div className="mb-5">
+          <div className="mb-5 scroll-mt-28" data-campo="email">
             <p className="text-[14px] font-bold text-[#1A3D3D] mb-2">Mail <span className="text-red-500">*</span></p>
             <input type="email" value={form.email} onChange={(e) => cambiar('email', e.target.value)} placeholder="tu@mail.com" className={claseInput} />
             {errores.email && <p className="text-[12px] font-semibold text-red-600 mt-2">{errores.email}</p>}
           </div>
         )}
 
-        <CampoBolsa titulo="Tu CV" ayuda="Opcional. Es el mismo que se guarda en tu editor.">
+        <CampoBolsa titulo="Tu currículum (opcional)" ayuda="Queda guardado en tu información de cuenta. No es público: cuando te postulás a una oferta, lo mandás vos.">
           <CajaCV uid={uid} cv={cv} setCv={setCv} />
           {cv && (
-            <label className="flex items-center gap-2 mt-3 text-[14px] text-[#333333] cursor-pointer">
-              <input type="checkbox" checked={form.mostrarCV} onChange={(e) => cambiar('mostrarCV', e.target.checked)} className="w-4 h-4 accent-[#2D6A6A]" />
-              Que las clínicas registradas puedan ver mi CV
-            </label>
+            <div className="mt-5">
+              <p className="text-[14px] font-bold text-[#1A3D3D] mb-1">¿Querés que las clínicas registradas vean tu currículum en esta publicación?</p>
+              <p className="text-[13px] text-[#666666] mb-3">Si decís que sí, aparece un botón «Ver su currículum» cuando abren tu publicación.</p>
+              <SelectorPills
+                opciones={[{ id: 'si', label: 'Sí, que lo vean' }, { id: 'no', label: 'No, solo lo mando yo' }]}
+                seleccion={form.mostrarCV ? 'si' : 'no'}
+                onCambio={(v) => cambiar('mostrarCV', v === 'si')}
+                multiple={false}
+              />
+            </div>
           )}
         </CampoBolsa>
       </section>
 
+      {hayErrores && (
+        <p className="text-[14px] font-semibold text-red-600 text-center mb-3">{errores.general || `Faltan completar: ${faltan.join(', ')}.`}</p>
+      )}
       <button type="button" onClick={guardar} disabled={guardando} className="w-full bg-[#2D6A6A] hover:bg-[#1A3D3D] disabled:opacity-70 text-white py-4 rounded-2xl text-[15px] font-semibold flex items-center justify-center gap-2 transition-colors shadow-md">
         {guardando && <Loader2 className="w-5 h-5 animate-spin" />}
         {existe ? 'Guardar cambios' : 'Marcarme como disponible'}

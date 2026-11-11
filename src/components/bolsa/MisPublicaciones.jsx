@@ -2,68 +2,101 @@ import React, { useState } from 'react';
 import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { ChevronLeft, Pencil, RefreshCw, Trash2, Plus, Briefcase, User } from 'lucide-react';
 import { db } from '../../firebase';
-import { tituloPuesto, diasRestantes, estaVencida, nuevoVencimiento, zonaTexto } from '../../utils/bolsa';
+import { etiquetaRol, diasRestantes, estaVencida, nuevoVencimiento, zonaTexto } from '../../utils/bolsa';
+import { VentanaConfirmar } from './ElementosBolsa';
 
 function Estado({ item }) {
   if (item.estado === 'pausado') return <span className="bg-amber-50 text-amber-800 text-[12px] font-semibold px-2.5 py-0.5 rounded-full">Pausada por el Portal</span>;
   if (estaVencida(item)) return <span className="bg-red-50 text-red-700 text-[12px] font-semibold px-2.5 py-0.5 rounded-full">Vencida</span>;
   const dias = diasRestantes(item);
-  return <span className={`text-[12px] font-semibold px-2.5 py-0.5 rounded-full ${dias <= 3 ? 'bg-amber-50 text-amber-800' : 'bg-[#2D6A6A]/10 text-[#1A3D3D]'}`}>Vence en {dias} {dias === 1 ? 'día' : 'días'}</span>;
+  return <span className={`text-[12px] font-semibold px-2.5 py-0.5 rounded-full ${dias <= 3 ? 'bg-amber-50 text-amber-800' : 'bg-[#2D6A6A]/10 text-[#1A3D3D]'}`}>Quedan {dias} {dias === 1 ? 'día' : 'días'}</span>;
 }
+
+const fechaCorta = (ms) => new Date(ms).toLocaleDateString('es-AR', { day: 'numeric', month: 'long' });
 
 function Fila({ icono: Icono, titulo, subtitulo, item, coleccion, onEditar, onCambio }) {
   const [trabajando, setTrabajando] = useState(false);
+  const [confirmarBorrar, setConfirmarBorrar] = useState(false);
+  const [error, setError] = useState('');
+  const vencida = estaVencida(item);
 
-  const renovar = async () => {
+  // Extender: vuelve a contar 30 días desde hoy
+  const extender = async () => {
     setTrabajando(true);
+    setError('');
     try {
       await actualizarPublicacion(coleccion, item.id, { vencimientoMillis: nuevoVencimiento() });
       onCambio();
     } catch (e) {
-      console.error('Error renovando:', e);
-      alert('No pudimos renovar. Intentá de nuevo.');
+      console.error('Error extendiendo:', e);
+      setError('No pudimos extenderla. Intentá de nuevo.');
     } finally {
       setTrabajando(false);
     }
   };
 
   const borrar = async () => {
-    if (!window.confirm('¿Cerrar esta publicación? Se borra de la Bolsa y no se puede deshacer.')) return;
     setTrabajando(true);
+    setError('');
     try {
       await deleteDoc(doc(db, coleccion, item.id, 'privado', 'contacto')).catch(() => {});
       await deleteDoc(doc(db, coleccion, item.id));
+      setConfirmarBorrar(false);
       onCambio();
     } catch (e) {
       console.error('Error borrando:', e);
-      alert('No pudimos cerrar la publicación. Intentá de nuevo.');
+      setError('No pudimos borrar la publicación. Intentá de nuevo.');
       setTrabajando(false);
     }
   };
 
   return (
-    <div className="bg-white rounded-[24px] border border-gray-100 shadow-sm p-5 flex flex-col md:flex-row md:items-center gap-4">
-      <div className="flex items-start gap-4 flex-1 min-w-0">
-        <div className="w-12 h-12 shrink-0 rounded-2xl bg-[#2D6A6A]/10 text-[#2D6A6A] flex items-center justify-center"><Icono className="w-5 h-5" /></div>
-        <div className="min-w-0">
-          <p className="font-['Montserrat'] font-extrabold text-[#1A3D3D] text-[15px] leading-tight">{titulo}</p>
-          {subtitulo && <p className="text-[13px] text-[#666666] mt-0.5 truncate">{subtitulo}</p>}
-          <div className="mt-2"><Estado item={item} /></div>
+    <div className="bg-white rounded-[24px] border border-gray-100 shadow-sm p-5">
+      <div className="flex flex-col md:flex-row md:items-center gap-4">
+        <div className="flex items-start gap-4 flex-1 min-w-0">
+          <div className="w-12 h-12 shrink-0 rounded-2xl bg-[#2D6A6A]/10 text-[#2D6A6A] flex items-center justify-center"><Icono className="w-5 h-5" /></div>
+          <div className="min-w-0">
+            <p className="font-['Montserrat'] font-extrabold text-[#1A3D3D] text-[15px] leading-tight">{titulo}</p>
+            {subtitulo && <p className="text-[13px] text-[#666666] mt-0.5 truncate">{subtitulo}</p>}
+            <div className="mt-2"><Estado item={item} /></div>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {item.estado !== 'pausado' && (
+            <button type="button" onClick={extender} disabled={trabajando} className="inline-flex items-center gap-1.5 bg-[#2D6A6A] hover:bg-[#1A3D3D] text-white rounded-2xl px-4 py-2.5 text-[13px] font-semibold transition-colors">
+              <RefreshCw className={`w-4 h-4 ${trabajando ? 'animate-spin' : ''}`} /> {vencida ? 'Volver a publicar' : 'Extender 30 días'}
+            </button>
+          )}
+          <button type="button" onClick={onEditar} disabled={trabajando} className="inline-flex items-center gap-1.5 bg-[#F4F7F7] hover:bg-gray-200 text-[#1A3D3D] rounded-2xl px-4 py-2.5 text-[13px] font-semibold transition-colors">
+            <Pencil className="w-4 h-4" /> Editar
+          </button>
+          <button type="button" onClick={() => { setError(''); setConfirmarBorrar(true); }} disabled={trabajando} className="inline-flex items-center gap-1.5 bg-white border border-gray-200 hover:border-red-300 hover:text-red-600 text-[#666666] rounded-2xl px-4 py-2.5 text-[13px] font-semibold transition-colors">
+            <Trash2 className="w-4 h-4" /> Borrar
+          </button>
         </div>
       </div>
-      <div className="flex flex-wrap gap-2">
-        {item.estado !== 'pausado' && (
-          <button type="button" onClick={renovar} disabled={trabajando} className="inline-flex items-center gap-1.5 bg-[#2D6A6A] hover:bg-[#1A3D3D] text-white rounded-2xl px-4 py-2.5 text-[13px] font-semibold transition-colors">
-            <RefreshCw className={`w-4 h-4 ${trabajando ? 'animate-spin' : ''}`} /> Renovar 30 días
-          </button>
-        )}
-        <button type="button" onClick={onEditar} disabled={trabajando} className="inline-flex items-center gap-1.5 bg-[#F4F7F7] hover:bg-gray-200 text-[#1A3D3D] rounded-2xl px-4 py-2.5 text-[13px] font-semibold transition-colors">
-          <Pencil className="w-4 h-4" /> Editar
-        </button>
-        <button type="button" onClick={borrar} disabled={trabajando} className="inline-flex items-center gap-1.5 bg-white border border-gray-200 hover:border-red-300 hover:text-red-600 text-[#666666] rounded-2xl px-4 py-2.5 text-[13px] font-semibold transition-colors">
-          <Trash2 className="w-4 h-4" /> Cerrar
-        </button>
-      </div>
+
+      {/* Explicación de qué hace "Extender" */}
+      {item.estado !== 'pausado' && (
+        <p className="text-[12px] text-[#666666] mt-3 md:pl-16">
+          {vencida
+            ? 'Ya no se ve en la Bolsa. «Volver a publicar» la muestra de nuevo por 30 días, gratis.'
+            : `Se ve en la Bolsa hasta el ${fechaCorta(item.vencimientoMillis)}. «Extender 30 días» le suma un mes más desde hoy, gratis.`}
+        </p>
+      )}
+      {error && !confirmarBorrar && <p className="text-[13px] font-semibold text-red-600 mt-2 md:pl-16">{error}</p>}
+
+      <VentanaConfirmar
+        abierta={confirmarBorrar}
+        titulo="¿Borrar esta publicación?"
+        texto="Se borra de la Bolsa de Trabajo y no se puede deshacer."
+        textoBoton="Sí, borrar"
+        peligro
+        trabajando={trabajando}
+        error={error}
+        onConfirmar={borrar}
+        onCerrar={() => setConfirmarBorrar(false)}
+      />
     </div>
   );
 }
@@ -81,7 +114,7 @@ export default function MisPublicaciones({ currentUser, misOfertas, miDisponible
         <ChevronLeft className="w-4 h-4" /> Volver a la Bolsa
       </button>
       <h1 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[28px] md:text-[36px] leading-tight tracking-tight mb-2">Mis publicaciones</h1>
-      <p className="text-[15px] text-[#666666] mb-8">Cada publicación dura 30 días. Renovarla es gratis.</p>
+      <p className="text-[15px] text-[#666666] mb-8">Cada publicación se ve 30 días en la Bolsa. Extenderla es gratis.</p>
 
       {esClinica && (
         <section className="mb-10">
@@ -94,7 +127,7 @@ export default function MisPublicaciones({ currentUser, misOfertas, miDisponible
           ) : (
             <div className="flex flex-col gap-3">
               {misOfertas.map((o) => (
-                <Fila key={o.id} icono={Briefcase} titulo={tituloPuesto(o)} subtitulo={zonaTexto(o)} item={o} coleccion="ofertasEmpleo" onEditar={() => onEditarOferta(o)} onCambio={onCambio} />
+                <Fila key={o.id} icono={Briefcase} titulo={`Puesto: ${etiquetaRol(o.rol)}`} subtitulo={[zonaTexto(o), (o.areas || []).join(', ')].filter(Boolean).join(' · ')} item={o} coleccion="ofertasEmpleo" onEditar={() => onEditarOferta(o)} onCambio={onCambio} />
               ))}
             </div>
           )}

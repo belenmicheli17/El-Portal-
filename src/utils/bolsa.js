@@ -24,6 +24,13 @@ export const aMilisegundos = (valor) => {
   return Number.isNaN(fecha.getTime()) ? 0 : fecha.getTime();
 };
 
+// "Publicado hoy", "Publicado ayer", "Publicado hace 5 días"
+export const publicadoHace = (valor) => {
+  const texto = tiempoDesde(valor);
+  if (texto === 'Recién publicada') return 'Recién publicado';
+  return `Publicado ${texto.charAt(0).toLowerCase()}${texto.slice(1)}`;
+};
+
 // "Hoy", "Ayer", "Hace 5 días", "Hace 2 semanas"
 export const tiempoDesde = (valor) => {
   const ms = aMilisegundos(valor);
@@ -80,7 +87,42 @@ export const linkPerfilProfesional = (slug) => (slug ? `${SITIO}/profesional/${s
 
 export const linkOferta = (id) => `${SITIO}/bolsa-de-trabajo?oferta=${id}`;
 
+// Provincia prolija: "Provincia de Buenos Aires" → "Buenos Aires", "Ciudad Autónoma de Buenos Aires" → "CABA"
+export const provinciaCorta = (provincia) => {
+  const p = String(provincia || '').trim();
+  if (/ciudad aut[oó]noma|^capital federal/i.test(p)) return 'CABA';
+  return p.replace(/^provincia de\s+/i, '');
+};
+
+// Ubicación corta, sin calle ni código postal: "Castelar · Zona Oeste", "Palermo · CABA", "Rosario · Santa Fe"
+// En la provincia de Buenos Aires se muestra la zona (Norte, Sur, Oeste...) en vez de la provincia
 export const zonaTexto = (item) => {
-  const partes = [item?.barrio || item?.localidad, item?.provincia].filter(Boolean);
-  return [...new Set(partes)].join(', ');
+  const lugar = String(item?.barrio || item?.localidad || '').trim();
+  let region = provinciaCorta(item?.provincia);
+  if (region === 'Buenos Aires' && item?.zonaBA) region = item.zonaBA;
+  if (lugar && region && lugar.toLowerCase() === region.toLowerCase()) return lugar;
+  return [lugar, region].filter(Boolean).join(' · ');
+};
+
+// Link para abrir la dirección en Google Maps
+export const linkMapa = (item) => {
+  if (!item?.direccion && !(item?.lat && item?.lng)) return '';
+  const consulta = item.direccion || `${item.lat},${item.lng}`;
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(consulta)}${item.placeId ? `&query_place_id=${item.placeId}` : ''}`;
+};
+
+// ---------- Mensajes de WhatsApp / mail ya escritos ----------
+// Profesional → clínica (al postularse). El cierre depende de si manda CV o su perfil.
+export const mensajePostulacion = (nombre) => `Hola, soy ${nombre || 'veterinario/a'}. Vi la búsqueda de personal que publicaron en Portal Veterinario y me gustaría postularme.`;
+export const cierrePostulacion = ({ cvUrl, perfilUrl }) => {
+  if (cvUrl) return `Adjunto mi currículum: ${cvUrl}\n\n¡Muchas gracias!`;
+  if (perfilUrl) return `Pueden ver mi portfolio desde este link: ${perfilUrl}\n\n¡Muchas gracias!`;
+  return '¡Muchas gracias!';
+};
+
+// Clínica (o colega) → profesional disponible
+export const mensajeAProfesional = (nombreProfesional, quienEscribe) => {
+  const saludo = `Hola${nombreProfesional ? ` ${nombreProfesional.split(' ')[0]}` : ''}`;
+  const desde = quienEscribe ? `, te escribimos de ${quienEscribe}` : '';
+  return `${saludo}${desde}. Vimos en Portal Veterinario que estás disponible para trabajar y nos gustaría hablar con vos.`;
 };

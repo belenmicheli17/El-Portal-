@@ -3,10 +3,10 @@ import { collection, doc, getDoc, serverTimestamp, writeBatch } from 'firebase/f
 import { ChevronLeft, Loader2, Plus, MapPin, Check } from 'lucide-react';
 import { db, auth } from '../../firebase';
 import provincias from '../../data/provincias.js';
-import { ROLES, GRUPOS_AREAS, JORNADAS, HORARIOS, EXPERIENCIAS, REQUISITOS, EQUIPO } from '../../data/bolsaOpciones';
+import { ROLES, ROLES_VISIBLES, rolSinAreas, ZONAS_BA, JORNADAS, HORARIOS, EXPERIENCIAS, REQUISITOS, EQUIPO } from '../../data/bolsaOpciones';
 import { nuevoVencimiento, conPrefijo54 } from '../../utils/bolsa';
 import { BuscadorDireccionGoogle, CampoWhatsapp, esEmailValido, whatsappCompleto } from '../editor/EditorComponents';
-import { SelectorPills, CampoBolsa } from './ElementosBolsa';
+import { SelectorPills, SelectorAreas, CampoBolsa, irAlPrimerError } from './ElementosBolsa';
 
 const claseCaja = "bg-white p-6 md:p-8 rounded-[24px] border border-gray-100 shadow-sm mb-5";
 const claseInput = "w-full border border-gray-200 focus:border-[#2D6A6A] rounded-2xl px-4 py-3 text-[15px] text-[#333333] focus:outline-none bg-gray-50/50";
@@ -15,6 +15,7 @@ const FORMULARIO_VACIO = {
   rol: 'veterinario',
   areas: [],
   jornada: [],
+  notaJornada: '',
   horario: [],
   experiencia: '',
   descripcion: '',
@@ -22,6 +23,7 @@ const FORMULARIO_VACIO = {
   equipo: [],
   ubicacionId: 'principal',
   otraDireccion: null,
+  zonaBA: '',
   tipoContacto: ['whatsapp'],
   whatsapp: '',
   email: ''
@@ -43,6 +45,13 @@ const lugaresDeClinica = (clinica) => {
 const equipoDeClinica = (clinica) => {
   const grupo = clinica?.servicios?.equipamiento_infraestructura;
   return grupo?.activo ? (grupo.subOpcionesSeleccionadas || []).filter((e) => EQUIPO.includes(e)) : [];
+};
+
+// Orden de los campos en la pantalla (para bajar hasta el primero que falta) y cómo se llaman en el aviso
+const ORDEN_CAMPOS = ['rol', 'areas', 'jornada', 'experiencia', 'descripcion', 'ubicacionId', 'zonaBA', 'tipoContacto', 'whatsapp', 'email'];
+const NOMBRES_CAMPOS = {
+  rol: 'puesto', areas: 'especialidad', jornada: 'jornada', experiencia: 'experiencia', descripcion: 'sobre el puesto',
+  ubicacionId: 'dónde es el puesto', zonaBA: 'zona de Buenos Aires', tipoContacto: 'forma de contacto', whatsapp: 'WhatsApp', email: 'mail'
 };
 
 export default function FormularioOferta({ currentUser, ofertaExistente, onVolver, onGuardada }) {
@@ -90,6 +99,7 @@ export default function FormularioOferta({ currentUser, ofertaExistente, onVolve
           setForm({
             ...FORMULARIO_VACIO,
             equipo: equipoDeClinica(datos),
+            zonaBA: datos.zonaBA || '',
             ubicacionId: lugares[0]?.id || 'otra',
             whatsapp: conPrefijo54(datos.whatsapp),
             email: datos.email || '',
@@ -116,23 +126,28 @@ export default function FormularioOferta({ currentUser, ofertaExistente, onVolve
     limpiar('');
   };
 
+  const sinAreas = rolSinAreas(form.rol);
+  const enBuenosAires = lugarElegido?.provincia === 'Buenos Aires';
+
   const validar = () => {
     const e = {};
-    if (!form.rol) e.rol = 'Elegí para quién es el puesto.';
-    if (form.rol === 'veterinario' && form.areas.length === 0) e.areas = 'Elegí al menos un área.';
+    if (!form.rol) e.rol = 'Elegí el puesto.';
+    if (!sinAreas && form.areas.length === 0) e.areas = 'Marcá al menos una especialidad.';
     if (form.jornada.length === 0) e.jornada = 'Elegí al menos una jornada.';
     if (!form.experiencia) e.experiencia = 'Elegí la experiencia que buscás.';
     if (!form.descripcion.trim()) e.descripcion = 'Contá brevemente de qué se trata el puesto.';
     if (!lugarElegido?.direccion) e.ubicacionId = 'Elegí dónde es el puesto.';
+    if (lugarElegido?.direccion && enBuenosAires && !form.zonaBA) e.zonaBA = 'Elegí la zona de Buenos Aires.';
     if (form.tipoContacto.length === 0) e.tipoContacto = 'Elegí al menos una forma de contacto.';
     if (form.tipoContacto.includes('whatsapp') && !whatsappCompleto(form.whatsapp)) e.whatsapp = 'Revisá el número de WhatsApp.';
     if (form.tipoContacto.includes('email') && !esEmailValido(form.email)) e.email = 'Revisá el mail.';
     setErrores(e);
-    return Object.keys(e).length === 0;
+    return e;
   };
 
   const guardar = async () => {
-    if (!validar()) { window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+    const encontrados = validar();
+    if (Object.keys(encontrados).length) { irAlPrimerError(ORDEN_CAMPOS, encontrados); return; }
     setGuardando(true);
     try {
       const refOferta = editando ? doc(db, 'ofertasEmpleo', ofertaExistente.id) : doc(collection(db, 'ofertasEmpleo'));
@@ -140,8 +155,9 @@ export default function FormularioOferta({ currentUser, ofertaExistente, onVolve
       const datos = {
         creadorId: currentUser.uid,
         rol: form.rol,
-        areas: form.rol === 'veterinario' ? form.areas : [],
+        areas: sinAreas ? [] : form.areas,
         jornada: form.jornada,
+        notaJornada: form.notaJornada.trim(),
         horario: form.horario,
         experiencia: form.experiencia,
         descripcion: form.descripcion.trim(),
@@ -155,6 +171,7 @@ export default function FormularioOferta({ currentUser, ofertaExistente, onVolve
         provincia: lugarElegido.provincia || '',
         localidad: lugarElegido.localidad || '',
         barrio: lugarElegido.barrio || '',
+        zonaBA: enBuenosAires ? form.zonaBA : '',
         placeId: lugarElegido.placeId || '',
         lat: lugarElegido.lat ?? null,
         lng: lugarElegido.lng ?? null,
@@ -204,6 +221,7 @@ export default function FormularioOferta({ currentUser, ofertaExistente, onVolve
   }
 
   const hayErrores = Object.values(errores).some(Boolean);
+  const faltan = ORDEN_CAMPOS.filter((c) => errores[c]).map((c) => NOMBRES_CAMPOS[c]);
 
   return (
     <div className="max-w-3xl mx-auto w-full px-4 pt-6 lg:pt-10 pb-16 font-['Inter'] relative z-10 animate-in fade-in duration-300">
@@ -214,51 +232,57 @@ export default function FormularioOferta({ currentUser, ofertaExistente, onVolve
       <h1 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[28px] md:text-[36px] leading-tight tracking-tight mb-2">
         {editando ? 'Editar oferta' : 'Publicar oferta'}
       </h1>
-      <p className="text-[15px] text-[#666666] mb-8">El logo y el nombre salen de la página de tu clínica. La oferta dura 30 días y la podés renovar gratis.</p>
+      <p className="text-[15px] text-[#666666] mb-8">El logo y el nombre salen de la página de tu clínica. La oferta se ve 30 días y la podés extender gratis.</p>
 
       {hayErrores && (
         <div className="bg-red-50 border border-red-100 text-red-700 rounded-2xl p-4 text-[14px] font-semibold mb-5">
-          {errores.general || 'Faltan completar algunos datos. Revisá los campos marcados en rojo.'}
+          {errores.general || `Faltan completar: ${faltan.join(', ')}.`}
         </div>
       )}
 
       {/* PUESTO */}
       <section className={claseCaja}>
-        <CampoBolsa titulo="¿Para quién es el puesto?" requerido error={errores.rol}>
-          <SelectorPills opciones={ROLES} seleccion={form.rol} onCambio={(v) => cambiar('rol', v)} multiple={false} />
+        <CampoBolsa titulo="¿Qué puesto buscás cubrir?" requerido campo="rol" error={errores.rol}>
+          <SelectorPills opciones={ROLES_VISIBLES.some((r) => r.id === form.rol) ? ROLES_VISIBLES : ROLES.filter((r) => !r.oculto || r.id === form.rol)} seleccion={form.rol} onCambio={(v) => cambiar('rol', v)} multiple={false} />
         </CampoBolsa>
 
-        {form.rol === 'veterinario' && (
-          <CampoBolsa titulo="Áreas" requerido ayuda="Son las mismas que usan los profesionales en su perfil: así les llega el aviso a quienes coinciden." error={errores.areas}>
-            <div className="flex flex-col gap-5">
-              {GRUPOS_AREAS.map((g) => (
-                <div key={g.id}>
-                  <p className="text-[12px] font-bold text-[#666666] mb-2">{g.grupo}</p>
-                  <SelectorPills
-                    opciones={g.opciones}
-                    seleccion={form.areas.filter((a) => g.opciones.includes(a))}
-                    onCambio={(elegidasGrupo) => cambiar('areas', [...form.areas.filter((a) => !g.opciones.includes(a)), ...elegidasGrupo])}
-                  />
-                </div>
-              ))}
-            </div>
-          </CampoBolsa>
-        )}
+        <CampoBolsa titulo="Especialidad" requerido={!sinAreas} campo="areas" ayuda={sinAreas ? '' : 'Marcá la especialidad del profesional que estás buscando. Podés elegir más de una.'} error={errores.areas}>
+          <SelectorAreas
+            seleccion={form.areas}
+            onCambio={(v) => cambiar('areas', v)}
+            deshabilitado={sinAreas}
+            textoDeshabilitado="Para este puesto no hace falta elegir especialidades."
+          />
+        </CampoBolsa>
 
-        <CampoBolsa titulo="Jornada" requerido error={errores.jornada}>
+        <CampoBolsa titulo="Jornada" requerido campo="jornada" error={errores.jornada}>
           <SelectorPills opciones={JORNADAS} seleccion={form.jornada} onCambio={(v) => cambiar('jornada', v)} />
+          <input
+            value={form.notaJornada}
+            onChange={(e) => cambiar('notaJornada', e.target.value)}
+            maxLength={200}
+            placeholder="Nota (opcional). Ej: el jueves de 9 a 13 h · reemplazo del 1 al 15 de enero"
+            className={`${claseInput} mt-4`}
+          />
         </CampoBolsa>
 
         <CampoBolsa titulo="Horario">
           <SelectorPills opciones={HORARIOS} seleccion={form.horario} onCambio={(v) => cambiar('horario', v)} />
         </CampoBolsa>
 
-        <CampoBolsa titulo="Experiencia que buscás" requerido error={errores.experiencia}>
+        <CampoBolsa titulo="Experiencia que buscás" requerido campo="experiencia" error={errores.experiencia}>
           <SelectorPills opciones={EXPERIENCIAS} seleccion={form.experiencia} onCambio={(v) => cambiar('experiencia', v)} multiple={false} />
         </CampoBolsa>
 
-        <CampoBolsa titulo="Sobre el puesto" requerido ayuda="Tareas, días, cómo es el equipo. Corto y claro." error={errores.descripcion}>
-          <textarea value={form.descripcion} onChange={(e) => cambiar('descripcion', e.target.value)} rows={5} maxLength={1500} className={`${claseInput} resize-none`} />
+        <CampoBolsa titulo="Sobre el puesto" requerido campo="descripcion" ayuda="Contá qué experiencia buscás, las tareas, los días y cómo es el equipo. Corto y claro." error={errores.descripcion}>
+          <textarea
+            value={form.descripcion}
+            onChange={(e) => cambiar('descripcion', e.target.value)}
+            rows={5}
+            maxLength={1500}
+            placeholder="Buscamos a alguien con experiencia en… para… Las tareas son… Trabajamos de lunes a viernes, en un equipo de…"
+            className={`${claseInput} resize-none placeholder:text-gray-400`}
+          />
           <p className="text-[12px] text-[#666666] text-right mt-1">{form.descripcion.length}/1500</p>
         </CampoBolsa>
       </section>
@@ -284,7 +308,7 @@ export default function FormularioOferta({ currentUser, ofertaExistente, onVolve
 
       {/* DÓNDE */}
       <section className={claseCaja}>
-        <CampoBolsa titulo="¿Dónde es el puesto?" requerido ayuda="Se muestra la dirección completa en la oferta." error={errores.ubicacionId}>
+        <CampoBolsa titulo="¿Dónde es el puesto?" requerido campo="ubicacionId" ayuda="En la oferta se muestra el barrio y la zona; al tocarlo se abre el mapa." error={errores.ubicacionId}>
           <div className="flex flex-col gap-2">
             {[...lugares, { id: 'otra', nombre: 'Otra dirección', direccion: 'Solo para esta oferta' }].map((l) => {
               const activo = form.ubicacionId === l.id;
@@ -318,22 +342,29 @@ export default function FormularioOferta({ currentUser, ofertaExistente, onVolve
             </div>
           )}
         </CampoBolsa>
+
+        {/* En Buenos Aires se muestra la zona en vez de la provincia */}
+        {lugarElegido?.direccion && enBuenosAires && (
+          <CampoBolsa titulo="Zona de Buenos Aires" requerido campo="zonaBA" ayuda="Es lo que ven los profesionales en vez de «Provincia de Buenos Aires»." error={errores.zonaBA}>
+            <SelectorPills opciones={ZONAS_BA} seleccion={form.zonaBA} onCambio={(v) => cambiar('zonaBA', v)} multiple={false} />
+          </CampoBolsa>
+        )}
       </section>
 
       {/* CONTACTO */}
       <section className={claseCaja}>
-        <CampoBolsa titulo="¿Cómo querés recibir las postulaciones?" requerido ayuda="Solo lo ven profesionales registrados en el Portal." error={errores.tipoContacto}>
+        <CampoBolsa titulo="¿Cómo querés recibir las postulaciones?" requerido campo="tipoContacto" ayuda="Solo lo ven profesionales registrados en el Portal." error={errores.tipoContacto}>
           <SelectorPills opciones={[{ id: 'whatsapp', label: 'WhatsApp' }, { id: 'email', label: 'Mail' }]} seleccion={form.tipoContacto} onCambio={(v) => cambiar('tipoContacto', v)} />
         </CampoBolsa>
 
         {form.tipoContacto.includes('whatsapp') && (
-          <div className="mb-5">
+          <div className="mb-5 scroll-mt-28" data-campo="whatsapp">
             <CampoWhatsapp id="whatsappOferta" label="WhatsApp" requerido valor={form.whatsapp} onCambio={(v) => cambiar('whatsapp', v)} />
             {errores.whatsapp && <p className="text-[12px] font-semibold text-red-600 mt-2">{errores.whatsapp}</p>}
           </div>
         )}
         {form.tipoContacto.includes('email') && (
-          <div>
+          <div className="scroll-mt-28" data-campo="email">
             <p className="text-[14px] font-bold text-[#1A3D3D] mb-2">Mail <span className="text-red-500">*</span></p>
             <input type="email" value={form.email} onChange={(e) => cambiar('email', e.target.value)} placeholder="rrhh@tuclinica.com" className={claseInput} />
             {errores.email && <p className="text-[12px] font-semibold text-red-600 mt-2">{errores.email}</p>}
@@ -341,6 +372,9 @@ export default function FormularioOferta({ currentUser, ofertaExistente, onVolve
         )}
       </section>
 
+      {hayErrores && (
+        <p className="text-[14px] font-semibold text-red-600 text-center mb-3">{errores.general || `Faltan completar: ${faltan.join(', ')}.`}</p>
+      )}
       <button type="button" onClick={guardar} disabled={guardando} className="w-full bg-[#2D6A6A] hover:bg-[#1A3D3D] disabled:opacity-70 text-white py-4 rounded-2xl text-[15px] font-semibold flex items-center justify-center gap-2 transition-colors shadow-md">
         {guardando && <Loader2 className="w-5 h-5 animate-spin" />}
         {editando ? 'Guardar cambios' : 'Publicar oferta'}

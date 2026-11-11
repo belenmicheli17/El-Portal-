@@ -74,7 +74,9 @@ export default async function handler(req, res) {
 
   const areas = Array.isArray(oferta.areas) ? oferta.areas : [];
   const puesto = oferta.rol === 'veterinario' && areas.length ? areas.join(' · ') : 'Puesto en clínica';
-  const zona = [oferta.barrio || oferta.localidad, oferta.provincia].filter(Boolean).join(', ');
+  // En Buenos Aires se muestra la zona (Norte, Sur, Oeste...) en vez de la provincia
+  const region = oferta.provincia === 'Buenos Aires' && oferta.zonaBA ? oferta.zonaBA : oferta.provincia;
+  const zona = [oferta.barrio || oferta.localidad, region].filter(Boolean).join(' · ');
   const linkOferta = `${SITIO}/bolsa-de-trabajo?oferta=${ofertaId}`;
 
   // 3) Buscamos a quién le corresponde

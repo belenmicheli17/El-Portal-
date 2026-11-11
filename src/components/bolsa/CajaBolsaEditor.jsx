@@ -41,8 +41,8 @@ export default function CajaBolsaEditor({ uid }) {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <p className="text-xs font-bold text-[#666666] uppercase tracking-widest mb-2 ml-1">Mi CV</p>
-        <p className="text-sm text-[#666666] mb-3 ml-1">Lo usás para postularte en la Bolsa de Trabajo. Se guarda al subirlo.</p>
+        <p className="text-xs font-bold text-[#666666] uppercase tracking-widest mb-2 ml-1">Mi currículum</p>
+        <p className="text-sm text-[#666666] mb-3 ml-1">PDF o foto. No es público: lo mandás vos cuando te postulás en la Bolsa de Trabajo. Se guarda al subirlo.</p>
         <CajaCV uid={uid} cv={cv} setCv={setCv} />
       </div>
 

@@ -4,7 +4,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { MapPin, MessageCircle, Mail, User, FileText, Loader2, Lock } from 'lucide-react';
 import { db } from '../../firebase';
 import { VentanaBolsa } from './ElementosBolsa';
-import { linkWhatsapp, tiempoDesde } from '../../utils/bolsa';
+import { linkWhatsapp, tiempoDesde, mensajeAProfesional, provinciaCorta } from '../../utils/bolsa';
 
 const clasePill = "bg-[#2D6A6A]/10 text-[#1A3D3D] text-[13px] font-semibold px-3 py-1 rounded-full";
 const claseBoton = "w-full py-3.5 rounded-2xl text-[14px] font-semibold flex items-center justify-center gap-2 transition-colors";
@@ -31,7 +31,8 @@ export default function DetalleDisponible({ disponible, abierto, onCerrar, conSe
 
   const tipos = contacto?.tipoContacto || [];
   const zonas = (disponible.zonas || []).map((z) => z.localidad || z.barrio).filter(Boolean);
-  const mensaje = `Hola ${disponible.nombre}, vi en la Bolsa de Trabajo de Portal Veterinario que estás disponible y te quería contactar.`;
+  // Mensaje ya escrito: si escribe una clínica, se presenta con su nombre
+  const mensaje = mensajeAProfesional(disponible.nombre, currentUser?.rol === 'clinica' ? currentUser?.nombre : '');
 
   return (
     <VentanaBolsa abierta={abierto} onCerrar={onCerrar}>
@@ -59,7 +60,7 @@ export default function DetalleDisponible({ disponible, abierto, onCerrar, conSe
       <div className="mb-4">
         <p className="flex items-start gap-1.5 text-[14px] text-[#333333] font-medium">
           <MapPin className="w-4 h-4 text-[#2D6A6A] shrink-0 mt-0.5" />
-          {[zonas.join(', '), disponible.provincia].filter(Boolean).join(' · ') || 'Zona a convenir'}
+          {[zonas.join(', '), provinciaCorta(disponible.provincia)].filter(Boolean).join(' · ') || 'Zona a convenir'}
         </p>
       </div>
 
@@ -107,7 +108,7 @@ export default function DetalleDisponible({ disponible, abierto, onCerrar, conSe
             )}
             {contacto.cvUrl && (
               <a href={contacto.cvUrl} target="_blank" rel="noopener noreferrer" className={`${claseBoton} bg-[#F4F7F7] hover:bg-gray-200 text-[#1A3D3D]`}>
-                <FileText className="w-5 h-5" /> Ver su CV
+                <FileText className="w-5 h-5" /> Ver su currículum
               </a>
             )}
             {tipos.length === 1 && tipos[0] === 'perfil' && (
@@ -116,7 +117,7 @@ export default function DetalleDisponible({ disponible, abierto, onCerrar, conSe
           </>
         )}
 
-        {esMio && <p className="text-[13px] text-[#666666] text-center mt-1">Es tu publicación. La editás o la renovás desde «Mis publicaciones».</p>}
+        {esMio && <p className="text-[13px] text-[#666666] text-center mt-1">Es tu publicación. La editás o la extendés desde «Mis publicaciones».</p>}
       </div>
     </VentanaBolsa>
   );

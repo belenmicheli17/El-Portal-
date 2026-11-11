@@ -1,12 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore';
-import { Search, X, Briefcase, User, Layers, MapPin, ChevronRight, ClipboardList, Plus, CheckCircle2, SlidersHorizontal, Stethoscope } from 'lucide-react';
+import { Search, X, Briefcase, User, Layers, MapPin, ChevronRight, ClipboardList, Plus, CheckCircle2, SlidersHorizontal, Stethoscope, Activity, Scissors, Microscope, FlaskConical, PawPrint, Brain, Leaf } from 'lucide-react';
 import { db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
 import provincias from '../data/provincias.js';
-import { ROLES, JORNADAS, HORARIOS, EXPERIENCIAS, GRUPOS_AREAS } from '../data/bolsaOpciones';
-import { estaVigente, permisosBolsa, tituloPuesto, aMilisegundos } from '../utils/bolsa';
+import { ROLES, ROLES_VISIBLES, JORNADAS, HORARIOS, EXPERIENCIAS, GRUPOS_AREAS } from '../data/bolsaOpciones';
+import { estaVigente, permisosBolsa, tituloPuesto, aMilisegundos, provinciaCorta } from '../utils/bolsa';
 import { coincideBusqueda } from '../utils/busquedaTolerante';
 import { TarjetaOferta, TarjetaDisponible } from '../components/bolsa/TarjetasBolsa';
 import DetalleOferta from '../components/bolsa/DetalleOferta';
@@ -23,6 +23,24 @@ const PESTANAS = [
 ];
 
 const masNuevasPrimero = (a, b) => aMilisegundos(b.publicadaEn) - aMilisegundos(a.publicadaEn);
+
+// Íconos de cada grupo de especialidades, como en la Cartilla
+const ICONOS_GRUPO = {
+  consulta_general: Stethoscope,
+  especialidades_medicas: Activity,
+  quirurgico_critico: Scissors,
+  imagenes: Microscope,
+  laboratorio: FlaskConical,
+  atencion_por_especie: PawPrint,
+  bienestar_comportamiento: Brain,
+  terapias_holisticas: Leaf,
+  terapias_complementarias: Leaf
+};
+const iconoDeArea = (area) => ICONOS_GRUPO[GRUPOS_AREAS.find((g) => g.opciones.includes(area))?.id] || Stethoscope;
+
+// Cuántas pastillas se ven antes de "Ver más" (en PC son unas 2 filas de especialidades y 1 de zonas)
+const PASTILLAS_AREAS = 10;
+const PASTILLAS_ZONAS = 6;
 
 export default function BolsaTrabajo() {
   const { currentUser, loading: cargandoSesion } = useAuth();
@@ -51,10 +69,22 @@ export default function BolsaTrabajo() {
   const [disponibleAbierto, setDisponibleAbierto] = useState(null);
   const [cartel, setCartel] = useState(null); // 'registro-publicar' | 'registro-contacto' | 'verificacion' | 'solo-clinicas' | 'solo-profesionales'
   const [aviso, setAviso] = useState('');
+  const [miProvincia, setMiProvincia] = useState('');
+  const [verTodasAreas, setVerTodasAreas] = useState(false);
+  const [verTodasZonas, setVerTodasZonas] = useState(false);
 
   useEffect(() => {
     document.title = 'Bolsa de Trabajo Veterinaria | Portal Veterinario';
   }, []);
+
+  // La provincia de su perfil: así le mostramos primero las publicaciones de su zona
+  useEffect(() => {
+    if (!currentUser?.uid || !['profesional', 'clinica'].includes(currentUser.rol)) { setMiProvincia(''); return; }
+    const coleccion = currentUser.rol === 'clinica' ? 'clinicas' : 'profesionales';
+    getDoc(doc(db, coleccion, currentUser.uid))
+      .then((snap) => setMiProvincia(snap.exists() ? (snap.data().provincia || '') : ''))
+      .catch(() => setMiProvincia(''));
+  }, [currentUser?.uid, currentUser?.rol]);
 
   // Cambia la vista sin perder los filtros
   const irA = useCallback((nuevaVista, extra = {}) => {
@@ -146,7 +176,7 @@ export default function BolsaTrabajo() {
 
   // ---------- Filtros ----------
   const textoDe = (item, tipo) => (tipo === 'oferta'
-    ? [tituloPuesto(item), item.clinicaNombre, item.localidad, item.barrio, item.provincia, item.descripcion, ...(item.areas || [])].join(' ')
+    ? [tituloPuesto(item), item.clinicaNombre, item.localidad, item.barrio, item.provincia, item.zonaBA, item.descripcion, item.notaJornada, ...(item.areas || [])].join(' ')
     : [item.nombre, item.especialidad, item.provincia, item.buscando, item.notaAreas, ...(item.areas || []), ...(item.zonas || []).map((z) => `${z.localidad} ${z.barrio}`)].join(' '));
 
   const pasaFiltros = useCallback((item, tipo) => {
@@ -161,20 +191,36 @@ export default function BolsaTrabajo() {
     return true;
   }, [provincia, jornada, area, rol, horario, experiencia, busqueda]);
 
-  const ofertasFiltradas = useMemo(() => ofertas.filter((o) => pasaFiltros(o, 'oferta')), [ofertas, pasaFiltros]);
-  const disponiblesFiltrados = useMemo(() => disponibles.filter((d) => pasaFiltros(d, 'disponible')), [disponibles, pasaFiltros]);
+  // Si tiene provincia en su perfil, primero van las publicaciones de ahí (el resto sigue abajo, no se esconde)
+  const primeroMiProvincia = useCallback((lista) => {
+    if (!miProvincia || provincia) return lista;
+    return [...lista.filter((x) => x.provincia === miProvincia), ...lista.filter((x) => x.provincia !== miProvincia)];
+  }, [miProvincia, provincia]);
 
-  // Pastillas "Explorá por área": solo las que tienen publicaciones
+  const ofertasFiltradas = useMemo(() => primeroMiProvincia(ofertas.filter((o) => pasaFiltros(o, 'oferta'))), [ofertas, pasaFiltros, primeroMiProvincia]);
+  const disponiblesFiltrados = useMemo(() => primeroMiProvincia(disponibles.filter((d) => pasaFiltros(d, 'disponible'))), [disponibles, pasaFiltros, primeroMiProvincia]);
+
+  // Lo que se ve en la pestaña actual (para contar las pastillas)
+  const deLaPestana = useMemo(() => [
+    ...(pestana !== 'disponibles' ? ofertas : []),
+    ...(pestana !== 'ofertas' ? disponibles : [])
+  ], [ofertas, disponibles, pestana]);
+
+  // Pastillas "Explorá por especialidad": solo las que tienen publicaciones, las más usadas primero
   const pastillas = useMemo(() => {
     const cuenta = {};
-    const sumar = (clave) => { cuenta[clave] = (cuenta[clave] || 0) + 1; };
-    if (pestana !== 'disponibles') ofertas.forEach((o) => (o.rol === 'veterinario' ? (o.areas || []).forEach(sumar) : sumar(o.rol)));
-    if (pestana !== 'ofertas') disponibles.forEach((d) => (d.areas || []).forEach(sumar));
+    deLaPestana.forEach((x) => (x.areas || []).forEach((a) => { cuenta[a] = (cuenta[a] || 0) + 1; }));
+    return Object.entries(cuenta).map(([id, cantidad]) => ({ id, cantidad })).sort((a, b) => b.cantidad - a.cantidad);
+  }, [deLaPestana]);
+
+  // Pastillas "Filtrá por zona": provincias con publicaciones; la de su perfil, primera
+  const pastillasZona = useMemo(() => {
+    const cuenta = {};
+    deLaPestana.forEach((x) => { if (x.provincia) cuenta[x.provincia] = (cuenta[x.provincia] || 0) + 1; });
     return Object.entries(cuenta)
-      .map(([id, cantidad]) => ({ id, label: ROLES.find((r) => r.id === id)?.label || id, cantidad, esRol: ROLES.some((r) => r.id === id) }))
-      .sort((a, b) => b.cantidad - a.cantidad)
-      .slice(0, 12);
-  }, [ofertas, disponibles, pestana]);
+      .map(([id, cantidad]) => ({ id, cantidad }))
+      .sort((a, b) => (b.id === miProvincia) - (a.id === miProvincia) || b.cantidad - a.cantidad);
+  }, [deLaPestana, miProvincia]);
 
   const provinciasConDatos = useMemo(() => {
     const set = new Set([...ofertas, ...disponibles].map((x) => x.provincia).filter(Boolean));
@@ -328,20 +374,39 @@ export default function BolsaTrabajo() {
         </div>
       </div>
 
-      {/* EXPLORÁ POR ÁREA */}
-      {!cargando && pastillas.length > 0 && (
-        <div className="max-w-6xl mx-auto w-full px-4">
-          <p className="text-[14px] font-bold text-[#1A3D3D] mb-3 px-1">Explorá por área</p>
-          <div className="flex gap-2 overflow-x-auto -mx-4 px-4 pb-1 lg:mx-0 lg:px-0 lg:flex-wrap lg:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {pastillas.map((p) => {
-              const activa = p.esRol ? rol === p.id : area === p.id;
-              return (
-                <button key={p.id} type="button" onClick={() => cambiarFiltro(p.esRol ? 'rol' : 'area', activa ? '' : p.id)} className={`shrink-0 inline-flex items-center gap-2 rounded-full px-4 py-2 text-[13px] font-semibold border shadow-sm transition-all duration-300 ease-in-out text-[#1A3D3D] ${activa ? 'bg-[#2D6A6A]/10 border-[#2D6A6A]' : 'bg-white border-gray-200 hover:border-[#2D6A6A]/60 hover:-translate-y-0.5'}`}>
-                  {p.label} <span className="text-[#666666] font-medium">· {p.cantidad}</span>
-                </button>
-              );
-            })}
-          </div>
+      {/* EXPLORÁ POR ESPECIALIDAD Y FILTRÁ POR ZONA: mismas pastillas que la Cartilla.
+          En celular se deslizan al costado; en PC se acomodan en filas y el resto queda en "Ver más". */}
+      {!cargando && (pastillas.length > 0 || pastillasZona.length > 0) && (
+        <div className="max-w-6xl mx-auto w-full px-4 flex flex-col gap-4">
+          {pastillas.length > 0 && (
+            <FilaPastillas
+              titulo="Explorá por especialidad"
+              items={pastillas}
+              limite={PASTILLAS_AREAS}
+              verTodas={verTodasAreas}
+              onVerTodas={() => setVerTodasAreas((v) => !v)}
+              activa={(id) => area === id}
+              onTocar={(id) => cambiarFiltro('area', area === id ? '' : id)}
+              icono={iconoDeArea}
+              etiqueta={(id) => id}
+            />
+          )}
+          {pastillasZona.length > 0 && (
+            <FilaPastillas
+              titulo="Filtrá por zona"
+              items={pastillasZona}
+              limite={PASTILLAS_ZONAS}
+              verTodas={verTodasZonas}
+              onVerTodas={() => setVerTodasZonas((v) => !v)}
+              activa={(id) => provincia === id}
+              onTocar={(id) => cambiarFiltro('prov', provincia === id ? '' : id)}
+              icono={() => MapPin}
+              etiqueta={(id) => (id === miProvincia ? `${provinciaCorta(id)} (tu zona)` : provinciaCorta(id))}
+            />
+          )}
+          {miProvincia && !provincia && (
+            <p className="text-[13px] text-[#666666] px-1 -mt-1">Primero te mostramos lo de {provinciaCorta(miProvincia)}, la provincia de tu perfil.</p>
+          )}
         </div>
       )}
 
@@ -351,9 +416,9 @@ export default function BolsaTrabajo() {
           <span className="text-[14px] font-bold text-[#1A3D3D]">{PESTANAS.find((t) => t.id === pestana)?.label}</span>
           <ChevronRight className="w-4 h-4 text-gray-300" />
           {busqueda.trim() && <button type="button" onClick={() => setBusqueda('')} className={claseChip}><Search className="w-3.5 h-3.5 text-[#2D6A6A]" /> {busqueda.trim()} <X className="w-3.5 h-3.5 text-gray-400" /></button>}
-          {rol && <button type="button" onClick={() => cambiarFiltro('rol', '')} className={claseChip}><Briefcase className="w-3.5 h-3.5 text-[#2D6A6A]" /> {ROLES.find((x) => x.id === rol)?.label} <X className="w-3.5 h-3.5 text-gray-400" /></button>}
+          {rol && <button type="button" onClick={() => cambiarFiltro('rol', '')} className={claseChip}><Briefcase className="w-3.5 h-3.5 text-[#2D6A6A]" /> Puesto: {ROLES.find((x) => x.id === rol)?.label} <X className="w-3.5 h-3.5 text-gray-400" /></button>}
           {area && <button type="button" onClick={() => cambiarFiltro('area', '')} className={claseChip}><Stethoscope className="w-3.5 h-3.5 text-[#2D6A6A]" /> {area} <X className="w-3.5 h-3.5 text-gray-400" /></button>}
-          {provincia && <button type="button" onClick={() => cambiarFiltro('prov', '')} className={claseChip}><MapPin className="w-3.5 h-3.5 text-[#2D6A6A]" /> {provincia} <X className="w-3.5 h-3.5 text-gray-400" /></button>}
+          {provincia && <button type="button" onClick={() => cambiarFiltro('prov', '')} className={claseChip}><MapPin className="w-3.5 h-3.5 text-[#2D6A6A]" /> {provinciaCorta(provincia)} <X className="w-3.5 h-3.5 text-gray-400" /></button>}
           {jornada && <button type="button" onClick={() => cambiarFiltro('jornada', '')} className={claseChip}>{jornada} <X className="w-3.5 h-3.5 text-gray-400" /></button>}
           {horario && <button type="button" onClick={() => cambiarFiltro('horario', '')} className={claseChip}>{horario} <X className="w-3.5 h-3.5 text-gray-400" /></button>}
           {experiencia && <button type="button" onClick={() => cambiarFiltro('exp', '')} className={claseChip}>{experiencia} <X className="w-3.5 h-3.5 text-gray-400" /></button>}
@@ -402,7 +467,7 @@ export default function BolsaTrabajo() {
       <VentanaBolsa abierta={verFiltros} onCerrar={() => setVerFiltros(false)}>
         <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[20px] mb-5">Filtros</h3>
 
-        <p className="text-[14px] font-bold text-[#1A3D3D] mb-2">Especialidad o área</p>
+        <p className="text-[14px] font-bold text-[#1A3D3D] mb-2">Especialidad</p>
         <select value={area} onChange={(e) => cambiarFiltro('area', e.target.value)} className={claseSelect}>
           <option value="">Todas</option>
           {GRUPOS_AREAS.map((g) => (
@@ -412,13 +477,13 @@ export default function BolsaTrabajo() {
           ))}
         </select>
 
-        <p className="text-[14px] font-bold text-[#1A3D3D] mb-2">Provincia</p>
+        <p className="text-[14px] font-bold text-[#1A3D3D] mb-2">Zona (provincia)</p>
         <select value={provincia} onChange={(e) => cambiarFiltro('prov', e.target.value)} className={claseSelect}>
           <option value="">Todas</option>
-          {(provinciasConDatos.length ? provinciasConDatos : provincias).map((p) => <option key={p} value={p}>{p}</option>)}
+          {(provinciasConDatos.length ? provinciasConDatos : provincias).map((p) => <option key={p} value={p}>{provinciaCorta(p)}</option>)}
         </select>
 
-        <GrupoFiltro titulo="Puesto" opciones={ROLES} valor={rol} onCambio={(v) => cambiarFiltro('rol', v)} />
+        <GrupoFiltro titulo="Puesto" opciones={ROLES_VISIBLES} valor={rol} onCambio={(v) => cambiarFiltro('rol', v)} />
         <GrupoFiltro titulo="Jornada" opciones={JORNADAS} valor={jornada} onCambio={(v) => cambiarFiltro('jornada', v)} />
         <GrupoFiltro titulo="Horario" opciones={HORARIOS} valor={horario} onCambio={(v) => cambiarFiltro('horario', v)} />
         <GrupoFiltro titulo="Experiencia" opciones={EXPERIENCIAS} valor={experiencia} onCambio={(v) => cambiarFiltro('exp', v)} />
@@ -445,6 +510,35 @@ export default function BolsaTrabajo() {
           {cartel === 'solo-clinicas' ? 'Con tu cuenta podés marcarte como disponible y postularte a las ofertas.' : 'Con tu cuenta de clínica podés publicar ofertas y contactar a los profesionales disponibles.'}
         </p>
       </VentanaBolsa>
+    </div>
+  );
+}
+
+// Una fila de pastillas con título y "Ver más" (igual que "Explorá por especialidad" de la Cartilla)
+function FilaPastillas({ titulo, items, limite, verTodas, onVerTodas, activa, onTocar, icono, etiqueta }) {
+  // La que está elegida se ve siempre, aunque quede después del límite
+  const visibles = verTodas ? items : items.filter((it, i) => i < limite || activa(it.id));
+  const quedan = items.length - visibles.length;
+  return (
+    <div>
+      <p className="text-[14px] font-bold text-[#1A3D3D] mb-2 px-1">{titulo}</p>
+      <div className="flex gap-2 overflow-x-auto -mx-4 px-4 pt-1.5 pb-2 lg:mx-0 lg:px-0 lg:flex-wrap lg:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {visibles.map((it) => {
+          const Icono = icono(it.id);
+          const elegida = activa(it.id);
+          return (
+            <button key={it.id} type="button" onClick={() => onTocar(it.id)} className={`shrink-0 inline-flex items-center gap-2 rounded-full px-4 py-2 text-[13px] font-semibold border shadow-sm transition-all duration-300 ease-in-out text-[#1A3D3D] ${elegida ? 'bg-[#2D6A6A]/10 border-[#2D6A6A]' : 'bg-white border-gray-200 hover:border-[#2D6A6A]/60 hover:-translate-y-0.5'}`}>
+              <Icono className="w-4 h-4 text-[#2D6A6A]" />
+              {etiqueta(it.id)} <span className="text-[#666666] font-medium">· {it.cantidad}</span>
+            </button>
+          );
+        })}
+        {(quedan > 0 || verTodas) && items.length > limite && (
+          <button type="button" onClick={onVerTodas} className="shrink-0 inline-flex items-center rounded-full px-4 py-2 text-[13px] font-semibold text-[#2D6A6A] hover:text-[#1A3D3D] underline underline-offset-2">
+            {verTodas ? 'Ver menos' : `Ver ${quedan} más`}
+          </button>
+        )}
+      </div>
     </div>
   );
 }

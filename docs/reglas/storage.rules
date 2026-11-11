@@ -39,7 +39,7 @@ service firebase.storage {
         (request.auth.uid == uid || request.auth.uid == 'JDiu4lkVyJXeoyZ3eAxuBfvc5bZ2');
     }
 
-    // CV de la Bolsa de Trabajo: solo PDF de hasta 5 MB.
+    // Currículum de la Bolsa de Trabajo: PDF o foto (JPG, PNG, WEBP) de hasta 5 MB. Nunca es público.
     // Las clínicas lo abren con el link que les llega en la postulación (ese link funciona sin sesión).
     match /cvs/{uid}/{archivo} {
       allow read: if request.auth != null &&
@@ -47,7 +47,8 @@ service firebase.storage {
 
       allow create, update: if request.auth != null && request.auth.uid == uid &&
         request.resource.size < 5 * 1024 * 1024 &&
-        request.resource.contentType == 'application/pdf';
+        (request.resource.contentType == 'application/pdf' ||
+         request.resource.contentType in ['image/jpeg', 'image/png', 'image/webp']);
 
       allow delete: if request.auth != null &&
         (request.auth.uid == uid || request.auth.uid == 'JDiu4lkVyJXeoyZ3eAxuBfvc5bZ2');

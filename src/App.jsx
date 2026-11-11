@@ -7,6 +7,7 @@ import { db } from './firebase';
 // Componentes Globales
 import Navbar from './components/Navbar'; 
 import Footer from './components/Footer'; 
+import FooterSimple from './components/FooterSimple';
 import AccessibilityWidget from './components/AccessibilityWidget';
 
 // Importaciones de páginas
@@ -62,17 +63,29 @@ const ScrollToTop = () => {
 // ==========================================
 // LAYOUT PÚBLICO — con Navbar y Footer completo
 // ==========================================
-const MainLayout = () => (
-  <div className="flex flex-col min-h-screen">
-    <Navbar />
-    <main className="pt-[72px] flex-grow">
-      <Outlet />
-    </main>
-    <footer className="mt-auto">
-      <Footer />
-    </footer>
-  </div>
-);
+// En los formularios de la Bolsa de Trabajo va el footer chico, para no distraer
+const usaFooterChico = (pathname, search) =>
+  pathname === '/bolsa-de-trabajo' && /[?&]v=(publicar|disponible|mis)\b/.test(search);
+
+const MainLayout = () => {
+  const { pathname, search } = useLocation();
+  const chico = usaFooterChico(pathname, search);
+  return (
+    <div className="flex flex-col min-h-screen">
+      <Navbar />
+      <main className="pt-[72px] flex-grow">
+        <Outlet />
+      </main>
+      {chico ? (
+        <FooterSimple seccion="Bolsa de Trabajo" />
+      ) : (
+        <footer className="mt-auto">
+          <Footer />
+        </footer>
+      )}
+    </div>
+  );
+};
 
 // ==========================================
 // LAYOUT PRIVADO — con Navbar, sin Footer global

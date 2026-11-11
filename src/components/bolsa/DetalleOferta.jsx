@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
-import { ChevronLeft, MapPin, Clock, Briefcase, Stethoscope, ListChecks, Building2, Info, AlertTriangle, Link2, Check, Loader2, Lock } from 'lucide-react';
+import { ChevronLeft, MapPin, Clock, Briefcase, Stethoscope, ListChecks, Building2, Info, AlertTriangle, Link2, Check, Loader2, Lock, ExternalLink } from 'lucide-react';
 import { db } from '../../firebase';
-import { tituloPuesto, etiquetaRol, tiempoDesde, linkOferta } from '../../utils/bolsa';
+import { etiquetaRol, publicadoHace, linkOferta, zonaTexto, linkMapa } from '../../utils/bolsa';
 import VentanaPostulacion from './VentanaPostulacion';
 
 const clasePill = "bg-[#2D6A6A]/10 text-[#1A3D3D] text-[13px] font-semibold px-3 py-1 rounded-full";
@@ -12,8 +12,8 @@ const claseEtiqueta = "bg-white border border-gray-200 text-[#333333] text-[13px
 function Bloque({ titulo, icono: Icono, children }) {
   return (
     <section className="bg-white p-6 rounded-[24px] border border-gray-100 shadow-sm">
-      <h3 className="font-['Montserrat'] font-bold text-[#1A3D3D] text-[16px] mb-4 flex items-center gap-2">
-        <Icono className="w-5 h-5 text-[#2D6A6A]" /> {titulo}
+      <h3 className="font-['Montserrat'] font-bold text-[#1A3D3D] text-[16px] mb-4 flex items-start gap-2 leading-snug">
+        <Icono className="w-5 h-5 text-[#2D6A6A] shrink-0 mt-0.5" /> {titulo}
       </h3>
       {children}
     </section>
@@ -52,6 +52,8 @@ export default function DetalleOferta({ oferta, permisos, currentUser, onVolver,
   };
 
   const areas = oferta.areas || [];
+  const zona = zonaTexto(oferta);
+  const mapa = linkMapa(oferta);
   const requisitos = oferta.requisitos || [];
   const equipo = oferta.equipo || [];
 
@@ -60,13 +62,13 @@ export default function DetalleOferta({ oferta, permisos, currentUser, onVolver,
       return (
         <>
           <p className="text-white/70 text-[14px] leading-relaxed mb-5">Para ver el contacto y postularte, creá tu perfil en 5 minutos. Es gratis.</p>
-          <button type="button" onClick={() => navigate('/login', { state: { registro: true } })} className="w-full bg-[#4DB6AC] hover:bg-white text-[#1A3D3D] py-3.5 rounded-2xl text-[14px] font-semibold transition-colors mb-2">Crear mi perfil</button>
+          <button type="button" onClick={() => navigate('/login', { state: { registro: true } })} className="w-full bg-white hover:bg-[#F4F7F7] text-[#1A3D3D] py-3.5 rounded-2xl text-[14px] font-bold shadow-md transition-colors mb-2">Crear mi perfil</button>
           <button type="button" onClick={() => navigate('/login')} className="w-full bg-white/10 hover:bg-white/20 text-white py-3.5 rounded-2xl text-[14px] font-semibold transition-colors">Ya tengo cuenta</button>
         </>
       );
     }
     if (esMia) {
-      return <p className="text-white/70 text-[14px] leading-relaxed">Es tu publicación. La podés editar, renovar o cerrar desde «Mis publicaciones».</p>;
+      return <p className="text-white/70 text-[14px] leading-relaxed">Es tu publicación. La podés editar, extender o borrar desde «Mis publicaciones».</p>;
     }
     if (currentUser?.rol !== 'profesional') {
       return <p className="text-white/70 text-[14px] leading-relaxed">Las postulaciones son para profesionales veterinarios registrados.</p>;
@@ -85,8 +87,8 @@ export default function DetalleOferta({ oferta, permisos, currentUser, onVolver,
     const via = tipos.includes('whatsapp') && tipos.includes('email') ? 'WhatsApp o mail' : tipos.includes('whatsapp') ? 'WhatsApp' : 'mail';
     return (
       <>
-        <p className="text-white/70 text-[14px] leading-relaxed mb-5">La clínica recibe postulaciones por {via}. Elegí si te postulás con tu CV o con tu perfil.</p>
-        <button type="button" onClick={() => setPostulando(true)} className="w-full bg-[#4DB6AC] hover:bg-white text-[#1A3D3D] py-3.5 rounded-2xl text-[14px] font-semibold transition-colors">Postularme ahora</button>
+        <p className="text-white/70 text-[14px] leading-relaxed mb-5">La clínica recibe postulaciones por {via}. Elegí si te postulás con tu currículum o con tu perfil.</p>
+        <button type="button" onClick={() => setPostulando(true)} className="w-full bg-white hover:bg-[#F4F7F7] text-[#1A3D3D] py-3.5 rounded-2xl text-[15px] font-bold shadow-md transition-colors">Postularme ahora</button>
       </>
     );
   };
@@ -110,8 +112,8 @@ export default function DetalleOferta({ oferta, permisos, currentUser, onVolver,
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <h1 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[22px] md:text-[28px] leading-tight tracking-tight">{tituloPuesto(oferta)}</h1>
-                {oferta.rol === 'veterinario' && areas.length > 0 && <p className="text-[#666666] text-[13px] font-medium mt-1">{etiquetaRol(oferta.rol)}</p>}
+                <p className="text-[12px] font-bold tracking-[0.12em] uppercase text-[#2D6A6A] mb-1">Puesto</p>
+                <h1 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[22px] md:text-[28px] leading-tight tracking-tight">{etiquetaRol(oferta.rol)}</h1>
                 {oferta.clinicaSlug ? (
                   <button type="button" onClick={() => navigate(`/clinica/${oferta.clinicaSlug}`)} className="text-[#2D6A6A] text-[14px] font-semibold mt-1 hover:underline underline-offset-2 text-left">
                     {oferta.clinicaNombre} · ver página de la clínica
@@ -122,24 +124,31 @@ export default function DetalleOferta({ oferta, permisos, currentUser, onVolver,
               </div>
             </div>
 
-            {oferta.direccion && (
-              <p className="flex items-start gap-1.5 text-[#666666] text-[14px] font-medium mt-4">
-                <MapPin className="w-4 h-4 shrink-0 mt-0.5" /> {oferta.direccion}
-              </p>
-            )}
+            {/* Ubicación corta (sin calle ni código postal); al tocarla abre el mapa */}
+            {zona && (mapa ? (
+              <a href={mapa} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-[#333333] text-[14px] font-semibold mt-4 hover:text-[#2D6A6A] group">
+                <MapPin className="w-4 h-4 shrink-0 text-[#2D6A6A]" /> <span className="underline decoration-gray-300 underline-offset-4 group-hover:decoration-[#2D6A6A]">{zona}</span>
+                <ExternalLink className="w-3.5 h-3.5 text-[#666666] group-hover:text-[#2D6A6A]" />
+              </a>
+            ) : (
+              <p className="flex items-center gap-1.5 text-[#333333] text-[14px] font-semibold mt-4"><MapPin className="w-4 h-4 shrink-0 text-[#2D6A6A]" /> {zona}</p>
+            ))}
 
             <div className="flex flex-wrap gap-2 mt-4">
               {(oferta.jornada || []).map((j) => <span key={j} className={clasePill}>{j}</span>)}
               {(oferta.horario || []).map((h) => <span key={h} className={clasePill}>{h}</span>)}
               {oferta.experiencia && <span className={clasePill}>{oferta.experiencia}</span>}
-              <span className="bg-[#F4F7F7] text-[#666666] text-[13px] font-medium px-3 py-1 rounded-lg inline-flex items-center gap-1">
-                <Clock className="w-3.5 h-3.5" /> {tiempoDesde(oferta.publicadaEn)}
+            </div>
+            {oferta.notaJornada && <p className="text-[14px] text-[#333333] mt-3 leading-relaxed bg-[#F4F7F7] rounded-2xl px-4 py-3">{oferta.notaJornada}</p>}
+
+            <div className="flex flex-wrap items-center justify-between gap-3 mt-5 pt-4 border-t border-gray-100">
+              <button type="button" onClick={copiarLink} className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#2D6A6A] hover:text-[#1A3D3D]">
+                {copiado ? <Check className="w-4 h-4" /> : <Link2 className="w-4 h-4" />} {copiado ? 'Link copiado' : 'Copiar link de la oferta'}
+              </button>
+              <span className="bg-[#F4F7F7] text-[#666666] text-[13px] font-medium px-3 py-1 rounded-lg inline-flex items-center gap-1 ml-auto">
+                <Clock className="w-3.5 h-3.5" /> {publicadoHace(oferta.publicadaEn)}
               </span>
             </div>
-
-            <button type="button" onClick={copiarLink} className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#2D6A6A] hover:text-[#1A3D3D] mt-4">
-              {copiado ? <Check className="w-4 h-4" /> : <Link2 className="w-4 h-4" />} {copiado ? 'Link copiado' : 'Copiar link de la oferta'}
-            </button>
           </header>
 
           {oferta.descripcion && (
@@ -149,7 +158,7 @@ export default function DetalleOferta({ oferta, permisos, currentUser, onVolver,
           )}
 
           {areas.length > 0 && (
-            <Bloque titulo="Áreas" icono={Stethoscope}>
+            <Bloque titulo="Buscan principalmente un profesional con estas especialidades" icono={Stethoscope}>
               <div className="flex flex-wrap gap-2">{areas.map((a) => <span key={a} className={claseEtiqueta}>{a}</span>)}</div>
             </Bloque>
           )}
