@@ -17,6 +17,7 @@ const FORMULARIO_VACIO = {
   jornada: [],
   notaJornada: '',
   horario: [],
+  notaHorario: '',
   experiencia: '',
   descripcion: '',
   requisitos: [],
@@ -44,7 +45,7 @@ const lugaresDeClinica = (clinica) => {
 // El equipamiento que la clínica ya marcó en su página viene elegido de entrada
 const equipoDeClinica = (clinica) => {
   const grupo = clinica?.servicios?.equipamiento_infraestructura;
-  return grupo?.activo ? (grupo.subOpcionesSeleccionadas || []).filter((e) => EQUIPO.includes(e)) : [];
+  return grupo?.activo ? (grupo.subOpcionesSeleccionadas || []).map((e) => (e === 'Farmacia y vacunatorio' ? 'Farmacia' : e)).filter((e) => EQUIPO.includes(e)) : [];
 };
 
 // Orden de los campos en la pantalla (para bajar hasta el primero que falta) y cómo se llaman en el aviso
@@ -159,6 +160,7 @@ export default function FormularioOferta({ currentUser, ofertaExistente, onVolve
         jornada: form.jornada,
         notaJornada: form.notaJornada.trim(),
         horario: form.horario,
+        notaHorario: form.notaHorario.trim(),
         experiencia: form.experiencia,
         descripcion: form.descripcion.trim(),
         requisitos: form.requisitos,
@@ -268,6 +270,13 @@ export default function FormularioOferta({ currentUser, ofertaExistente, onVolve
 
         <CampoBolsa titulo="Horario">
           <SelectorPills opciones={HORARIOS} seleccion={form.horario} onCambio={(v) => cambiar('horario', v)} />
+          <input
+            value={form.notaHorario}
+            onChange={(e) => cambiar('notaHorario', e.target.value)}
+            maxLength={200}
+            placeholder="Nota (opcional). Ej: de 8 a 14 h · a convenir según disponibilidad"
+            className={`${claseInput} mt-4`}
+          />
         </CampoBolsa>
 
         <CampoBolsa titulo="Experiencia que buscás" requerido campo="experiencia" error={errores.experiencia}>
@@ -278,9 +287,9 @@ export default function FormularioOferta({ currentUser, ofertaExistente, onVolve
           <textarea
             value={form.descripcion}
             onChange={(e) => cambiar('descripcion', e.target.value)}
-            rows={5}
+            rows={7}
             maxLength={1500}
-            placeholder="Buscamos a alguien con experiencia en… para… Las tareas son… Trabajamos de lunes a viernes, en un equipo de…"
+            placeholder={'Buscamos a alguien con experiencia en…\n\nTareas: …\nDías y horarios: …\nEl equipo: …'}
             className={`${claseInput} resize-none placeholder:text-gray-400`}
           />
           <p className="text-[12px] text-[#666666] text-right mt-1">{form.descripcion.length}/1500</p>

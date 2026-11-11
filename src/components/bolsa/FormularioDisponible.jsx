@@ -78,7 +78,7 @@ export default function FormularioDisponible({ currentUser, onVolver, onGuardada
             horario: d.horario || [],
             experiencia: d.experiencia || '',
             buscando: d.buscando || '',
-            tipoContacto: c.tipoContacto || ['whatsapp'],
+            tipoContacto: (c.tipoContacto || []).filter((t) => t !== 'perfil').length ? c.tipoContacto.filter((t) => t !== 'perfil') : ['whatsapp'],
             whatsapp: c.whatsapp || conPrefijo54(datosPerfil.whatsappNum),
             email: c.email || datosPerfil.emailContacto || '',
             mostrarCV: c.mostrarCV === true || !!c.cvUrl
@@ -128,7 +128,6 @@ export default function FormularioDisponible({ currentUser, onVolver, onGuardada
     if (form.tipoContacto.length === 0) e.tipoContacto = 'Elegí al menos una forma de contacto.';
     if (form.tipoContacto.includes('whatsapp') && !whatsappCompleto(form.whatsapp)) e.whatsapp = 'Revisá el número de WhatsApp.';
     if (form.tipoContacto.includes('email') && !esEmailValido(form.email)) e.email = 'Revisá el mail.';
-    if (form.tipoContacto.includes('perfil') && !perfil?.slug && !currentUser.slug) e.tipoContacto = 'Tu perfil todavía no tiene link. Elegí WhatsApp o mail.';
     setErrores(e);
     return e;
   };

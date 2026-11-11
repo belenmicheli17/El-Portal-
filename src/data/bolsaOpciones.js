@@ -12,12 +12,13 @@ export const DIAS_DE_VIGENCIA = 30;
 // Cuántas áreas principales puede elegir un profesional disponible
 export const MAX_AREAS_DISPONIBLE = 3;
 
-// "oculto: true" = existe pero todavía no se muestra para elegir (alumnos: se activa más adelante)
+// "oculto: true" = existe (para publicaciones viejas) pero ya no se muestra para elegir
 // "sinAreas: true" = para ese puesto no se eligen especialidades (se apagan)
 export const ROLES = [
-  { id: 'veterinario', label: 'Veterinario/a' },
-  { id: 'asistente', label: 'Asistente', sinAreas: true },
-  { id: 'recepcion', label: 'Recepción', sinAreas: true },
+  { id: 'veterinario', label: 'Profesional' },
+  { id: 'asistente', label: 'Asistente (alumno/a)', sinAreas: true },
+  { id: 'peluquero', label: 'Peluquero/a', sinAreas: true },
+  { id: 'recepcion', label: 'Recepción', sinAreas: true, oculto: true },
   { id: 'alumno', label: 'Alumno/a', sinAreas: true, oculto: true }
 ];
 export const ROLES_VISIBLES = ROLES.filter((r) => !r.oculto);
@@ -30,32 +31,32 @@ export const ZONAS_BA = ['Zona Norte', 'Zona Sur', 'Zona Oeste', 'Interior de la
 export const GRUPOS_AREAS = especialidadesData.map((g) => ({ id: g.id, grupo: g.grupo, opciones: g.opciones }));
 export const TODAS_LAS_AREAS = especialidadesData.flatMap((g) => g.opciones);
 
-export const JORNADAS = ['Full-time', 'Part-time', 'Por guardias', 'Reemplazo temporal', 'A convenir'];
+export const JORNADAS = ['Guardia en clínica general (diurna)', 'Guardia 24 h (nocturna)', 'Reemplazo', 'A convenir'];
 
 export const HORARIOS = ['Mañana', 'Tarde', 'Noche', 'Fines de semana', 'Rotativo', 'A convenir'];
 
-export const EXPERIENCIAS = ['Sin experiencia (junior)', '1 a 3 años', 'Más de 3 años', 'Especialista certificado/a'];
+export const EXPERIENCIAS = ['Sin experiencia (junior)', '1 a 3 años', 'Más de 3 años', 'Especialista'];
 
 export const REQUISITOS = [
   'Experiencia en cirugía',
-  'Experiencia en guardia',
+  'Manejo de emergencias',
   'Manejo de ecógrafo',
   'Manejo de rayos X',
-  'Disponibilidad fines de semana',
-  'Monotributo'
+  'Disponibilidad fines de semana'
 ];
 
+// Sale del equipamiento del editor de clínica, con algunos cambios solo para la Bolsa
 export const EQUIPO = [
-  ...(equipamientoData[0]?.opciones || []),
+  ...(equipamientoData[0]?.opciones || []).map((e) => (e === 'Farmacia y vacunatorio' ? 'Farmacia' : e)),
   'Ecógrafo',
   'Rayos X digital',
   'Anestesia inhalatoria',
-  'Monitor multiparamétrico',
-  'Electrocardiógrafo'
+  'Pet shop',
+  'Peluquería',
+  'Servicios a domicilio'
 ];
 
 export const FORMAS_CONTACTO_DISPONIBLE = [
   { id: 'whatsapp', label: 'WhatsApp', ayuda: 'Recomendado: es lo que más usan las clínicas' },
-  { id: 'email', label: 'Mail' },
-  { id: 'perfil', label: 'Solo ver mi perfil' }
+  { id: 'email', label: 'Mail' }
 ];

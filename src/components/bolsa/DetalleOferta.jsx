@@ -1,22 +1,32 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
-import { ChevronLeft, MapPin, Clock, Briefcase, Stethoscope, ListChecks, Building2, Info, AlertTriangle, Link2, Check, Loader2, Lock, ExternalLink } from 'lucide-react';
+import { ChevronLeft, MapPin, Clock, Info, Link2, Check, Loader2, Lock, ExternalLink, ArrowRight } from 'lucide-react';
 import { db } from '../../firebase';
 import { etiquetaRol, publicadoHace, linkOferta, zonaTexto, linkMapa } from '../../utils/bolsa';
 import VentanaPostulacion from './VentanaPostulacion';
 
-const clasePill = "bg-[#2D6A6A]/10 text-[#1A3D3D] text-[13px] font-semibold px-3 py-1 rounded-full";
-const claseEtiqueta = "bg-white border border-gray-200 text-[#333333] text-[13px] font-semibold px-3.5 py-1.5 rounded-xl";
+const claseEtiqueta = "bg-[#F4F7F7] text-[#1A3D3D] text-[13px] font-semibold px-3.5 py-1.5 rounded-full";
 
-function Bloque({ titulo, icono: Icono, children }) {
+// Una sección dentro de la hoja de la oferta (separadas por una línea, no como cajas sueltas)
+function Seccion({ titulo, children }) {
   return (
-    <section className="bg-white p-6 rounded-[24px] border border-gray-100 shadow-sm">
-      <h3 className="font-['Montserrat'] font-bold text-[#1A3D3D] text-[16px] mb-4 flex items-start gap-2 leading-snug">
-        <Icono className="w-5 h-5 text-[#2D6A6A] shrink-0 mt-0.5" /> {titulo}
-      </h3>
+    <section className="px-6 md:px-8 py-6 border-t border-gray-100">
+      <h2 className="text-[12px] font-bold tracking-[0.12em] uppercase text-[#2D6A6A] mb-3">{titulo}</h2>
       {children}
     </section>
+  );
+}
+
+// Un dato clave (Jornada, Horario, Experiencia) con su nota opcional abajo
+function Dato({ titulo, valores, nota }) {
+  if (!valores?.length && !nota) return null;
+  return (
+    <div className="min-w-0">
+      <p className="text-[12px] font-semibold text-[#666666] mb-1">{titulo}</p>
+      {valores?.length > 0 && <p className="text-[15px] font-semibold text-[#1A3D3D] leading-snug">{valores.join(' · ')}</p>}
+      {nota && <p className="text-[13px] text-[#666666] mt-1 leading-relaxed">{nota}</p>}
+    </div>
   );
 }
 
@@ -57,13 +67,17 @@ export default function DetalleOferta({ oferta, permisos, currentUser, onVolver,
   const requisitos = oferta.requisitos || [];
   const equipo = oferta.equipo || [];
 
+  // Botón principal de la caja oscura: blanco, y al pasar el mouse se pinta de verde agua y se levanta
+  const clasePrincipal = "group w-full bg-white text-[#1A3D3D] py-3.5 rounded-2xl text-[15px] font-bold shadow-md flex items-center justify-center gap-2 transition-all duration-300 hover:bg-[#4DB6AC] hover:shadow-lg hover:-translate-y-0.5";
+  const claseSecundario = "w-full bg-white/10 hover:bg-white/20 text-white py-3.5 rounded-2xl text-[14px] font-semibold transition-colors";
+
   const cajaPostulacion = () => {
     if (!permisos.conSesion) {
       return (
         <>
           <p className="text-white/70 text-[14px] leading-relaxed mb-5">Para ver el contacto y postularte, creá tu perfil en 5 minutos. Es gratis.</p>
-          <button type="button" onClick={() => navigate('/login', { state: { registro: true } })} className="w-full bg-white hover:bg-[#F4F7F7] text-[#1A3D3D] py-3.5 rounded-2xl text-[14px] font-bold shadow-md transition-colors mb-2">Crear mi perfil</button>
-          <button type="button" onClick={() => navigate('/login')} className="w-full bg-white/10 hover:bg-white/20 text-white py-3.5 rounded-2xl text-[14px] font-semibold transition-colors">Ya tengo cuenta</button>
+          <button type="button" onClick={() => navigate('/login', { state: { registro: true } })} className={`${clasePrincipal} mb-2`}>Crear mi perfil</button>
+          <button type="button" onClick={() => navigate('/login')} className={claseSecundario}>Ya tengo cuenta</button>
         </>
       );
     }
@@ -77,7 +91,7 @@ export default function DetalleOferta({ oferta, permisos, currentUser, onVolver,
       return (
         <>
           <p className="text-white/70 text-[14px] leading-relaxed mb-5">Vas a poder postularte apenas verifiquemos tu matrícula.</p>
-          <button type="button" onClick={onPedirVerificacion} className="w-full bg-white/10 hover:bg-white/20 text-white py-3.5 rounded-2xl text-[14px] font-semibold transition-colors">Ver estado de mi cuenta</button>
+          <button type="button" onClick={onPedirVerificacion} className={claseSecundario}>Ver estado de mi cuenta</button>
         </>
       );
     }
@@ -88,10 +102,14 @@ export default function DetalleOferta({ oferta, permisos, currentUser, onVolver,
     return (
       <>
         <p className="text-white/70 text-[14px] leading-relaxed mb-5">La clínica recibe postulaciones por {via}. Elegí si te postulás con tu currículum o con tu perfil.</p>
-        <button type="button" onClick={() => setPostulando(true)} className="w-full bg-white hover:bg-[#F4F7F7] text-[#1A3D3D] py-3.5 rounded-2xl text-[15px] font-bold shadow-md transition-colors">Postularme ahora</button>
+        <button type="button" onClick={() => setPostulando(true)} className={clasePrincipal}>
+          Postularme ahora <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
+        </button>
       </>
     );
   };
+
+  const hayDatos = (oferta.jornada || []).length || (oferta.horario || []).length || oferta.experiencia || oferta.notaJornada || oferta.notaHorario;
 
   return (
     <article className="max-w-6xl mx-auto w-full px-4 pt-6 lg:pt-10 pb-16 font-['Inter'] relative z-10 animate-in fade-in duration-300">
@@ -99,85 +117,93 @@ export default function DetalleOferta({ oferta, permisos, currentUser, onVolver,
         <ChevronLeft className="w-4 h-4" /> Volver a la Bolsa
       </button>
 
-      <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 items-start">
-        <div className="flex-1 min-w-0 w-full flex flex-col gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-6 lg:gap-8 items-start">
+        {/* LA OFERTA: una sola hoja, con secciones separadas por líneas */}
+        <div className="bg-white rounded-[28px] border border-gray-100 shadow-[0_8px_30px_rgba(26,61,61,0.06)] overflow-hidden">
           {/* Encabezado */}
-          <header className="bg-white p-6 rounded-[24px] border border-gray-100 shadow-sm">
+          <header className="p-6 md:p-8">
             <div className="flex items-start gap-4">
               {oferta.clinicaFoto ? (
-                <img src={oferta.clinicaFoto} alt={oferta.clinicaNombre} className="w-16 h-16 shrink-0 object-cover rounded-[18px] border border-gray-50 shadow-sm" />
+                <img src={oferta.clinicaFoto} alt={oferta.clinicaNombre} className="w-16 h-16 md:w-20 md:h-20 shrink-0 object-cover rounded-[20px] border border-gray-50 shadow-sm" />
               ) : (
-                <div className="w-16 h-16 shrink-0 rounded-[18px] bg-[#1A3D3D] text-white font-['Montserrat'] font-extrabold text-[18px] flex items-center justify-center">
+                <div className="w-16 h-16 md:w-20 md:h-20 shrink-0 rounded-[20px] bg-[#1A3D3D] text-white font-['Montserrat'] font-extrabold text-[18px] md:text-[22px] flex items-center justify-center">
                   {String(oferta.clinicaNombre || 'PV').slice(0, 2).toUpperCase()}
                 </div>
               )}
               <div className="flex-1 min-w-0">
-                <p className="text-[12px] font-bold tracking-[0.12em] uppercase text-[#2D6A6A] mb-1">Puesto</p>
-                <h1 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[22px] md:text-[28px] leading-tight tracking-tight">{etiquetaRol(oferta.rol)}</h1>
+                <p className="text-[12px] font-bold tracking-[0.12em] uppercase text-[#2D6A6A] mb-1">Buscan</p>
+                <h1 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[24px] md:text-[32px] leading-tight tracking-tight">{etiquetaRol(oferta.rol)}</h1>
                 {oferta.clinicaSlug ? (
-                  <button type="button" onClick={() => navigate(`/clinica/${oferta.clinicaSlug}`)} className="text-[#2D6A6A] text-[14px] font-semibold mt-1 hover:underline underline-offset-2 text-left">
+                  <button type="button" onClick={() => navigate(`/clinica/${oferta.clinicaSlug}`)} className="block text-[#2D6A6A] text-[15px] font-semibold mt-1 hover:underline underline-offset-2 text-left">
                     {oferta.clinicaNombre} · ver página de la clínica
                   </button>
                 ) : (
-                  <p className="text-[#2D6A6A] text-[14px] font-semibold mt-1">{oferta.clinicaNombre}</p>
+                  <p className="text-[#2D6A6A] text-[15px] font-semibold mt-1">{oferta.clinicaNombre}</p>
                 )}
+
+                {/* Ubicación corta (sin calle ni código postal); al tocarla abre el mapa */}
+                {zona && (mapa ? (
+                  <a href={mapa} target="_blank" rel="noopener noreferrer" className="flex w-fit items-center gap-1.5 text-[#333333] text-[14px] font-semibold mt-2 hover:text-[#2D6A6A] group">
+                    <MapPin className="w-4 h-4 shrink-0 text-[#2D6A6A]" /> <span className="underline decoration-gray-300 underline-offset-4 group-hover:decoration-[#2D6A6A]">{zona}</span>
+                    <ExternalLink className="w-3.5 h-3.5 text-[#666666] group-hover:text-[#2D6A6A]" />
+                  </a>
+                ) : (
+                  <p className="flex items-center gap-1.5 text-[#333333] text-[14px] font-semibold mt-2"><MapPin className="w-4 h-4 shrink-0 text-[#2D6A6A]" /> {zona}</p>
+                ))}
               </div>
             </div>
 
-            {/* Ubicación corta (sin calle ni código postal); al tocarla abre el mapa */}
-            {zona && (mapa ? (
-              <a href={mapa} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-[#333333] text-[14px] font-semibold mt-4 hover:text-[#2D6A6A] group">
-                <MapPin className="w-4 h-4 shrink-0 text-[#2D6A6A]" /> <span className="underline decoration-gray-300 underline-offset-4 group-hover:decoration-[#2D6A6A]">{zona}</span>
-                <ExternalLink className="w-3.5 h-3.5 text-[#666666] group-hover:text-[#2D6A6A]" />
-              </a>
-            ) : (
-              <p className="flex items-center gap-1.5 text-[#333333] text-[14px] font-semibold mt-4"><MapPin className="w-4 h-4 shrink-0 text-[#2D6A6A]" /> {zona}</p>
-            ))}
-
-            <div className="flex flex-wrap gap-2 mt-4">
-              {(oferta.jornada || []).map((j) => <span key={j} className={clasePill}>{j}</span>)}
-              {(oferta.horario || []).map((h) => <span key={h} className={clasePill}>{h}</span>)}
-              {oferta.experiencia && <span className={clasePill}>{oferta.experiencia}</span>}
-            </div>
-            {oferta.notaJornada && <p className="text-[14px] text-[#333333] mt-3 leading-relaxed bg-[#F4F7F7] rounded-2xl px-4 py-3">{oferta.notaJornada}</p>}
-
-            <div className="flex flex-wrap items-center justify-between gap-3 mt-5 pt-4 border-t border-gray-100">
-              <button type="button" onClick={copiarLink} className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#2D6A6A] hover:text-[#1A3D3D]">
-                {copiado ? <Check className="w-4 h-4" /> : <Link2 className="w-4 h-4" />} {copiado ? 'Link copiado' : 'Copiar link de la oferta'}
-              </button>
-              <span className="bg-[#F4F7F7] text-[#666666] text-[13px] font-medium px-3 py-1 rounded-lg inline-flex items-center gap-1 ml-auto">
-                <Clock className="w-3.5 h-3.5" /> {publicadoHace(oferta.publicadaEn)}
-              </span>
-            </div>
+            {/* Datos clave, en columnas */}
+            {hayDatos ? (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mt-6 bg-[#F4F7F7] rounded-2xl p-5">
+                <Dato titulo="Jornada" valores={oferta.jornada} nota={oferta.notaJornada} />
+                <Dato titulo="Horario" valores={oferta.horario} nota={oferta.notaHorario} />
+                <Dato titulo="Experiencia" valores={oferta.experiencia ? [oferta.experiencia] : []} />
+              </div>
+            ) : null}
           </header>
 
           {oferta.descripcion && (
-            <Bloque titulo="Sobre el puesto" icono={Briefcase}>
+            <Seccion titulo="Sobre el puesto">
               <p className="text-[15px] text-[#333333] leading-relaxed whitespace-pre-line">{oferta.descripcion}</p>
-            </Bloque>
+            </Seccion>
           )}
 
           {areas.length > 0 && (
-            <Bloque titulo="Buscan principalmente un profesional con estas especialidades" icono={Stethoscope}>
+            <Seccion titulo="Buscan principalmente un profesional con estas especialidades">
               <div className="flex flex-wrap gap-2">{areas.map((a) => <span key={a} className={claseEtiqueta}>{a}</span>)}</div>
-            </Bloque>
+            </Seccion>
           )}
 
           {requisitos.length > 0 && (
-            <Bloque titulo="Requisitos" icono={ListChecks}>
-              <div className="flex flex-wrap gap-2">{requisitos.map((r) => <span key={r} className={claseEtiqueta}>{r}</span>)}</div>
-            </Bloque>
+            <Seccion titulo="Requisitos">
+              <ul className="flex flex-col gap-2">
+                {requisitos.map((r) => (
+                  <li key={r} className="flex items-start gap-2 text-[15px] text-[#333333]"><Check className="w-4 h-4 text-[#2D6A6A] shrink-0 mt-1" /> {r}</li>
+                ))}
+              </ul>
+            </Seccion>
           )}
 
           {equipo.length > 0 && (
-            <Bloque titulo="Equipamiento de la clínica" icono={Building2}>
+            <Seccion titulo="Equipamiento de la clínica">
               <div className="flex flex-wrap gap-2">{equipo.map((e) => <span key={e} className={claseEtiqueta}>{e}</span>)}</div>
-            </Bloque>
+            </Seccion>
           )}
+
+          {/* Pie de la hoja: copiar link y cuándo se publicó */}
+          <div className="flex flex-wrap items-center justify-between gap-3 px-6 md:px-8 py-4 border-t border-gray-100 bg-[#F4F7F7]/60">
+            <button type="button" onClick={copiarLink} className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#2D6A6A] hover:text-[#1A3D3D]">
+              {copiado ? <Check className="w-4 h-4" /> : <Link2 className="w-4 h-4" />} {copiado ? 'Link copiado' : 'Copiar link de la oferta'}
+            </button>
+            <span className="inline-flex items-center gap-1 text-[13px] text-[#666666] font-medium ml-auto">
+              <Clock className="w-3.5 h-3.5" /> {publicadoHace(oferta.publicadaEn)}
+            </span>
+          </div>
         </div>
 
         {/* Caja de postulación */}
-        <aside className="w-full lg:w-[320px] shrink-0 lg:sticky lg:top-28">
+        <aside className="w-full lg:sticky lg:top-28">
           <div className="bg-[#1A3D3D] p-7 rounded-[28px] shadow-xl">
             <h2 className="font-['Montserrat'] font-black text-white text-[20px] mb-3 flex items-center gap-2">
               {!permisos.conSesion && <Lock className="w-5 h-5 text-[#4DB6AC]" />} Postularme
@@ -191,10 +217,10 @@ export default function DetalleOferta({ oferta, permisos, currentUser, onVolver,
         </aside>
       </div>
 
-      <div className="bg-white border border-gray-100 p-6 rounded-[24px] flex items-start gap-3 mt-8 text-[#666666] text-[13px] leading-relaxed">
-        <AlertTriangle className="w-5 h-5 text-[#2D6A6A] shrink-0 mt-0.5" />
-        <p><strong className="text-[#1A3D3D]">Aviso legal:</strong> El Portal es un canal de difusión gratuito de búsquedas laborales de terceros. No interviene en la selección, la contratación ni las condiciones acordadas. Cada postulación queda bajo la responsabilidad del profesional y de la institución.</p>
-      </div>
+      {/* Aviso legal: chiquito, sin caja */}
+      <p className="text-[12px] text-[#666666] leading-relaxed mt-8 max-w-3xl">
+        <strong className="text-[#1A3D3D]">Aviso legal:</strong> El Portal es un canal de difusión gratuito de búsquedas laborales de terceros. No interviene en la selección, la contratación ni las condiciones acordadas. Cada postulación queda bajo la responsabilidad del profesional y de la institución.
+      </p>
 
       {contacto && (
         <VentanaPostulacion abierta={postulando} onCerrar={() => setPostulando(false)} oferta={oferta} contacto={contacto} currentUser={currentUser} />

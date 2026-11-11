@@ -44,9 +44,11 @@ export function TarjetaOferta({ oferta, onAbrir }) {
         </div>
       )}
 
-      <div className="flex items-end justify-between gap-2 w-full mt-auto pt-1">
-        <p className="text-[12px] lg:text-[13px] text-[#666666] font-medium truncate">{jornadas.slice(0, 2).join(' · ')}</p>
-        <span className={`${claseEtiqueta} inline-flex items-center gap-1 shrink-0`}><Clock className="w-3 h-3" /> {publicadoHace(oferta.publicadaEn)}</span>
+      {/* Abajo: jornada y experiencia pedida (como en las tarjetas de profesionales) y, a la derecha, cuándo se publicó */}
+      <div className="flex flex-wrap items-end gap-1.5 w-full mt-auto pt-1">
+        {jornadas.slice(0, 2).map((j) => <span key={j} className={clasePill}>{j}</span>)}
+        {oferta.experiencia && <span className={claseEtiqueta}>{oferta.experiencia}</span>}
+        <span className="ml-auto inline-flex items-center gap-1 text-[12px] text-[#666666] font-medium shrink-0 pl-2"><Clock className="w-3 h-3" /> {publicadoHace(oferta.publicadaEn)}</span>
       </div>
     </button>
   );
