@@ -395,7 +395,12 @@ const Cartilla = () => {
             ...data,
             id: data.slug || doc.id,
             tipo: 'clinica',
-            opcionesFiltro: opcionesClinica,
+            // Sumamos los animales específicos que atiende (exóticos y de campo) para poder filtrar por cada uno
+            opcionesFiltro: [
+              ...opcionesClinica,
+              ...(data.servicios?.atencion_por_especie?.animalesExoticos || []),
+              ...(data.servicios?.atencion_por_especie?.animalesCampo || [])
+            ],
             // Extraemos los nombres de los servicios activos para las etiquetas visuales
             servicios: data.servicios && !Array.isArray(data.servicios)
               ? Object.entries(data.servicios)

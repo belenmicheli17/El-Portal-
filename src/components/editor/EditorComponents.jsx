@@ -1,4 +1,5 @@
 import { useState as useEstado, useRef as useReferencia } from 'react';
+import animalesData from '../../data/animales.json';
 import { RotateCcw as IconoGiroIzq, RotateCw as IconoGiroDer, Check as IconoListo, Copy as IconoCopiar, ArrowRight as IconoFlecha } from 'lucide-react';
 import React, { useState, useEffect, useRef } from 'react';
 import { BotonCompartirPerfil } from '../CompartirPerfil';
@@ -603,7 +604,10 @@ export const normalizarServicios = (servicios, grupos) => {
       activo: elegidas.length + propios.length > 0,
       subOpcionesSeleccionadas: elegidas,
       desc: grupo.desc || '',
-      serviciosPersonalizados: propios
+      serviciosPersonalizados: propios,
+      // Animales específicos (solo en "Atención por especie"): exóticos y de campo
+      ...(Array.isArray(grupo.animalesExoticos) ? { animalesExoticos: grupo.animalesExoticos } : {}),
+      ...(Array.isArray(grupo.animalesCampo) ? { animalesCampo: grupo.animalesCampo } : {})
     };
   });
   return resultado;
@@ -615,7 +619,7 @@ export const contarServicios = (servicios) => Object.values(servicios || {}).red
 );
 
 // Buscador + lista de grupos desplegables con casillas, servicios propios y descripción por grupo
-export function SelectorServicios({ servicios, setFormData, grupos, iconosGrupo = {} }) {
+export function SelectorServicios({ servicios, setFormData, grupos, iconosGrupo = {}, animalesExternos = null }) {
   const [busqueda, setBusqueda] = useState('');
   const [modalPropio, setModalPropio] = useState({ abierto: false, texto: '' });
   const [grupoElegido, setGrupoElegido] = useState('');
@@ -655,6 +659,23 @@ export function SelectorServicios({ servicios, setFormData, grupos, iconosGrupo 
   }));
 
   const cambiarDescripcion = (grupoId, texto) => actualizarGrupo(grupoId, () => ({ desc: texto }));
+
+  // Elige o saca un animal específico (exóticos o de campo) dentro de "Atención por especie"
+  const alternarAnimal = (grupoId, campo, animal) => {
+    // Profesionales: los animales se guardan arriba de todo, no adentro del grupo
+    if (animalesExternos) {
+      setFormData((prev) => {
+        const actuales = Array.isArray(prev[campo]) ? prev[campo] : [];
+        return { ...prev, [campo]: actuales.includes(animal) ? actuales.filter((a) => a !== animal) : [...actuales, animal] };
+      });
+      return;
+    }
+    // Clínicas: se guardan adentro del grupo "Atención por especie"
+    actualizarGrupo(grupoId, (g) => {
+      const actuales = Array.isArray(g[campo]) ? g[campo] : [];
+      return { [campo]: actuales.includes(animal) ? actuales.filter((a) => a !== animal) : [...actuales, animal] };
+    });
+  };
 
   const todasLasOpciones = grupos.flatMap((grupo) =>
     grupo.opciones.map((opcion) => ({ opcion, grupoId: grupo.id, grupoNombre: grupo.grupo }))
@@ -792,6 +813,36 @@ export function SelectorServicios({ servicios, setFormData, grupos, iconosGrupo 
           )}
         </div>
       )}
+
+      {/* ANIMALES ESPECÍFICOS (opcional): aparecen justo debajo del buscador apenas se elige exóticos o grandes animales */}
+      {Object.entries({ exoticos: 'animalesExoticos', campo: 'animalesCampo' }).map(([clave, campoAnimales]) => {
+        const datosAnimales = animalesData[clave];
+        const elegidaLaEspecie = (lista.atencion_por_especie?.subOpcionesSeleccionadas || []).includes(datosAnimales.padre);
+        if (!elegidaLaEspecie) return null;
+        const origenAnimales = animalesExternos ? animalesExternos[campoAnimales] : lista.atencion_por_especie?.[campoAnimales];
+        const elegidos = Array.isArray(origenAnimales) ? origenAnimales : [];
+        return (
+          <div key={clave} className="mb-6 bg-[#F4F7F7] border border-[#2D6A6A]/20 rounded-2xl px-4 py-4">
+            <p className="text-[13px] font-bold text-[#1A3D3D] mb-1">{datosAnimales.padre}: ¿cuáles atienden?</p>
+            <p className="text-[12px] text-[#666666] mb-3">Opcional. Así los tutores te encuentran cuando buscan por animal.</p>
+            <div className="flex flex-wrap gap-2">
+              {datosAnimales.opciones.map((animal) => {
+                const activo = elegidos.includes(animal);
+                return (
+                  <button
+                    key={animal}
+                    type="button"
+                    onClick={() => alternarAnimal('atencion_por_especie', campoAnimales, animal)}
+                    className={`px-3 py-1.5 rounded-full text-[13px] font-medium border transition-colors ${activo ? 'bg-[#2D6A6A] text-white border-[#2D6A6A]' : 'bg-white text-[#666666] border-gray-200 hover:border-[#2D6A6A]'}`}
+                  >
+                    {animal}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
 
       {/* GRUPOS DESPLEGABLES */}
       <div className="flex flex-col gap-3">

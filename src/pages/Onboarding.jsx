@@ -15,6 +15,7 @@ import especialidadesData from '../data/especialidades.json';
 import provincias from '../data/provincias.js';
 import animalesData from '../data/animales.json';
 import { generarSlugUnico } from '../utils/slugUnico';
+import { SelectorServicios, normalizarServicios } from '../components/editor/EditorComponents';
 // ==========================================
 // CONSTANTES DEL CUESTIONARIO
 // ==========================================
@@ -77,7 +78,7 @@ const ESTADO_INICIAL = {
   tipo: 'MP', mat: '', m2: false, mat2: '',
   prov: provincias[0] || 'Buenos Aires',
   tituloPath: '', tituloNombre: '',
-  esp: '', svc: [],          // svc: [{ nombre, grupoId, propio }]
+  esp: '', servicios: {},    // mismo formato que el editor: { grupoId: { activo, subOpcionesSeleccionadas, desc, serviciosPersonalizados } }
   trayectoria: [],           // [{ id, titulo, desc, extra }]
   dom: false, wa: '',        // wa: solo los dígitos, sin el 54
   zonas: [],                 // mismo formato que el editor: [{ id, nombre, clinicas: [...] }]
@@ -223,18 +224,6 @@ const barrioDesdeComponentes = (componentes = []) => {
   return buscar('sublocality_level_1') || buscar('sublocality') || buscar('neighborhood') || buscar('locality') || '';
 };
 
-// Convierte la lista de servicios elegidos al formato que guarda el editor
-const construirServicios = (servicios, descripcionesPrevias) => {
-  const resultado = {};
-  servicios.forEach(({ nombre, grupoId, propio }) => {
-    if (!resultado[grupoId]) {
-      resultado[grupoId] = { activo: true, subOpcionesSeleccionadas: [], desc: descripcionesPrevias[grupoId] || '', serviciosPersonalizados: [] };
-    }
-    if (propio) resultado[grupoId].serviciosPersonalizados.push(nombre);
-    else resultado[grupoId].subOpcionesSeleccionadas.push(nombre);
-  });
-  return resultado;
-};
 
 // Guarda solo los campos indicados y reemplaza su contenido completo (así no quedan restos viejos)
 const guardarCampos = (coleccion, uid, datos) =>
@@ -814,8 +803,6 @@ export default function Onboarding() {
   // Si está en la pantalla de la pregunta "¿Cómo llegaste?" (antes de enviar)
   const [enEncuesta, setEnEncuesta] = useState(false);
 
-  // Guarda las descripciones de grupos de servicios que ya tenía la persona (para no perderlas)
-  const descripcionesServicios = useRef({});
 
   const cambiar = (campo, valor) => {
     setDatos((previo) => ({ ...previo, [campo]: valor }));
@@ -854,17 +841,7 @@ export default function Onboarding() {
         }
         if (esCorreccion) setMotivoRechazo(verificacion.motivoRechazo || '');
 
-        // Servicios: del objeto del editor a la lista simple del cuestionario
-        const servicios = [];
-        if (perfil.servicios && !Array.isArray(perfil.servicios)) {
-          Object.entries(perfil.servicios).forEach(([grupoId, grupo]) => {
-            (grupo.subOpcionesSeleccionadas || []).forEach((nombre) => servicios.push({ nombre, grupoId, propio: false }));
-            (grupo.serviciosPersonalizados || []).forEach((nombre) => servicios.push({ nombre, grupoId, propio: true }));
-            descripcionesServicios.current[grupoId] = grupo.desc || '';
-          });
-        }
-
-        setDatos({
+            setDatos({
           ...ESTADO_INICIAL,
           nombre: perfil.nombre || currentUser.nombre || '',
           apellido: perfil.apellido || currentUser.apellido || '',
@@ -879,7 +856,7 @@ export default function Onboarding() {
           tituloPath: verificacion.tituloPath || '',
           tituloNombre: verificacion.tituloNombre || '',
           esp: perfil.especialidad || '',
-          svc: servicios,
+          servicios: normalizarServicios(perfil.servicios, especialidadesData),
           trayectoria: Array.isArray(perfil.trayectoria)
             ? perfil.trayectoria.map((t) => ({ id: t.id || Date.now() + Math.random(), titulo: t.titulo || '', desc: t.desc || '', extra: t.extra || '' }))
             : [],
@@ -1002,23 +979,7 @@ export default function Onboarding() {
     );
   };
 
-  // ----- Servicios y lugares -----
-  const alternarServicio = (opcion) => {
-    setDatos((previo) => {
-      const yaEsta = previo.svc.some((s) => s.nombre === opcion.nombre);
-      const nuevaLista = yaEsta
-        ? previo.svc.filter((s) => s.nombre !== opcion.nombre)
-        : [...previo.svc, { nombre: opcion.nombre, grupoId: opcion.grupoId, propio: !!opcion.propio }];
-      return { ...previo, svc: nuevaLista };
-    });
-    setError('');
-  };
-
-  const agregarServicioPropio = (nombre, grupoId) => {
-    setDatos((previo) => (previo.svc.some((s) => s.nombre === nombre)
-      ? previo
-      : { ...previo, svc: [...previo.svc, { nombre, grupoId, propio: true }] }));
-  };
+  
 
   const agregarLugar = (lugar) => {
     setDatos((previo) => {
@@ -1181,7 +1142,7 @@ export default function Onboarding() {
     }
     if (p === 2 && !datos.esp.trim()) return 'Escribí tu especialidad principal.';
     // Los servicios propios no cuentan: no aparecen en los filtros de la Cartilla
-    if (p === 2 && datos.svc.filter((s) => !s.propio).length === 0) return 'Elegí al menos un servicio de la lista: con eso te encuentran los tutores en la Cartilla.';
+    if (p === 2 && Object.values(datos.servicios).reduce((total, g) => total + (g.subOpcionesSeleccionadas || []).length, 0) === 0) return 'Elegí al menos un servicio de la lista: con eso te encuentran los tutores en la Cartilla.';
     if (p === 3) {
       // Un logro con datos pero sin título no se puede guardar (igual que en el editor)
       const sinTitulo = datos.trayectoria.some((t) => !t.titulo.trim() && (t.desc.trim() || t.extra.trim()));
@@ -1225,10 +1186,10 @@ export default function Onboarding() {
       return {
         perfil: {
           especialidad: d.esp.trim(),
-          servicios: construirServicios(d.svc, descripcionesServicios.current),
+          servicios: normalizarServicios(d.servicios, especialidadesData),
           // Los animales solo se guardan si sigue elegida la especie correspondiente
-          animalesExoticos: d.svc.some((s) => s.nombre === animalesData.exoticos.padre) ? d.animalesExoticos : [],
-          animalesCampo: d.svc.some((s) => s.nombre === animalesData.campo.padre) ? d.animalesCampo : []
+          animalesExoticos: (d.servicios.atencion_por_especie?.subOpcionesSeleccionadas || []).includes(animalesData.exoticos.padre) ? d.animalesExoticos : [],
+          animalesCampo: (d.servicios.atencion_por_especie?.subOpcionesSeleccionadas || []).includes(animalesData.campo.padre) ? d.animalesCampo : []
         },
         usuario: {}
       };
@@ -1525,33 +1486,12 @@ export default function Onboarding() {
 
           <span className={CLASE_LABEL}>Servicios que ofrecés<Obligatorio /></span>
           <p className={CLASE_AYUDA}>Elegí al menos uno de la lista. Los tutores filtran por estos servicios en la Cartilla: si no cargás ninguno, no aparecés en sus búsquedas.</p>
-          <BuscadorServicios seleccion={datos.svc} onAlternar={alternarServicio} onAgregarPropio={agregarServicioPropio} />
-
-          {/* Animales que atiende (opcional): aparece solo si eligió la especie correspondiente */}
-          {Object.entries({ exoticos: 'animalesExoticos', campo: 'animalesCampo' }).map(([clave, campoDatos]) => {
-            const grupo = animalesData[clave];
-            if (!datos.svc.some((s) => s.nombre === grupo.padre)) return null;
-            return (
-              <div key={clave} className="mt-5 bg-[#F4F7F7] rounded-2xl px-5 py-4">
-                <p className="text-[15px] font-semibold text-[#1A3D3D]">{grupo.titulo} <span className="font-medium text-[#666666]">(opcional)</span></p>
-                <div className="flex flex-wrap gap-2 mt-3">
-                  {grupo.opciones.map((animal) => {
-                    const elegido = datos[campoDatos].includes(animal);
-                    return (
-                      <button
-                        key={animal}
-                        type="button"
-                        onClick={() => cambiar(campoDatos, elegido ? datos[campoDatos].filter((a) => a !== animal) : [...datos[campoDatos], animal])}
-                        className={`${CLASE_CHIP} ${elegido ? 'bg-[#2D6A6A] border-[#2D6A6A] text-white' : 'bg-white border-gray-200 text-[#666666] hover:border-[#2D6A6A]'}`}
-                      >
-                        {animal}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
+          <SelectorServicios
+            servicios={datos.servicios}
+            setFormData={setDatos}
+            grupos={especialidadesData}
+            animalesExternos={{ animalesExoticos: datos.animalesExoticos, animalesCampo: datos.animalesCampo }}
+          />
         </>
       );
     }

@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { armarLinkWhatsapp } from '../../utils/whatsapp';
+import { opcionesConAnimales } from '../../utils/animales';
 import { db } from '../../firebase';
 import { useAuth } from '../../context/AuthContext';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
@@ -8,7 +9,7 @@ import { BotonCompartirPerfil, BotonCompartirLink, armarLinkPerfil } from '../..
 import {
   ChevronLeft, ChevronRight, ChevronDown, MapPin, Phone, Mail, Globe,
   Clock, Star, AlertTriangle, Building2, Instagram, Facebook, Users,
-  Award, Eye, X, Heart, MessageCircle, Home, Linkedin
+  Award, Eye, X, MessageCircle, Home, Linkedin
 } from 'lucide-react';
 
 // Pasos de urgencia que se muestran si la clínica activó la guardia pero no personalizó los suyos
@@ -437,7 +438,10 @@ export default function PerfilClinica() {
   // Servicios: "Atendemos" (especies) va aparte y el resto se junta en una sola caja
   const servicios = data.servicios && typeof data.servicios === 'object' ? data.servicios : {};
   const listaDe = (serv) => [...(serv?.subOpcionesSeleccionadas || []), ...(serv?.serviciosPersonalizados || [])].filter(Boolean);
-  const atendemos = servicios.atencion_por_especie?.activo ? listaDe(servicios.atencion_por_especie) : [];
+  // Si eligieron animales específicos, el texto queda "Animales Exóticos: Aves, Reptiles"
+  const atendemos = servicios.atencion_por_especie?.activo
+    ? opcionesConAnimales(listaDe(servicios.atencion_por_especie), servicios.atencion_por_especie)
+    : [];
   const todosLosServicios = Object.entries(servicios)
     .filter(([clave, serv]) => serv && serv.activo && clave !== 'atencion_por_especie')
     .flatMap(([, serv]) => listaDe(serv));
@@ -676,11 +680,19 @@ export default function PerfilClinica() {
         {/* ============ ATENDEMOS ============ */}
         {atendemos.length > 0 && (
           <section className="pt-7">
-            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#2D6A6A] flex items-center gap-1.5"><Heart className="w-3 h-3" /> Atendemos</p>
-            <div className="flex flex-wrap gap-2 mt-2.5">
-              {atendemos.map((a, i) => (
-                <span key={i} className="px-3 py-1.5 rounded-full bg-[#E8EFEF] text-[#1A3D3D] text-xs font-bold">{a}</span>
-              ))}
+            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#2D6A6A]">Atendemos</p>
+            <div className="flex flex-wrap gap-2.5 mt-3">
+              {atendemos.map((a, i) => {
+                // "Animales Exóticos: Aves, Reptiles" se separa en título y detalle
+                const [titulo, ...resto] = a.split(': ');
+                const detalle = resto.join(': ');
+                return (
+                  <div key={i} className="px-4 py-2.5 rounded-2xl bg-[#E8EFEF]">
+                    <span className="block text-[15px] font-bold text-[#1A3D3D]">{titulo}</span>
+                    {detalle && <span className="block text-[14px] font-medium text-[#666666] mt-0.5">{detalle}</span>}
+                  </div>
+                );
+              })}
             </div>
           </section>
         )}

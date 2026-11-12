@@ -935,15 +935,21 @@ const mobileTabs = [
                                     {s.desc}
                                   </p>
                                 )}
-                                <div className="flex flex-col gap-1.5">
-                                  {s.opciones.map(opcion => (
-                                    <div key={opcion} className="flex items-center gap-2">
-                                      <span className="w-1.5 h-1.5 rounded-full bg-[#2D6A6A] shrink-0" />
-                                      <span className="text-[12px] font-medium text-[#333333]">
-                                        {opcion}
-                                      </span>
-                                    </div>
-                                  ))}
+                                <div className="flex flex-col gap-2">
+                                  {s.opciones.map(opcion => {
+                                    // "Animales Exóticos: Aves, Reptiles" se separa en título y detalle
+                                    const [titulo, ...resto] = opcion.split(': ');
+                                    const detalle = resto.join(': ');
+                                    return (
+                                      <div key={opcion} className="flex items-start gap-2">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-[#2D6A6A] shrink-0 mt-[7px]" />
+                                        <span>
+                                          <span className="block text-[14px] font-medium text-[#333333]">{titulo}</span>
+                                          {detalle && <span className="block text-[13px] font-medium text-[#666666] mt-0.5">{detalle}</span>}
+                                        </span>
+                                      </div>
+                                    );
+                                  })}
                                 </div>
                               </div>
                             )
@@ -1352,15 +1358,21 @@ return (
                                       {s.desc}
                                     </p>
                                   )}
-                                  <div className="flex flex-col gap-2">
-                                    {s.opciones.map(opcion => (
-                                      <div key={opcion} className="flex items-center gap-2">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-[#2D6A6A] shrink-0" />
-                                        <span className="text-[14px] font-medium text-[#333333]">
-                                          {opcion}
-                                        </span>
-                                      </div>
-                                    ))}
+                                  <div className="flex flex-col gap-2.5">
+                                    {s.opciones.map(opcion => {
+                                      // "Animales Exóticos: Aves, Reptiles" se separa en título y detalle
+                                      const [titulo, ...resto] = opcion.split(': ');
+                                      const detalle = resto.join(': ');
+                                      return (
+                                        <div key={opcion} className="flex items-start gap-2">
+                                          <span className="w-1.5 h-1.5 rounded-full bg-[#2D6A6A] shrink-0 mt-[9px]" />
+                                          <span>
+                                            <span className="block text-[15px] font-medium text-[#333333]">{titulo}</span>
+                                            {detalle && <span className="block text-[14px] font-medium text-[#666666] mt-0.5">{detalle}</span>}
+                                          </span>
+                                        </div>
+                                      );
+                                    })}
                                   </div>
                                 </div>
                               )
