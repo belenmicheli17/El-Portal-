@@ -895,23 +895,36 @@ export default function Ecosistema() {
                   onClick={() => navigate('/cartilla')}
                   distintivo={distintivoTutores}
                 />
-                <TarjetaDisponible
-                  id="tour-bolsa"
-                  titulo="Bolsa de trabajo"
-                  descripcion="Ofertas de clínicas y profesionales disponibles para trabajar."
-                  icon={Briefcase}
-                  onClick={() => navigate('/bolsa-de-trabajo')}
-                />
-                <TarjetaDisponible
-                  id="tour-publicaciones"
-                  titulo="Publicaciones científicas"
-                  descripcion="Papers y actualizaciones de la comunidad. Podés publicar los tuyos."
-                  icon={Newspaper}
-                  onClick={() => navigate('/papers')}
-                />
+                {/* La Bolsa ocupa el doble de ancho para tener más protagonismo */}
+                <div className="md:col-span-2">
+                  <TarjetaDisponible
+                    id="tour-bolsa"
+                    titulo="Bolsa de trabajo"
+                    descripcion="Ofertas de clínicas y profesionales disponibles para trabajar."
+                    icon={Briefcase}
+                    onClick={() => navigate('/bolsa-de-trabajo')}
+                  />
+                </div>
               </>
             )}
           </div>
+
+          {/* Publicaciones científicas: renglón finito debajo, para que no le saque lugar a la Bolsa */}
+          {!esProveedor && (
+            <button
+              id="tour-publicaciones"
+              type="button"
+              onClick={() => navigate('/papers')}
+              className="group w-full mb-10 md:mb-12 -mt-6 md:-mt-8 bg-white/60 backdrop-blur-md border border-white/60 rounded-[20px] md:rounded-[24px] shadow-sm hover:bg-white/90 hover:shadow-md transition-all duration-300 ease-in-out px-4 py-3 flex items-center gap-3 text-left cursor-pointer outline-none focus:ring-4 focus:ring-[#2D6A6A]/10"
+            >
+              <Newspaper strokeWidth={1.5} className="w-5 h-5 shrink-0 text-[#2D6A6A] group-hover:text-[#4DB6AC] transition-colors" />
+              <div className="flex-1 min-w-0">
+                <span className="text-[14px] md:text-[15px] font-black text-[#1A3D3D] font-['Montserrat']">Publicaciones científicas</span>
+                <span className="hidden md:inline text-[#666666] font-medium text-[13px] ml-3">Papers y actualizaciones de la comunidad</span>
+              </div>
+              <ChevronRight className="w-4 h-4 shrink-0 text-[#2D6A6A] transition-transform group-hover:translate-x-0.5" />
+            </button>
+          )}
 
           {/* BLOQUE 2: PRÓXIMAMENTE (se activa con más usuarios) */}
           <div id="tour-proximamente">
