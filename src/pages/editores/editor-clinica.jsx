@@ -246,6 +246,13 @@ export default function EditorClinico() {
   const [esNueva, setEsNueva] = useState(false);
   const [socioUsuario, setSocioUsuario] = useState(false);
   // Datos que maneja el sistema (no los edita la clínica)
+  const [docSistema, setDocSistema] = useState({
+    existe: false,
+    slug: '',
+    slugLegado: null,
+    socioVitalicio: false,
+    visibleLegado: undefined
+  });
   const [textoSede, setTextoSede] = useState('');
   const [subiendoPortada, setSubiendoPortada] = useState(false);
   const [portadaParaRecortar, setPortadaParaRecortar] = useState(null);
