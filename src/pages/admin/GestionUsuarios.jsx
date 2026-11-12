@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { 
   Search, Edit2, Ban, X, Save, Trash2,
-  User, Building, ShieldAlert, Store, Loader2, Crown, Image as ImageIcon
+  User, Building, ShieldAlert, Store, Loader2, Crown, Image as ImageIcon, ExternalLink
 } from 'lucide-react';
 import { db } from '../../firebase';
 import PiezaBienvenida, { extraerInstagram } from '../../components/PiezaBienvenida';
@@ -20,7 +21,12 @@ export default function GestionUsuarios() {
   const [usuarios, setUsuarios] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filtroRol, setFiltroRol] = useState('todos');
+  // Si venís desde una tarjeta del Dashboard, la URL trae el rol (ej. ?rol=clinica)
+  const [searchParams] = useSearchParams();
+  const rolDeLaUrl = searchParams.get('rol');
+  const [filtroRol, setFiltroRol] = useState(
+    ['profesional', 'clinica', 'proveedor', 'alumno'].includes(rolDeLaUrl) ? rolDeLaUrl : 'todos'
+  );
   const [usuarioEditando, setUsuarioEditando] = useState(null);
   const [guardando, setGuardando] = useState(false);
   // Usuario del que se está armando la pieza de bienvenida para redes
@@ -58,6 +64,15 @@ export default function GestionUsuarios() {
     };
     fetchInstagrams();
   }, []);
+
+  // Dirección pública del perfil de cada rol (alumnos todavía no tienen perfil)
+  const urlDelPerfil = (user) => {
+    if (!user.slug) return null;
+    if (user.rol === 'profesional') return `/profesional/${user.slug}`;
+    if (user.rol === 'clinica') return `/clinica/${user.slug}`;
+    if (user.rol === 'proveedor') return `/proveedor/${user.slug}`;
+    return null;
+  };
 
   const usuariosFiltrados = usuarios.filter(user => {
     const coincideBusqueda = user.nombre?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -232,6 +247,18 @@ export default function GestionUsuarios() {
                           </span>
                         )}
                      
+                        {/* Botón ver perfil: lo abre en otra pestaña */}
+                        {urlDelPerfil(user) && (
+                          <a
+                            href={urlDelPerfil(user)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-2 text-[#666666] hover:text-[#2D6A6A] hover:bg-[#2D6A6A]/10 rounded-xl transition-all"
+                            title="Ver perfil en otra pestaña"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                          </a>
+                        )}
                         {/* Botón pieza de bienvenida (solo profesionales y clínicas ya aprobados que cargaron su Instagram) */}
                         {(user.rol === 'profesional' || user.rol === 'clinica') && !['pendiente', 'suspendido', 'baja'].includes(user.estado) && uidsConInstagram.has(user.uid) && (
                           <button
