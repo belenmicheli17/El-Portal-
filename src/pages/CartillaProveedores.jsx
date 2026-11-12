@@ -258,20 +258,20 @@ const PROVINCIAS_ARG = [
               </div>
               <div className="flex flex-col gap-3">
                 <select
-                  value={filtroProvincia}
-                  onChange={e => setFiltroProvincia(e.target.value)}
+                  value={filtroProvincia || ''}
+                  onChange={e => { setFiltroProvincia(e.target.value || null); setVisibleProviders(6); }}
                   className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-[#1A3D3D] font-medium focus:outline-none focus:border-[#2D6A6A] bg-white"
                 >
                   <option value="">Todas las provincias</option>
-                  {provinciasDisponibles.map(p => <option key={p} value={p}>{p}</option>)}
+                  {PROVINCIAS_ARG.map(p => <option key={p} value={p}>{p}</option>)}
                 </select>
                 <select
-                  value={filtroRubro}
-                  onChange={e => setFiltroRubro(e.target.value)}
+                  value={filtroCategoria || ''}
+                  onChange={e => { setFiltroCategoria(e.target.value || null); setVisibleProviders(6); }}
                   className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-[#1A3D3D] font-medium focus:outline-none focus:border-[#2D6A6A] bg-white"
                 >
                   <option value="">Todos los rubros</option>
-                  {rubrosDisponibles.map(r => <option key={r} value={r}>{r}</option>)}
+                  {CATEGORIAS_PROVEEDORES.map(r => <option key={r} value={r}>{r}</option>)}
                 </select>
                 <label className="flex items-center gap-2 text-sm font-medium text-[#1A3D3D] cursor-pointer">
                   <input

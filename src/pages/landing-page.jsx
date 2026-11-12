@@ -590,7 +590,7 @@ export default function LandingPage() {
             subtitle="Comunidad"
             title="Rompé con el aislamiento del consultorio."
             text="Mantenete conectado con colegas de todo el país y referentes de tu área. Tené siempre a mano los contactos para derivar casos complejoa, armar equipos de trabajo o acceder a nuevas oportunidades de capacitación. Una red sólida te abre puertas reales."
-            image="/2.consultorio.png"
+            image="/2.consultorio.webp"
             isReversed={true}
             badge={
               <div className="bg-white/10 backdrop-blur-md p-4 rounded-[24px] shadow-[0_8px_32px_rgba(0,0,0,0.3)] flex items-center gap-4 border border-white/10 text-left">
@@ -611,7 +611,7 @@ export default function LandingPage() {
             subtitle="Presencia Virtual"
             title="Tu trayectoria, verificada y en un solo lugar."
             text="Te ofrecemos un espacio exclusivo donde tu perfil funciona como tu propia página institucional. Centralizá tu conocimiento, infraestructura o catálogo frente a la audiencia exacta que necesita contactarte."
-            image="/3.perfil-verificado.png"
+            image="/3.perfil-verificado.webp"
             isReversed={false}
           />
         </div>

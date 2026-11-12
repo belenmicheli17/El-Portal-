@@ -348,6 +348,8 @@ const Cartilla = () => {
           // Perfiles pendientes de verificación (visible en false) no aparecen en la cartilla.
           // Los perfiles que no tienen el campo "visible" se siguen mostrando como siempre.
           if (data.visible === false) return;
+          // Perfiles "fantasma": si no tienen nombre cargado, no los mostramos (igual que con las clínicas)
+          if (!data.nombre?.trim()) return;
           const opcionesProfesional = data.servicios
             ? Array.isArray(data.servicios)
               ? data.servicios.map(s => s.titulo)

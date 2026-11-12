@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, Suspense, lazy } from 'react';
 import { Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { doc, setDoc } from "firebase/firestore";
@@ -10,39 +10,38 @@ import Footer from './components/Footer';
 import FooterSimple from './components/FooterSimple';
 import AccessibilityWidget from './components/AccessibilityWidget';
 
-// Importaciones de páginas
-import LandingPage from './pages/landing-page';
-import Inicio from './pages/inicio';
-import Cartilla from './pages/Cartilla';
-import Perfil from './pages/perfiles/perfil-profesional'; 
-import PerfilProveedor from './pages/perfiles/perfil-proveedores'; 
-import PerfilClinica from './pages/perfiles/perfil-clinica';
-import Editor from './pages/editores/editor-profesional'; 
-import EditorClinica from './pages/editores/editor-clinica'; 
-import EditorProveedor from './pages/editores/editor-proveedores'; 
-import Papers from './pages/Papers';
-import BolsaDeTrabajo from './pages/bolsa-de-trabajo';
-import LegalPage from './pages/legales/privacidad';
-import Login from './pages/Login';
-import Capacitaciones from './pages/Capacitaciones';
-import CartillaProveedores from './pages/CartillaProveedores';
-import Ecosistema from './pages/Ecosistema';
+// Páginas: la Sala de espera (portada) se carga directo; el resto se descarga recién cuando alguien entra
 import SalaDeEspera from './pages/SalaDeEspera';
-import Onboarding from './pages/Onboarding';
-import RestablecerClave from './pages/restablecer-clave';
-import OnboardingClinica from './pages/OnboardingClinica';
+const LandingPage = lazy(() => import('./pages/landing-page'));
+const Cartilla = lazy(() => import('./pages/Cartilla'));
+const Perfil = lazy(() => import('./pages/perfiles/perfil-profesional'));
+const PerfilProveedor = lazy(() => import('./pages/perfiles/perfil-proveedores'));
+const PerfilClinica = lazy(() => import('./pages/perfiles/perfil-clinica'));
+const Editor = lazy(() => import('./pages/editores/editor-profesional'));
+const EditorClinica = lazy(() => import('./pages/editores/editor-clinica'));
+const EditorProveedor = lazy(() => import('./pages/editores/editor-proveedores'));
+const Papers = lazy(() => import('./pages/Papers'));
+const BolsaDeTrabajo = lazy(() => import('./pages/bolsa-de-trabajo'));
+const LegalPage = lazy(() => import('./pages/legales/privacidad'));
+const Login = lazy(() => import('./pages/Login'));
+const Capacitaciones = lazy(() => import('./pages/Capacitaciones'));
+const CartillaProveedores = lazy(() => import('./pages/CartillaProveedores'));
+const Ecosistema = lazy(() => import('./pages/Ecosistema'));
+const Onboarding = lazy(() => import('./pages/Onboarding'));
+const RestablecerClave = lazy(() => import('./pages/restablecer-clave'));
+const OnboardingClinica = lazy(() => import('./pages/OnboardingClinica'));
 
 // Panel Admin
 import RutaProtegidaAdmin from './components/admin/RutaProtegidaAdmin';
 import RutaProtegida from './components/admin/RutaProtegida';
 import BannerModoPrueba from './components/admin/BannerModoPrueba';
-import AdminLayout from './pages/admin/AdminLayout';
-import DashboardAdmin from './pages/admin/DashboardAdmin';
-import GestionUsuarios from './pages/admin/GestionUsuarios';
-import Validaciones from './pages/admin/Validaciones';
-import GestionBolsa from './pages/admin/GestionBolsa';
-import GestionCapacitaciones from './pages/admin/GestionCapacitaciones';
-import Configuracion from './pages/admin/Configuracion';
+const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'));
+const DashboardAdmin = lazy(() => import('./pages/admin/DashboardAdmin'));
+const GestionUsuarios = lazy(() => import('./pages/admin/GestionUsuarios'));
+const Validaciones = lazy(() => import('./pages/admin/Validaciones'));
+const GestionBolsa = lazy(() => import('./pages/admin/GestionBolsa'));
+const GestionCapacitaciones = lazy(() => import('./pages/admin/GestionCapacitaciones'));
+const Configuracion = lazy(() => import('./pages/admin/Configuracion'));
 
 
 // ==========================================
@@ -144,6 +143,11 @@ export default function App() {
         <BannerModoPrueba />
         <OcultarEnAdmin><AccessibilityWidget /></OcultarEnAdmin> 
 
+        <Suspense fallback={
+          <div className="min-h-screen bg-[#F4F7F7] flex items-center justify-center">
+            <div className="w-10 h-10 border-4 border-[#2D6A6A]/20 border-t-[#2D6A6A] rounded-full animate-spin" />
+          </div>
+        }>
         <Routes>
 
           {/* ================================================ */}
@@ -210,6 +214,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
 
         </Routes>
+        </Suspense>
       </div>
     </AuthProvider>
   );

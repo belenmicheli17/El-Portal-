@@ -140,6 +140,131 @@ function FotoSensible({ src, sensible, alt, className, onAbrir }) {
   );
 }
 
+function CasoModal({ caso, casos, onCambiar, onCerrar }) {
+  const [fotoIdx, setFotoIdx] = useState(0);
+  const [revelada, setRevelada] = useState(false);
+
+  // Al cambiar de caso volvemos a la primera foto y la foto sensible vuelve a taparse
+  useEffect(() => {
+    setFotoIdx(0);
+    setRevelada(false);
+  }, [caso]);
+
+  // Descargamos todas las fotos del caso apenas se abre, así al pasar de una a otra ya están listas
+  useEffect(() => {
+    if (!caso || !Array.isArray(caso.fotos)) return;
+    caso.fotos.forEach((url) => {
+      const img = new Image();
+      img.src = url;
+    });
+  }, [caso]);
+
+  if (!caso) return null;
+
+  const fotos = Array.isArray(caso.fotos) ? caso.fotos : [];
+  const hayFotos = fotos.length > 0;
+  const oculta = caso.esSensible && !revelada;
+  const casoIdx = Math.max(0, casos.indexOf(caso));
+  const irACaso = (paso) => onCambiar(casos[(casoIdx + paso + casos.length) % casos.length]);
+  const pasarFoto = (paso) => setFotoIdx((fotoIdx + paso + fotos.length) % fotos.length);
+
+  return (
+    <div
+      className="fixed inset-0 z-[9999] bg-[#1A3D3D]/60 backdrop-blur-md flex items-center justify-center p-3 sm:p-8"
+      onClick={onCerrar}
+    >
+      <div
+        className="relative bg-white w-full max-w-5xl max-h-[90vh] md:h-[85vh] rounded-[32px] md:rounded-[40px] overflow-hidden shadow-2xl flex flex-col md:flex-row"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* FOTOS: arriba en celular, a la izquierda en PC */}
+        {hayFotos && (
+          <div className="relative h-[42vh] md:h-auto md:w-1/2 shrink-0 bg-black overflow-hidden">
+            <img
+              src={fotos[fotoIdx] || fotos[0]}
+              alt={caso.patologia || caso.nombre || 'Caso clínico'}
+              className={`w-full h-full object-cover transition-all duration-300 ${oculta ? 'blur-2xl scale-110' : ''}`}
+            />
+
+            {oculta && (
+              <button
+                type="button"
+                onClick={() => setRevelada(true)}
+                className="absolute inset-0 bg-[#1A3D3D]/70 flex flex-col items-center justify-center gap-1.5 text-white px-4 text-center"
+              >
+                <Eye className="w-7 h-7" />
+                <span className="text-sm font-bold">Contenido sensible</span>
+                <span className="text-xs font-medium opacity-80">Tocá para ver la imagen</span>
+              </button>
+            )}
+
+            {fotos.length > 1 && !oculta && (
+              <>
+                <button type="button" onClick={() => pasarFoto(-1)} aria-label="Foto anterior" className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/85 rounded-full flex items-center justify-center shadow-md hover:bg-white transition-all">
+                  <ChevronLeft className="w-5 h-5 text-[#1A3D3D]" />
+                </button>
+                <button type="button" onClick={() => pasarFoto(1)} aria-label="Foto siguiente" className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/85 rounded-full flex items-center justify-center shadow-md hover:bg-white transition-all">
+                  <ChevronRight className="w-5 h-5 text-[#1A3D3D]" />
+                </button>
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+                  {fotos.map((_, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => setFotoIdx(i)}
+                      aria-label={`Ir a la foto ${i + 1}`}
+                      className={`rounded-full transition-all ${i === fotoIdx ? 'w-4 h-2 bg-white' : 'w-2 h-2 bg-white/50'}`}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* TEXTO: abajo en celular, a la derecha en PC */}
+        <div className={`${hayFotos ? 'md:w-1/2' : 'w-full'} flex-1 min-h-0 bg-[#F4F7F7] overflow-y-auto p-6 md:p-10`}>
+          {caso.patologia && (
+            <span className="inline-block bg-[#2D6A6A]/10 text-[#2D6A6A] text-[11px] font-bold px-3 py-1.5 rounded-full uppercase tracking-widest">{caso.patologia}</span>
+          )}
+          {caso.nombre && (
+            <h3 className="text-[22px] md:text-[26px] font-black font-['Montserrat'] text-[#1A3D3D] mt-3 mb-2 leading-tight uppercase pr-10">{caso.nombre}</h3>
+          )}
+          <div className="w-10 h-[2px] bg-[#2D6A6A] rounded-full mb-4"></div>
+          {caso.desc && (
+            <>
+              <h4 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-2">Relato del caso</h4>
+              <p className="text-[15px] text-[#666666] leading-relaxed font-medium whitespace-pre-wrap">{caso.desc}</p>
+            </>
+          )}
+
+          {casos.length > 1 && (
+            <div className="flex items-center justify-between mt-8 pt-4 border-t border-gray-200">
+              <button type="button" onClick={() => irACaso(-1)} className="flex items-center gap-1.5 text-[11px] font-bold text-gray-400 uppercase tracking-widest hover:text-[#2D6A6A] transition-colors">
+                <ChevronLeft className="w-4 h-4" /> Anterior
+              </button>
+              <span className="text-[11px] font-bold text-gray-400">{casoIdx + 1} / {casos.length}</span>
+              <button type="button" onClick={() => irACaso(1)} className="flex items-center gap-1.5 text-[11px] font-bold text-gray-400 uppercase tracking-widest hover:text-[#2D6A6A] transition-colors">
+                Siguiente <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Botón cerrar, siempre arriba a la derecha */}
+        <button
+          type="button"
+          onClick={onCerrar}
+          aria-label="Cerrar"
+          className="absolute top-4 right-4 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg border border-gray-100 z-10"
+        >
+          <X className="w-5 h-5 text-[#666666]" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ==========================================
 // PÁGINA
 // ==========================================
@@ -152,6 +277,8 @@ export default function PerfilClinica() {
   const [loading, setLoading] = useState(true);
   const [openFaq, setOpenFaq] = useState(null);
   const [visor, setVisor] = useState(null);
+  // Caso clínico abierto en pantalla (null = ninguno)
+  const [casoAbierto, setCasoAbierto] = useState(null);
   const [urgenciaAbierta, setUrgenciaAbierta] = useState(false);
   const [presentacionAbierta, setPresentacionAbierta] = useState(false);
   const [presentacionRecortada, setPresentacionRecortada] = useState(false);
@@ -399,6 +526,7 @@ export default function PerfilClinica() {
     <div className="font-['Inter'] bg-white min-h-screen pb-28 lg:pb-0 text-[#333]">
 
       <VisorFotos visor={visor} setVisor={setVisor} />
+      <CasoModal caso={casoAbierto} casos={casos} onCambiar={setCasoAbierto} onCerrar={() => setCasoAbierto(null)} />
 
       {/* ============ PORTADA ============ */}
     <header className={`relative ${portada ? 'h-[220px] lg:h-[320px]' : 'h-[120px] lg:h-[170px]'} bg-[#1A3D3D] overflow-hidden`}>
@@ -421,7 +549,9 @@ export default function PerfilClinica() {
         <div className="bg-white rounded-[28px] lg:rounded-[32px] shadow-[0_18px_44px_rgba(26,61,61,0.15)] p-5 lg:p-8 lg:flex lg:items-center lg:gap-8">
           <div className="w-[84px] h-[84px] lg:w-[132px] lg:h-[132px] -mt-14 lg:mt-0 mb-3 lg:mb-0 rounded-[24px] lg:rounded-[32px] bg-white border border-gray-100 shadow-lg lg:shadow-none overflow-hidden flex items-center justify-center shrink-0">
             {data.foto ? (
-              <img src={data.foto} alt={data.nombre} className="w-full h-full object-cover" />
+              <button type="button" onClick={() => setVisor({ fotos: [data.foto], indice: 0 })} aria-label="Ampliar logo" className="w-full h-full cursor-zoom-in">
+                <img src={data.foto} alt={data.nombre} className="w-full h-full object-cover" />
+              </button>
             ) : (
               <Building2 className="w-9 h-9 text-[#2D6A6A]/50" />
             )}
@@ -735,17 +865,18 @@ export default function PerfilClinica() {
                         sensible={c.esSensible}
                         alt={c.patologia || c.nombre || 'Caso clínico'}
                         className="w-full h-[150px]"
-                        onAbrir={() => setVisor({ fotos: c.fotos, indice: 0 })}
+                        onAbrir={() => setCasoAbierto(c)}
                       />
                       {c.fotos.length > 1 && (
                         <span className="absolute bottom-2 right-2 bg-black/60 text-white text-[11px] font-bold px-2 py-1 rounded-full pointer-events-none">{c.fotos.length} fotos</span>
                       )}
                     </div>
                   ) : null}
-                  <div className="p-4">
+                  <div className="p-4 cursor-pointer" onClick={() => setCasoAbierto(c)}>
                     {c.patologia && <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-sm leading-snug">{c.patologia}</h3>}
                     {c.nombre && <p className="text-[#2D6A6A] text-xs font-bold mt-1">{c.nombre}</p>}
                     {c.desc && <p className="text-[#666666] text-xs leading-relaxed mt-1.5 line-clamp-4">{c.desc}</p>}
+                    <p className="text-[#2D6A6A] text-[11px] font-bold uppercase tracking-wider mt-2.5">Ver caso completo →</p>
                   </div>
                 </article>
               ))}
@@ -808,13 +939,22 @@ export default function PerfilClinica() {
                     <span className="min-w-0"><span className="block text-[11px] font-bold uppercase text-gray-400">Sitio web</span><span className="block text-sm font-black text-[#1A3D3D] truncate">{data.sitioWeb.replace(/^https?:\/\//, '')}</span></span>
                   </a>
                 )}
-                {data.redes && (data.redes.instagram || data.redes.facebook || data.redes.tiktok || data.redes.linkedin) && (
+                {data.redes?.instagram && (
+                  <a
+                    href={String(data.redes.instagram).startsWith('http') ? data.redes.instagram : `https://instagram.com/${String(data.redes.instagram).replace(/^@/, '')}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-3 bg-white rounded-2xl p-3.5  transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md "
+                  >
+                    <span className="w-9 h-9 rounded-xl bg-[#E4405F]/10 text-[#E4405F] flex items-center justify-center shrink-0"><Instagram className="w-4 h-4" /></span>
+                    <span className="min-w-0">
+                      <span className="block text-[11px] font-bold uppercase text-gray-400">Instagram</span>
+                      <span className="block text-sm font-black text-[#1A3D3D] truncate">@{String(data.redes.instagram).replace(/\/+$/, '').split('?')[0].split('/').pop().replace(/^@/, '')}</span>
+                    </span>
+                  </a>
+                )}
+                {data.redes && (data.redes.facebook || data.redes.tiktok || data.redes.linkedin) && (
                   <div className="grid grid-cols-2 gap-2">
-                    {data.redes.instagram && (
-                      <a href={data.redes.instagram} target="_blank" rel="noreferrer" className="flex-1 flex items-center justify-center gap-2 bg-white rounded-2xl p-3.5  transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md text-[#E4405F] text-sm font-bold">
-                        <Instagram className="w-4 h-4" /> Instagram
-                      </a>
-                    )}
                     {data.redes.facebook && (
                       <a href={data.redes.facebook} target="_blank" rel="noreferrer" className="flex-1 flex items-center justify-center gap-2 bg-white rounded-2xl p-3.5  transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md text-[#1877F2] text-sm font-bold">
                         <Facebook className="w-4 h-4" /> Facebook
