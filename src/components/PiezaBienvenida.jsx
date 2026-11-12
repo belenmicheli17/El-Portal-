@@ -35,6 +35,12 @@ const C = {
 // DATOS DEL PERFIL REAL
 // ==========================================
 
+// Instagram de la persona como "@usuario" (vacío si no cargó). Profesionales: perfil.instagram; clínicas: perfil.redes.instagram
+export const extraerInstagram = (perfil, esClinica) => {
+  const usuario = usuarioDeInstagram(esClinica ? perfil?.redes?.instagram : perfil?.instagram);
+  return usuario ? `@${usuario}` : '';
+};
+
 // "Mar del Plata, Buenos Aires": provincia sin "Provincia de" y CABA abreviada, como en la página de la clínica
 const armarZonaClinica = (perfil) => {
   const limpiar = (t) => String(t || '').replace(/^Provincia de\s+/i, '').replace(/^Ciudad Aut[oó]noma de Buenos Aires$/i, 'CABA').trim();
@@ -66,11 +72,8 @@ export const cargarDatosPieza = async (uid, tipo) => {
     // Solo las clínicas llevan zona: localidad + provincia (el barrio solo no alcanza, "Belgrano" puede ser de cualquier lado)
     zona: esClinica ? armarZonaClinica(perfil) : '',
     foto: perfil.foto || '',
-    // Instagram para etiquetarlo en la historia: "@usuario" (vacío si no cargó). Profesionales: perfil.instagram; clínicas: perfil.redes.instagram
-    instagram: (() => {
-      const usuario = usuarioDeInstagram(esClinica ? perfil.redes?.instagram : perfil.instagram);
-      return usuario ? `@${usuario}` : '';
-    })()
+    // Instagram para etiquetarlo en la historia
+    instagram: extraerInstagram(perfil, esClinica)
   };
 };
 
@@ -123,16 +126,17 @@ const ICONO_FLECHA = ['M5 12h14', 'M13 6l6 6-6 6'];
 
 const dibujarLogo = (ctx, logo) => {
   if (logo) {
-    ctx.drawImage(logo, 430, 250, 220, 72);
+    // 300 x 98 (misma proporción del logo), centrado y bien arriba
+    ctx.drawImage(logo, 390, 140, 300, 98);
     return;
   }
   // Plan B: si no carga el logo, va el nombre escrito
   ctx.save();
-  ctx.font = '700 44px Montserrat, sans-serif';
+  ctx.font = '700 58px Montserrat, sans-serif';
   ctx.fillStyle = C.titulo;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText('Portal Veterinario', ANCHO / 2, 286);
+  ctx.fillText('Portal Veterinario', ANCHO / 2, 189);
   ctx.restore();
 };
 
@@ -243,19 +247,11 @@ const dibujarLogoEntero = (ctx, img, x, y, w, h) => {
 const dibujarCertificado = (ctx, d, imgFoto, logo) => {
   dibujarLogo(ctx, logo);
 
-  // Etiqueta "SE SUMÓ A LA CARTILLA"
-  ctx.font = '700 34px Inter, sans-serif';
-  const textoChip = 'SE SUMÓ A LA CARTILLA';
-  const anchoChip = ctx.measureText(textoChip).width + 64;
-  rectRedondeado(ctx, (ANCHO - anchoChip) / 2, 352, anchoChip, 64, 32);
-  ctx.fillStyle = C.mentaOscuro;
-  ctx.fill();
-  ctx.fillStyle = C.texto;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(textoChip, ANCHO / 2, 385);
+  dibujarTitular(ctx, ['Ya es parte', 'de la Cartilla', 'Veterinaria.'], 90, 70, 920, 300, 1.1);
 
-  dibujarTitular(ctx, ['Ya es parte', 'de la Cartilla', 'Veterinaria.'], 90, 70, 920, 450, 1.1);
+  // Todo lo de abajo sube 140px: queda lugar libre debajo del botón para poner el nombre en la historia
+  ctx.save();
+  ctx.translate(0, -140);
 
   // Foto redonda con borde blanco y una "sombra" menta corrida
   ctx.beginPath();
@@ -332,6 +328,7 @@ const dibujarCertificado = (ctx, d, imgFoto, logo) => {
   }
 
   dibujarPildora(ctx, 1610, TEXTO_PILDORA.profesional);
+  ctx.restore();
 };
 
 // ==========================================
@@ -356,7 +353,7 @@ const dibujarEtiqueta = (ctx, x, y, texto, peso, fondo, icono, grosorIcono, anch
 
 const dibujarCredencial = (ctx, d, imgFoto, logo) => {
   dibujarLogo(ctx, logo);
-  dibujarTitular(ctx, ['Ya es parte de la', 'Cartilla Veterinaria.'], 72, 54, 920, 356, 1.12);
+  dibujarTitular(ctx, ['Ya es parte de la', 'Cartilla Veterinaria.'], 72, 54, 920, 284, 1.12);
 
   // Qué lleva la tarjeta (se mide antes para que la tarjeta se estire si el nombre ocupa dos renglones)
   const nombre = d.nombre || 'Nueva clínica';
@@ -373,6 +370,10 @@ const dibujarCredencial = (ctx, d, imgFoto, logo) => {
   const altoSub = d.subtitulo ? 6 + 38 * 1.35 : 0;
   const yEtiquetas = yNombre + bloque.lineas.length * altoNombre + altoSub + 26;
   const altoTarjeta = Math.min(1040, Math.max(997, yEtiquetas + 64 + (zonaEnOtraFila ? 14 + 64 : 0) + 36));
+
+  // Tarjeta y botón suben 72px: queda lugar libre debajo del botón para poner el nombre en la historia
+  ctx.save();
+  ctx.translate(0, -72);
 
   // Tarjeta menta de atrás, apenas girada
   ctx.save();
@@ -434,6 +435,7 @@ const dibujarCredencial = (ctx, d, imgFoto, logo) => {
   ctx.restore();
 
   dibujarPildora(ctx, 1618, TEXTO_PILDORA.clinica);
+  ctx.restore();
 };
 
 // ==========================================

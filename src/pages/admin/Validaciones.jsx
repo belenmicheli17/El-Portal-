@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import { armarLinkWhatsapp } from '../../utils/whatsapp';
 import { armarLinkPerfil } from '../../components/CompartirPerfil';
-import PiezaBienvenida from '../../components/PiezaBienvenida';
+import PiezaBienvenida, { cargarDatosPieza } from '../../components/PiezaBienvenida';
 import { db, storage, auth } from '../../firebase';
 import { collection, getDocs, getDoc, getCountFromServer, doc, query, where, writeBatch, serverTimestamp } from 'firebase/firestore';
 import { ref, getDownloadURL } from 'firebase/storage';
@@ -200,16 +200,22 @@ export default function Validaciones() {
         const primerNombre = (req.nombrePila || req.nombre || '').split(' ')[0];
         const nombreClinica = perfilAprobado.nombre || req.nombre;
         const texto = esClin
-          ? `Hola equipo de ${nombreClinica}! Soy Belén, del Portal Veterinario 🐾 Ya revisé el perfil de ${nombreClinica} y está publicado en la cartilla: ${link}. Para que los encuentren más fácil les recomiendo sumar el link en dos lugares: en su ficha de Google (la que aparece en Maps y en el buscador) y en la bio de su Instagram. Así cualquier tutor o colega ve toda la info al día y los puede contactar desde ahí. Además, desde su editor tienen un botón "Compartir el perfil de la clínica" que les arma una imagen lista para publicar. Si tienen dudas de cómo hacerlo, escribanme y los ayudo. Gracias por ser parte!`
-          : `Hola ${primerNombre}! Soy Belén, del Portal Veterinario 🐾 Ya revisé tu perfil y está publicado en la cartilla: ${link}. Un consejo para que te encuentren más fácil: poné el link en la bio de tu Instagram. Así quien te busque ve todo lo que ofrecés y te puede contactar desde ahí. Además, desde tu editor tenés un botón "Compartir mi perfil" que te arma una imagen lista para tus historias. Si tenés dudas de cómo hacerlo, escribime y te ayudo. Gracias por ser parte!`;
+          ? `Hola equipo de ${nombreClinica}! Soy Belén, del Portal Veterinario 🐾 Ya revisé el perfil de ${nombreClinica} y está publicado en la cartilla: ${link}. Para que los encuentren más fácil les recomiendo sumar el link en dos lugares: en su ficha de Google (la que aparece en Maps y en el buscador) y en la bio de su Instagram. Así cualquier tutor o colega ve toda la info al día y los puede contactar desde ahí. Si tienen dudas de cómo hacerlo, escribanme y los ayudo. Gracias por ser parte!`
+          : `Hola ${primerNombre}! Soy Belén, del Portal Veterinario 🐾 Ya revisé tu perfil y está publicado en la cartilla: ${link}. Un consejo para que te encuentren más fácil: poné el link en la bio de tu Instagram. Así quien te busca ve todo lo que ofrecés y te puede contactar desde ahí. Si tenés dudas de cómo hacerlo, escribime y te ayudo. Gracias por ser parte!`;
         setAvisosWp((prev) => [...prev, { uid: req.uid, nombre: req.nombre, url: armarLinkWhatsapp(numero, texto) }]);
       }
     } catch (error) {
       console.error('No se pudo armar el aviso de WhatsApp:', error);
     }
 
-    // Pieza de bienvenida para las redes (no se publica nada solo)
-    setPiezasBienvenida((prev) => [...prev, { uid: req.uid, nombre: req.nombre, tipo: req.tipo === 'clinica' ? 'clinica' : 'profesional' }]);
+    // Pieza de bienvenida para las redes: solo si la persona cargó su Instagram (es para etiquetarla). No se publica nada solo
+    try {
+      const tipoPieza = req.tipo === 'clinica' ? 'clinica' : 'profesional';
+      const datosPieza = await cargarDatosPieza(req.uid, tipoPieza);
+      if (datosPieza.instagram) setPiezasBienvenida((prev) => [...prev, { uid: req.uid, nombre: req.nombre, tipo: tipoPieza }]);
+    } catch (error) {
+      console.error('No se pudo revisar el Instagram para la pieza de bienvenida:', error);
+    }
 
     setPendientes((prev) => prev.filter((u) => u.uid !== req.uid));
     setProcesando(null);

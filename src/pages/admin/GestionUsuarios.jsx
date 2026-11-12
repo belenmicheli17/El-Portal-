@@ -4,7 +4,7 @@ import {
   User, Building, ShieldAlert, Store, Loader2, Crown, Image as ImageIcon
 } from 'lucide-react';
 import { db } from '../../firebase';
-import PiezaBienvenida from '../../components/PiezaBienvenida';
+import PiezaBienvenida, { extraerInstagram } from '../../components/PiezaBienvenida';
 import { collection, getDocs, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 
 // La fecha puede venir como Timestamp, texto o número: la pasamos a fecha común
@@ -25,6 +25,8 @@ export default function GestionUsuarios() {
   const [guardando, setGuardando] = useState(false);
   // Usuario del que se está armando la pieza de bienvenida para redes
   const [piezaUsuario, setPiezaUsuario] = useState(null);
+  // Quiénes cargaron su Instagram (la pieza es solo para etiquetarlos ahí)
+  const [uidsConInstagram, setUidsConInstagram] = useState(new Set());
  
 
   // Cargar usuarios reales de Firestore
@@ -41,6 +43,20 @@ export default function GestionUsuarios() {
       }
     };
     fetchUsuarios();
+
+    // Aparte: miramos qué perfiles y clínicas tienen Instagram cargado
+    const fetchInstagrams = async () => {
+      try {
+        const [snapPro, snapCli] = await Promise.all([getDocs(collection(db, 'profesionales')), getDocs(collection(db, 'clinicas'))]);
+        const conInstagram = new Set();
+        snapPro.docs.forEach((d) => { if (extraerInstagram(d.data(), false)) conInstagram.add(d.id); });
+        snapCli.docs.forEach((d) => { if (extraerInstagram(d.data(), true)) conInstagram.add(d.id); });
+        setUidsConInstagram(conInstagram);
+      } catch (error) {
+        console.error('Error revisando los Instagram cargados:', error);
+      }
+    };
+    fetchInstagrams();
   }, []);
 
   const usuariosFiltrados = usuarios.filter(user => {
@@ -216,8 +232,8 @@ export default function GestionUsuarios() {
                           </span>
                         )}
                      
-                        {/* Botón pieza de bienvenida (solo profesionales y clínicas ya aprobados) */}
-                        {(user.rol === 'profesional' || user.rol === 'clinica') && !['pendiente', 'suspendido', 'baja'].includes(user.estado) && (
+                        {/* Botón pieza de bienvenida (solo profesionales y clínicas ya aprobados que cargaron su Instagram) */}
+                        {(user.rol === 'profesional' || user.rol === 'clinica') && !['pendiente', 'suspendido', 'baja'].includes(user.estado) && uidsConInstagram.has(user.uid) && (
                           <button
                             onClick={() => setPiezaUsuario(user)}
                             className="p-2 text-[#666666] hover:text-[#2D6A6A] hover:bg-[#2D6A6A]/10 rounded-xl transition-all"
