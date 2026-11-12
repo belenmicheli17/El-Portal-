@@ -438,6 +438,8 @@ export default function OnboardingClinica() {
   // Si está en la pantalla de la pregunta "¿Cómo llegaron?" (antes de enviar)
   const [enEncuesta, setEnEncuesta] = useState(false);
   const [faqAbierta, setFaqAbierta] = useState(null);
+  // Lo que se escribe en el buscador de "otra sede" (se vacía al elegir una de la lista de Google)
+  const [textoSede, setTextoSede] = useState('');
 
   // Datos del sistema de la clínica (no los edita la persona): si el documento ya existe y cuál es su slug
   const sistema = useRef({ existe: false, slug: '' });
