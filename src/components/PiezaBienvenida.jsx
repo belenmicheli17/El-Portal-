@@ -33,6 +33,18 @@ const C = {
 // ==========================================
 // DATOS DEL PERFIL REAL
 // ==========================================
+
+// "Mar del Plata, Buenos Aires": provincia sin "Provincia de" y CABA abreviada, como en la página de la clínica
+const armarZonaClinica = (perfil) => {
+  const limpiar = (t) => String(t || '').replace(/^Provincia de\s+/i, '').replace(/^Ciudad Aut[oó]noma de Buenos Aires$/i, 'CABA').trim();
+  const provincia = limpiar(perfil.provincia);
+  const localidad = limpiar(perfil.localidad);
+  // Si no hay localidad ni provincia, usamos el barrio como último recurso
+  if (!localidad && !provincia) return String(perfil.barrio || '').trim();
+  // Si la localidad ya es la provincia (ej. CABA), no se repite
+  if (localidad && provincia && localidad.toLowerCase() === provincia.toLowerCase()) return localidad;
+  return [localidad, provincia].filter(Boolean).join(', ');
+};
 export const cargarDatosPieza = async (uid, tipo) => {
   const esClinica = tipo === 'clinica';
   const [snapPerfil, snapUsuario] = await Promise.all([
@@ -50,8 +62,8 @@ export const cargarDatosPieza = async (uid, tipo) => {
     nombre,
     // Profesionales: su especialidad. Clínicas: texto fijo.
     subtitulo: esClinica ? 'Clínica veterinaria' : (perfil.especialidad || ''),
-    // Solo las clínicas llevan zona (barrio o, si no hay, localidad)
-    zona: esClinica ? (perfil.barrio || perfil.localidad || '') : '',
+    // Solo las clínicas llevan zona: localidad + provincia (el barrio solo no alcanza, "Belgrano" puede ser de cualquier lado)
+    zona: esClinica ? armarZonaClinica(perfil) : '',
     foto: perfil.foto || ''
   };
 };
@@ -344,10 +356,17 @@ const dibujarCredencial = (ctx, d, imgFoto, logo) => {
   const nombre = d.nombre || 'Nueva clínica';
   const bloque = ajustarNombre(ctx, nombre, 688, 62, 40, 44, 30);
   const altoNombre = bloque.tam * 1.1;
-  const yNombre = 36 + 688 + 26;
+  // ¿La zona entra al lado de "Página verificada"? Si no, va abajo en otra fila y el cuadro del logo se achica
+  ctx.font = '700 30px Inter, sans-serif';
+  const anchoVerificada = 20 + 34 + 12 + ctx.measureText('Página verificada').width + 26;
+  ctx.font = '600 30px Inter, sans-serif';
+  const anchoZona = d.zona ? 20 + 34 + 12 + ctx.measureText(d.zona).width + 26 : 0;
+  const zonaEnOtraFila = !!d.zona && anchoVerificada + 16 + anchoZona > 688;
+  const altoCuadro = zonaEnOtraFila ? 688 - 78 : 688;
+  const yNombre = 36 + altoCuadro + 26;
   const altoSub = d.subtitulo ? 6 + 38 * 1.35 : 0;
   const yEtiquetas = yNombre + bloque.lineas.length * altoNombre + altoSub + 26;
-  const altoTarjeta = Math.min(1040, Math.max(997, yEtiquetas + 64 + 36));
+  const altoTarjeta = Math.min(1040, Math.max(997, yEtiquetas + 64 + (zonaEnOtraFila ? 14 + 64 : 0) + 36));
 
   // Tarjeta menta de atrás, apenas girada
   ctx.save();
@@ -374,18 +393,18 @@ const dibujarCredencial = (ctx, d, imgFoto, logo) => {
 
   // Cuadro del logo (entero, sobre fondo menta)
   ctx.save();
-  rectRedondeado(ctx, 36, 36, 688, 688, 40);
+  rectRedondeado(ctx, 36, 36, 688, altoCuadro, 40);
   ctx.clip();
   ctx.fillStyle = C.menta;
-  ctx.fillRect(36, 36, 688, 688);
-  if (imgFoto) dibujarLogoEntero(ctx, imgFoto, 36, 36, 688, 688);
+  ctx.fillRect(36, 36, 688, altoCuadro);
+  if (imgFoto) dibujarLogoEntero(ctx, imgFoto, 36, 36, 688, altoCuadro);
   ctx.restore();
   if (!imgFoto) {
     ctx.fillStyle = C.esmeralda;
     ctx.font = '700 230px Montserrat, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(iniciales(d.nombre), 380, 384);
+    ctx.fillText(iniciales(d.nombre), 380, 36 + altoCuadro / 2 + 6);
   }
 
   // Nombre de la clínica
@@ -403,8 +422,8 @@ const dibujarCredencial = (ctx, d, imgFoto, logo) => {
   // Etiquetas: verificada + zona
   const ancho1 = dibujarEtiqueta(ctx, 36, yEtiquetas, 'Página verificada', 700, C.mentaOscuro, ICONO_TILDE, 2.6, 400);
   if (d.zona) {
-    const sobra = 688 - ancho1 - 16 - 92;
-    dibujarEtiqueta(ctx, 36 + ancho1 + 16, yEtiquetas, d.zona, 600, C.gris, ICONO_PIN, 2.2, sobra);
+    if (zonaEnOtraFila) dibujarEtiqueta(ctx, 36, yEtiquetas + 64 + 14, d.zona, 600, C.gris, ICONO_PIN, 2.2, 688 - 92);
+    else dibujarEtiqueta(ctx, 36 + ancho1 + 16, yEtiquetas, d.zona, 600, C.gris, ICONO_PIN, 2.2, 688 - ancho1 - 16 - 92);
   }
   ctx.restore();
 
