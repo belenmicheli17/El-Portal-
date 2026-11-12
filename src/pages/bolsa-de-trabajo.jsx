@@ -322,7 +322,7 @@ export default function BolsaTrabajo() {
         <div className="flex flex-wrap gap-2 justify-center lg:justify-start">
           {(!permisos.conSesion || esClinica) && (
             <button type="button" onClick={pedirPublicarOferta} className="inline-flex items-center gap-2 bg-[#2D6A6A] hover:bg-[#1A3D3D] text-white px-6 py-3.5 rounded-2xl text-[14px] font-semibold shadow-md transition-colors">
-              <Plus className="w-4 h-4" /> Publicar oferta
+              <Plus className="w-4 h-4" /> Publicar oferta 
             </button>
           )}
           {(!permisos.conSesion || esProfesional) && (
@@ -580,8 +580,8 @@ function EstadoVacio({ onPublicar, onDisponible }) {
       <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[20px] md:text-[24px] mb-2">Estamos sumando las primeras ofertas</h3>
       <p className="text-[#666666] text-[15px] max-w-md mb-6">¿Tu clínica busca a alguien o estás buscando trabajo? Sé de los primeros en publicar. Es gratis.</p>
       <div className="flex flex-wrap gap-2 justify-center">
-        <button type="button" onClick={onPublicar} className="bg-[#2D6A6A] hover:bg-[#1A3D3D] text-white px-6 py-3 rounded-2xl text-[14px] font-semibold transition-colors">Publicar oferta</button>
-        <button type="button" onClick={onDisponible} className="bg-[#F4F7F7] hover:bg-gray-200 text-[#1A3D3D] px-6 py-3 rounded-2xl text-[14px] font-semibold transition-colors">Marcarme como disponible</button>
+        <button type="button" onClick={onPublicar} className="bg-[#2D6A6A] hover:bg-[#1A3D3D] text-white px-6 py-3 rounded-2xl text-[14px] font-semibold transition-colors">Me interesa publicar una búsqueda</button>
+        
       </div>
     </div>
   );
