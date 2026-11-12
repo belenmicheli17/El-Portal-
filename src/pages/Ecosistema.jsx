@@ -867,7 +867,7 @@ export default function Ecosistema() {
           <h2 className="text-[#2D6A6A] font-bold text-[12px] md:text-[13px] uppercase tracking-[0.2em] mb-4">
             Tu espacio
           </h2>
-          <div className={`grid grid-cols-1 ${esProveedor ? 'md:grid-cols-3' : 'md:grid-cols-2 lg:grid-cols-4'} gap-3 md:gap-6 mb-10 md:mb-12`}>
+          <div className={`grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-6 mb-10 md:mb-12`}>
 
             <TarjetaDisponible
               id="tour-editar-perfil"
@@ -890,21 +890,18 @@ export default function Ecosistema() {
                 <TarjetaDisponible
                   id="tour-colegas"
                   titulo="Cartilla de colegas"
-                  descripcion="Tené a mano los contactos de tus colegas para derivaciones o trabajos en equipo."
+                  descripcion="Los contactos de tus colegas, a mano."
                   icon={Users}
                   onClick={() => navigate('/cartilla')}
                   distintivo={distintivoTutores}
                 />
-                {/* La Bolsa ocupa el doble de ancho para tener más protagonismo */}
-                <div className="md:col-span-2">
-                  <TarjetaDisponible
-                    id="tour-bolsa"
-                    titulo="Bolsa de trabajo"
-                    descripcion="Ofertas de clínicas y profesionales disponibles para trabajar."
-                    icon={Briefcase}
-                    onClick={() => navigate('/bolsa-de-trabajo')}
-                  />
-                </div>
+                <TarjetaDisponible
+                  id="tour-bolsa"
+                  titulo="Bolsa de trabajo"
+                  descripcion="Encontrá tu próximo trabajo o a quien sumar a tu equipo."
+                  icon={Briefcase}
+                  onClick={() => navigate('/bolsa-de-trabajo')}
+                />
               </>
             )}
           </div>
