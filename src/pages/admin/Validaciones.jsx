@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import {
   CheckCircle, XCircle, User, Calendar, Mail, AlertTriangle, Loader2,
-  Hash, MapPin, FileText, ExternalLink, X, Megaphone, MessageCircle
+  Hash, MapPin, FileText, ExternalLink, X, Megaphone, MessageCircle, Image as ImageIcon
 } from 'lucide-react';
 import { armarLinkWhatsapp } from '../../utils/whatsapp';
 import { armarLinkPerfil } from '../../components/CompartirPerfil';
+import PiezaBienvenida from '../../components/PiezaBienvenida';
 import { db, storage, auth } from '../../firebase';
 import { collection, getDocs, getDoc, getCountFromServer, doc, query, where, writeBatch, serverTimestamp } from 'firebase/firestore';
 import { ref, getDownloadURL } from 'firebase/storage';
@@ -39,6 +40,9 @@ export default function Validaciones() {
   const [reenviando, setReenviando] = useState(null);
   // Avisos de WhatsApp pendientes de enviar (uno por cada persona recién aprobada con número)
   const [avisosWp, setAvisosWp] = useState([]);
+  // Piezas de bienvenida para redes de quienes recién aprobaste, y la que está abierta ahora
+  const [piezasBienvenida, setPiezasBienvenida] = useState([]);
+  const [piezaAbierta, setPiezaAbierta] = useState(null);
 
   // Ventana para escribir el motivo del rechazo: guarda a quién se está rechazando
   const [modalRechazo, setModalRechazo] = useState(null);
@@ -203,6 +207,9 @@ export default function Validaciones() {
     } catch (error) {
       console.error('No se pudo armar el aviso de WhatsApp:', error);
     }
+
+    // Pieza de bienvenida para las redes (no se publica nada solo)
+    setPiezasBienvenida((prev) => [...prev, { uid: req.uid, nombre: req.nombre, tipo: req.tipo === 'clinica' ? 'clinica' : 'profesional' }]);
 
     setPendientes((prev) => prev.filter((u) => u.uid !== req.uid));
     setProcesando(null);
@@ -431,6 +438,43 @@ export default function Validaciones() {
           ))}
         </div>
       )}
+
+      {/* Pieza de bienvenida para tus redes */}
+      {piezasBienvenida.length > 0 && (
+        <div className="mb-6 flex flex-col gap-3">
+          {piezasBienvenida.map((pieza) => (
+            <div key={pieza.uid} className="bg-[#2D6A6A]/10 border border-[#2D6A6A]/30 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <p className="text-[14px] font-medium text-[#1A3D3D] leading-snug">
+                Ya tenés lista la pieza de bienvenida de <span className="font-bold">{pieza.nombre}</span> para tus redes.
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => { setPiezaAbierta(pieza); setPiezasBienvenida((prev) => prev.filter((a) => a.uid !== pieza.uid)); }}
+                  className="px-4 py-2 rounded-xl bg-[#2D6A6A] text-white text-[13px] font-bold hover:bg-[#1A3D3D] transition-colors flex items-center gap-2"
+                >
+                  <ImageIcon className="w-4 h-4" /> Ver pieza
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPiezasBienvenida((prev) => prev.filter((a) => a.uid !== pieza.uid))}
+                  className="px-3 py-2 rounded-xl text-[13px] font-bold text-[#666666] hover:bg-white transition-colors"
+                >
+                  Ahora no
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <PiezaBienvenida
+        abierto={!!piezaAbierta}
+        onCerrar={() => setPiezaAbierta(null)}
+        uid={piezaAbierta?.uid}
+        tipo={piezaAbierta?.tipo}
+        nombre={piezaAbierta?.nombre}
+      />
 
       {/* Encabezado */}
       <div className="mb-8">

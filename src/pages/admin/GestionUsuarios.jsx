@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Search, Edit2, Ban, X, Save, Trash2,
-  User, Building, ShieldAlert, Store, Loader2, Crown
+  User, Building, ShieldAlert, Store, Loader2, Crown, Image as ImageIcon
 } from 'lucide-react';
 import { db } from '../../firebase';
+import PiezaBienvenida from '../../components/PiezaBienvenida';
 import { collection, getDocs, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 
 // La fecha puede venir como Timestamp, texto o número: la pasamos a fecha común
@@ -22,6 +23,8 @@ export default function GestionUsuarios() {
   const [filtroRol, setFiltroRol] = useState('todos');
   const [usuarioEditando, setUsuarioEditando] = useState(null);
   const [guardando, setGuardando] = useState(false);
+  // Usuario del que se está armando la pieza de bienvenida para redes
+  const [piezaUsuario, setPiezaUsuario] = useState(null);
  
 
   // Cargar usuarios reales de Firestore
@@ -213,6 +216,16 @@ export default function GestionUsuarios() {
                           </span>
                         )}
                      
+                        {/* Botón pieza de bienvenida (solo profesionales y clínicas ya aprobados) */}
+                        {(user.rol === 'profesional' || user.rol === 'clinica') && !['pendiente', 'suspendido', 'baja'].includes(user.estado) && (
+                          <button
+                            onClick={() => setPiezaUsuario(user)}
+                            className="p-2 text-[#666666] hover:text-[#2D6A6A] hover:bg-[#2D6A6A]/10 rounded-xl transition-all"
+                            title="Armar pieza de bienvenida para redes"
+                          >
+                            <ImageIcon className="w-4 h-4" />
+                          </button>
+                        )}
                         {/* Botón corona (socio vitalicio) */}
                         <button
                           onClick={() => handleToggleSocio(user.uid, user.nombre, !!user.socioVitalicio)}
@@ -271,6 +284,14 @@ export default function GestionUsuarios() {
           </div>
         )}
       </div>
+
+      <PiezaBienvenida
+        abierto={!!piezaUsuario}
+        onCerrar={() => setPiezaUsuario(null)}
+        uid={piezaUsuario?.uid}
+        tipo={piezaUsuario?.rol}
+        nombre={piezaUsuario?.nombre}
+      />
 
       {/* MODAL DE EDICIÓN */}
       {usuarioEditando && (

@@ -21,7 +21,7 @@ export const armarLinkPerfil = (tipo, slug) => `${DOMINIO}/${tramoRuta(tipo)}/${
 const armarLinkCorto = (tipo, slug) => `portalveterinario.ar/${tramoRuta(tipo)}/${slug}`;
 
 // "María González" → "MG"
-const iniciales = (nombre) => {
+export const iniciales = (nombre) => {
   const partes = String(nombre || '').trim().split(/\s+/).filter(Boolean);
   if (partes.length === 0) return 'PV';
   const primera = partes[0][0] || '';
@@ -34,7 +34,7 @@ const iniciales = (nombre) => {
 // ==========================================
 
 // Carga la foto pidiendo permiso (CORS). Si falla, reintenta una vez y si no, devuelve null (se usan las iniciales)
-const cargarImagen = (url) => new Promise((resolve) => {
+export const cargarImagen = (url) => new Promise((resolve) => {
   if (!url) { resolve(null); return; }
   const intentar = (src, reintento) => {
     const img = new Image();
@@ -54,7 +54,7 @@ const cargarImagen = (url) => new Promise((resolve) => {
 });
 
 // Rectángulo con esquinas redondeadas (se arma a mano para que funcione en todos los navegadores)
-const rectRedondeado = (ctx, x, y, w, h, r) => {
+export const rectRedondeado = (ctx, x, y, w, h, r) => {
   ctx.beginPath();
   ctx.moveTo(x + r, y);
   ctx.arcTo(x + w, y, x + w, y + h, r);
@@ -76,7 +76,7 @@ const burbuja = (ctx, x, y, radio, color) => {
 };
 
 // Parte un texto en renglones que entren en el ancho máximo
-const partirLineas = (ctx, texto, anchoMax) => {
+export const partirLineas = (ctx, texto, anchoMax) => {
   const palabras = String(texto).split(/\s+/).filter(Boolean);
   const lineas = [];
   let actual = '';
@@ -94,7 +94,7 @@ const partirLineas = (ctx, texto, anchoMax) => {
 };
 
 // Achica la letra de a poco hasta que el texto entre en el ancho y en la cantidad de renglones permitida
-const ajustarTexto = (ctx, texto, armarFuente, tamMax, tamMin, anchoMax, maxLineas) => {
+export const ajustarTexto = (ctx, texto, armarFuente, tamMax, tamMin, anchoMax, maxLineas) => {
   let tam = tamMax;
   while (tam >= tamMin) {
     ctx.font = armarFuente(tam);
@@ -255,7 +255,7 @@ const CLASES_BOTON = {
   secundario: 'bg-white border border-gray-200 text-[#1A3D3D] hover:border-[#2D6A6A] hover:text-[#2D6A6A]',
   glass: 'bg-white/15 border border-white/20 text-white hover:bg-white/25 hover:-translate-y-0.5'
 };
-const armarClaseBoton = (variante, soloIcono, className) =>
+export const armarClaseBoton = (variante, soloIcono, className) =>
   `${BASE_BOTON} ${CLASES_BOTON[variante] || CLASES_BOTON.principal} ${soloIcono ? 'p-2.5' : 'px-5 py-3.5'} ${className}`;
 
 // Copia un texto al portapapeles (con plan B para navegadores viejos)
