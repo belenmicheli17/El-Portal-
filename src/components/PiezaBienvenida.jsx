@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Download, Share2, Loader2, AlertTriangle } from 'lucide-react';
+import { X, Download, Share2, Loader2, AlertTriangle, Check } from 'lucide-react';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
-import { iniciales, cargarImagen, rectRedondeado, ajustarTexto, armarClaseBoton } from './CompartirPerfil';
+import { iniciales, cargarImagen, rectRedondeado, ajustarTexto, armarClaseBoton, copiarAlPortapapeles } from './CompartirPerfil';
+import { usuarioDeInstagram } from './editor/EditorComponents';
 
 // =====================================================================
 // PIEZA DE BIENVENIDA PARA REDES
@@ -64,7 +65,12 @@ export const cargarDatosPieza = async (uid, tipo) => {
     subtitulo: esClinica ? 'Clínica veterinaria' : (perfil.especialidad || ''),
     // Solo las clínicas llevan zona: localidad + provincia (el barrio solo no alcanza, "Belgrano" puede ser de cualquier lado)
     zona: esClinica ? armarZonaClinica(perfil) : '',
-    foto: perfil.foto || ''
+    foto: perfil.foto || '',
+    // Instagram para etiquetarlo en la historia: "@usuario" (vacío si no cargó). Profesionales: perfil.instagram; clínicas: perfil.redes.instagram
+    instagram: (() => {
+      const usuario = usuarioDeInstagram(esClinica ? perfil.redes?.instagram : perfil.instagram);
+      return usuario ? `@${usuario}` : '';
+    })()
   };
 };
 
@@ -470,6 +476,9 @@ export default function PiezaBienvenida({ abierto, onCerrar, uid, tipo = 'profes
   const [fotoFallo, setFotoFallo] = useState(false);
   const [nombreArchivo, setNombreArchivo] = useState('bienvenida.png');
   const [puedeCompartir, setPuedeCompartir] = useState(false);
+  // Instagram de la persona ("@usuario") y si ya se copió al portapapeles
+  const [instagram, setInstagram] = useState('');
+  const [instagramCopiado, setInstagramCopiado] = useState(false);
   const archivoRef = useRef(null);
 
   // Cada vez que se abre, leemos el perfil real y armamos la imagen
@@ -481,10 +490,13 @@ export default function PiezaBienvenida({ abierto, onCerrar, uid, tipo = 'profes
     setError('');
     setImagenUrl('');
     setFotoFallo(false);
+    setInstagram('');
+    setInstagramCopiado(false);
 
     (async () => {
       try {
         const datos = await cargarDatosPieza(uid, tipo);
+        if (!cancelado) setInstagram(datos.instagram || '');
         let resultado = null;
         try {
           resultado = await generarPiezaBienvenida(datos);
@@ -527,8 +539,15 @@ export default function PiezaBienvenida({ abierto, onCerrar, uid, tipo = 'profes
 
   if (!abierto) return null;
 
+  // Al descargar o compartir, el @ de Instagram queda copiado para pegarlo en la historia (si cargó uno)
+  const copiarInstagram = () => {
+    if (!instagram) return;
+    copiarAlPortapapeles(instagram).then((ok) => { if (ok) setInstagramCopiado(true); });
+  };
+
   const descargar = () => {
     if (!imagenUrl) return;
+    copiarInstagram();
     const enlace = document.createElement('a');
     enlace.href = imagenUrl;
     enlace.download = nombreArchivo;
@@ -540,6 +559,7 @@ export default function PiezaBienvenida({ abierto, onCerrar, uid, tipo = 'profes
   // Menú nativo del celular (para subirla a Instagram, por ejemplo)
   const compartir = () => {
     if (!archivoRef.current || !navigator.share) return;
+    copiarInstagram();
     navigator.share({ files: [archivoRef.current] }).catch(() => {});
   };
 
@@ -584,6 +604,14 @@ export default function PiezaBienvenida({ abierto, onCerrar, uid, tipo = 'profes
               </button>
               {puedeCompartir && (
                 <p className="text-[15px] text-[#666666] leading-snug">Se abre el menú de tu celular: elegí Instagram → Historias.</p>
+              )}
+              {instagram ? (
+                <p className="flex items-center gap-1.5 text-[13px] font-bold text-[#2D6A6A] break-all">
+                  {instagramCopiado && <Check className="w-4 h-4 shrink-0" />}
+                  {instagramCopiado ? `Copiado ${instagram}: pegalo en la historia para etiquetarlo` : `Al descargar o compartir se copia ${instagram} para etiquetarlo`}
+                </p>
+              ) : (
+                !generando && <p className="text-[13px] text-[#666666]">Esta cuenta no cargó su Instagram.</p>
               )}
               {fotoFallo && !generando && (
                 <div className="flex items-start gap-3 bg-yellow-50 border border-yellow-100 rounded-2xl px-4 py-3.5">

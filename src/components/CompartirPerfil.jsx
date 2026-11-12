@@ -259,7 +259,7 @@ export const armarClaseBoton = (variante, soloIcono, className) =>
   `${BASE_BOTON} ${CLASES_BOTON[variante] || CLASES_BOTON.principal} ${soloIcono ? 'p-2.5' : 'px-5 py-3.5'} ${className}`;
 
 // Copia un texto al portapapeles (con plan B para navegadores viejos)
-const copiarAlPortapapeles = async (texto) => {
+export const copiarAlPortapapeles = async (texto) => {
   try {
     await navigator.clipboard.writeText(texto);
     return true;
