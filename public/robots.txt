@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /ecosistema
+Disallow: /editor-
+Disallow: /onboarding
+
+Sitemap: https://www.portalveterinario.ar/sitemap.xml

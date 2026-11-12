@@ -1,8 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { X, Check, Lock, Search, ChevronDown, Loader2, AlertTriangle } from 'lucide-react';
+import { X, Check, Lock, Search, ChevronDown, Loader2, AlertTriangle, Info } from 'lucide-react';
 import { GRUPOS_AREAS } from '../../data/bolsaOpciones';
+
+
 
 // Pills para elegir una o varias opciones
 export function SelectorPills({ opciones, seleccion, onCambio, multiple = true, maximo = null, deshabilitado = false }) {
@@ -185,8 +187,7 @@ export function SelectorAreas({ seleccion = [], onCambio, maximo = null, sugerid
           ))}
         </div>
       )}
-      {lleno && <p className="text-[13px] text-[#666666] -mt-2">Llegaste al máximo de {maximo}. Para cambiar una, sacala primero.</p>}
-
+   
       {sugeridasLimpias.length > 0 && (
         <div>
           <p className="text-[13px] font-bold text-[#666666] mb-2">De tu perfil</p>
@@ -205,6 +206,16 @@ export function SelectorAreas({ seleccion = [], onCambio, maximo = null, sugerid
         />
         {texto && <button type="button" onClick={() => setTexto('')} aria-label="Borrar búsqueda"><X className="w-4 h-4 text-gray-400" /></button>}
       </div>
+
+      {/* Aviso: aparece pegado al buscador cuando ya elegiste el máximo */}
+      {lleno && (
+        <div className="flex items-start gap-2.5 bg-[#2D6A6A]/10 text-[#1A3D3D] rounded-2xl px-4 py-3">
+          <Info className="w-4 h-4 text-[#2D6A6A] shrink-0 mt-0.5" />
+          <p className="text-[13px] leading-relaxed">
+            Llegaste al máximo de {maximo} especialidades. Las que están en gris no se pueden sumar: sacá una de las elegidas (tocando la X) para elegir otra.
+          </p>
+        </div>
+      )}
 
       {texto.trim() ? (
         resultados.length > 0

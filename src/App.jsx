@@ -60,6 +60,23 @@ const ScrollToTop = () => {
   return null;
 };
 
+// Le avisa a Google cuál es la dirección oficial de cada página (sin filtros y sin mayúsculas)
+const CanonicalAutomatico = () => {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    let ruta = pathname.replace(/\/+$/, '');
+    if (ruta.toLowerCase() === '/cartilla') ruta = '/cartilla';
+    let enlace = document.querySelector('link[rel="canonical"]');
+    if (!enlace) {
+      enlace = document.createElement('link');
+      enlace.rel = 'canonical';
+      document.head.appendChild(enlace);
+    }
+    enlace.href = 'https://www.portalveterinario.ar' + ruta;
+  }, [pathname]);
+  return null;
+};
+
 // ==========================================
 // LAYOUT PÚBLICO — con Navbar y Footer completo
 // ==========================================
@@ -123,6 +140,7 @@ export default function App() {
         `}} />
 
         <ScrollToTop />
+        <CanonicalAutomatico />
         <BannerModoPrueba />
         <OcultarEnAdmin><AccessibilityWidget /></OcultarEnAdmin> 
 

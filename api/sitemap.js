@@ -18,6 +18,7 @@ const DOMINIO = 'https://www.portalveterinario.ar';
 const PAGINAS_FIJAS = [
   { ruta: '/', prioridad: '1.0', frecuencia: 'weekly' },
   { ruta: '/cartilla', prioridad: '0.9', frecuencia: 'daily' },
+  { ruta: '/bolsa-de-trabajo', prioridad: '0.7', frecuencia: 'daily' },
   { ruta: '/login', prioridad: '0.5', frecuencia: 'monthly' }
 ];
 
