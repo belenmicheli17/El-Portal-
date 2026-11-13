@@ -166,6 +166,12 @@ export default function BolsaTrabajo() {
     irA('disponible');
   };
 
+  // Botón único "Me interesa publicar una búsqueda": reconoce el tipo de cuenta y abre el formulario que corresponde
+  const pedirPublicarBusqueda = () => {
+    if (currentUser?.rol === 'profesional') return pedirDisponible();
+    return pedirPublicarOferta();
+  };
+
   const alGuardar = async (mensaje) => {
     setAviso(mensaje);
     setCargando(true);
@@ -581,7 +587,6 @@ function EstadoVacio({ onPublicar }) {
       <p className="text-[#666666] text-[15px] max-w-md mb-6">¿Tu clínica busca a alguien o estás buscando trabajo? Sé de los primeros en publicar. Es gratis.</p>
       <div className="flex flex-wrap gap-2 justify-center">
         <button type="button" onClick={onPublicar} className="bg-[#2D6A6A] hover:bg-[#1A3D3D] text-white px-6 py-3 rounded-2xl text-[14px] font-semibold transition-colors">Me interesa publicar una búsqueda</button>
-        
       </div>
     </div>
   );
