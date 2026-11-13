@@ -432,7 +432,7 @@ export default function BolsaTrabajo() {
         {cargando ? (
           <div className="flex justify-center items-center py-20"><div className="w-12 h-12 border-4 border-[#2D6A6A]/20 border-t-[#2D6A6A] rounded-full animate-spin" /></div>
         ) : ofertas.length === 0 && disponibles.length === 0 ? (
-          <EstadoVacio onPublicar={pedirPublicarOferta} onDisponible={pedirDisponible} />
+          <EstadoVacio onPublicar={pedirPublicarBusqueda} />
         ) : (
           <div className="flex flex-col gap-8">
             {mostrarOfertas && (
@@ -571,17 +571,17 @@ function AvisoExito({ texto }) {
   );
 }
 
-function EstadoVacio({ onPublicar, onDisponible }) {
+function EstadoVacio({ onPublicar }) {
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center bg-white rounded-[32px] border border-gray-100 shadow-sm px-6">
       <div className="w-20 h-20 bg-[#F4F7F7] rounded-full flex items-center justify-center mb-5">
-        <Briefcase className="w-10 h-10 text-[#2D6A6A] opaacity-60" />
+        <Briefcase className="w-10 h-10 text-[#2D6A6A] opacity-60" />
       </div>
       <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[20px] md:text-[24px] mb-2">Estamos sumando las primeras ofertas</h3>
       <p className="text-[#666666] text-[15px] max-w-md mb-6">¿Tu clínica busca a alguien o estás buscando trabajo? Sé de los primeros en publicar. Es gratis.</p>
-        <div className="flex flex-wrap gap-2 justify-center">
-        <button type="button" onClick={onPublicar} className="bg-[#2D6A6A] hover:bg-[#1A3D3D] text-white px-6 py-3 rounded-2xl text-[14px] font-semibold transition-colors">Publicar oferta</button>
-        <button type="button" onClick={onDisponible} className="bg-[#F4F7F7] hover:bg-gray-200 text-[#1A3D3D] px-6 py-3 rounded-2xl text-[14px] font-semibold transition-colors">Marcarme como disponible</button>
+      <div className="flex flex-wrap gap-2 justify-center">
+        <button type="button" onClick={onPublicar} className="bg-[#2D6A6A] hover:bg-[#1A3D3D] text-white px-6 py-3 rounded-2xl text-[14px] font-semibold transition-colors">Me interesa publicar una búsqueda</button>
+        
       </div>
     </div>
   );
