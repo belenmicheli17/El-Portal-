@@ -122,7 +122,7 @@ export const linkMapa = (item) => {
 // Profesional → clínica (al postularse). El cierre depende de si manda CV o su perfil.
 export const mensajePostulacion = (nombre) => `Hola, soy ${nombre || 'veterinario/a'}. Vi la búsqueda de personal que publicaron en Portal Veterinario y me gustaría postularme.`;
 export const cierrePostulacion = ({ cvUrl, cvEsFoto, perfilUrl }) => {
-  if (cvUrl) return `📄 Ver currículum (${cvEsFoto ? 'foto' : 'PDF'}): ${cvUrl}\n(Se abre iniciando sesión en Portal Veterinario con la cuenta de la clínica.)\n\n¡Muchas gracias!`;
+  if (cvUrl) return `📄 Ver currículum (${cvEsFoto ? 'foto' : 'PDF'}): ${cvUrl}\n\n¡Muchas gracias!`;
   if (perfilUrl) return `Pueden ver mi portfolio desde este link: ${perfilUrl}\n\n¡Muchas gracias!`;
   return '¡Muchas gracias!';
 };

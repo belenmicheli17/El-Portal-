@@ -371,10 +371,10 @@ export default function BolsaTrabajo() {
           {/* PANEL DE FILTROS: se despliega pegado debajo de la barra, como en la Cartilla */}
           {verFiltros && (
             <div className="absolute top-full left-0 right-0 bg-white rounded-t-none lg:rounded-tr-[32px] rounded-b-[32px] p-6 sm:p-8 border-x border-b border-gray-100 shadow-2xl z-40 animate-in fade-in slide-in-from-top-4 cursor-default">
-              <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_340px] gap-8 lg:gap-10 lg:divide-x lg:divide-gray-100 mb-6">
+              <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] gap-8 lg:gap-0 lg:divide-x lg:divide-gray-100 mb-6">
 
                 {/* Columna 1: especialidades, agrupadas, solo las que tienen publicaciones */}
-                <div>
+                <div className="lg:pr-8">
                   <h3 className={claseTituloPanel}><Stethoscope className="w-4 h-4 lg:w-3.5 lg:h-3.5 text-[#2D6A6A]" /> Especialidad</h3>
                   <div className="flex flex-col gap-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                     {pastillas.length === 0 && <p className="text-[13px] text-[#666666]">Todavía no hay publicaciones con especialidades.</p>}
@@ -399,7 +399,7 @@ export default function BolsaTrabajo() {
                 </div>
 
                 {/* Columna 2: zona, puesto, jornada, horario y experiencia */}
-                <div className="lg:pl-10 flex flex-col gap-6">
+                <div className="lg:pl-8 flex flex-col gap-6">
                   <div>
                     <h3 className={claseTituloPanel}><MapPin className="w-4 h-4 lg:w-3.5 lg:h-3.5 text-[#2D6A6A]" /> Zona</h3>
                     <div className="flex flex-wrap gap-2">
@@ -414,8 +414,6 @@ export default function BolsaTrabajo() {
                   </div>
                   <GrupoPanel titulo="Puesto" opciones={ROLES_VISIBLES} valor={rol} onCambio={(v) => cambiarFiltro('rol', v)} />
                   <GrupoPanel titulo="Jornada" opciones={JORNADAS} valor={jornada} onCambio={(v) => cambiarFiltro('jornada', v)} />
-                  <GrupoPanel titulo="Horario" opciones={HORARIOS} valor={horario} onCambio={(v) => cambiarFiltro('horario', v)} />
-                  <GrupoPanel titulo="Experiencia" opciones={EXPERIENCIAS} valor={experiencia} onCambio={(v) => cambiarFiltro('exp', v)} />
                 </div>
               </div>
 
