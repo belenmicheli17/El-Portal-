@@ -234,6 +234,8 @@ export default function BolsaTrabajo() {
   }, [ofertas, disponibles]);
 
   const cantidadFiltrosVentana = [provincia, jornada, area, rol, horario, experiencia].filter(Boolean).length;
+  // Cuántas publicaciones hay por especialidad (para mostrar el número al lado de cada pill del panel)
+  const cuentaAreas = Object.fromEntries(pastillas.map((p) => [p.id, p.cantidad]));
   const hayFiltros = !!(cantidadFiltrosVentana || busqueda.trim());
   const limpiarFiltros = () => {
     const nuevos = new URLSearchParams(params);
@@ -352,6 +354,10 @@ export default function BolsaTrabajo() {
 
       {/* BARRA DE BÚSQUEDA: pestañas tipo solapa en PC, como en la Cartilla */}
       <div className="max-w-6xl mx-auto w-full px-4">
+        {/* Fondo suave detrás del panel de filtros (igual que en la Cartilla) */}
+        {verFiltros && (
+          <div className="fixed inset-0 bg-[#1A3D3D]/10 backdrop-blur-[2px] z-20 transition-opacity" onClick={() => setVerFiltros(false)} />
+        )}
         <div className="hidden md:inline-flex gap-1 relative z-20 bg-white/60 rounded-t-[16px] px-1.5 overflow-hidden">
           {PESTANAS.map((t) => (
             <button key={t.id} type="button" onClick={() => cambiarFiltro('tab', t.id === 'todo' ? '' : t.id)} className={`flex items-center gap-1.5 px-6 py-2.5 rounded-t-[14px] text-[14px] font-semibold transition-all ${pestana === t.id ? 'bg-white text-[#1A3D3D]' : 'bg-transparent text-[#666666] hover:text-[#1A3D3D]'}`}>
@@ -360,7 +366,70 @@ export default function BolsaTrabajo() {
           ))}
         </div>
 
-        <div className="bg-white rounded-[24px] md:rounded-tl-none p-2 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.08)] flex flex-col md:flex-row items-stretch md:items-center gap-2 relative z-30 md:-mt-px">
+        <div className={`bg-white rounded-[24px] md:rounded-tl-none p-2 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.08)] flex flex-col md:flex-row items-stretch md:items-center gap-2 relative z-30 md:-mt-px transition-all duration-300 ${verFiltros ? 'rounded-b-none' : ''}`}>
+
+          {/* PANEL DE FILTROS: se despliega pegado debajo de la barra, como en la Cartilla */}
+          {verFiltros && (
+            <div className="absolute top-full left-0 right-0 bg-white rounded-t-none lg:rounded-tr-[32px] rounded-b-[32px] p-6 sm:p-8 border-x border-b border-gray-100 shadow-2xl z-40 animate-in fade-in slide-in-from-top-4 cursor-default">
+              <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_340px] gap-8 lg:gap-10 lg:divide-x lg:divide-gray-100 mb-6">
+
+                {/* Columna 1: especialidades, agrupadas, solo las que tienen publicaciones */}
+                <div>
+                  <h3 className={claseTituloPanel}><Stethoscope className="w-4 h-4 lg:w-3.5 lg:h-3.5 text-[#2D6A6A]" /> Especialidad</h3>
+                  <div className="flex flex-col gap-4 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                    {pastillas.length === 0 && <p className="text-[13px] text-[#666666]">Todavía no hay publicaciones con especialidades.</p>}
+                    {GRUPOS_AREAS.map((g) => {
+                      const opciones = g.opciones.filter((o) => cuentaAreas[o] || area === o);
+                      if (opciones.length === 0) return null;
+                      return (
+                        <div key={g.id}>
+                          <p className="text-[11px] font-black text-[#1A3D3D] uppercase tracking-[0.15em] mb-2 opacity-50">{g.grupo}</p>
+                          <div className="flex flex-wrap gap-2">
+                            {opciones.map((o) => (
+                              <button key={o} type="button" onClick={() => cambiarFiltro('area', area === o ? '' : o)} className={clasePildora(area === o)}>
+                                {o}
+                                {cuentaAreas[o] > 0 && <span className={`text-[11px] font-bold ${area === o ? 'text-white/70' : 'text-gray-400'}`}>({cuentaAreas[o]})</span>}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Columna 2: zona, puesto, jornada, horario y experiencia */}
+                <div className="lg:pl-10 flex flex-col gap-6">
+                  <div>
+                    <h3 className={claseTituloPanel}><MapPin className="w-4 h-4 lg:w-3.5 lg:h-3.5 text-[#2D6A6A]" /> Zona</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {pastillasZona.length === 0 && <p className="text-[13px] text-[#666666]">Todavía no hay publicaciones con zona.</p>}
+                      {pastillasZona.map((z) => (
+                        <button key={z.id} type="button" onClick={() => cambiarFiltro('prov', provincia === z.id ? '' : z.id)} className={clasePildora(provincia === z.id)}>
+                          {z.id === miProvincia ? `${provinciaCorta(z.id)} (tu zona)` : provinciaCorta(z.id)}
+                          <span className={`text-[11px] font-bold ${provincia === z.id ? 'text-white/70' : 'text-gray-400'}`}>({z.cantidad})</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <GrupoPanel titulo="Puesto" opciones={ROLES_VISIBLES} valor={rol} onCambio={(v) => cambiarFiltro('rol', v)} />
+                  <GrupoPanel titulo="Jornada" opciones={JORNADAS} valor={jornada} onCambio={(v) => cambiarFiltro('jornada', v)} />
+                  <GrupoPanel titulo="Horario" opciones={HORARIOS} valor={horario} onCambio={(v) => cambiarFiltro('horario', v)} />
+                  <GrupoPanel titulo="Experiencia" opciones={EXPERIENCIAS} valor={experiencia} onCambio={(v) => cambiarFiltro('exp', v)} />
+                </div>
+              </div>
+
+              {/* Pie del panel: limpiar y ver resultados */}
+              <div className="pt-5 border-t border-gray-100 flex flex-col-reverse sm:flex-row gap-2 sm:justify-center">
+                {cantidadFiltrosVentana > 0 && (
+                  <button type="button" onClick={limpiarFiltros} className="px-6 py-2.5 rounded-xl bg-[#F4F7F7] text-[#1A3D3D] text-[13px] font-semibold hover:bg-gray-200 transition-all duration-300 ease-in-out">Borrar filtros</button>
+                )}
+                <button type="button" onClick={() => setVerFiltros(false)} className="px-6 py-2.5 rounded-xl bg-[#2D6A6A] hover:bg-[#1A3D3D] text-white text-[13px] font-semibold transition-all duration-300 ease-in-out">
+                  Ver {(mostrarOfertas ? ofertasFiltradas.length : 0) + (mostrarDisponibles ? disponiblesFiltrados.length : 0)} resultados
+                </button>
+              </div>
+            </div>
+          )}
           <div className="grid grid-cols-3 md:hidden bg-[#F4F7F7] p-1.5 rounded-[20px]">
             {PESTANAS.map((t) => (
               <button key={t.id} type="button" onClick={() => cambiarFiltro('tab', t.id === 'todo' ? '' : t.id)} className={`flex items-center justify-center gap-1.5 px-2 py-2.5 rounded-2xl text-[13px] font-medium transition-all ${pestana === t.id ? 'bg-white text-[#1A3D3D] shadow-sm' : 'text-[#666666]'}`}>
@@ -375,14 +444,14 @@ export default function BolsaTrabajo() {
             {busqueda && <button type="button" onClick={() => setBusqueda('')} aria-label="Borrar búsqueda"><X className="w-4 h-4 text-gray-400" /></button>}
           </div>
 
-          <button type="button" onClick={() => setVerFiltros(true)} className={`shrink-0 px-6 py-3 md:py-2.5 rounded-[20px] md:rounded-full text-[14px] font-semibold flex items-center justify-center gap-2 transition-all ${cantidadFiltrosVentana ? 'bg-[#1A3D3D] text-white' : 'bg-[#F4F7F7] text-[#1A3D3D] hover:bg-gray-200'}`}>
+          <button type="button" onClick={() => setVerFiltros((v) => !v)} className={`shrink-0 px-6 py-3 md:py-2.5 rounded-[20px] md:rounded-full text-[14px] font-semibold flex items-center justify-center gap-2 transition-all ${cantidadFiltrosVentana ? 'bg-[#1A3D3D] text-white' : 'bg-[#F4F7F7] text-[#1A3D3D] hover:bg-gray-200'}`}>
             <SlidersHorizontal className="w-4 h-4" /> Filtros{cantidadFiltrosVentana ? ` · ${cantidadFiltrosVentana}` : ''}
           </button>
         </div>
       </div>
 
-      {/* EXPLORÁ POR ESPECIALIDAD Y FILTRÁ POR ZONA: mismas pastillas que la Cartilla.
-          En celular se deslizan al costado; en PC se acomodan en filas y el resto queda en "Ver más". */}
+      {/* FILTROS ACTIVOS */}
+          
       {!cargando && (pastillas.length > 0 || pastillasZona.length > 0) && (
         <div className="max-w-6xl mx-auto w-full px-4 flex flex-col gap-4">
           {pastillas.length > 0 && (
@@ -470,40 +539,7 @@ export default function BolsaTrabajo() {
         )}
       </div>
 
-      {/* VENTANA DE FILTROS */}
-      <VentanaBolsa abierta={verFiltros} onCerrar={() => setVerFiltros(false)}>
-        <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[20px] mb-5">Filtros</h3>
 
-        <p className="text-[14px] font-bold text-[#1A3D3D] mb-2">Especialidad</p>
-        <select value={area} onChange={(e) => cambiarFiltro('area', e.target.value)} className={claseSelect}>
-          <option value="">Todas</option>
-          {GRUPOS_AREAS.map((g) => (
-            <optgroup key={g.id} label={g.grupo}>
-              {g.opciones.map((o) => <option key={o} value={o}>{o}</option>)}
-            </optgroup>
-          ))}
-        </select>
-
-        <p className="text-[14px] font-bold text-[#1A3D3D] mb-2">Zona (provincia)</p>
-        <select value={provincia} onChange={(e) => cambiarFiltro('prov', e.target.value)} className={claseSelect}>
-          <option value="">Todas</option>
-          {(provinciasConDatos.length ? provinciasConDatos : provincias).map((p) => <option key={p} value={p}>{provinciaCorta(p)}</option>)}
-        </select>
-
-        <GrupoFiltro titulo="Puesto" opciones={ROLES_VISIBLES} valor={rol} onCambio={(v) => cambiarFiltro('rol', v)} />
-        <GrupoFiltro titulo="Jornada" opciones={JORNADAS} valor={jornada} onCambio={(v) => cambiarFiltro('jornada', v)} />
-        <GrupoFiltro titulo="Horario" opciones={HORARIOS} valor={horario} onCambio={(v) => cambiarFiltro('horario', v)} />
-        <GrupoFiltro titulo="Experiencia" opciones={EXPERIENCIAS} valor={experiencia} onCambio={(v) => cambiarFiltro('exp', v)} />
-
-        <div className="flex gap-2">
-          {cantidadFiltrosVentana > 0 && (
-            <button type="button" onClick={limpiarFiltros} className="flex-1 bg-[#F4F7F7] hover:bg-gray-200 text-[#1A3D3D] py-3.5 rounded-2xl text-[14px] font-semibold">Limpiar</button>
-          )}
-          <button type="button" onClick={() => setVerFiltros(false)} className="flex-[2] bg-[#2D6A6A] hover:bg-[#1A3D3D] text-white py-3.5 rounded-2xl text-[14px] font-semibold">
-            Ver {(mostrarOfertas ? ofertasFiltradas.length : 0) + (mostrarDisponibles ? disponiblesFiltrados.length : 0)} resultados
-          </button>
-        </div>
-      </VentanaBolsa>
 
       <DetalleDisponible disponible={disponibleAbierto} abierto={!!disponibleAbierto} onCerrar={() => setDisponibleAbierto(null)} conSesion={permisos.conSesion} currentUser={currentUser} />
 
@@ -551,6 +587,27 @@ function FilaPastillas({ titulo, items, limite, verTodas, onVerTodas, activa, on
 }
 
 const claseSelect = 'w-full border border-gray-200 focus:border-[#2D6A6A] rounded-2xl px-4 py-3 text-[15px] text-[#333333] focus:outline-none bg-gray-50/50 mb-6';
+
+// Estilos del panel de filtros (los mismos que usa la Cartilla)
+const clasePildora = (activa) => `px-3 py-1.5 text-[13px] font-medium rounded-xl cursor-pointer transition-colors flex items-center gap-1.5 ${activa ? 'bg-[#2D6A6A] text-white shadow-sm' : 'bg-[#F4F7F7] text-[#666666] hover:bg-gray-200'}`;
+const claseTituloPanel = "font-['Montserrat'] font-black text-[#1A3D3D] text-[12px] lg:text-[13px] uppercase tracking-[0.2em] mb-4 flex items-center gap-2";
+
+// Un grupo de pills de una sola opción dentro del panel (tocar de nuevo la saca)
+function GrupoPanel({ titulo, opciones, valor, onCambio }) {
+  const lista = opciones.map((o) => (typeof o === 'string' ? { id: o, label: o } : o));
+  return (
+    <div>
+      <h3 className={claseTituloPanel}>{titulo}</h3>
+      <div className="flex flex-wrap gap-2">
+        {lista.map((o) => (
+          <button key={o.id} type="button" onClick={() => onCambio(valor === o.id ? '' : o.id)} className={clasePildora(valor === o.id)}>
+            {o.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 // Pills de una sola opción dentro de la ventana de filtros (tocar de nuevo la saca)
 function GrupoFiltro({ titulo, opciones, valor, onCambio }) {

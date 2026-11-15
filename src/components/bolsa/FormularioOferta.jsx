@@ -45,7 +45,7 @@ const lugaresDeClinica = (clinica) => {
 // El equipamiento que la clínica ya marcó en su página viene elegido de entrada
 const equipoDeClinica = (clinica) => {
   const grupo = clinica?.servicios?.equipamiento_infraestructura;
-  return grupo?.activo ? (grupo.subOpcionesSeleccionadas || []).map((e) => (e === 'Farmacia y vacunatorio' ? 'Farmacia' : e)).filter((e) => EQUIPO.includes(e)) : [];
+  return grupo?.activo ? (grupo.subOpcionesSeleccionadas || []).map((e) => (e === 'Farmacia' ? 'Farmacia' : e)).filter((e) => EQUIPO.includes(e)) : [];
 };
 
 // Orden de los campos en la pantalla (para bajar hasta el primero que falta) y cómo se llaman en el aviso

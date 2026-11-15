@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
 import { ChevronLeft, MapPin, Clock, Info, Link2, Check, Loader2, Lock, ExternalLink, ArrowRight } from 'lucide-react';
 import { db } from '../../firebase';
-import { etiquetaRol, publicadoHace, linkOferta, zonaTexto, linkMapa } from '../../utils/bolsa';
+import { etiquetaRol, publicadoHace, linkOferta, zonaTexto } from '../../utils/bolsa';
 import VentanaPostulacion from './VentanaPostulacion';
 
 const claseEtiqueta = "bg-[#F4F7F7] text-[#1A3D3D] text-[13px] font-semibold px-3.5 py-1.5 rounded-full";
@@ -63,7 +63,9 @@ export default function DetalleOferta({ oferta, permisos, currentUser, onVolver,
 
   const areas = oferta.areas || [];
   const zona = zonaTexto(oferta);
-  const mapa = linkMapa(oferta);
+                  <button type="button" onClick={() => navigate(`/clinica/${oferta.clinicaSlug}`)} className="flex w-fit items-center gap-1.5 text-[#2D6A6A] text-[15px] font-semibold mt-1 hover:underline underline-offset-2 text-left">
+                    {oferta.clinicaNombre} · ver página de la clínica <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                  </button>
   const requisitos = oferta.requisitos || [];
   const equipo = oferta.equipo || [];
 
@@ -134,22 +136,17 @@ export default function DetalleOferta({ oferta, permisos, currentUser, onVolver,
                 <p className="text-[12px] font-bold tracking-[0.12em] uppercase text-[#2D6A6A] mb-1">Buscan</p>
                 <h1 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[24px] md:text-[32px] leading-tight tracking-tight">{etiquetaRol(oferta.rol)}</h1>
                 {oferta.clinicaSlug ? (
-                  <button type="button" onClick={() => navigate(`/clinica/${oferta.clinicaSlug}`)} className="block text-[#2D6A6A] text-[15px] font-semibold mt-1 hover:underline underline-offset-2 text-left">
-                    {oferta.clinicaNombre} · ver página de la clínica
+                  <button type="button" onClick={() => navigate(`/clinica/${oferta.clinicaSlug}`)} className="flex w-fit items-center gap-1.5 text-[#2D6A6A] text-[15px] font-semibold mt-1 hover:underline underline-offset-2 text-left">
+                    {oferta.clinicaNombre} · ver página de la clínica <ExternalLink className="w-3.5 h-3.5 shrink-0" />
                   </button>
                 ) : (
                   <p className="text-[#2D6A6A] text-[15px] font-semibold mt-1">{oferta.clinicaNombre}</p>
                 )}
 
                 {/* Ubicación corta (sin calle ni código postal); al tocarla abre el mapa */}
-                {zona && (mapa ? (
-                  <a href={mapa} target="_blank" rel="noopener noreferrer" className="flex w-fit items-center gap-1.5 text-[#333333] text-[14px] font-semibold mt-2 hover:text-[#2D6A6A] group">
-                    <MapPin className="w-4 h-4 shrink-0 text-[#2D6A6A]" /> <span className="underline decoration-gray-300 underline-offset-4 group-hover:decoration-[#2D6A6A]">{zona}</span>
-                    <ExternalLink className="w-3.5 h-3.5 text-[#666666] group-hover:text-[#2D6A6A]" />
-                  </a>
-                ) : (
+                {zona && (
                   <p className="flex items-center gap-1.5 text-[#333333] text-[14px] font-semibold mt-2"><MapPin className="w-4 h-4 shrink-0 text-[#2D6A6A]" /> {zona}</p>
-                ))}
+                )}
               </div>
             </div>
 

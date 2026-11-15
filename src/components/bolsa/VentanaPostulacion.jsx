@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { MessageCircle, Mail, Loader2, Check, FileText, UserCircle2 } from 'lucide-react';
 import { VentanaBolsa } from './ElementosBolsa';
-import CajaCV, { useMiCV } from './CajaCV';
-import { etiquetaRol, linkWhatsapp, linkPerfilProfesional, mensajePostulacion, cierrePostulacion } from '../../utils/bolsa';
+import CajaCV, { useMiCV, esFotoCV } from './CajaCV';
+import { etiquetaRol, linkWhatsapp, linkPerfilProfesional, linkCV, mensajePostulacion, cierrePostulacion } from '../../utils/bolsa';
 
 // Se abre al tocar "Postularme". A la izquierda elige con qué se postula (currículum o perfil);
 // a la derecha ve el mensaje que le llega a la clínica y lo manda por WhatsApp o mail.
@@ -29,7 +29,7 @@ export default function VentanaPostulacion({ abierta, onCerrar, oferta, contacto
   }, [abierta, cargando]);
 
   // El cierre del mensaje se arma solo: con el link al currículum o al perfil
-  const cierre = cierrePostulacion(opcion === 'cv' ? { cvUrl: cv?.url } : { perfilUrl });
+  const cierre = cierrePostulacion(opcion === 'cv' ? { cvUrl: linkCV(cv?.ruta), cvEsFoto: esFotoCV(cv) } : { perfilUrl });
   const textoFinal = [mensaje.trim(), cierre].filter(Boolean).join('\n\n');
 
   const validar = () => {

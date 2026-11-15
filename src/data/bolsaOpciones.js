@@ -47,7 +47,7 @@ export const REQUISITOS = [
 
 // Sale del equipamiento del editor de clínica, con algunos cambios solo para la Bolsa
 export const EQUIPO = [
-  ...(equipamientoData[0]?.opciones || []).map((e) => (e === 'Farmacia y vacunatorio' ? 'Farmacia' : e)),
+  ...(equipamientoData[0]?.opciones || []).map((e) => (e === 'Farmacia' ? 'Farmacia' : e)),
   'Ecógrafo',
   'Rayos X digital',
   'Anestesia inhalatoria',

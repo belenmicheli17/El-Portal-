@@ -4,6 +4,7 @@ import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage
 import { FileText, Eye, EyeOff, UploadCloud, Trash2, Loader2, ExternalLink } from 'lucide-react';
 import { db, storage } from '../../firebase';
 import { VentanaConfirmar } from './ElementosBolsa';
+import { linkCV } from '../../utils/bolsa';
 
 const TAMANO_MAXIMO = 5 * 1024 * 1024; // 5 MB
 
@@ -72,7 +73,7 @@ export default function CajaCV({ uid, cv, setCv, compacta = false }) {
       await updateDoc(doc(db, 'usuarios', uid), { cv: nuevo });
       // Borramos el CV anterior para no dejar archivos viejos dando vueltas
       if (cv?.ruta) await deleteObject(ref(storage, cv.ruta)).catch(() => {});
-      await actualizarCVEnDisponible(uid, url);
+      await actualizarCVEnDisponible(uid, linkCV(ruta));
       setCv(nuevo);
       setVerPdf(false);
     } catch (e) {

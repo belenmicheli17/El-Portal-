@@ -4,7 +4,7 @@ import { ChevronLeft, Loader2, X } from 'lucide-react';
 import { db } from '../../firebase';
 import provincias from '../../data/provincias.js';
 import { TODAS_LAS_AREAS, JORNADAS, HORARIOS, EXPERIENCIAS, FORMAS_CONTACTO_DISPONIBLE, MAX_AREAS_DISPONIBLE } from '../../data/bolsaOpciones';
-import { nuevoVencimiento, conPrefijo54, serviciosDePerfil, permisosBolsa } from '../../utils/bolsa';
+import { nuevoVencimiento, conPrefijo54, serviciosDePerfil, permisosBolsa, linkCV } from '../../utils/bolsa';
 import { BuscadorDireccionGoogle, CampoWhatsapp, esEmailValido, whatsappCompleto } from '../editor/EditorComponents';
 import { SelectorPills, SelectorAreas, CampoBolsa, irAlPrimerError } from './ElementosBolsa';
 import CajaCV, { useMiCV } from './CajaCV';
@@ -168,7 +168,7 @@ export default function FormularioDisponible({ currentUser, onVolver, onGuardada
         whatsapp: form.tipoContacto.includes('whatsapp') ? conPrefijo54(form.whatsapp) : '',
         email: form.tipoContacto.includes('email') ? form.email.trim() : '',
         mostrarCV: form.mostrarCV,
-        cvUrl: form.mostrarCV && cv?.url ? cv.url : ''
+        cvUrl: form.mostrarCV && cv?.ruta ? linkCV(cv.ruta) : ''
       });
       await lote.commit();
       onGuardada(existe ? 'Tus datos de disponible se actualizaron.' : enEspera ? 'Quedó guardado. Vas a figurar como disponible apenas verifiquemos tu cuenta.' : 'Ya figurás como disponible por 30 días.');

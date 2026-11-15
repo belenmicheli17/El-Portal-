@@ -30,6 +30,7 @@ const Ecosistema = lazy(() => import('./pages/Ecosistema'));
 const Onboarding = lazy(() => import('./pages/Onboarding'));
 const RestablecerClave = lazy(() => import('./pages/restablecer-clave'));
 const OnboardingClinica = lazy(() => import('./pages/OnboardingClinica'));
+const VerCV = lazy(() => import('./pages/ver-cv'));
 
 // Panel Admin
 import RutaProtegidaAdmin from './components/admin/RutaProtegidaAdmin';
@@ -170,6 +171,9 @@ export default function App() {
             <Route path="/capacitaciones" element={<Capacitaciones />} />
             <Route path="/cartilla-proveedores" element={<CartillaProveedores />} />
             <Route path="/papers" element={<Papers />} />
+
+            {/* Currículum de un postulante (la propia página pide sesión) */}
+            <Route path="/cv/:uid/:archivo" element={<VerCV />} />
 
             {/* Legales */}
             <Route path="/terminos-y-condiciones" element={<LegalPage />} />
