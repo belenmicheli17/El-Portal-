@@ -31,6 +31,7 @@ const Onboarding = lazy(() => import('./pages/Onboarding'));
 const RestablecerClave = lazy(() => import('./pages/restablecer-clave'));
 const OnboardingClinica = lazy(() => import('./pages/OnboardingClinica'));
 const VerCV = lazy(() => import('./pages/ver-cv'));
+const VerPostulacion = lazy(() => import('./pages/ver-postulacion'));
 
 // Panel Admin
 import RutaProtegidaAdmin from './components/admin/RutaProtegidaAdmin';
@@ -174,6 +175,7 @@ export default function App() {
 
             {/* Currículum de un postulante (la propia página pide sesión) */}
             <Route path="/cv/:uid/:archivo" element={<VerCV />} />
+            <Route path="/postulacion/:postId" element={<VerPostulacion />} />
 
             {/* Legales */}
             <Route path="/terminos-y-condiciones" element={<LegalPage />} />

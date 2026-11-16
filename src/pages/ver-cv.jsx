@@ -38,7 +38,13 @@ export default function VerCV() {
 
     // Pedimos el archivo a Storage: si la cuenta no tiene permiso, Storage lo rechaza acá
     getDownloadURL(ref(storage, `cvs/${uid}/${archivo}`))
-      .then((link) => { if (!cancelado) { setUrl(link); setEstado('listo'); } })
+      .then((link) => {
+        if (cancelado) return;
+        setUrl(link);
+        setEstado('listo');
+        // Abre el archivo directo, sin pedir otro toque (el botón queda de respaldo por si no se abre)
+        window.location.replace(link);
+      })
       .catch((e) => {
         if (cancelado) return;
         if (e?.code === 'storage/unauthorized') setEstado('sin-permiso');

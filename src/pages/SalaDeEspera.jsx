@@ -68,21 +68,32 @@ const CardPublica = ({ icono: Icono, titulo, descripcion, highlight }) => (
 );
 
 // ── Cajita zona exclusiva ──────────────────────────────────────────────────
-const CardExclusiva = ({ icono: Icono, titulo, descripcion, highlight }) => (
-  <div className={`bg-white border rounded-[24px] isolate p-4 sm:p-6 h-full transition-all duration-700 hover:shadow-[0_8px_24px_rgba(45,106,106,0.12)] hover:border-[#2D6A6A]/30 hover:-translate-y-0.5 ${
+// Si le pasás "ruta", toda la cajita se puede presionar y muestra el cartelito
+const CardExclusiva = ({ icono: Icono, titulo, descripcion, highlight, ruta }) => {
+  const clases = `block bg-white border rounded-[24px] isolate p-4 sm:p-6 h-full transition-all duration-700 hover:shadow-[0_8px_24px_rgba(45,106,106,0.12)] hover:border-[#2D6A6A]/30 hover:-translate-y-0.5 ${
     highlight
       ? 'shadow-[0_8px_24px_rgba(45,106,106,0.12)] border-[#2D6A6A]/30 -translate-y-0.5'
       : 'shadow-[0_2px_8px_rgba(0,0,0,0.06)] border-gray-200'
-  }`}>
-    <div className="flex flex-col gap-2 sm:gap-3">
+  }`;
+  const contenido = (
+    <div className="flex flex-col gap-2 sm:gap-3 h-full">
       <Icono size={20} className="text-[#2D6A6A]" strokeWidth={2} />
       <div>
-       <h3 className="font-['Montserrat'] font-bold text-[#1A3D3D] text-[19px] md:text-[17px] mb-1 sm:mb-2">{titulo}</h3>
-<p className="text-[#333333] text-[17px] md:text-[16px] font-medium leading-relaxed">{descripcion}</p>
+        <h3 className="font-['Montserrat'] font-bold text-[#1A3D3D] text-[19px] md:text-[17px] mb-1 sm:mb-2">{titulo}</h3>
+        <p className="text-[#333333] text-[17px] md:text-[16px] font-medium leading-relaxed">{descripcion}</p>
       </div>
+      {ruta && (
+        <span className="mt-auto inline-flex items-center gap-1.5 text-[#FF9800] text-[16px] font-bold">
+          ¡Presioná para verla!
+          <ArrowRight size={18} strokeWidth={2.5} />
+        </span>
+      )}
     </div>
-  </div>
-);
+  );
+  return ruta
+    ? <a href={ruta} className={`${clases} cursor-pointer`}>{contenido}</a>
+    : <div className={clases}>{contenido}</div>;
+};
 
 // ── Selector de tipo de cuenta (igual al de Login) ─────────────────────────
 const OPCIONES_CUENTA = [
@@ -388,7 +399,7 @@ Creá tu perfil, aparecé en búsquedas y conectate con colegas, clínicas y pro
               {[
                { icono: Package, titulo: 'Cartilla de proveedores', descripcion: 'Dedicado a mayoristas: insumos, equipamiento tecnológico y más. También para quienes ofrezcan servicios exclusivos para veterinarios.', delay: 'delay-[100ms]' },
                 { icono: BookOpen, titulo: 'Capacitaciones', descripcion: 'Espacio de difusión de todas las formaciones especializadas en medicina veterinaria, la publicación es gratuita.', delay: 'delay-[100ms]' },
-                { icono: Briefcase, titulo: 'Bolsa de trabajo', descripcion: 'Las clínicas podrán publicar ofertas de empleo y los profesionales podrán marcarse como disponibles si buscan nuevas oportunidades laborales.', delay: 'delay-[200ms]' },
+
               ].map(({ icono, titulo, descripcion, delay }) => (
                 <div
                   key={titulo}
@@ -414,8 +425,9 @@ Creá tu perfil, aparecé en búsquedas y conectate con colegas, clínicas y pro
             <div ref={fila2Ref} className="col-span-1 sm:col-span-2 lg:col-span-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {[
                 { icono: FlaskConical, titulo: 'Publicaciones científicas', descripcion: 'Desde tu perfil puedes compartir papers propios para que tus colegas puedan acceder a tus estudios.', delay: 'delay-[0ms]' },
-               { icono: Users, titulo: 'Cartilla de colegas', descripcion: 'Tené los contactos siempre a mano y mantenete conectado con otros profesionales para trabajos en equipo.', delay: 'delay-[0ms]' },
-              ].map(({ icono, titulo, descripcion, delay }) => (
+                            { icono: Users, titulo: 'Cartilla de colegas', descripcion: 'Tené los contactos siempre a mano y mantenete conectado con otros profesionales para trabajos en equipo.', delay: 'delay-[0ms]', ruta: '/Cartilla' },
+                { icono: Briefcase, titulo: 'Bolsa de trabajo', descripcion: 'Las clínicas publican ofertas de empleo y los profesionales pueden marcarse como disponibles si buscan nuevas oportunidades laborales.', delay: 'delay-[0ms]', ruta: '/bolsa-de-trabajo' },
+              ].map(({ icono, titulo, descripcion, delay, ruta }) => (
                 <div
                   key={titulo}
                   className={`transition-all duration-700 ease-out h-full ${delay} ${
@@ -424,7 +436,7 @@ Creá tu perfil, aparecé en búsquedas y conectate con colegas, clínicas y pro
                       : 'opacity-0 translate-y-8'
                   }`}
                 >
-                  <CardExclusiva icono={icono} titulo={titulo} descripcion={descripcion} highlight={fila2Highlight} />
+                  <CardExclusiva icono={icono} titulo={titulo} descripcion={descripcion} highlight={fila2Highlight} ruta={ruta} />
                 </div>
               ))}
             </div>

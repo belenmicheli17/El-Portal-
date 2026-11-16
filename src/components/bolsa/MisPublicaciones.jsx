@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
-import { ChevronLeft, Pencil, RefreshCw, Trash2, Plus, Briefcase, User } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { collection, doc, getDoc, getDocs, query, where, updateDoc, deleteDoc } from 'firebase/firestore';
+import { ChevronLeft, ChevronDown, Pencil, RefreshCw, Trash2, Plus, Briefcase, User, Users } from 'lucide-react';
 import { db } from '../../firebase';
 import { etiquetaRol, diasRestantes, estaVencida, nuevoVencimiento, zonaTexto } from '../../utils/bolsa';
 import { VentanaConfirmar } from './ElementosBolsa';
@@ -15,7 +16,18 @@ function Estado({ item }) {
 
 const fechaCorta = (ms) => new Date(ms).toLocaleDateString('es-AR', { day: 'numeric', month: 'long' });
 
-function Fila({ icono: Icono, titulo, subtitulo, item, coleccion, onEditar, onCambio }) {
+// Los tres estados con los que la clínica ordena a sus postulantes
+const ESTADOS_POST = {
+  nueva: { label: 'Nueva', clase: 'bg-blue-50 text-blue-700' },
+  interesa: { label: 'Me interesa', clase: 'bg-green-50 text-green-700' },
+  descartada: { label: 'Descartada', clase: 'bg-gray-100 text-gray-500' }
+};
+const nombreCompleto = (p, perfil) => (perfil ? `${perfil.nombre || ''} ${perfil.apellido || ''}`.trim() : '') || p.nombre || 'Postulante';
+const fechaPost = (p) => (p.creadaEn?.toMillis ? fechaCorta(p.creadaEn.toMillis()) : '');
+
+function Fila({ icono: Icono, titulo, subtitulo, item, coleccion, onEditar, onCambio, postulaciones = [], abierto = false, perfiles = {} }) {
+  const navigate = useNavigate();
+  const [verPostulantes, setVerPostulantes] = useState(abierto);
   const [trabajando, setTrabajando] = useState(false);
   const [confirmarBorrar, setConfirmarBorrar] = useState(false);
   const [error, setError] = useState('');
@@ -90,6 +102,42 @@ function Fila({ icono: Icono, titulo, subtitulo, item, coleccion, onEditar, onCa
       )}
       {error && !confirmarBorrar && <p className="text-[13px] font-semibold text-red-600 mt-2 md:pl-16">{error}</p>}
 
+      {/* Postulantes de esta oferta */}
+      {coleccion === 'ofertasEmpleo' && (
+        <div className="mt-4 md:pl-16">
+          <button type="button" onClick={() => setVerPostulantes((v) => !v)} className="inline-flex items-center gap-2 bg-[#F4F7F7] hover:bg-gray-200 text-[#1A3D3D] rounded-xl px-4 py-2.5 text-[13px] font-semibold transition-colors">
+            <Users className="w-4 h-4 text-[#2D6A6A]" /> Postulantes · {postulaciones.length}
+            {postulaciones.filter((p) => p.estado === 'nueva').length > 0 && (
+              <span className="bg-blue-600 text-white text-[11px] font-bold px-2 py-0.5 rounded-full">{postulaciones.filter((p) => p.estado === 'nueva').length} nuevas</span>
+            )}
+            <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${verPostulantes ? 'rotate-180' : ''}`} />
+          </button>
+
+          {verPostulantes && (
+            postulaciones.length === 0 ? (
+              <p className="text-[13px] text-[#666666] mt-3">Todavía nadie se postuló a esta oferta.</p>
+            ) : (
+              <div className="flex flex-col gap-2 mt-3">
+                {[...postulaciones].sort((a, b) => (b.creadaEn?.toMillis?.() || 0) - (a.creadaEn?.toMillis?.() || 0)).map((p) => (
+                  <button key={p.id} type="button" onClick={() => navigate(`/postulacion/${p.id}`)} className="flex items-center gap-3 text-left bg-white border border-gray-100 hover:border-[#2D6A6A]/40 rounded-2xl px-4 py-3 transition-colors">
+                    {perfiles[p.postulanteId]?.foto ? (
+                      <img src={perfiles[p.postulanteId].foto} alt="" className="w-9 h-9 shrink-0 rounded-full object-cover border border-gray-100" />
+                    ) : (
+                      <div className="w-9 h-9 shrink-0 rounded-full bg-[#F4F7F7] text-[#2D6A6A] flex items-center justify-center"><User className="w-4 h-4" /></div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[14px] font-bold text-[#1A3D3D] truncate">{nombreCompleto(p, perfiles[p.postulanteId])}</p>
+                      <p className="text-[12px] text-[#666666]">Se postuló el {fechaPost(p)}{p.conCV ? ' · con currículum' : ' · con perfil'}</p>
+                    </div>
+                    <span className={`shrink-0 text-[12px] font-semibold px-2.5 py-0.5 rounded-full ${ESTADOS_POST[p.estado]?.clase || ESTADOS_POST.nueva.clase}`}>{ESTADOS_POST[p.estado]?.label || 'Nueva'}</span>
+                  </button>
+                ))}
+              </div>
+            )
+          )}
+        </div>
+      )}
+
       <VentanaConfirmar
         abierta={confirmarBorrar}
         titulo="¿Borrar esta publicación?"
@@ -108,9 +156,29 @@ function Fila({ icono: Icono, titulo, subtitulo, item, coleccion, onEditar, onCa
 // Renovar solo toca la fecha de vencimiento (las reglas no dejan cambiar nada más de paso)
 const actualizarPublicacion = (coleccion, id, cambios) => updateDoc(doc(db, coleccion, id), cambios);
 
-export default function MisPublicaciones({ currentUser, misOfertas, miDisponible, onVolver, onNuevaOferta, onEditarOferta, onEditarDisponible, onCambio }) {
+export default function MisPublicaciones({ currentUser, misOfertas, miDisponible, abrirPostulantes = '', onVolver, onNuevaOferta, onEditarOferta, onEditarDisponible, onCambio }) {
   const esClinica = currentUser?.rol === 'clinica' || currentUser?.rol === 'admin';
   const esProfesional = currentUser?.rol === 'profesional';
+  const [postulaciones, setPostulaciones] = useState([]);
+  const [perfiles, setPerfiles] = useState({});
+
+  // Clínica: las postulaciones que recibió. Profesional: las que mandó.
+  useEffect(() => {
+    if (!currentUser?.uid) return;
+    const campo = esClinica ? 'clinicaId' : 'postulanteId';
+    getDocs(query(collection(db, 'postulaciones'), where(campo, '==', currentUser.uid)))
+      .then((snap) => {
+        const lista = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        setPostulaciones(lista);
+        // Perfil público de cada postulante (apellido y foto)
+        [...new Set(lista.map((p) => p.postulanteId))].forEach((uid) => {
+          getDoc(doc(db, 'profesionales', uid))
+            .then((s) => { if (s.exists()) setPerfiles((prev) => ({ ...prev, [uid]: s.data() })); })
+            .catch(() => {});
+        });
+      })
+      .catch((e) => console.error('Error leyendo las postulaciones:', e));
+  }, [currentUser?.uid, esClinica]);
 
   return (
     <div className="max-w-4xl mx-auto w-full px-4 pt-6 lg:pt-10 pb-16 font-['Inter'] relative z-10 animate-in fade-in duration-300">
@@ -131,7 +199,7 @@ export default function MisPublicaciones({ currentUser, misOfertas, miDisponible
           ) : (
             <div className="flex flex-col gap-3">
               {misOfertas.map((o) => (
-                <Fila key={o.id} icono={Briefcase} titulo={`Puesto: ${etiquetaRol(o.rol)}`} subtitulo={[zonaTexto(o), (o.areas || []).join(', ')].filter(Boolean).join(' · ')} item={o} coleccion="ofertasEmpleo" onEditar={() => onEditarOferta(o)} onCambio={onCambio} />
+                <Fila key={o.id} icono={Briefcase} titulo={`Puesto: ${etiquetaRol(o.rol)}`} subtitulo={[zonaTexto(o), (o.areas || []).join(', ')].filter(Boolean).join(' · ')} item={o} coleccion="ofertasEmpleo" onEditar={() => onEditarOferta(o)} onCambio={onCambio} postulaciones={postulaciones.filter((p) => p.ofertaId === o.id)} abierto={abrirPostulantes === o.id} perfiles={perfiles} />
               ))}
             </div>
           )}
@@ -149,6 +217,27 @@ export default function MisPublicaciones({ currentUser, misOfertas, miDisponible
               <button type="button" onClick={onEditarDisponible} className="inline-flex items-center gap-1.5 bg-[#2D6A6A] hover:bg-[#1A3D3D] text-white rounded-2xl px-5 py-3 text-[14px] font-semibold transition-colors">
                 <Plus className="w-4 h-4" /> Marcarme como disponible
               </button>
+            </div>
+          )}
+        </section>
+      )}
+
+      {esProfesional && (
+        <section className="mt-10">
+          <h2 className="text-[14px] font-bold text-[#1A3D3D] mb-4">Mis postulaciones · {postulaciones.length}</h2>
+          {postulaciones.length === 0 ? (
+            <p className="bg-white rounded-[24px] border border-gray-100 p-6 text-[14px] text-[#666666]">Todavía no te postulaste a ninguna oferta.</p>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {[...postulaciones].sort((a, b) => (b.creadaEn?.toMillis?.() || 0) - (a.creadaEn?.toMillis?.() || 0)).map((p) => (
+                <div key={p.id} className="bg-white rounded-[24px] border border-gray-100 shadow-sm p-5 flex items-center gap-4">
+                  <div className="w-12 h-12 shrink-0 rounded-2xl bg-[#2D6A6A]/10 text-[#2D6A6A] flex items-center justify-center"><Briefcase className="w-5 h-5" /></div>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-['Montserrat'] font-extrabold text-[#1A3D3D] text-[15px] leading-tight">{p.puesto}{p.clinicaNombre ? ` en ${p.clinicaNombre}` : ''}</p>
+                    <p className="text-[13px] text-[#666666] mt-0.5">Te postulaste el {fechaPost(p)} · {p.conCV ? 'con tu currículum' : 'con tu perfil'}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </section>

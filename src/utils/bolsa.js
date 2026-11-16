@@ -91,9 +91,11 @@ export const linkPerfilProfesional = (slug) => (slug ? `${SITIO}/profesional/${s
 
 export const linkOferta = (id) => `${SITIO}/bolsa-de-trabajo?oferta=${id}`;
 
-// Link a la página que abre el currículum (pide sesión). La ruta guardada es "cvs/UID/archivo".
-export const linkCV = (ruta) => (ruta ? `${SITIO}/cv/${String(ruta).replace(/^cvs\//, '')}` : '');
+// Link a la postulación de una persona a una oferta (la clínica la abre y ve el CV ahí mismo)
+export const linkPostulacion = (ofertaId, uid) => `${SITIO}/postulacion/${ofertaId}_${uid}`;
 
+// Link a la página del currículum (para la ficha de "disponible", cuando la persona elige mostrarlo)
+export const linkCV = (ruta) => (ruta ? `${SITIO}/cv/${String(ruta).replace(/^cvs\//, '')}` : '');
 // Provincia prolija: "Provincia de Buenos Aires" → "Buenos Aires", "Ciudad Autónoma de Buenos Aires" → "CABA"
 export const provinciaCorta = (provincia) => {
   const p = String(provincia || '').trim();
@@ -121,8 +123,8 @@ export const linkMapa = (item) => {
 // ---------- Mensajes de WhatsApp / mail ya escritos ----------
 // Profesional → clínica (al postularse). El cierre depende de si manda CV o su perfil.
 export const mensajePostulacion = (nombre) => `Hola, soy ${nombre || 'veterinario/a'}. Vi la búsqueda de personal que publicaron en Portal Veterinario y me gustaría postularme.`;
-export const cierrePostulacion = ({ cvUrl, cvEsFoto, perfilUrl }) => {
-  if (cvUrl) return `📄 Ver currículum (${cvEsFoto ? 'foto' : 'PDF'}): ${cvUrl}\n\n¡Muchas gracias!`;
+export const cierrePostulacion = ({ postulacionUrl, perfilUrl }) => {
+  if (postulacionUrl) return `Podés ver mi postulación y mi currículum acá: ${postulacionUrl}\n\n¡Muchas gracias!`;
   if (perfilUrl) return `Pueden ver mi portfolio desde este link: ${perfilUrl}\n\n¡Muchas gracias!`;
   return '¡Muchas gracias!';
 };
