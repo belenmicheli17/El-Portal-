@@ -143,3 +143,264 @@ export const mensajeAProfesional = (nombreProfesional, quienEscribe) => {
   const desde = quienEscribe ? `, te escribimos de ${quienEscribe}` : '';
   return `${saludo}${desde}. Vimos en Portal Veterinario que estás disponible para trabajar y nos gustaría hablar con vos.`;
 };
+// ---------- Imagen para difundir una oferta (1080 x 1440, formato 3:4) ----------
+const FUENTE_TITULO = 'Montserrat, sans-serif';
+const FUENTE_TEXTO = 'Inter, sans-serif';
+const RUTA_IMAGENES = '/bolsa-imagen';
+const ARCHIVO_LOGO = 'logo-portal-veterinario.svg';
+const ARCHIVO_PERSONAJE = 'veterinario-con-planilla-v2.svg';
+const PUESTOS_IMAGEN = { veterinario: 'Veterinario/a', asistente: 'Asistente', peluquero: 'Peluquero/a', recepcion: 'Recepción', alumno: 'Alumno/a' };
+
+// Zona para el texto: CABA, zona grande del Gran Buenos Aires, o la ciudad
+export const zonaParaImagen = (oferta) => {
+  const prov = provinciaCorta(oferta?.provincia);
+  if (prov === 'CABA') return 'CABA';
+  if (prov === 'Buenos Aires') {
+    if (['Zona Norte', 'Zona Sur', 'Zona Oeste'].includes(oferta?.zonaBA)) return oferta.zonaBA;
+    return String(oferta?.localidad || oferta?.barrio || 'Buenos Aires').trim();
+  }
+  return String(oferta?.localidad || prov || '').trim();
+};
+
+// Especialidades (máximo 2) o el puesto, para el texto grande de la imagen
+const especialidadesParaImagen = (oferta) => {
+  const areas = Array.isArray(oferta?.areas) ? oferta.areas.filter(Boolean) : [];
+  if (oferta?.rol === 'veterinario' && areas.length > 0) {
+    const lista = areas.slice(0, 2);
+    if (areas.length > 2) lista[1] = `${lista[1]}…`;
+    return lista;
+  }
+  return [PUESTOS_IMAGEN[oferta?.rol] || 'Veterinario/a'];
+};
+
+// Texto listo para pegar en el posteo, con el link de la oferta
+export const textoParaCompartir = (oferta) => {
+  const areas = Array.isArray(oferta?.areas) ? oferta.areas.filter(Boolean) : [];
+  const que = oferta?.rol === 'veterinario' && areas.length > 0 ? areas.slice(0, 3).join(', ') : (PUESTOS_IMAGEN[oferta?.rol] || 'Veterinario/a');
+  return `¿Tenés algún colega que esté buscando trabajo como ${que} en ${zonaParaImagen(oferta)}? ${oferta?.clinicaNombre || 'Una clínica'} está en búsqueda.\nMirá la oferta y postulate acá: ${linkOferta(oferta.id)}`;
+};
+
+const cargarImagen = (src, conCors = false) => new Promise((resolver) => {
+  if (!src) { resolver(null); return; }
+  const img = new Image();
+  if (conCors) img.crossOrigin = 'anonymous';
+  img.onload = () => resolver(img);
+  img.onerror = () => resolver(null);
+  img.src = src;
+});
+
+const partirEnRenglones = (ctx, texto, ancho) => {
+  const renglones = [];
+  let actual = '';
+  texto.split(/\s+/).filter(Boolean).forEach((palabra) => {
+    const prueba = actual ? `${actual} ${palabra}` : palabra;
+    if (actual && ctx.measureText(prueba).width > ancho) { renglones.push(actual); actual = palabra; } else actual = prueba;
+  });
+  if (actual) renglones.push(actual);
+  return renglones;
+};
+
+const cortarConPuntos = (ctx, texto, ancho) => {
+  let t = texto;
+  while (t && ctx.measureText(`${t}…`).width > ancho) t = t.slice(0, -1);
+  return `${t.trimEnd()}…`;
+};
+
+// Busca el tamaño más grande en que el texto entra; si no entra, lo corta con «…»
+const ajustarTexto = (ctx, texto, peso, familia, tamanos, ancho, maxRenglones) => {
+  for (const tam of tamanos) {
+    ctx.font = `${peso} ${tam}px ${familia}`;
+    const renglones = partirEnRenglones(ctx, texto, ancho);
+    if (renglones.length <= maxRenglones && renglones.every((r) => ctx.measureText(r).width <= ancho)) return { tam, renglones, entra: true };
+  }
+  const tam = tamanos[tamanos.length - 1];
+  ctx.font = `${peso} ${tam}px ${familia}`;
+  const renglones = partirEnRenglones(ctx, texto, ancho).slice(0, maxRenglones);
+  renglones[renglones.length - 1] = cortarConPuntos(ctx, renglones[renglones.length - 1] || '', ancho);
+  return { tam, renglones, entra: false };
+};
+
+const ajustarEspecialidad = (ctx, texto) => {
+  for (const tam of [84, 72, 64]) {
+    ctx.font = `700 ${tam}px ${FUENTE_TITULO}`;
+    if (ctx.measureText(texto).width <= 680) return { tam, renglones: [texto] };
+  }
+  return ajustarTexto(ctx, texto, 700, FUENTE_TITULO, [64], 680, 2);
+};
+
+// Dibuja la imagen de una oferta y devuelve un PNG
+export const generarImagenOferta = async (oferta) => {
+  const NARANJA = '#F29B24';
+
+  await Promise.all(['700 84px Montserrat', '700 32px Inter', '500 36px Inter', '600 36px Inter', '600 28px Inter'].map((f) => document.fonts.load(f, '¿Tenés algún búsqueda·…?')));
+  const [logo, personaje, fotoClinica] = await Promise.all([
+    cargarImagen(`${RUTA_IMAGENES}/${ARCHIVO_LOGO}`),
+    cargarImagen(`${RUTA_IMAGENES}/${ARCHIVO_PERSONAJE}`),
+    cargarImagen(oferta?.clinicaFoto, true)
+  ]);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 1080;
+  canvas.height = 1440;
+  const ctx = canvas.getContext('2d');
+  ctx.textBaseline = 'middle';
+  ctx.textAlign = 'left';
+
+  // Fondo
+  const degradado = ctx.createLinearGradient(0, 0, 1080, 1440);
+  degradado.addColorStop(0, '#FBE7CE');
+  degradado.addColorStop(0.5, '#F8F3EA');
+  degradado.addColorStop(1, '#DFEEE8');
+  ctx.fillStyle = degradado;
+  ctx.fillRect(0, 0, 1080, 1440);
+
+  // Forma detrás del personaje
+  ctx.save();
+  ctx.translate(690 + 230, 560 + 380);
+  ctx.rotate((-4 * Math.PI) / 180);
+  ctx.fillStyle = '#FFFFFF';
+  ctx.beginPath(); ctx.roundRect(-230, -380, 460, 760, 230); ctx.fill();
+  ctx.restore();
+
+  // Personaje: se ajusta a la caja sin deformarse y apoyado abajo
+  if (personaje) {
+    const caja = { x: 818, y: 630, ancho: 200, alto: 648 };
+    const anchoOriginal = personaje.naturalWidth || personaje.width || caja.ancho;
+    const altoOriginal = personaje.naturalHeight || personaje.height || caja.alto;
+    const escala = Math.min(caja.ancho / anchoOriginal, caja.alto / altoOriginal);
+    const ancho = anchoOriginal * escala;
+    const alto = altoOriginal * escala;
+    ctx.drawImage(personaje, caja.x + (caja.ancho - ancho) / 2, caja.y + caja.alto - alto, ancho, alto);
+  }
+
+  // Logo
+  if (logo) ctx.drawImage(logo, 80, 90, 220, 72);
+
+  // Píldora «Bolsa de trabajo»
+  ctx.font = `700 32px ${FUENTE_TEXTO}`;
+  const textoPildora = 'BOLSA DE TRABAJO';
+  ctx.fillStyle = '#D8EBE5';
+  ctx.beginPath(); ctx.roundRect(80, 222, ctx.measureText(textoPildora).width + 64, 64, 32); ctx.fill();
+  ctx.fillStyle = '#284847';
+  ctx.fillText(textoPildora, 112, 254);
+
+  // Pregunta fija (si no entra en 920 px, se achica)
+  const pregunta = ['¿Tenés algún colega', 'que esté buscando', 'trabajo como'];
+  ctx.font = `700 84px ${FUENTE_TITULO}`;
+  const masAncho = Math.max(...pregunta.map((l) => ctx.measureText(l).width));
+  const tamPregunta = Math.min(84, Math.floor((84 * 920) / masAncho));
+  const altoPregunta = tamPregunta * 1.12;
+  ctx.font = `700 ${tamPregunta}px ${FUENTE_TITULO}`;
+  ctx.fillStyle = '#1F4140';
+  pregunta.forEach((linea, i) => ctx.fillText(linea, 80, 352 + altoPregunta * (i + 0.5)));
+
+  // Especialidades con subrayado naranja
+  let y = 352 + altoPregunta * 3 + 18;
+  especialidadesParaImagen(oferta).forEach((esp) => {
+    const { tam, renglones } = ajustarEspecialidad(ctx, esp);
+    const alto = tam * 1.12;
+    ctx.font = `700 ${tam}px ${FUENTE_TITULO}`;
+    ctx.fillStyle = '#2D6A6A';
+    renglones.forEach((r, i) => ctx.fillText(r, 80, y + alto * (i + 0.5)));
+    const anchoUltimo = ctx.measureText(renglones[renglones.length - 1]).width;
+    const arriba = y + alto * renglones.length - 6;
+    const esc = anchoUltimo / 100;
+    ctx.strokeStyle = NARANJA;
+    ctx.lineWidth = 9;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(80 + esc, arriba + 8 * 2.2);
+    ctx.quadraticCurveTo(80 + 50 * esc, arriba - 2 * 2.2, 80 + 99 * esc, arriba + 6 * 2.2);
+    ctx.stroke();
+    y += alto * renglones.length + 30;
+  });
+
+  // Zona: «en Zona Oeste?»
+  let zona = zonaParaImagen(oferta);
+  let tamZona = 72;
+  for (const tam of [72, 64, 56]) {
+    tamZona = tam;
+    ctx.font = `700 ${tam}px ${FUENTE_TITULO}`;
+    if (ctx.measureText(`en ${zona}?`).width <= 680) break;
+  }
+  while (zona.length > 3 && ctx.measureText(`en ${zona}?`).width > 680) zona = `${zona.slice(0, -2).trimEnd()}…`;
+  let x = 80;
+  [['en ', '#1F4140'], [zona, '#2D6A6A'], ['?', '#1F4140']].forEach(([texto, col]) => {
+    ctx.fillStyle = col;
+    ctx.fillText(texto, x, y + (tamZona * 1.12) / 2);
+    x += ctx.measureText(texto).width;
+  });
+
+  // Tarjeta de la clínica: foto o iniciales a la izquierda, nombre y «está en búsqueda» a la derecha
+  const FOTO = 104;
+  const BORDE_TARJETA = 1250;
+  const xTexto = 80 + 36 + FOTO + 28;
+  const anchoTexto = 80 + 700 - 36 - xTexto;
+  const nombre = String(oferta?.clinicaNombre || 'Una clínica del Portal').trim();
+  let ajuste = ajustarTexto(ctx, nombre, 700, FUENTE_TITULO, [44], anchoTexto, 2);
+  if (!ajuste.entra) ajuste = ajustarTexto(ctx, nombre, 700, FUENTE_TITULO, [38], anchoTexto, 3);
+  const altoNombre = ajuste.tam * 1.2;
+  const altoContenido = altoNombre * ajuste.renglones.length + 12 + 36 * 1.2;
+  const altoCuerpo = Math.max(FOTO, altoContenido);
+  const altoTarjeta = 36 + altoCuerpo + 36;
+  const arribaTarjeta = BORDE_TARJETA - altoTarjeta;
+  ctx.save();
+  ctx.shadowColor = 'rgba(31,65,64,0.12)';
+  ctx.shadowBlur = 36;
+  ctx.shadowOffsetY = 18;
+  ctx.fillStyle = '#FFFFFF';
+  ctx.beginPath(); ctx.roundRect(80, arribaTarjeta, 700, altoTarjeta, 36); ctx.fill();
+  ctx.restore();
+
+  // Foto de la clínica (círculo) o iniciales
+  const cx = 80 + 36 + FOTO / 2;
+  const cy = arribaTarjeta + 36 + altoCuerpo / 2;
+  if (fotoClinica) {
+    ctx.save();
+    ctx.beginPath(); ctx.arc(cx, cy, FOTO / 2, 0, Math.PI * 2); ctx.clip();
+    const escala = Math.max(FOTO / fotoClinica.width, FOTO / fotoClinica.height);
+    const ancho = fotoClinica.width * escala;
+    const alto = fotoClinica.height * escala;
+    ctx.drawImage(fotoClinica, cx - ancho / 2, cy - alto / 2, ancho, alto);
+    ctx.restore();
+    ctx.strokeStyle = '#E8EFEF';
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(cx, cy, FOTO / 2, 0, Math.PI * 2); ctx.stroke();
+  } else {
+    ctx.fillStyle = '#1F4140';
+    ctx.beginPath(); ctx.arc(cx, cy, FOTO / 2, 0, Math.PI * 2); ctx.fill();
+    ctx.font = `700 40px ${FUENTE_TITULO}`;
+    ctx.fillStyle = '#FFFFFF';
+    ctx.textAlign = 'center';
+    ctx.fillText(nombre.slice(0, 2).toUpperCase(), cx, cy);
+    ctx.textAlign = 'left';
+  }
+
+  // Nombre y «está en búsqueda»
+  const arribaTexto = arribaTarjeta + 36 + (altoCuerpo - altoContenido) / 2;
+  ctx.font = `700 ${ajuste.tam}px ${FUENTE_TITULO}`;
+  ctx.fillStyle = '#1F4140';
+  ajuste.renglones.forEach((r, i) => ctx.fillText(r, xTexto, arribaTexto + altoNombre * (i + 0.5)));
+  const ySub = arribaTexto + altoNombre * ajuste.renglones.length + 12 + (36 * 1.2) / 2;
+  ctx.font = `500 36px ${FUENTE_TEXTO}`;
+  ctx.fillStyle = '#284847';
+  ctx.fillText('está en ', xTexto, ySub);
+  const anchoEsta = ctx.measureText('está en ').width;
+  ctx.font = `600 36px ${FUENTE_TEXTO}`;
+  ctx.fillText('búsqueda', xTexto + anchoEsta, ySub);
+
+  // Firma con flecha naranja hacia abajo
+  ctx.strokeStyle = NARANJA;
+  ctx.lineWidth = 4;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  ctx.moveTo(92, 1320); ctx.lineTo(92, 1344);
+  ctx.moveTo(80, 1332); ctx.lineTo(92, 1344); ctx.lineTo(104, 1332);
+  ctx.stroke();
+  ctx.font = `600 28px ${FUENTE_TEXTO}`;
+  ctx.fillStyle = '#284847';
+  ctx.fillText('Portal Veterinario · Link en la descripción', 118, 1332);
+
+  return new Promise((resolver) => canvas.toBlob(resolver, 'image/png'));
+};

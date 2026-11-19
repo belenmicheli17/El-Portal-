@@ -6,6 +6,7 @@ import {
 import { db } from '../../firebase';
 import { collection, getDocs, doc, updateDoc, deleteDoc, query, orderBy } from 'firebase/firestore';
 import { tituloPuesto, estaVigente, aMilisegundos, provinciaCorta } from '../../utils/bolsa';
+import { BotonImagenOferta } from '../../components/bolsa/ElementosBolsa';
 
 export default function GestionBolsa() {
   const [tabActiva, setTabActiva] = useState('ofertas');
@@ -99,6 +100,7 @@ export default function GestionBolsa() {
             <div className="flex items-center gap-4 text-[#666666] text-[12px] font-medium">
               <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" /> {item.provincia}</span>
             </div>
+            {coleccion === 'ofertasEmpleo' && <div className="mt-3"><BotonImagenOferta oferta={item} /></div>}
           </div>
         </div>
 

@@ -4,7 +4,7 @@ import { collection, doc, getDoc, getDocs, query, where, updateDoc, deleteDoc } 
 import { ChevronLeft, ChevronDown, Pencil, RefreshCw, Trash2, Plus, Briefcase, User, Users } from 'lucide-react';
 import { db } from '../../firebase';
 import { etiquetaRol, diasRestantes, estaVencida, nuevoVencimiento, zonaTexto } from '../../utils/bolsa';
-import { VentanaConfirmar } from './ElementosBolsa';
+import { VentanaConfirmar, BotonImagenOferta } from './ElementosBolsa';
 
 function Estado({ item }) {
   if (item.estado === 'esperando') return <span className="bg-amber-50 text-amber-800 text-[12px] font-semibold px-2.5 py-0.5 rounded-full">Esperando la verificación de tu cuenta</span>;
@@ -105,6 +105,7 @@ function Fila({ icono: Icono, titulo, subtitulo, item, coleccion, onEditar, onCa
       {/* Postulantes de esta oferta */}
       {coleccion === 'ofertasEmpleo' && (
         <div className="mt-4 md:pl-16">
+          <div className="mb-3"><BotonImagenOferta oferta={item} /></div>
           <button type="button" onClick={() => setVerPostulantes((v) => !v)} className="inline-flex items-center gap-2 bg-[#F4F7F7] hover:bg-gray-200 text-[#1A3D3D] rounded-xl px-4 py-2.5 text-[13px] font-semibold transition-colors">
             <Users className="w-4 h-4 text-[#2D6A6A]" /> Postulantes · {postulaciones.length}
             {postulaciones.filter((p) => p.estado === 'nueva').length > 0 && (

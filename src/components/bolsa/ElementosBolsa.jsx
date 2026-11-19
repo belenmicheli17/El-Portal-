@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { X, Check, Lock, Search, ChevronDown, Loader2, AlertTriangle, Info } from 'lucide-react';
+import { X, Check, Lock, Search, ChevronDown, Loader2, AlertTriangle, Info, Share2, Copy } from 'lucide-react';
 import { GRUPOS_AREAS } from '../../data/bolsaOpciones';
+import { generarImagenOferta, textoParaCompartir } from '../../utils/bolsa';
 
 
 
@@ -284,5 +285,99 @@ export function CartelVerificacion({ abierto, onCerrar }) {
         Ir a mi cuenta
       </button>
     </VentanaBolsa>
+  );
+}
+// Botón «Compartir» de una oferta: arma la imagen y abre el menú de compartir.
+// Si el navegador no lo permite, muestra la imagen con botones para copiarla.
+export function BotonImagenOferta({ oferta }) {
+  const [trabajando, setTrabajando] = useState(false);
+  const [mensaje, setMensaje] = useState('');
+  const [vista, setVista] = useState(null); // { url, blob }
+  const [copiado, setCopiado] = useState('');
+
+  const avisar = (texto) => {
+    setMensaje(texto);
+    setTimeout(() => setMensaje(''), 4000);
+  };
+
+  const compartir = async () => {
+    setTrabajando(true);
+    setMensaje('');
+    const texto = textoParaCompartir(oferta);
+    let textoCopiado = false;
+    try { await navigator.clipboard.writeText(texto); textoCopiado = true; } catch { textoCopiado = false; }
+    try {
+      const blob = await generarImagenOferta(oferta);
+      const archivo = new File([blob], 'oferta.png', { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
+        try {
+          await navigator.share({ files: [archivo], text: texto });
+          avisar(textoCopiado ? 'Listo. El texto con el link quedó copiado' : 'Listo');
+          return;
+        } catch (e) {
+          if (e?.name === 'AbortError') return; // cerró el menú de compartir
+        }
+      }
+      setVista({ url: URL.createObjectURL(blob), blob });
+    } catch (e) {
+      console.error('Error generando la imagen:', e);
+      avisar('No pudimos generar la imagen');
+    } finally {
+      setTrabajando(false);
+    }
+  };
+
+  const cerrarVista = () => {
+    if (vista?.url) URL.revokeObjectURL(vista.url);
+    setVista(null);
+    setCopiado('');
+  };
+
+  const copiarImagen = async () => {
+    try {
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': vista.blob })]);
+      setCopiado('imagen');
+    } catch (e) {
+      console.error('No se pudo copiar la imagen:', e);
+      setCopiado('error');
+    }
+  };
+
+  const copiarTexto = async () => {
+    try {
+      await navigator.clipboard.writeText(textoParaCompartir(oferta));
+      setCopiado('texto');
+    } catch (e) {
+      console.error('No se pudo copiar el texto:', e);
+      setCopiado('error');
+    }
+  };
+
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <button type="button" onClick={compartir} disabled={trabajando} className="inline-flex items-center gap-1.5 bg-[#F4F7F7] hover:bg-gray-200 text-[#1A3D3D] rounded-xl px-3.5 py-2 text-[13px] font-semibold transition-colors disabled:opacity-60">
+        {trabajando ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Share2 className="w-3.5 h-3.5 text-[#2D6A6A]" />} Compartir
+      </button>
+      {mensaje && <span className="text-[12px] font-semibold text-[#2D6A6A]">{mensaje}</span>}
+
+      <VentanaBolsa abierta={!!vista} onCerrar={cerrarVista} ancho="max-w-md">
+        <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[20px] leading-tight mb-4 pr-10">Imagen para compartir</h3>
+        {vista && <img src={vista.url} alt="Imagen de la oferta" className="w-full rounded-2xl border border-gray-100 mb-4" />}
+        <div className="flex flex-col gap-2">
+          <button type="button" onClick={copiarImagen} className="w-full inline-flex items-center justify-center gap-2 bg-[#2D6A6A] hover:bg-[#1A3D3D] text-white py-3.5 rounded-2xl text-[14px] font-semibold transition-colors">
+            <Copy className="w-4 h-4" /> Copiar imagen
+          </button>
+          <button type="button" onClick={copiarTexto} className="w-full inline-flex items-center justify-center gap-2 bg-[#F4F7F7] hover:bg-gray-200 text-[#1A3D3D] py-3.5 rounded-2xl text-[14px] font-semibold transition-colors">
+            <Copy className="w-4 h-4" /> Copiar texto con el link
+          </button>
+        </div>
+        <p className="text-[13px] text-[#666666] mt-3 leading-relaxed">
+          {copiado === 'imagen' && 'Imagen copiada: pegala en el posteo. Después copiá el texto con el link.'}
+          {copiado === 'texto' && 'Texto copiado: pegalo en la descripción del posteo.'}
+          {copiado === 'error' && 'No pudimos copiar. Probá con otro navegador.'}
+          {!copiado && 'Copiá la imagen y pegala en el posteo; después copiá el texto con el link y pegalo en la descripción.'}
+        </p>
+      </VentanaBolsa>
+    </div>
   );
 }
