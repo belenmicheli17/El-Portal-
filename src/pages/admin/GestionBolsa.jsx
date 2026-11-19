@@ -170,22 +170,22 @@ export default function GestionBolsa() {
         </p>
       </div>
 
-      <div className="bg-white p-2 rounded-[24px] border border-gray-100 shadow-sm inline-flex mb-8">
+      <div className="bg-white p-1.5 sm:p-2 rounded-[24px] border border-gray-100 shadow-sm flex w-full sm:w-auto sm:inline-flex gap-1 mb-8 overflow-x-auto max-w-full">
         <button 
           onClick={() => setTabActiva('ofertas')}
-          className={`flex items-center gap-2 px-6 py-3.5 rounded-[18px] text-[13px] font-bold uppercase tracking-widest transition-all ${tabActiva === 'ofertas' ? 'bg-[#1A3D3D] text-white shadow-md' : 'text-[#666666] hover:bg-[#F4F7F7]'}`}
+          className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-3 sm:py-3.5 rounded-[18px] text-[11px] sm:text-[13px] font-bold uppercase tracking-wide sm:tracking-widest whitespace-nowrap transition-all ${tabActiva === 'ofertas' ? 'bg-[#1A3D3D] text-white shadow-md' : 'text-[#666666] hover:bg-[#F4F7F7]'}`}
         >
           <Building className="w-4 h-4" /> Ofertas ({ofertas.length})
         </button>
         <button 
           onClick={() => setTabActiva('profesionales')}
-          className={`flex items-center gap-2 px-6 py-3.5 rounded-[18px] text-[13px] font-bold uppercase tracking-widest transition-all ${tabActiva === 'profesionales' ? 'bg-[#1A3D3D] text-white shadow-md' : 'text-[#666666] hover:bg-[#F4F7F7]'}`}
+          className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-3 sm:py-3.5 rounded-[18px] text-[11px] sm:text-[13px] font-bold uppercase tracking-wide sm:tracking-widest whitespace-nowrap transition-all ${tabActiva === 'profesionales' ? 'bg-[#1A3D3D] text-white shadow-md' : 'text-[#666666] hover:bg-[#F4F7F7]'}`}
         >
           <UserCheck className="w-4 h-4" /> Profesionales ({profesionales.length})
         </button>
         <button 
           onClick={() => setTabActiva('metricas')}
-          className={`flex items-center gap-2 px-6 py-3.5 rounded-[18px] text-[13px] font-bold uppercase tracking-widest transition-all ${tabActiva === 'metricas' ? 'bg-[#1A3D3D] text-white shadow-md' : 'text-[#666666] hover:bg-[#F4F7F7]'}`}
+          className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-3 sm:py-3.5 rounded-[18px] text-[11px] sm:text-[13px] font-bold uppercase tracking-wide sm:tracking-widest whitespace-nowrap transition-all ${tabActiva === 'metricas' ? 'bg-[#1A3D3D] text-white shadow-md' : 'text-[#666666] hover:bg-[#F4F7F7]'}`}
         >
           <Activity className="w-4 h-4" /> Métricas
         </button>

@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Users, Building, FileCheck, 
   Activity, ChevronRight, Clock, AlertCircle, Loader2,
-  Repeat, Stethoscope, Store, UserPlus
+  Repeat, Stethoscope, Store, UserPlus, ChevronDown
 } from 'lucide-react';
 import { db, auth, functions } from '../../firebase';
 import { collection, getDocs, query, where } from 'firebase/firestore';
@@ -111,6 +111,24 @@ export default function DashboardAdmin() {
   const [isLoading, setIsLoading] = useState(true);
   const [rolEntrando, setRolEntrando] = useState(null); // rol de la cuenta de prueba a la que se está entrando
   const [errorCuenta, setErrorCuenta] = useState('');
+  // Cajitas desplegables y pestañita de cuentas de prueba
+  const [verLugares, setVerLugares] = useState(false);
+  const [verLlegada, setVerLlegada] = useState(false);
+  const [cuentasAbierto, setCuentasAbierto] = useState(false);
+  const cuentasRef = useRef(null);
+
+  // Cierra la cajita de cuentas al tocar afuera o con Escape
+  useEffect(() => {
+    if (!cuentasAbierto) return undefined;
+    const afuera = (e) => { if (cuentasRef.current && !cuentasRef.current.contains(e.target)) setCuentasAbierto(false); };
+    const escape = (e) => { if (e.key === 'Escape') setCuentasAbierto(false); };
+    document.addEventListener('mousedown', afuera);
+    window.addEventListener('keydown', escape);
+    return () => {
+      document.removeEventListener('mousedown', afuera);
+      window.removeEventListener('keydown', escape);
+    };
+  }, [cuentasAbierto]);
 
   useEffect(() => {
     const fetchMetricas = async () => {
@@ -258,12 +276,15 @@ setLugares(contarLugares([
           </p>
         </div>
 
-        {/* Entrar a las cuentas de prueba sin cerrar sesión: un botón por rol, a la vista */}
-        <div className="flex flex-col items-start md:items-end gap-2">
-          <p className="text-[11px] font-bold text-[#2D6A6A] uppercase tracking-[0.2em] flex items-center gap-1.5">
-            <Repeat className="w-3.5 h-3.5" /> Entrar como
-          </p>
-          <div className="bg-white p-1.5 rounded-2xl border border-gray-100 shadow-sm inline-flex gap-1">
+      </div>
+
+      {/* Pestañita semioculta al costado: al tocarla se desliza una cajita con las cuentas de prueba, una arriba de la otra */}
+      <div ref={cuentasRef} className="fixed right-0 top-1/2 -translate-y-1/2 z-[9998] flex items-center">
+        {cuentasAbierto && (
+          <div className="mr-2 w-48 bg-white rounded-2xl border border-gray-100 shadow-[0_8px_30px_rgba(26,61,61,0.18)] p-3 flex flex-col gap-2 animate-in fade-in slide-in-from-right-2 duration-200">
+            <p className="text-[11px] font-bold uppercase tracking-widest text-[#2D6A6A] px-1 flex items-center gap-1.5">
+              <Repeat className="w-3.5 h-3.5" /> Entrar como
+            </p>
             {[
               { rol: 'profesional', etiqueta: 'Profesional', Icono: Stethoscope },
               { rol: 'clinica', etiqueta: 'Clínica', Icono: Building },
@@ -273,7 +294,7 @@ setLugares(contarLugares([
                 key={rol}
                 onClick={() => handleCambiarCuenta(rol)}
                 disabled={rolEntrando !== null}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[#1A3D3D] font-bold text-[13px] hover:bg-[#2D6A6A] hover:text-white transition-all duration-300 ease-in-out disabled:opacity-60 group"
+                className="w-full flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#F4F7F7] text-[#1A3D3D] font-bold text-[13px] text-left hover:bg-[#2D6A6A] hover:text-white transition-all duration-300 ease-in-out disabled:opacity-60 group"
               >
                 {rolEntrando === rol ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -283,9 +304,17 @@ setLugares(contarLugares([
                 {etiqueta}
               </button>
             ))}
+            {errorCuenta && <p className="text-[11px] text-red-500 font-medium px-1">{errorCuenta}</p>}
           </div>
-          {errorCuenta && <p className="text-[12px] text-red-500 font-medium">{errorCuenta}</p>}
-        </div>
+        )}
+        <button
+          type="button"
+          onClick={() => setCuentasAbierto((v) => !v)}
+          aria-label="Entrar como otra cuenta de prueba"
+          className={`h-14 rounded-l-xl flex items-center justify-center shadow-lg bg-[#1A3D3D] text-white transition-all duration-300 ease-in-out ${cuentasAbierto ? 'w-9' : 'w-6 hover:w-9'}`}
+        >
+          <Repeat className="w-4 h-4" strokeWidth={2} />
+        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
@@ -325,10 +354,20 @@ setLugares(contarLugares([
         </div>
       )}
 
-      {/* De dónde son los perfiles */}
-      <div className="bg-white rounded-[32px] border border-gray-100 p-8 shadow-sm mb-8">
-        <h2 className="text-[18px] font-black font-['Montserrat'] text-[#1A3D3D] mb-6 border-b border-gray-50 pb-4">De dónde son los perfiles</h2>
-        {isLoading ? (
+      {/* En el celu, Validaciones pendientes va arriba de "De dónde son los perfiles"; en la compu queda como estaba */}
+      <div className="flex flex-col">
+      {/* De dónde son los perfiles (desplegable) */}
+      <div className="order-2 lg:order-1 bg-white rounded-[32px] border border-gray-100 p-5 md:p-8 shadow-sm mb-8">
+        <button
+          type="button"
+          onClick={() => setVerLugares((v) => !v)}
+          aria-expanded={verLugares}
+          className={`w-full flex items-center justify-between gap-3 text-left ${verLugares ? 'mb-6 border-b border-gray-50 pb-4' : ''}`}
+        >
+          <h2 className="text-[18px] font-black font-['Montserrat'] text-[#1A3D3D]">De dónde son los perfiles</h2>
+          <ChevronDown className={`w-5 h-5 text-[#2D6A6A] shrink-0 transition-transform duration-300 ${verLugares ? 'rotate-180' : ''}`} />
+        </button>
+        {!verLugares ? null : isLoading ? (
           <Loader2 className="w-6 h-6 animate-spin text-[#2D6A6A]" />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
@@ -369,7 +408,7 @@ setLugares(contarLugares([
         )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="order-1 lg:order-2 grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8 lg:mb-0">
         <div className="lg:col-span-2 bg-white rounded-[32px] border border-gray-100 p-8 shadow-sm">
           <div className="flex items-center justify-between mb-6 border-b border-gray-50 pb-4">
             <h2 className="text-[18px] font-black font-['Montserrat'] text-[#1A3D3D] flex items-center gap-2">
@@ -404,8 +443,16 @@ setLugares(contarLugares([
 
         <div className="bg-[#1A3D3D] rounded-[32px] p-8 shadow-xl text-white relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-[20px] -translate-y-1/2 translate-x-1/2"></div>
-          <h2 className="text-[18px] font-black font-['Montserrat'] mb-6 relative z-10">Llegaron por</h2>
-          <div className="space-y-4 relative z-10">
+          <button
+            type="button"
+            onClick={() => setVerLlegada((v) => !v)}
+            aria-expanded={verLlegada}
+            className={`w-full flex items-center justify-between gap-3 text-left relative z-10 ${verLlegada ? 'mb-6' : ''}`}
+          >
+            <h2 className="text-[18px] font-black font-['Montserrat']">Llegaron por</h2>
+            <ChevronDown className={`w-5 h-5 text-[#4DB6AC] shrink-0 transition-transform duration-300 ${verLlegada ? 'rotate-180' : ''}`} />
+          </button>
+          <div className={`space-y-4 relative z-10 ${verLlegada ? '' : 'hidden'}`}>
             {isLoading ? (
               <Loader2 className="w-6 h-6 animate-spin text-[#4DB6AC]" />
             ) : llegaronPor.length > 0 ? (
@@ -434,6 +481,7 @@ setLugares(contarLugares([
             )}
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

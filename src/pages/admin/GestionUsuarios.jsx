@@ -33,6 +33,9 @@ export default function GestionUsuarios() {
   const [piezaUsuario, setPiezaUsuario] = useState(null);
   // Quiénes cargaron su Instagram (la pieza es solo para etiquetarlos ahí)
   const [uidsConInstagram, setUidsConInstagram] = useState(new Set());
+  // Cuántos usuarios se muestran en la lista: arranca con pocos y se piden más con el botón
+  const POR_ETAPA = 25;
+  const [cantidadVisible, setCantidadVisible] = useState(POR_ETAPA);
  
 
   // Cargar usuarios reales de Firestore
@@ -86,6 +89,13 @@ export default function GestionUsuarios() {
     if (!fechaB) return -1;
     return fechaB - fechaA;
   });
+
+  // Si cambia la búsqueda o el filtro de rol, la lista vuelve a mostrar solo la primera tanda
+  useEffect(() => {
+    setCantidadVisible(POR_ETAPA);
+  }, [searchTerm, filtroRol]);
+
+  const usuariosVisibles = usuariosFiltrados.slice(0, cantidadVisible);
 
   const handleGuardarEdicion = async (e) => {
     e.preventDefault();
@@ -212,7 +222,7 @@ export default function GestionUsuarios() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {usuariosFiltrados.length > 0 ? usuariosFiltrados.map((user) => (
+                {usuariosFiltrados.length > 0 ? usuariosVisibles.map((user) => (
                   <tr key={user.uid} className="hover:bg-[#F4F7F7]/50 transition-colors">
                     <td className="px-6 py-5">
                       <div className="flex items-center gap-3">
@@ -324,6 +334,20 @@ export default function GestionUsuarios() {
                 )}
               </tbody>
             </table>
+            {/* Pedir más usuarios de a tandas */}
+            {usuariosFiltrados.length > cantidadVisible && (
+              <div className="flex flex-col items-center gap-2 py-6 border-t border-gray-50">
+                <p className="text-[12px] text-[#666666] font-medium">
+                  Mostrando {usuariosVisibles.length} de {usuariosFiltrados.length}
+                </p>
+                <button
+                  onClick={() => setCantidadVisible((n) => n + POR_ETAPA)}
+                  className="px-6 py-3 rounded-xl bg-[#F4F7F7] text-[#1A3D3D] text-[12px] font-bold uppercase tracking-widest hover:bg-[#2D6A6A] hover:text-white transition-all"
+                >
+                  Ver más usuarios
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

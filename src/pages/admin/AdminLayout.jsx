@@ -29,7 +29,7 @@ export default function AdminLayout() {
     { path: '/admin', icon: <LayoutDashboard className="w-5 h-5" />, label: 'Dashboard', exact: true },
        { path: '/admin/validaciones', icon: <CheckSquare className="w-5 h-5" />, label: 'Validaciones' },
     { path: '/admin/usuarios', icon: <Users className="w-5 h-5" />, label: 'Gestión Usuarios' },
-    { path: '/admin/bolsa', icon: <Briefcase className="w-5 h-5" />, label: 'Bolsa de Trabajo' },
+    { path: '/admin/bolsa', icon: <Briefcase className="w-5 h-5" />, label: 'Gestión Bolsa' },
 
     { path: '/admin/capacitaciones', icon: <BookOpen className="w-5 h-5" />, label: 'Capacitaciones' },
       { path: '/admin/configuracion', icon: <Settings className="w-5 h-5" />, label: 'Configuración' },

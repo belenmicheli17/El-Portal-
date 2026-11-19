@@ -143,7 +143,7 @@ export const mensajeAProfesional = (nombreProfesional, quienEscribe) => {
   const desde = quienEscribe ? `, te escribimos de ${quienEscribe}` : '';
   return `${saludo}${desde}. Vimos en Portal Veterinario que estás disponible para trabajar y nos gustaría hablar con vos.`;
 };
-// ---------- Imagen para difundir una oferta (1080 x 1440, formato 3:4) ----------
+// ---------- Imagen para difundir una oferta (1080 x 1920, formato historia 9:16) ----------
 const FUENTE_TITULO = 'Montserrat, sans-serif';
 const FUENTE_TEXTO = 'Inter, sans-serif';
 const RUTA_IMAGENES = '/bolsa-imagen';
@@ -223,16 +223,16 @@ const ajustarTexto = (ctx, texto, peso, familia, tamanos, ancho, maxRenglones) =
 const ajustarEspecialidad = (ctx, texto) => {
   for (const tam of [84, 72, 64]) {
     ctx.font = `700 ${tam}px ${FUENTE_TITULO}`;
-    if (ctx.measureText(texto).width <= 680) return { tam, renglones: [texto] };
+    if (ctx.measureText(texto).width <= 600) return { tam, renglones: [texto] };
   }
-  return ajustarTexto(ctx, texto, 700, FUENTE_TITULO, [64], 680, 2);
+  return ajustarTexto(ctx, texto, 700, FUENTE_TITULO, [64], 600, 2);
 };
 
 // Dibuja la imagen de una oferta y devuelve un PNG
 export const generarImagenOferta = async (oferta) => {
   const NARANJA = '#F29B24';
 
-  await Promise.all(['700 84px Montserrat', '700 32px Inter', '500 36px Inter', '600 36px Inter', '600 28px Inter'].map((f) => document.fonts.load(f, '¿Tenés algún búsqueda·…?')));
+  await Promise.all(['700 84px Montserrat', '700 32px Inter', '500 36px Inter', '600 36px Inter', '700 40px Inter'].map((f) => document.fonts.load(f, '¿Tenés algún búsqueda·…?')));
   const [logo, personaje, fotoClinica] = await Promise.all([
     cargarImagen(`${RUTA_IMAGENES}/${ARCHIVO_LOGO}`),
     cargarImagen(`${RUTA_IMAGENES}/${ARCHIVO_PERSONAJE}`),
@@ -241,30 +241,30 @@ export const generarImagenOferta = async (oferta) => {
 
   const canvas = document.createElement('canvas');
   canvas.width = 1080;
-  canvas.height = 1440;
+  canvas.height = 1920;
   const ctx = canvas.getContext('2d');
   ctx.textBaseline = 'middle';
   ctx.textAlign = 'left';
 
   // Fondo
-  const degradado = ctx.createLinearGradient(0, 0, 1080, 1440);
+  const degradado = ctx.createLinearGradient(0, 0, 1080, 1920);
   degradado.addColorStop(0, '#FBE7CE');
   degradado.addColorStop(0.5, '#F8F3EA');
   degradado.addColorStop(1, '#DFEEE8');
   ctx.fillStyle = degradado;
-  ctx.fillRect(0, 0, 1080, 1440);
+  ctx.fillRect(0, 0, 1080, 1920);
 
   // Forma detrás del personaje
   ctx.save();
-  ctx.translate(690 + 230, 560 + 380);
+  ctx.translate(845, 1240);
   ctx.rotate((-4 * Math.PI) / 180);
   ctx.fillStyle = '#FFFFFF';
-  ctx.beginPath(); ctx.roundRect(-230, -380, 460, 760, 230); ctx.fill();
+  ctx.beginPath(); ctx.roundRect(-175, -500, 350, 1000, 175); ctx.fill();
   ctx.restore();
 
   // Personaje: se ajusta a la caja sin deformarse y apoyado abajo
   if (personaje) {
-    const caja = { x: 818, y: 630, ancho: 200, alto: 648 };
+    const caja = { x: 680, y: 760, ancho: 330, alto: 940 };
     const anchoOriginal = personaje.naturalWidth || personaje.width || caja.ancho;
     const altoOriginal = personaje.naturalHeight || personaje.height || caja.alto;
     const escala = Math.min(caja.ancho / anchoOriginal, caja.alto / altoOriginal);
@@ -321,9 +321,9 @@ export const generarImagenOferta = async (oferta) => {
   for (const tam of [72, 64, 56]) {
     tamZona = tam;
     ctx.font = `700 ${tam}px ${FUENTE_TITULO}`;
-    if (ctx.measureText(`en ${zona}?`).width <= 680) break;
+    if (ctx.measureText(`en ${zona}?`).width <= 600) break;
   }
-  while (zona.length > 3 && ctx.measureText(`en ${zona}?`).width > 680) zona = `${zona.slice(0, -2).trimEnd()}…`;
+  while (zona.length > 3 && ctx.measureText(`en ${zona}?`).width > 600) zona = `${zona.slice(0, -2).trimEnd()}…`;
   let x = 80;
   [['en ', '#1F4140'], [zona, '#2D6A6A'], ['?', '#1F4140']].forEach(([texto, col]) => {
     ctx.fillStyle = col;
@@ -333,9 +333,9 @@ export const generarImagenOferta = async (oferta) => {
 
   // Tarjeta de la clínica: foto o iniciales a la izquierda, nombre y «está en búsqueda» a la derecha
   const FOTO = 104;
-  const BORDE_TARJETA = 1250;
+  const ANCHO_TARJETA = 600;
   const xTexto = 80 + 36 + FOTO + 28;
-  const anchoTexto = 80 + 700 - 36 - xTexto;
+  const anchoTexto = 80 + ANCHO_TARJETA - 36 - xTexto;
   const nombre = String(oferta?.clinicaNombre || 'Una clínica del Portal').trim();
   let ajuste = ajustarTexto(ctx, nombre, 700, FUENTE_TITULO, [44], anchoTexto, 2);
   if (!ajuste.entra) ajuste = ajustarTexto(ctx, nombre, 700, FUENTE_TITULO, [38], anchoTexto, 3);
@@ -343,13 +343,13 @@ export const generarImagenOferta = async (oferta) => {
   const altoContenido = altoNombre * ajuste.renglones.length + 12 + 36 * 1.2;
   const altoCuerpo = Math.max(FOTO, altoContenido);
   const altoTarjeta = 36 + altoCuerpo + 36;
-  const arribaTarjeta = BORDE_TARJETA - altoTarjeta;
+  const arribaTarjeta = Math.min(y + tamZona * 1.12 + 70, 1700 - altoTarjeta);
   ctx.save();
   ctx.shadowColor = 'rgba(31,65,64,0.12)';
   ctx.shadowBlur = 36;
   ctx.shadowOffsetY = 18;
   ctx.fillStyle = '#FFFFFF';
-  ctx.beginPath(); ctx.roundRect(80, arribaTarjeta, 700, altoTarjeta, 36); ctx.fill();
+  ctx.beginPath(); ctx.roundRect(80, arribaTarjeta, ANCHO_TARJETA, altoTarjeta, 36); ctx.fill();
   ctx.restore();
 
   // Foto de la clínica (círculo) o iniciales
@@ -395,12 +395,12 @@ export const generarImagenOferta = async (oferta) => {
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   ctx.beginPath();
-  ctx.moveTo(92, 1320); ctx.lineTo(92, 1344);
-  ctx.moveTo(80, 1332); ctx.lineTo(92, 1344); ctx.lineTo(104, 1332);
+  ctx.moveTo(98, 1780); ctx.lineTo(98, 1812);
+  ctx.moveTo(82, 1796); ctx.lineTo(98, 1812); ctx.lineTo(114, 1796);
   ctx.stroke();
-  ctx.font = `600 28px ${FUENTE_TEXTO}`;
+  ctx.font = `700 40px ${FUENTE_TEXTO}`;
   ctx.fillStyle = '#284847';
-  ctx.fillText('Portal Veterinario · Link en la descripción', 118, 1332);
+  ctx.fillText('Postulate desde el link de la descripción', 134, 1796);
 
   return new Promise((resolver) => canvas.toBlob(resolver, 'image/png'));
 };
