@@ -311,8 +311,8 @@ export function BotonImagenOferta({ oferta }) {
       const archivo = new File([blob], 'oferta.png', { type: 'image/png' });
       if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
         try {
-          await navigator.share({ files: [archivo], text: texto });
-          avisar(textoCopiado ? 'Listo. El texto con el link quedó copiado' : 'Listo');
+          await navigator.share({ files: [archivo] });
+          avisar(textoCopiado ? 'Listo. El link quedó copiado' : 'Listo');
           return;
         } catch (e) {
           if (e?.name === 'AbortError') return; // cerró el menú de compartir
@@ -368,14 +368,14 @@ export function BotonImagenOferta({ oferta }) {
             <Copy className="w-4 h-4" /> Copiar imagen
           </button>
           <button type="button" onClick={copiarTexto} className="w-full inline-flex items-center justify-center gap-2 bg-[#F4F7F7] hover:bg-gray-200 text-[#1A3D3D] py-3.5 rounded-2xl text-[14px] font-semibold transition-colors">
-            <Copy className="w-4 h-4" /> Copiar texto con el link
+            <Copy className="w-4 h-4" /> Copiar link
           </button>
         </div>
         <p className="text-[13px] text-[#666666] mt-3 leading-relaxed">
-          {copiado === 'imagen' && 'Imagen copiada: pegala en el posteo. Después copiá el texto con el link.'}
-          {copiado === 'texto' && 'Texto copiado: pegalo en la descripción del posteo.'}
+          {copiado === 'imagen' && 'Imagen copiada: pegala en la historia. Después copiá el link.'}
+          {copiado === 'texto' && 'Link copiado: pegalo como sticker en la historia.'}
           {copiado === 'error' && 'No pudimos copiar. Probá con otro navegador.'}
-          {!copiado && 'Copiá la imagen y pegala en el posteo; después copiá el texto con el link y pegalo en la descripción.'}
+          {!copiado && 'Copiá la imagen y pegala en la historia; después copiá el link y pegalo como sticker.'}
         </p>
       </VentanaBolsa>
     </div>

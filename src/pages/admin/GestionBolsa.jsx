@@ -170,24 +170,24 @@ export default function GestionBolsa() {
         </p>
       </div>
 
-      <div className="bg-white p-1.5 sm:p-2 rounded-[24px] border border-gray-100 shadow-sm flex w-full sm:w-auto sm:inline-flex gap-1 mb-8 overflow-x-auto max-w-full">
+      <div className="bg-white p-1.5 sm:p-2 rounded-[24px] border border-gray-100 shadow-sm flex w-full sm:w-auto sm:inline-flex gap-1 mb-8 max-w-full">
         <button 
           onClick={() => setTabActiva('ofertas')}
-          className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-3 sm:py-3.5 rounded-[18px] text-[11px] sm:text-[13px] font-bold uppercase tracking-wide sm:tracking-widest whitespace-nowrap transition-all ${tabActiva === 'ofertas' ? 'bg-[#1A3D3D] text-white shadow-md' : 'text-[#666666] hover:bg-[#F4F7F7]'}`}
+          className={`flex-1 sm:flex-none min-w-0 flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-6 py-3 sm:py-3.5 rounded-[18px] text-[10px] sm:text-[13px] leading-tight text-center font-bold uppercase tracking-normal sm:tracking-widest sm:whitespace-nowrap transition-all ${tabActiva === 'ofertas' ? 'bg-[#1A3D3D] text-white shadow-md' : 'text-[#666666] hover:bg-[#F4F7F7]'}`}
         >
-          <Building className="w-4 h-4" /> Ofertas ({ofertas.length})
+          <Building className="w-4 h-4 hidden sm:block shrink-0" /> Ofertas ({ofertas.length})
         </button>
         <button 
           onClick={() => setTabActiva('profesionales')}
-          className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-3 sm:py-3.5 rounded-[18px] text-[11px] sm:text-[13px] font-bold uppercase tracking-wide sm:tracking-widest whitespace-nowrap transition-all ${tabActiva === 'profesionales' ? 'bg-[#1A3D3D] text-white shadow-md' : 'text-[#666666] hover:bg-[#F4F7F7]'}`}
+          className={`flex-1 sm:flex-none min-w-0 flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-6 py-3 sm:py-3.5 rounded-[18px] text-[10px] sm:text-[13px] leading-tight text-center font-bold uppercase tracking-normal sm:tracking-widest sm:whitespace-nowrap transition-all ${tabActiva === 'profesionales' ? 'bg-[#1A3D3D] text-white shadow-md' : 'text-[#666666] hover:bg-[#F4F7F7]'}`}
         >
-          <UserCheck className="w-4 h-4" /> Profesionales ({profesionales.length})
+          <UserCheck className="w-4 h-4 hidden sm:block shrink-0" /> Profesionales ({profesionales.length})
         </button>
         <button 
           onClick={() => setTabActiva('metricas')}
-          className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-3 sm:py-3.5 rounded-[18px] text-[11px] sm:text-[13px] font-bold uppercase tracking-wide sm:tracking-widest whitespace-nowrap transition-all ${tabActiva === 'metricas' ? 'bg-[#1A3D3D] text-white shadow-md' : 'text-[#666666] hover:bg-[#F4F7F7]'}`}
+          className={`flex-1 sm:flex-none min-w-0 flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-6 py-3 sm:py-3.5 rounded-[18px] text-[10px] sm:text-[13px] leading-tight text-center font-bold uppercase tracking-normal sm:tracking-widest sm:whitespace-nowrap transition-all ${tabActiva === 'metricas' ? 'bg-[#1A3D3D] text-white shadow-md' : 'text-[#666666] hover:bg-[#F4F7F7]'}`}
         >
-          <Activity className="w-4 h-4" /> Métricas
+          <Activity className="w-4 h-4 hidden sm:block shrink-0" /> Métricas
         </button>
       </div>
 

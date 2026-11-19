@@ -173,12 +173,8 @@ const especialidadesParaImagen = (oferta) => {
   return [PUESTOS_IMAGEN[oferta?.rol] || 'Veterinario/a'];
 };
 
-// Texto listo para pegar en el posteo, con el link de la oferta
-export const textoParaCompartir = (oferta) => {
-  const areas = Array.isArray(oferta?.areas) ? oferta.areas.filter(Boolean) : [];
-  const que = oferta?.rol === 'veterinario' && areas.length > 0 ? areas.slice(0, 3).join(', ') : (PUESTOS_IMAGEN[oferta?.rol] || 'Veterinario/a');
-  return `¿Tenés algún colega que esté buscando trabajo como ${que} en ${zonaParaImagen(oferta)}? ${oferta?.clinicaNombre || 'Una clínica'} está en búsqueda.\nMirá la oferta y postulate acá: ${linkOferta(oferta.id)}`;
-};
+// Lo que se copia al portapapeles: solo el link de la oferta (para pegarlo como sticker en la historia)
+export const textoParaCompartir = (oferta) => linkOferta(oferta.id);
 
 const cargarImagen = (src, conCors = false) => new Promise((resolver) => {
   if (!src) { resolver(null); return; }
@@ -395,12 +391,13 @@ export const generarImagenOferta = async (oferta) => {
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   ctx.beginPath();
-  ctx.moveTo(98, 1780); ctx.lineTo(98, 1812);
-  ctx.moveTo(82, 1796); ctx.lineTo(98, 1812); ctx.lineTo(114, 1796);
+  ctx.moveTo(98, 1794); ctx.lineTo(98, 1826);
+  ctx.moveTo(82, 1810); ctx.lineTo(98, 1826); ctx.lineTo(114, 1810);
   ctx.stroke();
   ctx.font = `700 40px ${FUENTE_TEXTO}`;
   ctx.fillStyle = '#284847';
-  ctx.fillText('Postulate desde el link de la descripción', 134, 1796);
+  ctx.fillText('Postulate desde el enlace y mirá todas', 134, 1780);
+  ctx.fillText('las ofertas desde el link en la descripción', 134, 1836);
 
   return new Promise((resolver) => canvas.toBlob(resolver, 'image/png'));
 };
