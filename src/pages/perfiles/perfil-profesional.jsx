@@ -5,6 +5,7 @@ import { doc, collection, query, where, getDocs, getDoc } from 'firebase/firesto
 import { useAuth } from '../../context/AuthContext';
 import { BotonCompartirPerfil, BotonCompartirLink, armarLinkPerfil } from '../../components/CompartirPerfil';
 import especialidadesData from '../../data/especialidades.json';
+import { direccionCorta } from '../../utils/bolsa';
 import { Video as IconoVideo, Siren as IconoSirena } from 'lucide-react';
 import { 
   ShieldCheck, MessageCircle, Star, Award, MapPin, Images, GalleryHorizontal, 
@@ -842,7 +843,7 @@ const mobileTabs = [
                                 {c.direccion && (
                                   <a href={mapsUrl} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()} className="flex items-center gap-1.5 text-[13px] text-[#2D6A6A] font-bold transition-colors active:text-[#1A3D3D]">
                                     <MapPin className="w-3 h-3 text-[#2D6A6A] shrink-0" />
-                                    {c.direccion}
+                                    {direccionCorta(c.direccion)}
                                   </a>
                                 )}
 
@@ -1537,7 +1538,7 @@ return (
                                     {clinica.direccion && (
                                       <a href={mapsUrl} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-[15px] text-[#666666] hover:text-[#4DB6AC] transition-colors">
                                         <MapPin className="w-3.5 h-3.5 text-[#2D6A6A] shrink-0" />
-                                        {clinica.direccion}
+                                        {direccionCorta(clinica.direccion)}
                                       </a>
                                     )}
 

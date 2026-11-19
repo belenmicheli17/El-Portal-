@@ -29,6 +29,7 @@ export default function AccessibilityWidget() {
   });
 
   const [position, setPosition] = useState(null);
+  const [panelStyle, setPanelStyle] = useState({});
 const location = useLocation();
   const dragState = useRef({
     isDragging: false,
@@ -85,13 +86,39 @@ const location = useLocation();
     e.currentTarget.releasePointerCapture(e.pointerId);
   };
 
+  // Calcula dónde abrir el menú según dónde está el botón y cuánto lugar hay en pantalla
+  const calcularPanel = () => {
+    if (!widgetRef.current) return;
+    const rect = widgetRef.current.getBoundingClientRect();
+    const margen = 12;
+    const ancho = Math.min(320, window.innerWidth - margen * 2);
+    const botonEnLaIzquierda = rect.left + rect.width / 2 < window.innerWidth / 2;
+    let left = botonEnLaIzquierda ? rect.left : rect.right - ancho;
+    left = Math.max(margen, Math.min(left, window.innerWidth - ancho - margen));
+    const espacioAbajo = window.innerHeight - rect.bottom - margen - 8;
+    const espacioArriba = rect.top - margen - 8;
+    const haciaAbajo = espacioAbajo >= 380 || espacioAbajo >= espacioArriba;
+    const maxHeight = Math.max(180, haciaAbajo ? espacioAbajo : espacioArriba);
+    setPanelStyle(haciaAbajo
+      ? { left, width: ancho, top: rect.bottom + 8, maxHeight }
+      : { left, width: ancho, bottom: window.innerHeight - rect.top + 8, maxHeight });
+  };
+
   const handleToggle = (e) => {
     if (dragState.current.hasDragged) {
       e.preventDefault();
       return;
     }
+    if (!isOpen) calcularPanel();
     setIsOpen(!isOpen);
   };
+
+  // Si se gira el celular o cambia el tamaño con el menú abierto, lo vuelve a acomodar
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    window.addEventListener('resize', calcularPanel);
+    return () => window.removeEventListener('resize', calcularPanel);
+  }, [isOpen]);
 
 
 
@@ -215,14 +242,6 @@ return () => {
     </div>
   );
 
-  // ==========================================
-  // CÁLCULO DE DIRECCIÓN DE APERTURA
-  // ==========================================
-  // Si está de la mitad para arriba de la pantalla, se abre hacia abajo. Si no, hacia arriba.
-  const isTopHalf = position ? position.y < window.innerHeight / 2 : false;
-  // Si está de la mitad izquierda, se ancla a la izquierda. Si no, a la derecha.
-  const isLeftHalf = position ? position.x < window.innerWidth / 2 : true;
-
   if (location.pathname === '/sala-de-espera') return null;
 
   return (
@@ -236,7 +255,7 @@ return () => {
 
       <div 
         className={`accessibility-widget-container fixed z-[10000] transition-none 
-          ${!position ? (hasCookiesBanner ? 'bottom-40 md:bottom-28 left-5' : 'bottom-5 left-5') : ''}
+          ${!position ? `top-[40%] right-3 md:top-auto md:right-auto md:left-5 ${hasCookiesBanner ? 'md:bottom-28' : 'md:bottom-5'}` : ''}
         `}
         ref={widgetRef}
         style={{
@@ -245,11 +264,9 @@ return () => {
         }}
       >
         {isOpen && (
-          <div 
-            className={`absolute w-[calc(100vw-40px)] md:w-80 bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.25)] border border-gray-100 p-5 animate-in fade-in duration-300 text-left overflow-y-auto max-h-[70vh]
-              ${isTopHalf ? 'top-[calc(100%+16px)]' : 'bottom-[calc(100%+16px)]'}
-              ${isLeftHalf ? 'left-0' : 'right-0'}
-            `}
+          <div
+            className="fixed bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.25)] border border-gray-100 p-5 animate-in fade-in duration-300 text-left overflow-y-auto overscroll-contain"
+            style={panelStyle}
           >
             <div className="flex justify-between items-center mb-5 pb-2 border-b border-gray-100">
               <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Accesibilidad</p>

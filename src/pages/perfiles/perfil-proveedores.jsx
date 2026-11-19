@@ -5,6 +5,7 @@ import {
   Facebook, Instagram, Building2, MapPin, ArrowUp, Filter, Clock,
   Search, Play
 } from 'lucide-react';
+import { direccionCorta } from '../../utils/bolsa';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 
@@ -413,7 +414,7 @@ export default function PerfilProveedor() {
                         {proveedor.mapaUrl && <ArrowUpRight className="w-4 h-4 text-gray-300 group-hover:text-[#2D6A6A] transition-colors" />}
                       </div>
                       
-                      {proveedor.direccion && <p className="text-[#1A3D3D] font-bold text-[15px] leading-snug mb-5">{proveedor.direccion}</p>}
+                      {proveedor.direccion && <p className="text-[#1A3D3D] font-bold text-[15px] leading-snug mb-5">{direccionCorta(proveedor.direccion)}</p>}
                       
                       {(proveedor.modalidadTexto || proveedor.horariosAtencion) && (
                         <div className="pt-4 border-t border-gray-100/60">

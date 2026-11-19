@@ -96,6 +96,14 @@ export const linkPostulacion = (ofertaId, uid) => `${SITIO}/postulacion/${oferta
 
 // Link a la página del currículum (para la ficha de "disponible", cuando la persona elige mostrarlo)
 export const linkCV = (ruta) => (ruta ? `${SITIO}/cv/${String(ruta).replace(/^cvs\//, '')}` : '');
+// Dirección para mostrar, sin código postal ni país: "Av. Yrigoyen 8017, B1828 CGL, Argentina" → "Av. Yrigoyen 8017"
+export const direccionCorta = (direccion) => String(direccion || '')
+  .split(',').map((p) => p.trim()).filter(Boolean)
+  .filter((p) => !/^argentina$/i.test(p) && !/^provincia de\s/i.test(p))
+  .map((p) => p.replace(/^[A-Z]?\d{4}(?:\s?[A-Z]{3}(?![a-zA-Z]))?\s*/, ''))
+  .filter(Boolean)
+  .join(', ');
+
 // Provincia prolija: "Provincia de Buenos Aires" → "Buenos Aires", "Ciudad Autónoma de Buenos Aires" → "CABA"
 export const provinciaCorta = (provincia) => {
   const p = String(provincia || '').trim();

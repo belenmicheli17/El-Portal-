@@ -157,7 +157,9 @@ export const datosDesdeLugarGoogle = (lugar, listaProvincias = []) => {
 };
 
 // Campo de dirección con sugerencias de Google. Se puede buscar por nombre del lugar o por dirección.
-export function BuscadorDireccionGoogle({ id, valor, onEscribir, onElegir, placeholder, listaProvincias = [] }) {
+export function BuscadorDireccionGoogle({ id, valor, onEscribir, onElegir, placeholder, listaProvincias = [], soloLocales = false }) {
+  const autocompleteRef = useRef(null);
+  const [porDireccion, setPorDireccion] = useState(false); // "¿No la encontrás? Buscá por dirección"
   const inputRef = useRef(null);
   const onElegirRef = useRef(onElegir);
   onElegirRef.current = onElegir; // siempre apunta a la versión más nueva de la función
@@ -174,6 +176,9 @@ export function BuscadorDireccionGoogle({ id, valor, onEscribir, onElegir, place
           componentRestrictions: { country: 'ar' },
           fields: ['name', 'formatted_address', 'place_id', 'geometry', 'address_components']
         });
+        autocompleteRef.current = autocomplete;
+        // En los campos de veterinaria, Google solo sugiere negocios (nombre, dirección y ciudad ya vienen separados)
+        if (soloLocales) autocomplete.setTypes(['establishment']);
         autocomplete.addListener('place_changed', () => {
           const lugar = autocomplete.getPlace();
           if (!lugar || !lugar.place_id) return;
@@ -192,6 +197,12 @@ export function BuscadorDireccionGoogle({ id, valor, onEscribir, onElegir, place
     };
   }, []);
 
+  // Si la persona no encuentra su veterinaria, puede pasar a buscar por dirección y volver
+  useEffect(() => {
+    if (!autocompleteRef.current || !soloLocales) return;
+    autocompleteRef.current.setTypes(porDireccion ? [] : ['establishment']);
+  }, [porDireccion, soloLocales, estadoMapa]);
+
   return (
     <div>
       <style>{`.pac-container { border-radius: 16px; margin-top: 6px; font-family: Inter, sans-serif; z-index: 10000; }`}</style>
@@ -209,6 +220,11 @@ export function BuscadorDireccionGoogle({ id, valor, onEscribir, onElegir, place
           className="w-full border border-gray-200 focus:border-[#2D6A6A] rounded-2xl pl-11 pr-5 py-3.5 text-base font-medium focus:outline-none transition-all bg-gray-50/50 text-[#1A3D3D]"
         />
       </div>
+      {soloLocales && estadoMapa === 'listo' && (
+        <button type="button" onClick={() => setPorDireccion((v) => !v)} className="mt-2 text-[13px] font-semibold text-[#2D6A6A] underline underline-offset-2 hover:text-[#1A3D3D]">
+          {porDireccion ? 'Volver a buscar por el nombre de la veterinaria' : '¿No la encontrás? Buscá por dirección'}
+        </button>
+      )}
       {estadoMapa === 'error' && (
         <p className="text-[11px] font-bold text-red-500 mt-1.5 ml-1">No pudimos cargar Google Maps. Recargá la página para volver a intentar.</p>
       )}

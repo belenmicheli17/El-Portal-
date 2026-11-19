@@ -1,27 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Briefcase, UserCheck, Trash2, PauseCircle, 
-  PlayCircle, Clock, MapPin, Building, User, CalendarDays, Loader2
+  PlayCircle, Clock, MapPin, Building, User, CalendarDays, Loader2, Activity
 } from 'lucide-react';
 import { db } from '../../firebase';
 import { collection, getDocs, doc, updateDoc, deleteDoc, query, orderBy } from 'firebase/firestore';
-import { tituloPuesto } from '../../utils/bolsa';
+import { tituloPuesto, estaVigente, aMilisegundos, provinciaCorta } from '../../utils/bolsa';
 
 export default function GestionBolsa() {
   const [tabActiva, setTabActiva] = useState('ofertas');
   const [ofertas, setOfertas] = useState([]);
   const [profesionales, setProfesionales] = useState([]);
+  const [postulaciones, setPostulaciones] = useState([]);
+  const [prueba, setPrueba] = useState(new Set()); // cuentas de prueba, que no cuentan en las métricas
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [ofertasSnap, profSnap] = await Promise.all([
+        const [ofertasSnap, profSnap, postSnap, usuariosSnap] = await Promise.all([
           getDocs(query(collection(db, 'ofertasEmpleo'), orderBy('createdAt', 'desc'))),
-          getDocs(query(collection(db, 'profesionalesDisponibles'), orderBy('createdAt', 'desc')))
+          getDocs(query(collection(db, 'profesionalesDisponibles'), orderBy('createdAt', 'desc'))),
+          getDocs(collection(db, 'postulaciones')).catch(() => ({ docs: [] })),
+          getDocs(collection(db, 'usuarios')).catch(() => ({ docs: [] }))
         ]);
         setOfertas(ofertasSnap.docs.map(d => ({ id: d.id, ...d.data() })));
         setProfesionales(profSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+        setPostulaciones(postSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+        setPrueba(new Set(usuariosSnap.docs.filter(d => d.data().esPrueba === true).map(d => d.id)));
       } catch (error) {
         console.error("Error cargando datos:", error);
       } finally {
@@ -128,6 +134,29 @@ export default function GestionBolsa() {
     );
   };
 
+  // Métricas de la Bolsa: salen de lo que hay guardado, sin cuentas de prueba
+  const DIA = 24 * 60 * 60 * 1000;
+  const ofertasReales = ofertas.filter(o => !prueba.has(o.creadorId));
+  const ofertasActivas = ofertasReales.filter(estaVigente);
+  const dispActivos = profesionales.filter(p => !prueba.has(p.creadorId || p.id)).filter(estaVigente);
+  const idsOfertas = new Set(ofertasReales.map(o => o.id));
+  // Solo se cuentan postulaciones de ofertas que todavía existen
+  const postsReales = postulaciones.filter(p => idsOfertas.has(p.ofertaId) && !prueba.has(p.postulanteId));
+  const postsPorOferta = {};
+  postsReales.forEach(p => { postsPorOferta[p.ofertaId] = (postsPorOferta[p.ofertaId] || 0) + 1; });
+  const sinPostulantes = ofertasActivas.filter(o => !postsPorOferta[o.id]);
+  const postsUlt7 = postsReales.filter(p => Date.now() - aMilisegundos(p.creadaEn) <= 7 * DIA).length;
+  const provMapa = {};
+  const sumarProv = (prov, campo) => {
+    const nombre = provinciaCorta(prov) || 'Sin dato';
+    provMapa[nombre] = provMapa[nombre] || { nombre, ofertas: 0, disponibles: 0, postulaciones: 0 };
+    provMapa[nombre][campo] += 1;
+  };
+  ofertasActivas.forEach(o => sumarProv(o.provincia, 'ofertas'));
+  dispActivos.forEach(p => sumarProv(p.provincia, 'disponibles'));
+  postsReales.forEach(p => sumarProv(ofertasReales.find(o => o.id === p.ofertaId)?.provincia, 'postulaciones'));
+  const provinciasMetricas = Object.values(provMapa).sort((a, b) => (b.ofertas + b.disponibles + b.postulaciones) - (a.ofertas + a.disponibles + a.postulaciones));
+
   return (
     <div className="animate-in fade-in duration-500 pb-10">
       <div className="mb-8">
@@ -152,6 +181,12 @@ export default function GestionBolsa() {
         >
           <UserCheck className="w-4 h-4" /> Profesionales ({profesionales.length})
         </button>
+        <button 
+          onClick={() => setTabActiva('metricas')}
+          className={`flex items-center gap-2 px-6 py-3.5 rounded-[18px] text-[13px] font-bold uppercase tracking-widest transition-all ${tabActiva === 'metricas' ? 'bg-[#1A3D3D] text-white shadow-md' : 'text-[#666666] hover:bg-[#F4F7F7]'}`}
+        >
+          <Activity className="w-4 h-4" /> Métricas
+        </button>
       </div>
 
       {isLoading ? (
@@ -160,6 +195,69 @@ export default function GestionBolsa() {
         </div>
       ) : (
         <div className="space-y-4">
+          {tabActiva === 'metricas' && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                {[
+                  { titulo: 'Ofertas activas', valor: ofertasActivas.length, ayuda: 'Clínicas buscando personal hoy' },
+                  { titulo: 'Disponibles', valor: dispActivos.length, ayuda: 'Profesionales buscando trabajo hoy' },
+                  { titulo: 'Postulaciones', valor: postsReales.length, ayuda: `${postsUlt7} en los últimos 7 días` },
+                  { titulo: 'Sin postulantes', valor: sinPostulantes.length, ayuda: 'Ofertas activas que nadie pidió' }
+                ].map(t => (
+                  <div key={t.titulo} className="bg-white p-6 rounded-[24px] border border-gray-100 shadow-sm">
+                    <h3 className="text-[#666666] text-[12px] font-bold uppercase tracking-widest mb-2">{t.titulo}</h3>
+                    <p className="text-[#1A3D3D] text-[32px] font-black font-['Montserrat'] leading-none">{t.valor}</p>
+                    <p className="text-[#666666] text-[13px] font-medium mt-2">{t.ayuda}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="bg-white rounded-[24px] border border-gray-100 p-6 shadow-sm">
+                <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[16px] mb-1">Ofertas sin postulantes</h3>
+                <p className="text-[#666666] text-[13px] mb-4">Son las que conviene mostrar en redes, entre profesionales de esa provincia.</p>
+                {sinPostulantes.length === 0 ? (
+                  <p className="text-[14px] text-[#666666]">Todas las ofertas activas tienen postulantes.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {sinPostulantes.slice(0, 8).map(o => (
+                      <div key={o.id} className="flex items-center justify-between gap-3 p-4 bg-[#F4F7F7] rounded-2xl border border-gray-100">
+                        <div className="min-w-0">
+                          <p className="text-[#1A3D3D] font-bold text-[14px] truncate">{tituloPuesto(o)}</p>
+                          <p className="text-[#666666] text-[13px] truncate">{[o.clinicaNombre, provinciaCorta(o.provincia)].filter(Boolean).join(' · ')}</p>
+                        </div>
+                        <span className="shrink-0 bg-[#FF9800]/20 text-[#e68900] text-[12px] font-bold px-2.5 py-1 rounded-lg">
+                          {Math.floor((Date.now() - aMilisegundos(o.publicadaEn)) / DIA)} días
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-white rounded-[24px] border border-gray-100 p-6 shadow-sm">
+                <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[16px] mb-1">Por provincia</h3>
+                <p className="text-[#666666] text-[13px] mb-4">Si hay más ofertas que profesionales disponibles, conviene difundir entre profesionales. Si hay más disponibles que ofertas, entre clínicas.</p>
+                {provinciasMetricas.length === 0 ? (
+                  <p className="text-[14px] text-[#666666]">Todavía no hay datos.</p>
+                ) : (
+                  <div className="divide-y divide-gray-50">
+                    <div className="grid grid-cols-[1.4fr_0.7fr_0.8fr_0.8fr_1.2fr] gap-2 pb-2 text-[11px] font-bold uppercase tracking-widest text-[#666666]">
+                      <span>Provincia</span><span>Ofertas</span><span>Disp.</span><span>Post.</span><span>Difundir en</span>
+                    </div>
+                    {provinciasMetricas.map(p => (
+                      <div key={p.nombre} className="grid grid-cols-[1.4fr_0.7fr_0.8fr_0.8fr_1.2fr] gap-2 py-3 text-[14px] items-center">
+                        <span className="font-bold text-[#1A3D3D] truncate">{p.nombre}</span>
+                        <span className="text-[#333333]">{p.ofertas}</span>
+                        <span className="text-[#333333]">{p.disponibles}</span>
+                        <span className="text-[#333333]">{p.postulaciones}</span>
+                        <span className="text-[13px] font-semibold text-[#2D6A6A]">{p.ofertas > p.disponibles ? 'Profesionales' : p.disponibles > p.ofertas ? 'Clínicas' : '—'}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
           {tabActiva === 'ofertas' && (
             ofertas.length > 0 ? ofertas.map(oferta => (
               <CardItem 

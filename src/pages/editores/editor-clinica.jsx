@@ -6,6 +6,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 // ==========================================
 import { db, storage } from '../../firebase';
 import { doc, setDoc, getDoc, deleteDoc, collection, query, where, getDocs, serverTimestamp } from 'firebase/firestore';
+import { direccionCorta } from '../../utils/bolsa';
 import { ref, uploadString, getDownloadURL, deleteObject } from 'firebase/storage';
 import { useAuth } from '../../context/AuthContext';
 import FooterSimple from '../../components/FooterSimple';
@@ -1649,10 +1650,10 @@ export default function EditorClinico() {
                         </label>
                         <BuscadorDireccionGoogle
                           id="direccion"
-                          valor={formData.direccion}
+                          valor={formData.placeId ? direccionCorta(formData.direccion) : formData.direccion}
                           onEscribir={escribirDireccion}
                           onElegir={elegirDireccion}
-                          placeholder="Ej: Av. Santa Fe 1234, Buenos Aires"
+                          placeholder="Buscá el nombre de tu veterinaria" soloLocales
                           listaProvincias={provincias}
                         />
                         {formData.placeId ? (
@@ -1716,7 +1717,7 @@ export default function EditorClinico() {
                                 placeholder="Nombre de la sede (opcional, si tiene distinto nombre) Ej: Sede Palermo"
                                 className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-[15px] font-medium text-[#1A3D3D] outline-none focus:border-[#2D6A6A]"
                               />
-                              <p className="text-[13px] text-[#666666] leading-snug">{sede.direccion}</p>
+                              <p className="text-[13px] text-[#666666] leading-snug">{direccionCorta(sede.direccion)}</p>
                               <p className="text-[11px] text-[#2D6A6A] font-bold">Confirmada con Google{sede.barrio ? ` · Barrio: ${sede.barrio}` : ''}</p>
                             </div>
                             <button type="button" onClick={() => quitarSede(sede.id)} className="p-1.5 text-gray-400 hover:text-red-500 transition-colors" aria-label="Quitar sede">
@@ -1729,7 +1730,7 @@ export default function EditorClinico() {
                           valor={textoSede}
                           onEscribir={setTextoSede}
                           onElegir={agregarSede}
-                          placeholder="Buscá la dirección de otra sede"
+                          placeholder="Buscá el nombre de la otra sede" soloLocales
                           listaProvincias={provincias}
                         />
                       </div>

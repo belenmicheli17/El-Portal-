@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { signInWithCustomToken } from 'firebase/auth';
 import { httpsCallable } from 'firebase/functions';
@@ -21,6 +21,8 @@ export default function BannerModoPrueba() {
   const [enModoPrueba, setEnModoPrueba] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [abierto, setAbierto] = useState(false);
+  const panelRef = useRef(null);
 
   const esAdmin = currentUser?.rol === 'admin';
   const enPanelAdmin = location.pathname.startsWith('/admin');
@@ -49,13 +51,18 @@ export default function BannerModoPrueba() {
     return () => { cancelado = true; };
   }, [currentUser?.uid]);
 
-  // Deja lugar abajo para que la barra no tape el final de las páginas
+    // Cierra la ventanita al tocar afuera o con Escape
   useEffect(() => {
-    if (!mostrar) return;
-    const anterior = document.body.style.paddingBottom;
-    document.body.style.paddingBottom = '48px';
-    return () => { document.body.style.paddingBottom = anterior; };
-  }, [mostrar]);
+    if (!abierto) return undefined;
+    const afuera = (e) => { if (panelRef.current && !panelRef.current.contains(e.target)) setAbierto(false); };
+    const escape = (e) => { if (e.key === 'Escape') setAbierto(false); };
+    document.addEventListener('mousedown', afuera);
+    window.addEventListener('keydown', escape);
+    return () => {
+      document.removeEventListener('mousedown', afuera);
+      window.removeEventListener('keydown', escape);
+    };
+  }, [abierto]);
 
   // Salta directo a la cuenta de prueba de otro rol
   const handleSaltar = async (rol) => {
@@ -96,52 +103,26 @@ export default function BannerModoPrueba() {
     }
   };
 
-  if (!mostrar) return null;
+    if (!mostrar) return null;
+
+  const claseCuenta = (activo) => `w-full px-4 py-2.5 rounded-xl text-[13px] font-bold text-left transition-all duration-300 ease-in-out disabled:opacity-60 ${
+    activo ? 'bg-[#2D6A6A] text-white shadow-md cursor-default' : 'bg-[#F4F7F7] text-[#1A3D3D] hover:bg-gray-200'
+  }`;
 
   return (
-    <div className={`fixed bottom-0 left-0 right-0 z-[9999] border-t shadow-[0_-4px_20px_rgba(26,61,61,0.08)] ${
-      enModoPrueba
-        ? 'bg-yellow-50 border-yellow-200 text-yellow-700'
-        : 'bg-white border-gray-200 text-[#1A3D3D]'
-    }`}>
-      <div className="px-4 py-2 flex items-center justify-between gap-3">
-        {/* Etiqueta */}
-        <div className="flex items-center gap-2 min-w-0">
-          {isLoading ? (
-            <Loader2 className="w-4 h-4 shrink-0 animate-spin" />
-          ) : (
-            <FlaskConical className="w-4 h-4 shrink-0" strokeWidth={2} />
-          )}
-          <p className="text-[11px] sm:text-[12px] font-bold uppercase tracking-widest truncate">
+    <div ref={panelRef} className="fixed right-0 top-1/2 -translate-y-1/2 z-[9999] flex items-center">
+      {/* Ventanita con los botones, uno arriba del otro */}
+      {abierto && (
+        <div className="mr-2 w-48 bg-white rounded-2xl border border-gray-100 shadow-[0_8px_30px_rgba(26,61,61,0.18)] p-3 flex flex-col gap-2 animate-in fade-in slide-in-from-right-2 duration-200">
+          <p className="text-[11px] font-bold uppercase tracking-widest text-[#2D6A6A] px-1 flex items-center gap-1.5">
+            {isLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FlaskConical className="w-3.5 h-3.5" strokeWidth={2} />}
             {enModoPrueba ? 'Modo prueba' : 'Cuentas de prueba'}
           </p>
-          {error && (
-            <p className="hidden sm:block text-[12px] font-medium text-red-500 truncate">{error}</p>
-          )}
-        </div>
-
-        {/* Botones: tres cuentas de prueba + admin */}
-        <div className="flex items-center gap-2 shrink-0">
-          {CUENTAS.map(({ rol, etiqueta }) => {
-            const activo = currentUser?.rol === rol;
-            return (
-              <button
-                key={rol}
-                onClick={() => handleSaltar(rol)}
-                disabled={isLoading}
-                className={`px-3 py-1.5 rounded-xl text-[12px] font-bold transition-all duration-300 ease-in-out disabled:opacity-60 ${
-                  activo
-                    ? 'bg-[#2D6A6A] text-white shadow-md cursor-default'
-                    : enModoPrueba
-                      ? 'bg-white text-[#1A3D3D] hover:bg-gray-200'
-                      : 'bg-[#F4F7F7] text-[#1A3D3D] hover:bg-gray-200'
-                }`}
-              >
-                {etiqueta}
-              </button>
-            );
-          })}
-          {/* Ver el cuestionario de alta de la cuenta de prueba (usa el modo corrección que ya existe) */}
+          {CUENTAS.map(({ rol, etiqueta }) => (
+            <button key={rol} onClick={() => handleSaltar(rol)} disabled={isLoading} className={claseCuenta(currentUser?.rol === rol)}>
+              {etiqueta}
+            </button>
+          ))}
           {enModoPrueba && (currentUser?.rol === 'profesional' || currentUser?.rol === 'clinica') && (
             <button
               onClick={() => navigate(
@@ -149,28 +130,33 @@ export default function BannerModoPrueba() {
                 { state: { correccion: true, vistaPrueba: true } }
               )}
               disabled={isLoading}
-              className="px-3 py-1.5 rounded-xl text-[12px] font-bold bg-white text-[#1A3D3D] hover:bg-gray-200 transition-all duration-300 ease-in-out disabled:opacity-60 flex items-center gap-1.5"
+              className="w-full px-4 py-2.5 rounded-xl text-[13px] font-bold bg-white border border-gray-200 text-[#1A3D3D] hover:bg-gray-100 transition-all duration-300 ease-in-out disabled:opacity-60 flex items-center gap-1.5"
             >
-              <ClipboardList className="w-3.5 h-3.5" strokeWidth={2} />
-              Onboarding
+              <ClipboardList className="w-3.5 h-3.5" strokeWidth={2} /> Onboarding
             </button>
           )}
           <button
             onClick={handleAdmin}
             disabled={isLoading}
-            className={`px-3 py-1.5 rounded-xl text-[12px] font-bold bg-[#1A3D3D] text-white hover:bg-[#2D6A6A] transition-all duration-300 ease-in-out disabled:opacity-60 ${
-              esAdmin ? 'ring-2 ring-[#4DB6AC]' : ''
-            }`}
+            className={`w-full px-4 py-2.5 rounded-xl text-[13px] font-bold text-left bg-[#1A3D3D] text-white hover:bg-[#2D6A6A] transition-all duration-300 ease-in-out disabled:opacity-60 ${esAdmin ? 'ring-2 ring-[#4DB6AC]' : ''}`}
           >
             Admin
           </button>
+          {error && <p className="text-[11px] font-medium text-red-500 px-1">{error}</p>}
         </div>
-      </div>
-
-      {/* En pantallas chicas el error va en una segunda línea */}
-      {error && (
-        <p className="sm:hidden px-4 pb-2 text-[11px] font-medium text-red-500">{error}</p>
       )}
+
+      {/* Pestañita semioculta en el borde: se agranda al pasar el mouse */}
+      <button
+        type="button"
+        onClick={() => setAbierto((v) => !v)}
+        aria-label="Cambiar de cuenta de prueba"
+        className={`h-14 rounded-l-xl flex items-center justify-center shadow-lg transition-all duration-300 ease-in-out ${abierto ? 'w-9' : 'w-6 hover:w-9'} ${
+          enModoPrueba ? 'bg-yellow-400 text-yellow-900' : 'bg-[#1A3D3D] text-white'
+        }`}
+      >
+        <FlaskConical className="w-4 h-4" strokeWidth={2} />
+      </button>
     </div>
   );
 }

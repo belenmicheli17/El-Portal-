@@ -32,7 +32,7 @@ const ICONOS_GRUPO = {
 // Saca la localidad de una dirección de Google: "Dorrego 242, S2000 Rosario, Santa Fe" → "Rosario"
 const localidadDeDireccion = (direccion) => {
   const partes = (direccion || '').split(',').map(p => p.trim()).filter(Boolean);
-  return (partes[1] || '').replace(/^[A-Z]?\d{4}[A-Z]{0,3}\s+/, '');
+  return (partes[1] || '').replace(/^[A-Z]?\d{4}(?:\s?[A-Z]{3}(?![a-zA-Z]))?\s*/, '');
 };
 
 // "Barrio, Localidad" sin repetir (si son iguales, queda uno solo)

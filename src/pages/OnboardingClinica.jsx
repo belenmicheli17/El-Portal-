@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { db, storage } from '../firebase';
 import { doc, getDoc, setDoc, getDocs, collection, query, where, serverTimestamp } from 'firebase/firestore';
 import { BotonCompartirPerfil } from '../components/CompartirPerfil';
+import { direccionCorta } from '../utils/bolsa';
 import { ref, uploadBytesResumable, uploadString, getDownloadURL, deleteObject } from 'firebase/storage';
 import {
   Camera, Check, Loader2, X, Clock, Building2, FileCheck, Upload,
@@ -1190,10 +1191,10 @@ export default function OnboardingClinica() {
           <label className={CLASE_LABEL} htmlFor="ob-direccion">Dirección de la clínica<Obligatorio /></label>
           <BuscadorDireccionGoogle
             id="ob-direccion"
-            valor={datos.direccion}
+            valor={datos.placeId ? direccionCorta(datos.direccion) : datos.direccion}
             onEscribir={escribirDireccion}
             onElegir={elegirDireccion}
-            placeholder="Buscá por nombre o dirección"
+            placeholder="Buscá el nombre de tu veterinaria" soloLocales
             listaProvincias={provincias}
           />
           {datos.placeId ? (
@@ -1210,7 +1211,7 @@ export default function OnboardingClinica() {
                 <Building2 className="w-[22px] h-[22px] text-[#2D6A6A] mt-3 shrink-0" strokeWidth={1.5} />
                 <div className="flex-1 min-w-0 flex flex-col gap-2.5">
                   <input aria-label="Nombre de la sede" value={sede.nombre} maxLength={50} onChange={(e) => actualizarEnLista('sedes', sede.id, 'nombre', e.target.value)} placeholder="Nombre de la sede (ej: Sede Palermo)" autoComplete="off" className={CLASE_INPUT} />
-                  <p className="text-sm text-[#666666] leading-snug">{sede.direccion}</p>
+                  <p className="text-sm text-[#666666] leading-snug">{direccionCorta(sede.direccion)}</p>
                   <p className="text-[12px] font-semibold text-[#2D6A6A] flex items-center gap-1">
                     <CheckCircle2 className="w-[15px] h-[15px]" /> Confirmado con Google{sede.barrio ? ` · Barrio: ${sede.barrio}` : ''}
                   </p>
@@ -1228,7 +1229,7 @@ export default function OnboardingClinica() {
             valor={textoSede}
             onEscribir={setTextoSede}
             onElegir={agregarSede}
-            placeholder="Buscá la dirección de otra sede"
+            placeholder="Buscá el nombre de la otra sede" soloLocales
             listaProvincias={provincias}
           />
           <p className={CLASE_AYUDA}>Podés sumar todas las que quieras. Aparecen juntas en el mismo perfil.</p>

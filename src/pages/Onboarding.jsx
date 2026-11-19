@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { db, storage } from '../firebase';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytesResumable, uploadString, getDownloadURL, deleteObject } from 'firebase/storage';
+import { direccionCorta } from '../utils/bolsa';
 import { BotonCompartirPerfil } from '../components/CompartirPerfil';
 import {
   Camera, Check, Loader2, Search, MapPin, Trash2, X, Plus, Clock,
@@ -1655,7 +1656,7 @@ export default function Onboarding() {
               <Building2 className="w-[22px] h-[22px] text-[#2D6A6A] mt-0.5 shrink-0" strokeWidth={1.5} />
               <div className="flex-1 min-w-0">
                 <p className="text-[15px] font-bold text-[#1A3D3D]">{clinica.nombrePropio}</p>
-                <p className="text-sm text-[#666666] mt-0.5 leading-snug">{clinica.direccion}</p>
+                <p className="text-sm text-[#666666] mt-0.5 leading-snug">{direccionCorta(clinica.direccion)}</p>
                 {clinica.telefono && <p className="text-sm text-[#666666] mt-0.5">{clinica.telefono}</p>}
                 <p className="text-[12px] font-semibold text-[#2D6A6A] mt-2 flex items-center gap-1">
                   <CheckCircle2 className="w-[15px] h-[15px]" /> Confirmado con Google{clinica.barrio ? ` · Barrio: ${clinica.barrio}` : ''}

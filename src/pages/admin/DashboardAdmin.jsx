@@ -3,12 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Users, Building, FileCheck, 
   Activity, ChevronRight, Clock, AlertCircle, Loader2,
-  Repeat, Stethoscope, Store
+  Repeat, Stethoscope, Store, UserPlus
 } from 'lucide-react';
 import { db, auth, functions } from '../../firebase';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { signInWithCustomToken } from 'firebase/auth';
 import { httpsCallable } from 'firebase/functions';
+import { provinciaCorta } from '../../utils/bolsa';
 
 // Traduce la fecha de registro a una fecha común.
 // En Firebase puede venir como Timestamp, como texto (ISO) o como número en milisegundos.
@@ -18,6 +19,76 @@ const aFecha = (valor) => {
   if (typeof valor === 'object' && typeof valor.seconds === 'number') return new Date(valor.seconds * 1000);
   const fecha = new Date(valor);
   return isNaN(fecha.getTime()) ? null : fecha;
+};
+
+// "Dorrego 242, S2000 Rosario, Santa Fe" → "Rosario"
+const localidadDeDireccion = (direccion) => {
+  const partes = (direccion || '').split(',').map((p) => p.trim()).filter(Boolean);
+  return (partes[1] || '').replace(/^[A-Z]?\d{4}(?:\s?[A-Z]{3}(?![a-zA-Z]))?\s*/, '');
+};
+const normLugar = (t) => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+
+// Zonas del Gran Buenos Aires: los barrios y partidos se agrupan en una zona grande.
+// Para sumar un lugar a una zona, agregalo a la lista correspondiente.
+const ZONAS_GBA = {
+  'Zona Oeste': ['Morón', 'Castelar', 'Haedo', 'Ituzaingó', 'Hurlingham', 'Villa Tesei', 'William Morris', 'Ramos Mejía', 'San Justo', 'La Matanza', 'Laferrere', 'González Catán', 'Isidro Casanova', 'Ciudadela', 'Villa Luzuriaga', 'San Antonio de Padua', 'Padua', 'Merlo', 'Libertad', 'Moreno', 'Paso del Rey', 'Francisco Álvarez', 'General Rodríguez', 'Marcos Paz', 'Tres de Febrero', 'Caseros', 'Santos Lugares', 'Martín Coronado', 'Villa Bosch', 'Ciudad Evita', 'El Palomar', 'Villa Sarmiento', 'Gregorio de Laferrere', 'Virrey del Pino', 'Rafael Castillo', 'Lomas del Mirador'],
+  'Zona Norte': ['Vicente López', 'Olivos', 'Florida', 'Munro', 'La Lucila', 'Martínez', 'Acassuso', 'San Isidro', 'Beccar', 'Boulogne', 'Villa Adelina', 'San Fernando', 'Victoria', 'Tigre', 'Don Torcuato', 'General Pacheco', 'Benavídez', 'Nordelta', 'Rincón de Milberg', 'Pilar', 'Escobar', 'Garín', 'Maschwitz', 'Ingeniero Maschwitz', 'San Martín', 'Villa Ballester', 'José León Suárez', 'San Miguel', 'Muñiz', 'Bella Vista', 'Malvinas Argentinas', 'Grand Bourg', 'José C. Paz', 'Del Viso', 'Tortuguitas', 'Billinghurst', 'Villa Maipú', 'Loma Hermosa', 'Santos Lugares'],
+  'Zona Sur': ['Juan María Gutiérrez', 'Avellaneda', 'Sarandí', 'Wilde', 'Lanús', 'Remedios de Escalada', 'Lomas de Zamora', 'Banfield', 'Temperley', 'Turdera', 'Adrogué', 'Burzaco', 'Almirante Brown', 'Claypole', 'Quilmes', 'Bernal', 'Ezpeleta', 'Berazategui', 'Florencio Varela', 'Ranelagh', 'Esteban Echeverría', 'Monte Grande', 'Canning', 'Ezeiza', 'Presidente Perón', 'San Vicente', 'Longchamps', 'Glew', 'Gerli', 'Valentín Alsina', 'Villa Domínico', 'Dock Sud', 'Don Bosco', 'Hudson', 'José Mármol', 'Rafael Calzada', 'Solano', 'San Francisco Solano'],
+  'La Plata': ['La Plata', 'Gonnet', 'City Bell', 'Tolosa', 'Los Hornos', 'Villa Elisa', 'Ringuelet', 'Berisso', 'Ensenada', 'Manuel B. Gonnet']
+};
+const ZONA_DE_LUGAR = new Map(
+  Object.entries(ZONAS_GBA).flatMap(([zona, lugares]) => lugares.map((l) => [normLugar(l), zona]))
+);
+// A qué grupo grande pertenece un lugar: CABA es una sola, el Gran Buenos Aires va por zonas y el resto queda con su nombre
+const grupoDeLugar = (nombre, provincia) => {
+  // CABA aparece escrita de muchas formas ("Cdad. Autónoma de Buenos Aires", "Capital Federal"...)
+  if (provincia === 'CABA' || /autonoma|capital federal|^caba$/.test(normLugar(nombre))) return 'CABA';
+  if (provincia === 'Buenos Aires') return ZONA_DE_LUGAR.get(normLugar(nombre)) || nombre;
+  return nombre;
+};
+
+// Cuenta perfiles por provincia y por localidad donde atienden
+const contarLugares = (perfiles) => {
+  const provincias = new Map();
+  const localidades = new Map();
+  const sumar = (mapa, clave, nombre, provincia) => {
+    const previo = mapa.get(clave) || { nombre, provincia, total: 0 };
+    previo.total += 1;
+    mapa.set(clave, previo);
+  };
+  perfiles.forEach(({ tipo, datos }) => {
+    const prov = provinciaCorta(datos.provincia) || 'Sin dato';
+    sumar(provincias, normLugar(prov), prov, prov);
+    const lugares = [];
+    const agregar = (p, loc, dir) => {
+      const nombre = (loc || localidadDeDireccion(dir) || '').trim();
+      // Si el nombre trae números es una dirección (calle y altura), no una localidad: se descarta
+      if (nombre && !/\d/.test(nombre)) lugares.push({ nombre, provincia: provinciaCorta(p || datos.provincia) || 'Sin dato' });
+    };
+    if (tipo === 'profesional') {
+      (datos.zonas || []).forEach((z) => (z.clinicas || []).forEach((c) => agregar(c.provincia, c.localidad, c.direccion)));
+    } else {
+      agregar(datos.provincia, datos.localidad, datos.direccion);
+      (datos.sedes || []).forEach((s) => agregar(s.provincia, s.localidad, s.direccion));
+    }
+    const vistas = new Set();
+    lugares.forEach((l) => {
+      const grupo = grupoDeLugar(l.nombre, l.provincia);
+      const clave = `${normLugar(grupo)}|${normLugar(l.provincia)}`;
+      if (vistas.has(clave)) return;
+      vistas.add(clave);
+      sumar(localidades, clave, grupo, l.provincia);
+    });
+  });
+  const ordenar = (m) => [...m.values()].sort((a, b) => b.total - a.total);
+  return { provincias: ordenar(provincias), localidades: ordenar(localidades) };
+};
+
+// Clave de día "2026-11-19" en hora local, para agrupar los registros por día
+const claveDia = (fecha) => `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(fecha.getDate()).padStart(2, '0')}`;
+const etiquetaDia = (clave, corta = false) => {
+  const [a, m, d] = clave.split('-').map(Number);
+  return new Date(a, m - 1, d).toLocaleDateString('es-AR', corta ? { day: 'numeric', month: 'short' } : { weekday: 'long', day: 'numeric', month: 'long' });
 };
 
 export default function DashboardAdmin() {
@@ -33,6 +104,10 @@ export default function DashboardAdmin() {
   });
   const [pendientes, setPendientes] = useState([]);
   const [llegaronPor, setLlegaronPor] = useState([]);
+  const [lugares, setLugares] = useState({ provincias: [], localidades: [] });
+  const [provSel, setProvSel] = useState('');
+  const [registrosPorDia, setRegistrosPorDia] = useState([]); // [["2026-11-19", 4], ...] del más nuevo al más viejo
+  const [verDias, setVerDias] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [rolEntrando, setRolEntrando] = useState(null); // rol de la cuenta de prueba a la que se está entrando
   const [errorCuenta, setErrorCuenta] = useState('');
@@ -53,6 +128,10 @@ const [profesionalesSnap, clinicasSnap] = await Promise.all([
 ]);
 const profesionalesActivos = profesionalesSnap.docs.filter(d => d.data().visible !== false && !uidsPrueba.has(d.id)).length;
 const clinicasActivas = clinicasSnap.docs.filter(d => d.data().visible !== false && d.data().nombre?.trim() && !uidsPrueba.has(d.id) && !uidsPrueba.has(d.data().uid)).length;
+setLugares(contarLugares([
+  ...profesionalesSnap.docs.filter(d => d.data().visible !== false && !uidsPrueba.has(d.id)).map(d => ({ tipo: 'profesional', datos: d.data() })),
+  ...clinicasSnap.docs.filter(d => d.data().visible !== false && d.data().nombre?.trim() && !uidsPrueba.has(d.id) && !uidsPrueba.has(d.data().uid)).map(d => ({ tipo: 'clinica', datos: d.data() }))
+]));
         const usuarios = usuariosSnap.docs.map(d => d.data());
         
         const profesionales = usuarios.filter(u => u.rol === 'profesional').length;
@@ -80,6 +159,15 @@ const clinicasActivas = clinicasSnap.docs.filter(d => d.data().visible !== false
 
                setMetricas({ profesionales, clinicas, alumnos, proveedores, pendientesValidacion, profesionalesActivos, clinicasActivas, nuevosHoy });
         setPendientes(pendientesList);
+        // Registros por día (todos los tipos de cuenta, sin admin ni cuentas de prueba)
+        const porDia = {};
+        usuarios.filter(u => u.rol !== 'admin').forEach(u => {
+          const fecha = aFecha(u.fechaRegistro);
+          if (!fecha) return;
+          const clave = claveDia(fecha);
+          porDia[clave] = (porDia[clave] || 0) + 1;
+        });
+        setRegistrosPorDia(Object.entries(porDia).sort((a, b) => b[0].localeCompare(a[0])));
         // Cuántas personas eligieron cada opción de "¿Cómo llegaste?" (sin admin ni cuentas de prueba)
         const conteoLlegada = {};
         usuarios.filter(u => u.rol !== 'admin').forEach(u => {
@@ -117,6 +205,11 @@ const clinicasActivas = clinicasSnap.docs.filter(d => d.data().visible !== false
       setRolEntrando(null);
     }
   };
+
+  // Nuevos usuarios: hoy y el día récord
+  const nuevosDeHoy = (registrosPorDia.find(([clave]) => clave === claveDia(new Date())) || [null, 0])[1];
+  const diaRecord = registrosPorDia.reduce((mejor, actual) => (actual[1] > (mejor?.[1] || 0) ? actual : mejor), null);
+  const maximoDia = diaRecord ? diaRecord[1] : 0;
 
   const StatCard = ({ titulo, valor, icono, color, alerta, subtitulo, nuevosHoy, onClick }) => (
     <div
@@ -201,6 +294,79 @@ const clinicasActivas = clinicasSnap.docs.filter(d => d.data().visible !== false
       {/* <StatCard titulo="Alumnos" valor={metricas.alumnos} icono={<Users className="w-6 h-6 text-blue-500" />} color="bg-blue-50 border border-blue-100" /> */}
       {/* <StatCard titulo="Proveedores" onClick={() => navigate('/admin/usuarios?rol=proveedor')} valor={metricas.proveedores} nuevosHoy={metricas.nuevosHoy.proveedores} icono={<Briefcase className="w-6 h-6 text-purple-600" />} color="bg-purple-100 border border-purple-200" /> */}
         <StatCard titulo="Validaciones" onClick={() => navigate('/admin/validaciones')} valor={metricas.pendientesValidacion} nuevosHoy={metricas.nuevosHoy.validaciones} icono={<FileCheck className="w-6 h-6 text-[#e68900]" />} color="bg-[#FF9800]/20 border border-[#FF9800]/30" />
+        <StatCard titulo="Nuevos hoy" onClick={() => setVerDias((v) => !v)} valor={nuevosDeHoy} subtitulo={diaRecord ? `Récord: ${maximoDia} el ${etiquetaDia(diaRecord[0], true)}` : 'Tocá para ver por día'} icono={<UserPlus className="w-6 h-6 text-green-600" />} color="bg-green-50 border border-green-100" />
+      </div>
+
+      {/* Usuarios nuevos por día (se abre al tocar la tarjeta "Nuevos hoy") */}
+      {verDias && (
+        <div className="bg-white rounded-[32px] border border-gray-100 p-8 shadow-sm mb-8 animate-in fade-in duration-300">
+          <h2 className="text-[18px] font-black font-['Montserrat'] text-[#1A3D3D] mb-6 border-b border-gray-50 pb-4">Usuarios nuevos por día</h2>
+          {registrosPorDia.length === 0 ? (
+            <p className="text-[14px] text-[#666666]">Todavía no hay registros con fecha guardada.</p>
+          ) : (
+            <div className="space-y-3 max-h-[360px] overflow-y-auto pr-2">
+              {registrosPorDia.slice(0, 30).map(([clave, cantidad]) => (
+                <div key={clave}>
+                  <div className="flex items-center justify-between text-[13px] font-semibold mb-1.5">
+                    <span className="text-[#1A3D3D] capitalize">
+                      {etiquetaDia(clave)}
+                      {clave === diaRecord?.[0] && <span className="ml-2 bg-green-50 text-green-600 text-[11px] font-bold px-2 py-0.5 rounded-md normal-case">Récord</span>}
+                    </span>
+                    <span className="text-[#2D6A6A] font-black">{cantidad}</span>
+                  </div>
+                  <div className="h-1.5 bg-[#F4F7F7] rounded-full overflow-hidden">
+                    <div className="h-full bg-[#4DB6AC] rounded-full" style={{ width: `${(cantidad / maximoDia) * 100}%` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          <p className="text-[12px] text-[#666666] mt-4">Se cuentan todos los tipos de cuenta. Solo aparecen quienes tienen la fecha de registro guardada.</p>
+        </div>
+      )}
+
+      {/* De dónde son los perfiles */}
+      <div className="bg-white rounded-[32px] border border-gray-100 p-8 shadow-sm mb-8">
+        <h2 className="text-[18px] font-black font-['Montserrat'] text-[#1A3D3D] mb-6 border-b border-gray-50 pb-4">De dónde son los perfiles</h2>
+        {isLoading ? (
+          <Loader2 className="w-6 h-6 animate-spin text-[#2D6A6A]" />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+            <div>
+              <p className="text-[11px] font-bold text-[#2D6A6A] uppercase tracking-[0.2em] mb-3">Provincias</p>
+              <div className="space-y-3">
+                {lugares.provincias.slice(0, 8).map((p) => (
+                  <button
+                    key={p.nombre}
+                    type="button"
+                    onClick={() => setProvSel(provSel === p.nombre ? '' : p.nombre)}
+                    className={`w-full flex items-center justify-between text-[14px] px-3 py-2 rounded-xl transition-colors ${provSel === p.nombre ? 'bg-[#2D6A6A] text-white' : 'hover:bg-[#F4F7F7] text-[#1A3D3D]'}`}
+                  >
+                    <span className="font-semibold">{p.nombre}</span>
+                    <span className={`font-black ${provSel === p.nombre ? 'text-white' : 'text-[#2D6A6A]'}`}>{p.total}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="text-[11px] font-bold text-[#2D6A6A] uppercase tracking-[0.2em] mb-3">{provSel ? `Zonas y ciudades de ${provSel}` : 'Zonas y ciudades principales'}</p>
+              <div className="space-y-3">
+                {lugares.localidades
+                  .filter((l) => l.nombre !== l.provincia && (!provSel || l.provincia === provSel))
+                  .slice(0, 12)
+                  .map((l) => (
+                    <div key={`${l.nombre}-${l.provincia}`} className="flex items-center justify-between text-[14px]">
+                      <span className="font-semibold text-[#1A3D3D]">{l.nombre}{!provSel && <span className="font-normal text-[#666666]"> · {l.provincia}</span>}</span>
+                      <span className="font-black text-[#2D6A6A]">{l.total}</span>
+                    </div>
+                  ))}
+                {lugares.localidades.filter((l) => l.nombre !== l.provincia && (!provSel || l.provincia === provSel)).length === 0 && (
+                  <p className="text-[13px] text-[#666666]">{provSel ? 'Esta provincia no tiene localidades cargadas por separado.' : 'Todavía no hay localidades cargadas.'}</p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

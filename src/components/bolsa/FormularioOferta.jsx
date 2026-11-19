@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { collection, doc, getDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { ChevronLeft, Loader2, Plus, MapPin, Check } from 'lucide-react';
 import { db, auth } from '../../firebase';
+import { direccionCorta } from '../../utils/bolsa';
 import provincias from '../../data/provincias.js';
 import { ROLES, ROLES_VISIBLES, rolSinAreas, ZONAS_BA, JORNADAS, HORARIOS, EXPERIENCIAS, REQUISITOS, EQUIPO } from '../../data/bolsaOpciones';
 import { nuevoVencimiento, conPrefijo54, permisosBolsa } from '../../utils/bolsa';
@@ -335,7 +336,7 @@ export default function FormularioOferta({ currentUser, ofertaExistente, onVolve
                   </span>
                   <span className="min-w-0">
                     <span className="block text-[14px] font-bold text-[#1A3D3D]">{l.nombre}</span>
-                    <span className="block text-[13px] text-[#666666]">{l.direccion}</span>
+                    <span className="block text-[13px] text-[#666666]">{direccionCorta(l.direccion)}</span>
                   </span>
                 </button>
               );
@@ -353,7 +354,7 @@ export default function FormularioOferta({ currentUser, ofertaExistente, onVolve
                 listaProvincias={provincias}
               />
               {form.otraDireccion?.direccion && (
-                <p className="flex items-center gap-1.5 text-[13px] text-[#2D6A6A] font-semibold mt-2"><MapPin className="w-4 h-4" /> {form.otraDireccion.direccion}</p>
+                <p className="flex items-center gap-1.5 text-[13px] text-[#2D6A6A] font-semibold mt-2"><MapPin className="w-4 h-4" /> {direccionCorta(form.otraDireccion.direccion)}</p>
               )}
             </div>
           )}

@@ -330,7 +330,7 @@ export default function SalaDeEspera() {
           <span className="text-[#666666] font-bold">El primer Portal exclusivo para Veterinarios. </span>  <br />
 Creá tu perfil, aparecé en búsquedas y conectate con colegas, clínicas y proveedores de todo el país. 
       </p>
-      <div className="mt-6 flex items-center gap-2 flex-wrap">
+      <div className="mt-6 flex flex-col items-start gap-3">
         <a
           href="/cartilla"
           target="_blank"
@@ -339,6 +339,16 @@ Creá tu perfil, aparecé en búsquedas y conectate con colegas, clínicas y pro
         >
           <PawPrint className="w-5 h-5" />
           Ya podés ver la Cartilla
+          <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform duration-200" />
+        </a>
+        <a
+          href="/bolsa-de-trabajo"
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-2 bg-[#2D6A6A] text-white font-bold text-[16px] md:text-[15px] px-5 py-3 rounded-2xl hover:bg-[#1A3D3D] transition-all duration-200 shadow-md hover:-translate-y-0.5 group"
+        >
+          <Briefcase className="w-5 h-5" />
+          Ver la bolsa de trabajo
           <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform duration-200" />
         </a>
       </div>

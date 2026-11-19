@@ -42,6 +42,7 @@ const DashboardAdmin = lazy(() => import('./pages/admin/DashboardAdmin'));
 const GestionUsuarios = lazy(() => import('./pages/admin/GestionUsuarios'));
 const Validaciones = lazy(() => import('./pages/admin/Validaciones'));
 const GestionBolsa = lazy(() => import('./pages/admin/GestionBolsa'));
+
 const GestionCapacitaciones = lazy(() => import('./pages/admin/GestionCapacitaciones'));
 const Configuracion = lazy(() => import('./pages/admin/Configuracion'));
 
@@ -211,6 +212,7 @@ export default function App() {
                        <Route path="validaciones" element={<Validaciones />} />
             <Route path="usuarios" element={<GestionUsuarios />} />
             <Route path="bolsa" element={<GestionBolsa />} />
+
             <Route path="capacitaciones" element={<GestionCapacitaciones />} />
             <Route path="configuracion" element={<Configuracion />} />
           </Route>
