@@ -25,7 +25,7 @@ export default function GestionUsuarios() {
   const [searchParams] = useSearchParams();
   const rolDeLaUrl = searchParams.get('rol');
   const [filtroRol, setFiltroRol] = useState(
-    ['profesional', 'clinica', 'proveedor', 'alumno'].includes(rolDeLaUrl) ? rolDeLaUrl : 'todos'
+    ['profesional', 'clinica', 'proveedor', 'alumnx'].includes(rolDeLaUrl) ? rolDeLaUrl : 'todos'
   );
   const [usuarioEditando, setUsuarioEditando] = useState(null);
   const [guardando, setGuardando] = useState(false);
@@ -109,7 +109,7 @@ export default function GestionUsuarios() {
       if (usuarioEditando.rol === 'profesional' && usuarioEditando.matricula) datosAGuardar.matricula = usuarioEditando.matricula;
       if (usuarioEditando.rol === 'clinica' && usuarioEditando.direccion) datosAGuardar.direccion = usuarioEditando.direccion;
       if (usuarioEditando.rol === 'proveedor' && usuarioEditando.cuit) datosAGuardar.cuit = usuarioEditando.cuit;
-      if (usuarioEditando.rol === 'alumno' && usuarioEditando.universidad) datosAGuardar.universidad = usuarioEditando.universidad;
+      if (usuarioEditando.rol === 'alumnx' && usuarioEditando.universidad) datosAGuardar.universidad = usuarioEditando.universidad;
       await updateDoc(docRef, datosAGuardar);
       setUsuarios(prev => prev.map(u => u.uid === usuarioEditando.uid ? { ...u, ...usuarioEditando } : u));
       setUsuarioEditando(null);
@@ -192,7 +192,7 @@ export default function GestionUsuarios() {
           />
         </div>
         <div className="flex gap-2 bg-[#F4F7F7] p-1.5 rounded-2xl shrink-0 overflow-x-auto">
-          {['todos', 'profesional', 'clinica', 'proveedor', 'alumno'].map(rol => (
+          {['todos', 'profesional', 'clinica', 'proveedor', 'alumnx'].map(rol => (
             <button
               key={rol}
               onClick={() => setFiltroRol(rol)}
@@ -394,7 +394,7 @@ export default function GestionUsuarios() {
                   <option value="profesional">Profesional</option>
                   <option value="clinica">Clínica</option>
                   <option value="proveedor">Proveedor</option>
-                  <option value="alumno">Alumnx</option>
+                  <option value="alumnx">Alumno/a</option>
                  
                 </select>
                 <p className="text-[11px] text-[#666666] mt-2 font-medium">⚠️ Cambiar el rol afecta qué secciones ve el usuario al loguearse.</p>
@@ -437,7 +437,7 @@ export default function GestionUsuarios() {
                   />
                 </div>
               )}
-              {usuarioEditando.rol === 'alumno' && (
+              {usuarioEditando.rol === 'alumnx' && (
                 <div>
                   <label className="block text-[11px] font-bold text-[#666666] uppercase tracking-widest mb-2">Universidad</label>
                   <input 

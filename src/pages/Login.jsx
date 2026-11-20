@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   Mail, Lock, Eye, EyeOff, ShieldCheck, ChevronLeft,
   ArrowRight, KeyRound, CheckCircle2, Stethoscope,
-  Hospital, Store, Loader2, AlertCircle
+  Hospital, Store, Loader2, AlertCircle, GraduationCap
 } from 'lucide-react';
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { pedirRecuperacionClave } from '../utils/recuperarClave';
@@ -57,7 +57,7 @@ export default function Login() {
       // Si el link trae un tipo de cuenta válido, saltamos directo al formulario.
       // Si no trae ninguno (o no es válido), mostramos las opciones para elegir.
       // Proveedor queda afuera porque todavía figura como "Próximamente".
-      const tiposValidos = ['profesional', 'clinica'];
+      const tiposValidos = ['profesional', 'clinica', 'alumnx'];
       setAccountType(tiposValidos.includes(registro) ? registro : null);
     }
   }, [location.state, location.search]);
@@ -118,12 +118,11 @@ export default function Login() {
         const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
         const user = userCredential.user;
         const userDocRef = doc(db, 'usuarios', user.uid);
-        // Por ahora el registro abierto es solo para profesionales. El nombre, la matrícula y el resto
-        // se piden después, en el cuestionario de alta (/onboarding).
+        // El nombre y el resto de los datos se piden después, en el cuestionario de alta de cada tipo de cuenta.
         await setDoc(userDocRef, {
           nombre: '',
           email: formData.email,
-          rol: accountType === 'clinica' ? 'clinica' : 'profesional',
+          rol: ['clinica', 'alumnx'].includes(accountType) ? accountType : 'profesional',
           slug: '',
           fechaRegistro: new Date().toISOString(),
           estado: 'pendiente',
@@ -144,7 +143,7 @@ export default function Login() {
 
         // Releemos los datos del usuario para que la app sepa que es profesional y debe pasar por el cuestionario
         await refreshUser();
-        navigate(accountType === 'clinica' ? '/onboarding-clinica' : '/onboarding');
+        navigate(accountType === 'clinica' ? '/onboarding-clinica' : accountType === 'alumnx' ? '/onboarding-alumnx' : '/onboarding');
       } catch (error) {
         setErrorMsg(traducirErrorFirebase(error.code));
       } finally {
@@ -301,6 +300,7 @@ export default function Login() {
                   {[
                     { valor: 'profesional', label: 'Soy Profesional', sub: 'Veterinario/a que busca conectar y crecer.', Icono: Stethoscope, acento: 'bg-blue-50 text-blue-600', proximamente: false },
                     { valor: 'clinica', label: 'Soy una Clínica', sub: 'Institución que busca talento y visibilidad.', Icono: Hospital, acento: 'bg-violet-50 text-violet-600', proximamente: false },
+                    { valor: 'alumnx', label: 'Soy Estudiante', sub: 'Alumno/a de veterinaria que busca sus primeras experiencias.', Icono: GraduationCap, acento: 'bg-rose-50 text-rose-500', proximamente: false },
                     { valor: 'proveedor', label: 'Proveedor o empresa', sub: 'Insumos, equipamiento o servicios para el sector.', Icono: Store, acento: 'bg-emerald-50 text-emerald-600', proximamente: true },
                   ].map(({ valor, label, sub, Icono, acento, proximamente }) => (
                     <div key={valor} className="relative mt-4 md:mt-2.5 first:mt-0">
