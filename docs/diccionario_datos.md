@@ -198,33 +198,36 @@ Lista ordenada de ítems en la vidriera pública.
 ---
 
 ## 4. Colección: `alumnos`
-Guarda los perfiles de estudiantes y graduados recientes. Cuenta gratuita con visibilidad acotada: no aparecen en la cartilla pública, solo en búsquedas de bolsa de trabajo.
+Perfil de estudiantes de veterinaria (el id del documento es el uid). Cuenta gratuita: no aparecen en la Cartilla ni en Google (link público no listado en `/alumno/:slug`). En la Bolsa se postulan solo a búsquedas de asistente y pueden marcarse disponibles. Se crea en el cuestionario `/onboarding-alumnx`, que también sirve de editor.
 
 | Campo | Tipo | Descripción |
 |---|---|---|
-| `id` | String | Identificador único generado por Firebase (uid de Auth) |
-| `nombre` | String | Nombre completo |
-| `email` | String | Correo de acceso y contacto |
-| `foto` | String | URL de foto de perfil en Firebase Storage |
-| `provincia` | String | Ubicación base |
-| `bio` | String | Presentación breve |
-| `planActual` | String | `'free'` (único plan disponible para alumnos) |
-| `instagram` | String | URL de Instagram (opcional) |
-| `linkedin` | String | URL de LinkedIn (opcional) |
+| `uid` | String | uid de Auth (igual al id del documento) |
+| `nombre` | String | Nombre |
+| `apellido` | String | Apellido |
+| `nombreCompleto` | String | Nombre y apellido juntos |
+| `slug` | String | Link del perfil (`/alumno/slug`); se arma una vez y queda fijo |
+| `tituloGenero` | String | Cómo se identifica: `'alumna'`, `'alumno'`, `'alumnx'` o `''` (se muestra «Alumno/a») |
+| `foto` | String | URL de la foto en Storage (`alumnos/{uid}/`) |
+| `universidad` | String | Facultad o universidad |
+| `provincia` | String | Provincia donde vive |
+| `localidad` | String | Localidad o barrio (opcional) |
+| `presentacion` | String | Presentación (mín. 30, máx. 400 letras) |
+| `redes` | Objeto | `{ instagram: URL, linkedin: URL }` (opcionales, se ven en el perfil) |
+| `visible` | Boolean | Nace en `false`; la admin lo pone en `true` al verificar el certificado |
+| `fechaCreacion` | Timestamp | Cuándo se creó el perfil |
 
 ### Sub-estructuras
 
-**`trayectoria`** — Historial académico
-- `id`: String
-- `titulo`: String (Ej: "Estudiante de Veterinaria — UBA")
-- `desc`: String
-- `extra`: String (opcional)
+**`trayectoria`** — Experiencia (prácticas, pasantías, ayudantías, voluntariados), opcional
+- `id`: Number
+- `titulo`: String (Ej: "Pasantía en guardia")
+- `desc`: String (Ej: "Clínica del Parque, 2025")
 
-**`busquedaLaboral`** — Configuración de visibilidad en bolsa de trabajo
-- `activa`: Boolean (true si quiere aparecer en búsquedas)
-- `disponibilidad`: String (Ej: "Tiempo completo", "Part-time")
-- `zonas`: Array de Strings (provincias donde busca trabajo)
-- `especialidadesInteres`: Array de Strings
+### Datos del alumno/a que van en otros lugares
+- `usuarios/{uid}`: `rol: 'alumnx'`, `whatsapp` (privado, solo para avisarle la aprobación), `universidad`, `pideSerProfesional` + `fechaPedidoProfesional` (cuando avisa que se recibió).
+- `verificaciones/{uid}`: `tipo: 'alumnx'`; `tituloPath` es el certificado de alumno regular (carpeta privada `titulos/{uid}/`).
+- `profesionalesDisponibles/{uid}`: si se marca disponible, va con `puesto: 'asistente'`, `areas: []`, `tituloGenero` y `universidad`.
 
 ---
 
