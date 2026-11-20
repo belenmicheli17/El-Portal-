@@ -1,6 +1,6 @@
 import React from 'react';
 import { MapPin, ChevronRight, Clock, Briefcase } from 'lucide-react';
-import { etiquetaRol, publicadoHace, zonaTexto, provinciaCorta } from '../../utils/bolsa';
+import { etiquetaRol, publicadoHace, zonaTexto, provinciaCorta, etiquetaAlumnx } from '../../utils/bolsa';
 
 const claseTarjeta = "group bg-white rounded-[24px] p-4 border border-gray-100 shadow-sm hover:border-[#2D6A6A]/30 hover:shadow-[0_15px_30px_rgba(45,106,106,0.08)] hover:-translate-y-0.5 transition-all duration-300 ease-in-out cursor-pointer flex items-start gap-4 h-full text-left w-full";
 const clasePill = "bg-[#2D6A6A]/10 text-[#1A3D3D] text-[12px] lg:text-[13px] font-semibold px-2.5 py-0.5 rounded-full";
@@ -71,7 +71,9 @@ export function TarjetaDisponible({ disponible, onAbrir }) {
 
       <div className="flex-1 min-w-0">
         <h2 className="font-['Montserrat'] font-extrabold text-[#1A3D3D] text-[15px] leading-tight truncate">{disponible.nombre}</h2>
-        {areas.length > 0 && <p className="text-[#2D6A6A] text-[13px] font-semibold leading-snug mt-0.5 line-clamp-1">{areas.join(' · ')}</p>}
+        {disponible.puesto === 'asistente' ? (
+          <p className="text-rose-500 text-[13px] font-semibold leading-snug mt-0.5 line-clamp-1">Asistente · {etiquetaAlumnx(disponible.tituloGenero)} de Veterinaria</p>
+        ) : areas.length > 0 && <p className="text-[#2D6A6A] text-[13px] font-semibold leading-snug mt-0.5 line-clamp-1">{areas.join(' · ')}</p>}
         {lugar && (
           <p className="flex items-center gap-1 text-[#666666] text-[13px] font-medium mt-0.5 min-w-0">
             <MapPin className="w-3.5 h-3.5 shrink-0" /> <span className="truncate">{lugar}</span>

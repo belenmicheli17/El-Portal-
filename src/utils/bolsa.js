@@ -1,12 +1,23 @@
 // Ayudantes de la Bolsa de Trabajo (se usan en la página, los formularios y la postulación)
 import { ROLES, SOLO_VERIFICADOS, DIAS_DE_VIGENCIA } from '../data/bolsaOpciones';
 import { armarLinkWhatsapp } from './whatsapp';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../firebase';
 
 export const SITIO = 'https://www.portalveterinario.ar';
 export const UN_DIA = 24 * 60 * 60 * 1000;
 export const ADMIN_UID = 'JDiu4lkVyJXeoyZ3eAxuBfvc5bZ2';
 
 export const etiquetaRol = (id) => ROLES.find((r) => r.id === id)?.label || 'Veterinario/a';
+
+// Perfil público de quien se postula: primero busca en profesionales y, si no está, en alumnos.
+// Devuelve null si no encuentra nada; a los alumnos/as les suma esAlumnx: true.
+export const leerPerfilPostulante = async (uid) => {
+  const snapPro = await getDoc(doc(db, 'profesionales', uid));
+  if (snapPro.exists()) return snapPro.data();
+  const snapAlumno = await getDoc(doc(db, 'alumnos', uid));
+  return snapAlumno.exists() ? { ...snapAlumno.data(), esAlumnx: true } : null;
+};
 
 // Etiqueta de una cuenta de alumno/a según cómo se identifica (campo tituloGenero)
 export const etiquetaAlumnx = (tituloGenero) =>
@@ -66,10 +77,13 @@ export const permisosBolsa = (currentUser) => {
     verificada,
     // Publicar se puede aunque la cuenta no esté verificada: queda "en espera" y sale cuando la verificamos
     puedePublicarOferta: !!currentUser && (currentUser.rol === 'clinica' || esAdmin) && !suspendida,
-    puedeMarcarseDisponible: !!currentUser && currentUser.rol === 'profesional' && !suspendida,
+    // Profesionales y alumnos/as (los alumnos/as figuran como asistentes)
+    puedeMarcarseDisponible: !!currentUser && ['profesional', 'alumnx'].includes(currentUser.rol) && !suspendida,
     publicaEnEspera: !verificada,
     // Postularse (contactar a una clínica) sí pide la cuenta verificada
-    puedePostularse: !!currentUser && currentUser.rol === 'profesional' && verificada
+    puedePostularse: !!currentUser && ['profesional', 'alumnx'].includes(currentUser.rol) && verificada,
+    // Los alumnos/as solo se postulan a las búsquedas de asistente
+    esAlumnx: currentUser?.rol === 'alumnx'
   };
 };
 
@@ -92,6 +106,7 @@ export const conPrefijo54 = (valor) => {
 export const linkWhatsapp = (numero, mensaje) => armarLinkWhatsapp(conPrefijo54(numero), mensaje);
 
 export const linkPerfilProfesional = (slug) => (slug ? `${SITIO}/profesional/${slug}` : '');
+export const linkPerfilAlumnx = (slug) => (slug ? `${SITIO}/alumno/${slug}` : '');
 
 export const linkOferta = (id) => `${SITIO}/bolsa-de-trabajo?oferta=${id}`;
 

@@ -4,7 +4,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { MapPin, MessageCircle, Mail, User, FileText, Loader2, Lock, Stethoscope, Clock, Award } from 'lucide-react';
 import { db } from '../../firebase';
 import { VentanaBolsa } from './ElementosBolsa';
-import { linkWhatsapp, tiempoDesde, mensajeAProfesional, provinciaCorta } from '../../utils/bolsa';
+import { linkWhatsapp, tiempoDesde, mensajeAProfesional, provinciaCorta, etiquetaAlumnx } from '../../utils/bolsa';
 
 const claseBoton = "w-full py-3.5 rounded-2xl text-[14px] font-semibold flex items-center justify-center gap-2 transition-colors";
 
@@ -63,7 +63,9 @@ export default function DetalleDisponible({ disponible, abierto, onCerrar, conSe
         <div className="min-w-0">
           <p className="text-[12px] font-bold tracking-[0.12em] uppercase text-[#2D6A6A] mb-1">Disponible para trabajar</p>
           <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[22px] md:text-[24px] leading-tight">{disponible.nombre}</h3>
-          {disponible.especialidad && <p className="text-[14px] font-semibold text-[#2D6A6A] mt-0.5">{disponible.especialidad}</p>}
+          {disponible.puesto === 'asistente' ? (
+            <p className="text-[14px] font-semibold text-rose-500 mt-0.5">Asistente · {etiquetaAlumnx(disponible.tituloGenero)} de Veterinaria{disponible.universidad ? ` (${disponible.universidad})` : ''}</p>
+          ) : disponible.especialidad && <p className="text-[14px] font-semibold text-[#2D6A6A] mt-0.5">{disponible.especialidad}</p>}
         </div>
       </div>
 
@@ -121,7 +123,7 @@ export default function DetalleDisponible({ disponible, abierto, onCerrar, conSe
 
           {(disponible.slug || (conSesion && contacto?.cvUrl)) && <div className="h-px bg-gray-100 my-2" />}
           {disponible.slug && (
-            <button type="button" onClick={() => navigate(`/profesional/${disponible.slug}`)} className={`${claseBoton} bg-white border border-gray-200 text-[#1A3D3D] hover:border-[#2D6A6A]`}>
+            <button type="button" onClick={() => navigate(`/${disponible.puesto === 'asistente' ? 'alumno' : 'profesional'}/${disponible.slug}`)} className={`${claseBoton} bg-white border border-gray-200 text-[#1A3D3D] hover:border-[#2D6A6A]`}>
               <User className="w-4 h-4" /> Ver su perfil
             </button>
           )}
