@@ -13,6 +13,9 @@
     },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
+  "headers": [
+    { "source": "/alumno/(.*)", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] }
+  ],
   "crons": [
     { "path": "/api/recordatorio-onboarding", "schedule": "0 13 * * *" },
     { "path": "/api/recordatorio-perfil", "schedule": "30 13 * * *" }

@@ -15,7 +15,7 @@ const DOMINIO = 'https://www.portalveterinario.ar';
 const ANCHO = 1080;
 const ALTO = 1920; // 9:16, el formato de historias de Instagram y estados de WhatsApp
 
-const tramoRuta = (tipo) => (tipo === 'clinica' ? 'clinica' : 'profesional');
+const tramoRuta = (tipo) => (tipo === 'clinica' ? 'clinica' : tipo === 'alumnx' ? 'alumno' : 'profesional');
 export const armarLinkPerfil = (tipo, slug) => `${DOMINIO}/${tramoRuta(tipo)}/${slug}`;
 // El que se ve escrito en la imagen: sin https:// ni www para que sea corto
 const armarLinkCorto = (tipo, slug) => `portalveterinario.ar/${tramoRuta(tipo)}/${slug}`;

@@ -68,12 +68,13 @@ export default function GestionUsuarios() {
     fetchInstagrams();
   }, []);
 
-  // Dirección pública del perfil de cada rol (alumnos todavía no tienen perfil)
+  // Dirección pública del perfil de cada rol
   const urlDelPerfil = (user) => {
     if (!user.slug) return null;
     if (user.rol === 'profesional') return `/profesional/${user.slug}`;
     if (user.rol === 'clinica') return `/clinica/${user.slug}`;
     if (user.rol === 'proveedor') return `/proveedor/${user.slug}`;
+    if (user.rol === 'alumnx') return `/alumno/${user.slug}`;
     return null;
   };
 
