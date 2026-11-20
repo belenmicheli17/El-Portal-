@@ -137,7 +137,7 @@ export default function Login() {
           .then((token) => fetch('/api/enviar-mail', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-            body: JSON.stringify({ tipo: 'bienvenida' })
+            body: JSON.stringify({ tipo: 'bienvenida', rol: accountType })
           }))
           .catch((errorMail) => console.error('Error enviando el mail de bienvenida:', errorMail));
 

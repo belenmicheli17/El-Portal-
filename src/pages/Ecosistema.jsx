@@ -7,7 +7,7 @@ import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import {
   User, BookOpen, Package, Newspaper, ChevronRight,
   Briefcase, Users, LogOut, Eye, Store, PawPrint, Clock,
-  ShieldCheck, AlertCircle, Upload, Loader2, Check, Camera
+  ShieldCheck, AlertCircle, Upload, Loader2, Check, Camera, GraduationCap
 } from 'lucide-react';
 import FooterSimple from '../components/FooterSimple';
 import TourGuia from '../components/TourGuia';
@@ -498,6 +498,73 @@ const PantallaEstado = ({ tipo, currentUser, handleLogout }) => {
   );
 };
 
+// ── "Ya me recibí": el alumno/a pide pasar su cuenta a profesional ─────────
+// Queda anotado en su usuario y la admin hace el cambio desde Gestión de usuarios
+function AvisoMeRecibi({ currentUser }) {
+  const [abierto, setAbierto] = useState(false);
+  const [enviando, setEnviando] = useState(false);
+  const [pedido, setPedido] = useState(currentUser?.pideSerProfesional === true);
+  const [error, setError] = useState('');
+
+  const pedirCambio = async () => {
+    setEnviando(true);
+    setError('');
+    try {
+      await updateDoc(doc(db, 'usuarios', currentUser.uid), { pideSerProfesional: true, fechaPedidoProfesional: new Date().toISOString() });
+      setPedido(true);
+    } catch (e) {
+      console.error('Error pidiendo el cambio a profesional:', e);
+      setError('No pudimos enviar el pedido. Probá de nuevo.');
+    } finally {
+      setEnviando(false);
+    }
+  };
+
+  if (pedido) {
+    return (
+      <div className="w-full mb-10 md:mb-12 -mt-6 md:-mt-8 bg-white/60 backdrop-blur-md border border-white/60 rounded-[20px] md:rounded-[24px] shadow-sm px-4 py-3 flex items-center gap-3">
+        <Check className="w-5 h-5 shrink-0 text-[#2D6A6A]" strokeWidth={2.5} />
+        <p className="text-[14px] md:text-[15px] font-medium text-[#1A3D3D]">
+          <span className="font-black font-['Montserrat']">¡Felicitaciones!</span> Recibimos tu aviso: te escribimos para pasar tu cuenta a profesional con tu matrícula.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full mb-10 md:mb-12 -mt-6 md:-mt-8 bg-white/60 backdrop-blur-md border border-white/60 rounded-[20px] md:rounded-[24px] shadow-sm overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setAbierto(!abierto)}
+        className="group w-full px-4 py-3 flex items-center gap-3 text-left hover:bg-white/90 transition-all duration-300 ease-in-out outline-none focus:ring-4 focus:ring-[#2D6A6A]/10"
+      >
+        <GraduationCap strokeWidth={1.5} className="w-5 h-5 shrink-0 text-rose-500" />
+        <div className="flex-1 min-w-0">
+          <span className="text-[14px] md:text-[15px] font-black text-[#1A3D3D] font-['Montserrat']">¿Ya te recibiste?</span>
+          <span className="hidden md:inline text-[#666666] font-medium text-[13px] ml-3">Pasá tu cuenta a profesional</span>
+        </div>
+        <ChevronRight className={`w-4 h-4 shrink-0 text-[#2D6A6A] transition-transform ${abierto ? 'rotate-90' : ''}`} />
+      </button>
+      {abierto && (
+        <div className="px-4 pb-4">
+          <p className="text-[14px] text-[#666666] font-medium leading-relaxed mb-3">
+            Te pasamos a una cuenta profesional: vas a cargar tu matrícula, la verificamos y aparecés en la Cartilla. Tu perfil de estudiante se oculta.
+          </p>
+          <button
+            type="button"
+            onClick={pedirCambio}
+            disabled={enviando}
+            className="bg-[#2D6A6A] text-white rounded-xl px-5 py-3 text-[12px] font-bold uppercase tracking-[0.12em] shadow-md transition-all duration-300 ease-in-out hover:bg-[#1A3D3D] disabled:opacity-50 inline-flex items-center gap-2"
+          >
+            {enviando && <Loader2 className="w-4 h-4 animate-spin" />} Ya me recibí
+          </button>
+          {error && <p className="text-sm font-medium text-red-500 mt-2" role="alert">{error}</p>}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Pantalla de espera (profesional que ya envió sus datos) ────────────────
 const PantallaEspera = ({ verificacion, handleLogout, rol }) => {
   const navigate = useNavigate();
@@ -518,7 +585,9 @@ const PantallaEspera = ({ verificacion, handleLogout, rol }) => {
         </h1>
 
         <p className="text-[#666666] text-[16px] md:text-[17px] font-medium mb-6 leading-relaxed">
-          Estamos revisando tu matrícula y tu título. Tarda menos de 48 horas hábiles y te avisamos por mail apenas esté listo.
+          {rol === 'alumnx'
+            ? 'Estamos revisando tu certificado de alumno regular. Tarda menos de 48 horas hábiles y te avisamos apenas esté listo.'
+            : 'Estamos revisando tu matrícula y tu título. Tarda menos de 48 horas hábiles y te avisamos por mail apenas esté listo.'}
         </p>
 
         {/* Estado de la solicitud */}
@@ -537,12 +606,14 @@ const PantallaEspera = ({ verificacion, handleLogout, rol }) => {
         </div>
 
         <p className="text-[#666666] text-[15px] font-medium mb-5 leading-relaxed">
-          Mientras esperás, podés sumar tu trayectoria y tus fotos. Apenas te verifiquemos, tu perfil sale publicado.
+          {rol === 'alumnx'
+            ? 'Mientras esperás, podés sumar tu experiencia y tu foto. Apenas te verifiquemos, vas a poder postularte en la Bolsa.'
+            : 'Mientras esperás, podés sumar tu trayectoria y tus fotos. Apenas te verifiquemos, tu perfil sale publicado.'}
         </p>
 
         <button
           type="button"
-          onClick={() => navigate(rol === 'clinica' ? '/editor-clinica' : '/editor-profesional')}
+          onClick={() => navigate(rol === 'clinica' ? '/editor-clinica' : rol === 'alumnx' ? '/onboarding-alumnx' : '/editor-profesional')}
           className="w-full bg-[#2D6A6A] text-white rounded-xl px-7 py-4 text-[13px] font-bold uppercase tracking-[0.15em] shadow-md transition-all duration-300 ease-in-out hover:bg-[#1A3D3D] hover:-translate-y-1 hover:shadow-xl flex items-center justify-center gap-2 mb-6"
         >
           <User className="w-4 h-4" /> Completar mi perfil
@@ -588,7 +659,7 @@ const PantallaRechazo = ({ verificacion, handleLogout, rol }) => {
 
         <button
           type="button"
-          onClick={() => navigate(rol === 'clinica' ? '/onboarding-clinica' : '/onboarding', { state: { correccion: true } })}
+          onClick={() => navigate(rol === 'clinica' ? '/onboarding-clinica' : rol === 'alumnx' ? '/onboarding-alumnx' : '/onboarding', { state: { correccion: true } })}
           className="w-full bg-[#2D6A6A] text-white rounded-xl px-7 py-4 text-[13px] font-bold uppercase tracking-[0.15em] shadow-md transition-all duration-300 ease-in-out hover:bg-[#1A3D3D] hover:-translate-y-1 hover:shadow-xl flex items-center justify-center gap-2 mb-4"
         >
           Corregir mis datos y volver a enviar
@@ -627,7 +698,7 @@ export default function Ecosistema() {
   useEffect(() => {
     if (!currentUser) return;
     // Si ya está aprobado (o no es profesional) no hace falta buscar nada
-    if ((currentUser.rol !== 'profesional' && currentUser.rol !== 'clinica') || currentUser.estado === 'activo') {
+    if (!['profesional', 'clinica', 'alumnx'].includes(currentUser.rol) || currentUser.estado === 'activo') {
       setCargandoVerificacion(false);
       return;
     }
@@ -653,13 +724,19 @@ export default function Ecosistema() {
   // Leemos el perfil profesional y calculamos el porcentaje con la misma cuenta que usa el editor
   useEffect(() => {
     if (!currentUser?.uid) return;
-    if (currentUser.rol !== 'profesional' && currentUser.rol !== 'clinica') {
+    if (!['profesional', 'clinica', 'alumnx'].includes(currentUser.rol)) {
       setCargandoAvance(false);
       return;
     }
     let cancelado = false;
     const cargarAvance = async () => {
       try {
+        // Alumnos/as: por ahora sin porcentaje, solo leemos cómo se identifican para el saludo
+        if (currentUser.rol === 'alumnx') {
+          const snapAlumno = await getDoc(doc(db, 'alumnos', currentUser.uid));
+          if (!cancelado) setTituloGenero(snapAlumno.exists() ? snapAlumno.data().tituloGenero || '' : '');
+          return;
+        }
         const coleccion = currentUser.rol === 'clinica' ? 'clinicas' : 'profesionales';
         const snap = await getDoc(doc(db, coleccion, currentUser.uid));
         if (cancelado) return;
@@ -782,21 +859,20 @@ export default function Ecosistema() {
   }
 
   // Pantallas de estado (pendiente / rechazado)
-  const necesitaValidacion = currentUser.rol === 'profesional' || currentUser.rol === 'clinica';
+  const necesitaValidacion = ['profesional', 'clinica', 'alumnx'].includes(currentUser.rol);
   if (necesitaValidacion && currentUser.estado !== 'activo') {
-    // Profesionales del flujo nuevo: manda lo que dice su solicitud de verificación
-    if (currentUser.rol === 'profesional' || currentUser.rol === 'clinica') {
-      if (cargandoVerificacion) return <PantallaCarga />;
-      if (verificacion?.estado === 'rechazado') return <PantallaRechazo verificacion={verificacion} handleLogout={handleLogout} rol={currentUser.rol} />;
-      if (verificacion?.estado === 'pendiente') return <PantallaEspera verificacion={verificacion} handleLogout={handleLogout} rol={currentUser.rol} />;
-    }
-    // Clínicas (y cuentas viejas sin solicitud): queda la pantalla de antes
+    // Flujo nuevo: manda lo que dice su solicitud de verificación
+    if (cargandoVerificacion) return <PantallaCarga />;
+    if (verificacion?.estado === 'rechazado') return <PantallaRechazo verificacion={verificacion} handleLogout={handleLogout} rol={currentUser.rol} />;
+    if (verificacion?.estado === 'pendiente') return <PantallaEspera verificacion={verificacion} handleLogout={handleLogout} rol={currentUser.rol} />;
+    // Cuentas viejas sin solicitud: queda la pantalla de antes
     return <PantallaEstado tipo={currentUser.estado} currentUser={currentUser} handleLogout={handleLogout} />;
   }
 
   // Rutas según el tipo de cuenta
-  const rutaEditor = activeRole === 'clinica' ? '/editor-clinica' : activeRole === 'proveedor' ? '/editor-proveedores' : '/editor-profesional';
-  const rutaPerfilPublico = `/${activeRole === 'clinica' ? 'clinica' : activeRole === 'proveedor' ? 'proveedor' : 'profesional'}/${currentUser?.slug}`;
+  const rutaEditor = activeRole === 'clinica' ? '/editor-clinica' : activeRole === 'proveedor' ? '/editor-proveedores' : activeRole === 'alumnx' ? '/onboarding-alumnx' : '/editor-profesional';
+  const rutaPerfilPublico = `/${activeRole === 'clinica' ? 'clinica' : activeRole === 'proveedor' ? 'proveedor' : activeRole === 'alumnx' ? 'alumno' : 'profesional'}/${currentUser?.slug}`;
+  const esAlumnx = activeRole === 'alumnx';
   const esProveedor = activeRole === 'proveedor';
 
   // Etiqueta para la Cartilla de colegas: avisa que también la ven los tutores (huella naranja = mundo tutores)
@@ -825,9 +901,9 @@ export default function Ecosistema() {
 
             <div className="lg:col-span-2">
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-[#1A3D3D] font-['Montserrat'] leading-[1.1] tracking-tight">
-                ¡Hola, {currentUser.nombre || (activeRole === 'clinica' ? 'Clínica' : activeRole === 'proveedor' ? 'Proveedor' : 'Profesional')}! <br className="hidden md:block" />
+                ¡Hola, {currentUser.nombre || (activeRole === 'clinica' ? 'Clínica' : activeRole === 'proveedor' ? 'Proveedor' : activeRole === 'alumnx' ? 'Estudiante' : 'Profesional')}! <br className="hidden md:block" />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#1A3D3D] to-[#2D6A6A]">
-                  {tituloGenero === 'veterinaria' ? 'Bienvenida' : tituloGenero === 'veterinario' ? 'Bienvenido' : 'Bienvenido/a'} al ecosistema.
+                  {['veterinaria', 'alumna'].includes(tituloGenero) ? 'Bienvenida' : ['veterinario', 'alumno'].includes(tituloGenero) ? 'Bienvenido' : 'Bienvenido/a'} al ecosistema.
                 </span>
               </h1>
               <h3 className="text-[#2D6A6A] font-bold text-[12px] md:text-[13px] uppercase tracking-[0.2em] mt-4">
@@ -867,7 +943,7 @@ export default function Ecosistema() {
           <h2 className="text-[#2D6A6A] font-bold text-[12px] md:text-[13px] uppercase tracking-[0.2em] mb-4">
             Tu espacio
           </h2>
-          <div className={`grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-6 mb-10 md:mb-12`}>
+          <div className={`grid grid-cols-1 ${esAlumnx ? 'md:grid-cols-2' : 'md:grid-cols-3'} gap-3 md:gap-6 mb-10 md:mb-12`}>
 
             <TarjetaDisponible
               id="tour-editar-perfil"
@@ -887,18 +963,23 @@ export default function Ecosistema() {
               />
             ) : (
               <>
-                <TarjetaDisponible
-                  id="tour-colegas"
-                  titulo="Cartilla de colegas"
-                  descripcion="Los contactos de tus colegas, a mano."
-                  icon={Users}
-                  onClick={() => navigate('/cartilla')}
-                  distintivo={distintivoTutores}
-                />
+                {/* Los alumnos/as no están en la Cartilla: no les mostramos la tarjeta de colegas */}
+                {!esAlumnx && (
+                  <TarjetaDisponible
+                    id="tour-colegas"
+                    titulo="Cartilla de colegas"
+                    descripcion="Los contactos de tus colegas, a mano."
+                    icon={Users}
+                    onClick={() => navigate('/cartilla')}
+                    distintivo={distintivoTutores}
+                  />
+                )}
                 <TarjetaDisponible
                   id="tour-bolsa"
                   titulo="Bolsa de trabajo"
-                  descripcion="Encontrá tu próximo trabajo o a quien sumar a tu equipo."
+                  descripcion={esAlumnx
+                    ? 'Postulate a las búsquedas de asistente y mostrate disponible para las clínicas.'
+                    : 'Encontrá tu próximo trabajo o a quien sumar a tu equipo.'}
                   icon={Briefcase}
                   onClick={() => navigate('/bolsa-de-trabajo')}
                 />
@@ -922,6 +1003,9 @@ export default function Ecosistema() {
               <ChevronRight className="w-4 h-4 shrink-0 text-[#2D6A6A] transition-transform group-hover:translate-x-0.5" />
             </button>
           )}
+
+          {/* Alumnos/as: aviso de que ya se recibieron, para pasar la cuenta a profesional */}
+          {esAlumnx && <AvisoMeRecibi currentUser={currentUser} />}
 
           {/* BLOQUE 2: PRÓXIMAMENTE (se activa con más usuarios) */}
           <div id="tour-proximamente">
