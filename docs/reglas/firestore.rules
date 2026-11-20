@@ -24,9 +24,10 @@ service cloud.firestore {
               && get(/databases/$(database)/documents/verificaciones/$(uid)).data.get('estado', '') == 'verificado')
         );
 
-      // La dueña edita su perfil, pero no puede cambiar "visible" ni pasarse a PRO
+        // La dueña edita su perfil, pero no puede cambiar "visible", "numeroFundador" ni pasarse a PRO
       allow update: if request.auth != null && request.auth.uid == uid
         && campoSinCambios('visible', true)
+        && campoSinCambios('numeroFundador', 0)
         && (request.resource.data.get('planActual', 'pro') != 'pro' || campoSinCambios('planActual', 'pro'));
 
       allow create, update, delete: if esAdmin();
@@ -63,13 +64,13 @@ service cloud.firestore {
               && get(/databases/$(database)/documents/verificaciones/$(request.auth.uid)).data.get('estado', '') == 'verificado')
         );
 
-      // La dueña edita su perfil, pero no puede cambiar "visible", "socioVitalicio" ni pasarse a PRO
+           // La dueña edita su perfil, pero no puede cambiar "visible", "socioVitalicio", "numeroFundador" ni pasarse a PRO
       allow update: if request.auth != null
         && (slug == request.auth.uid || resource.data.get('uid', '') == request.auth.uid)
         && campoSinCambios('visible', true)
         && campoSinCambios('socioVitalicio', false)
+        && campoSinCambios('numeroFundador', 0)
         && (request.resource.data.get('planActual', 'pro') != 'pro' || campoSinCambios('planActual', 'pro'));
-
       allow delete: if request.auth != null
         && (slug == request.auth.uid || resource.data.get('uid', '') == request.auth.uid);
 
@@ -139,6 +140,12 @@ service cloud.firestore {
     function vencimientoValido() {
       return request.resource.data.get('vencimientoMillis', 0) <= request.time.toMillis() + 2678400000;
     }
+    // Puede postularse a esa oferta: profesionales a cualquiera; alumnos/as solo a las de asistente
+    function puedePostularseA(ofertaId) {
+      return rolPropio() == 'profesional'
+        || (rolPropio() == 'alumnx'
+            && get(/databases/$(database)/documents/ofertasEmpleo/$(ofertaId)).data.get('rol', '') == 'asistente');
+    }
 
     // Ofertas de las clínicas: las activas las ve cualquiera; la dueña ve también las suyas vencidas o pausadas
     match /ofertasEmpleo/{docId} {
@@ -199,6 +206,40 @@ service cloud.firestore {
         allow write: if request.auth != null && request.auth.uid == uid;
         allow read, write: if esAdmin();
       }
+    }
+
+    // ─── Postulaciones a ofertas ───
+    // Una por persona y por oferta (el id es ofertaId_uid). La ve la clínica dueña de la oferta y quien se postuló.
+    match /postulaciones/{postId} {
+      allow read: if request.auth != null && (
+        resource == null
+        || resource.data.get('postulanteId', '') == request.auth.uid
+        || resource.data.get('clinicaId', '') == request.auth.uid
+      );
+
+      allow create: if request.auth != null && puedePostularseA(request.resource.data.get('ofertaId', 'x'))
+        && request.resource.data.get('postulanteId', '') == request.auth.uid
+        && postId == request.resource.data.get('ofertaId', 'x') + '_' + request.auth.uid
+        && request.resource.data.get('estado', '') == 'nueva'
+        && get(/databases/$(database)/documents/ofertasEmpleo/$(request.resource.data.get('ofertaId', 'x'))).data.get('creadorId', '') == request.resource.data.get('clinicaId', 'y');
+
+      // La clínica solo puede cambiar el estado (nueva, interesa, descartada)
+      allow update: if request.auth != null
+        && resource.data.get('clinicaId', '') == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['estado'])
+        && request.resource.data.get('estado', '') in ['nueva', 'interesa', 'descartada'];
+
+      allow read, write: if esAdmin();
+    }
+
+    // Permiso para que una clínica abra el CV de quien se postuló a una de sus ofertas (lo usan las reglas de Storage)
+    match /accesosCV/{accesoId} {
+      allow create, update: if request.auth != null && puedePostularseA(request.resource.data.get('ofertaId', 'x'))
+        && request.resource.data.get('postulanteId', '') == request.auth.uid
+        && accesoId == request.resource.data.get('clinicaId', 'x') + '_' + request.auth.uid
+        && get(/databases/$(database)/documents/ofertasEmpleo/$(request.resource.data.get('ofertaId', 'x'))).data.get('creadorId', '') == request.resource.data.get('clinicaId', 'y');
+
+      allow read, write: if esAdmin();
     }
 
     // Banners y notificaciones: solo lectura pública
