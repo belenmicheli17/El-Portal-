@@ -159,6 +159,7 @@ export default function PerfilAlumnx() {
                   <div className="min-w-0">
                     <p className="text-[16px] font-bold text-[#1A3D3D] leading-snug">{t.titulo}</p>
                     {t.desc && <p className="text-[14px] font-medium text-[#666666] mt-0.5">{t.desc}</p>}
+                    {t.detalle && <p className="text-[15px] text-[#333333] leading-relaxed mt-1.5 whitespace-pre-line">{t.detalle}</p>}
                   </div>
                 </li>
               ))}

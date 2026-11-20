@@ -16,12 +16,12 @@ import { RecortadorImagen, generarSlug, usuarioDeInstagram, instagramAURL } from
 
 const TOTAL_PASOS = 4;
 const NOMBRES_PASOS = ['Tus datos', 'Tu facultad', 'Sobre vos', 'Contacto'];
-const TITULOS = ['Contanos quién sos', 'Tu facultad', 'Sobre vos', 'Cómo te encuentran'];
+const TITULOS = ['Contanos quién sos', 'Tu facultad', 'Sobre vos', 'Redes y WhatsApp'];
 const SUBTITULOS = [
-  'Con estos datos arrancamos tu perfil de estudiante.',
+  'Con tu perfil de estudiante te podés postular a las búsquedas de asistente de la Bolsa de Trabajo y mostrarte disponible para las clínicas.',
   'Con el certificado de alumno regular verificamos que estás cursando.',
-  'Lo que leen las clínicas cuando te postulás.',
-  'Tus redes van en el perfil. El WhatsApp no se muestra: lo usamos solo para avisarte.'
+  'Es lo que leen las clínicas cuando te postulás en la Bolsa de Trabajo.',
+  'Todo es opcional. Tus redes se muestran en tu perfil.'
 ];
 
 // Facultades con Veterinaria (sugerencias: también se puede escribir otra)
@@ -43,6 +43,12 @@ const UNIVERSIDADES = [
   'Universidad Maimónides'
 ];
 
+// Largo máximo del comentario de cada experiencia
+const MAX_DETALLE = 300;
+
+// Sin tildes y en minúscula, para comparar lo que se escribe con la lista
+const normalizar = (texto) => String(texto || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+
 const OPCIONES_LLEGADA = [
   'Me lo recomendó un/a compañero/a', 'Instagram', 'Facebook', 'Google',
   'En la facultad', 'Bolsa de trabajo', 'Otro'
@@ -61,7 +67,7 @@ const Obligatorio = () => <span className="text-red-500" aria-hidden="true"> *</
 
 const ESTADO_INICIAL = {
   nombre: '', apellido: '', tituloGenero: '', foto: '',
-  universidad: '', provincia: '', localidad: '',
+  universidad: '', provincia: '',
   certificadoPath: '', certificadoNombre: '',
   presentacion: '', trayectoria: [],
   wa: '', ig: '', linkedin: '',
@@ -163,6 +169,61 @@ function TarjetaViva({ datos, verificado }) {
   );
 }
 
+// Buscador de facultad: muestra sugerencias a medida que se escribe (busca por nombre o sigla)
+function BuscadorFacultad({ valor, onCambio }) {
+  const [abierto, setAbierto] = useState(false);
+  const [marcada, setMarcada] = useState(0);
+  const texto = normalizar(valor.trim());
+  const sugerencias = texto.length < 2 ? [] : UNIVERSIDADES.filter((u) => normalizar(u).includes(texto) && u !== valor).slice(0, 6);
+  const mostrar = abierto && sugerencias.length > 0;
+
+  const elegir = (u) => { onCambio(u); setAbierto(false); };
+  const teclas = (e) => {
+    if (!mostrar) return;
+    if (e.key === 'ArrowDown') { e.preventDefault(); setMarcada((m) => Math.min(m + 1, sugerencias.length - 1)); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); setMarcada((m) => Math.max(m - 1, 0)); }
+    else if (e.key === 'Enter') { e.preventDefault(); elegir(sugerencias[marcada]); }
+    else if (e.key === 'Escape') setAbierto(false);
+  };
+
+  return (
+    <div className="relative">
+      <input
+        id="al-universidad"
+        value={valor}
+        maxLength={120}
+        onChange={(e) => { onCambio(e.target.value); setAbierto(true); setMarcada(0); }}
+        onFocus={() => setAbierto(true)}
+        onBlur={() => setTimeout(() => setAbierto(false), 150)}
+        onKeyDown={teclas}
+        placeholder="Ej: UBA o La Plata"
+        autoComplete="off"
+        role="combobox"
+        aria-expanded={mostrar}
+        aria-controls="al-facultades"
+        className={CLASE_INPUT}
+      />
+      {mostrar && (
+        <ul id="al-facultades" role="listbox" className="absolute z-20 left-0 right-0 mt-2 bg-white border border-gray-100 rounded-2xl shadow-[0_12px_32px_rgba(26,61,61,0.12)] overflow-hidden py-1.5">
+          {sugerencias.map((u, i) => (
+            <li
+              key={u}
+              role="option"
+              aria-selected={i === marcada}
+              onMouseDown={(e) => { e.preventDefault(); elegir(u); }}
+              onMouseEnter={() => setMarcada(i)}
+              className={`flex items-center gap-3 px-4 py-3 text-[15px] font-medium cursor-pointer transition-colors ${i === marcada ? 'bg-[#F4F7F7] text-[#1A3D3D]' : 'text-[#333333]'}`}
+            >
+              <GraduationCap className="w-4 h-4 text-[#2D6A6A] shrink-0" />
+              <span className="min-w-0">{u}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 // ==========================================
 // PÁGINA
 // ==========================================
@@ -226,12 +287,11 @@ export default function OnboardingAlumnx() {
           foto: a.foto || '',
           universidad: a.universidad || '',
           provincia: a.provincia || '',
-          localidad: a.localidad || '',
           certificadoPath: v.tipo === 'alumnx' ? (v.tituloPath || '') : '',
           certificadoNombre: v.tipo === 'alumnx' ? (v.tituloNombre || '') : '',
           presentacion: a.presentacion || '',
           trayectoria: Array.isArray(a.trayectoria)
-            ? a.trayectoria.map((t) => ({ id: t.id || Date.now() + Math.random(), titulo: t.titulo || '', desc: t.desc || '' }))
+            ? a.trayectoria.map((t) => ({ id: t.id || Date.now() + Math.random(), titulo: t.titulo || '', desc: t.desc || '', detalle: t.detalle || '' }))
             : [],
           wa: String(currentUser.whatsapp || '').replace(/\D/g, '').replace(/^54/, ''),
           ig: usuarioDeInstagram(a.redes?.instagram || ''),
@@ -325,7 +385,7 @@ export default function OnboardingAlumnx() {
 
   // ----- Experiencias (trayectoria) -----
   const agregarExperiencia = () =>
-    setDatos((p) => ({ ...p, trayectoria: [...p.trayectoria, { id: Date.now(), titulo: '', desc: '' }] }));
+    setDatos((p) => ({ ...p, trayectoria: [...p.trayectoria, { id: Date.now(), titulo: '', desc: '', detalle: '' }] }));
   const cambiarExperiencia = (id, campo, valor) =>
     setDatos((p) => ({ ...p, trayectoria: p.trayectoria.map((t) => (t.id === id ? { ...t, [campo]: valor } : t)) }));
   const quitarExperiencia = (id) =>
@@ -351,7 +411,7 @@ export default function OnboardingAlumnx() {
     }
     if (p === 2) {
       if (d.presentacion.trim().length < 30) return 'Escribí una presentación de al menos 30 letras.';
-      if (d.trayectoria.some((t) => !t.titulo.trim() && t.desc.trim())) return 'A cada experiencia ponele un título, o borrala.';
+      if (d.trayectoria.some((t) => !t.titulo.trim() && (t.desc.trim() || t.detalle.trim()))) return 'A cada experiencia ponele un título, o borrala.';
     }
     if (p === 3) {
       const digitos = d.wa.replace(/\D/g, '').length;
@@ -376,12 +436,12 @@ export default function OnboardingAlumnx() {
       };
       usuario = { nombre: nombreCompleto, slug: slugGuardado.current };
     } else if (p === 1) {
-      alumno = { universidad: d.universidad.trim(), provincia: d.provincia, localidad: d.localidad.trim() };
+      alumno = { universidad: d.universidad.trim(), provincia: d.provincia };
       usuario = { universidad: d.universidad.trim() };
     } else if (p === 2) {
       alumno = {
         presentacion: d.presentacion.trim(),
-        trayectoria: d.trayectoria.filter((t) => t.titulo.trim()).map((t) => ({ id: t.id, titulo: t.titulo.trim(), desc: t.desc.trim() }))
+        trayectoria: d.trayectoria.filter((t) => t.titulo.trim()).map((t) => ({ id: t.id, titulo: t.titulo.trim(), desc: t.desc.trim(), detalle: t.detalle.trim() }))
       };
     } else {
       const digitos = d.wa.replace(/\D/g, '');
@@ -538,20 +598,14 @@ export default function OnboardingAlumnx() {
       return (
         <>
           <label className={CLASE_LABEL} htmlFor="al-universidad">Facultad o universidad<Obligatorio /></label>
-          <input id="al-universidad" list="al-universidades" value={datos.universidad} maxLength={120} onChange={(e) => cambiar('universidad', e.target.value)} placeholder="Escribí o elegí de la lista" autoComplete="off" className={CLASE_INPUT} />
-          <datalist id="al-universidades">
-            {UNIVERSIDADES.map((u) => <option key={u} value={u} />)}
-          </datalist>
+          <BuscadorFacultad valor={datos.universidad} onCambio={(v) => cambiar('universidad', v)} />
+          <p className={CLASE_AYUDA}>Empezá a escribir y elegí de la lista. Si no está, escribila completa.</p>
 
           <label className={CLASE_LABEL} htmlFor="al-provincia">Provincia donde vivís<Obligatorio /></label>
           <select id="al-provincia" value={datos.provincia} onChange={(e) => cambiar('provincia', e.target.value)} className={CLASE_INPUT}>
             <option value="">Elegí una provincia</option>
             {provincias.map((p) => <option key={p} value={p}>{p}</option>)}
           </select>
-
-          <label className={CLASE_LABEL} htmlFor="al-localidad">Localidad o barrio</label>
-          <input id="al-localidad" value={datos.localidad} maxLength={80} onChange={(e) => cambiar('localidad', e.target.value)} placeholder="Ej: Castelar" autoComplete="off" className={CLASE_INPUT} />
-          <p className={CLASE_AYUDA}>Sirve para que te encuentren las clínicas de tu zona.</p>
 
           <span className={CLASE_LABEL}>Certificado de alumno regular<Obligatorio /></span>
           {verificado ? (
@@ -603,6 +657,8 @@ export default function OnboardingAlumnx() {
                 <div className="flex-1 min-w-0 flex flex-col gap-2.5">
                   <input aria-label="Qué hiciste" value={item.titulo} maxLength={100} onChange={(e) => cambiarExperiencia(item.id, 'titulo', e.target.value)} placeholder="Qué hiciste (ej: Pasantía en guardia)" autoComplete="off" className={CLASE_INPUT} />
                   <input aria-label="Dónde y cuándo" value={item.desc} maxLength={100} onChange={(e) => cambiarExperiencia(item.id, 'desc', e.target.value)} placeholder="Dónde y cuándo (ej: Clínica del Parque, 2025)" autoComplete="off" className={CLASE_INPUT} />
+                  <textarea aria-label="Qué hacías" rows={3} value={item.detalle} maxLength={MAX_DETALLE} onChange={(e) => cambiarExperiencia(item.id, 'detalle', e.target.value)} placeholder="Qué hacías o qué aprendiste (opcional). Ej: Asistía en cirugías y en la internación." className={`${CLASE_INPUT} resize-none`} />
+                  <p className="text-right text-sm text-[#666666] -mt-1">{item.detalle.length} / {MAX_DETALLE}</p>
                 </div>
                 <button type="button" aria-label="Quitar" onClick={() => quitarExperiencia(item.id)} className="p-1.5 text-gray-400 hover:text-red-500 transition-colors"><Trash2 className="w-[18px] h-[18px]" /></button>
               </div>
@@ -623,7 +679,7 @@ export default function OnboardingAlumnx() {
           <span className="shrink-0 bg-[#F4F7F7] rounded-2xl px-4 py-4 text-[17px] font-bold text-[#1A3D3D]">+54</span>
           <input id="al-wa" type="tel" inputMode="numeric" value={datos.wa} maxLength={15} onChange={(e) => cambiar('wa', e.target.value.replace(/\D/g, ''))} placeholder="1123456789" autoComplete="off" className={CLASE_INPUT} />
         </div>
-        <p className={CLASE_AYUDA}>Opcional. No se muestra en tu perfil: lo usamos para avisarte cuando te verifiquemos.</p>
+        <p className={CLASE_AYUDA}>Es privado: no aparece en tu perfil ni lo ven las clínicas. El equipo del Portal lo usa solo para avisarte por WhatsApp cuando tu cuenta esté aprobada.</p>
 
         <label className={CLASE_LABEL} htmlFor="al-ig">Instagram</label>
         <div className="flex gap-2">
