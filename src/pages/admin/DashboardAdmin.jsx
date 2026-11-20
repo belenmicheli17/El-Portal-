@@ -293,6 +293,7 @@ setLugares(contarLugares([
               { rol: 'profesional', etiqueta: 'Profesional', Icono: Stethoscope },
               { rol: 'clinica', etiqueta: 'Clínica', Icono: Building },
               { rol: 'proveedor', etiqueta: 'Proveedor', Icono: Store },
+              { rol: 'alumnx', etiqueta: 'Alumno/a', Icono: GraduationCap },
             ].map(({ rol, etiqueta, Icono }) => (
               <button
                 key={rol}

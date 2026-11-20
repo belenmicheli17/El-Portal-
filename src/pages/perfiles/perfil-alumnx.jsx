@@ -4,7 +4,7 @@ import { db } from '../../firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { useAuth } from '../../context/AuthContext';
 import { BotonCompartirLink, armarLinkPerfil } from '../../components/CompartirPerfil';
-import { etiquetaAlumnx, ADMIN_UID } from '../../utils/bolsa';
+import { etiquetaAlumnx } from '../../utils/bolsa';
 import { GraduationCap, MapPin, Instagram, Linkedin, Pencil, Clock, Briefcase } from 'lucide-react';
 
 // Perfil público de alumno/a. Se abre solo con el link: no está en la Cartilla, ni en el sitemap, ni en Google.
@@ -51,9 +51,8 @@ export default function PerfilAlumnx() {
   }, [data]);
 
   const esDuena = !!data && currentUser?.uid === data.id;
-  const esAdmin = currentUser?.uid === ADMIN_UID || currentUser?.rol === 'admin';
-  // Mientras no está verificado, solo lo ven la dueña y la admin
-  const puedeVerlo = !!data && (data.visible !== false || esDuena || esAdmin);
+  // Se ve con el link aunque todavía no esté verificado (igual que los profesionales)
+  const puedeVerlo = !!data;
 
   if (cargando) {
     return (
@@ -88,7 +87,7 @@ export default function PerfilAlumnx() {
         {esDuena && data.visible === false && (
           <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 rounded-2xl px-4 py-3 text-[14px] font-medium leading-snug flex gap-2">
             <Clock className="w-4 h-4 shrink-0 mt-0.5" />
-            <span>Tu perfil se va a poder ver con el link cuando verifiquemos tu certificado. Mientras, lo ves solo vos.</span>
+            <span>Estamos verificando tu certificado. Cuando te aprobemos vas a poder postularte en la Bolsa.</span>
           </div>
         )}
 
