@@ -668,9 +668,16 @@ export default function OnboardingAlumnx() {
             Portal Veterinario<span className="text-[#2D6A6A]">.</span>
           </div>
           {modo === 'edicion' && (
-            <button type="button" onClick={() => navigate('/ecosistema')} className="inline-flex items-center gap-1 text-[14px] font-semibold text-[#2D6A6A] hover:text-[#1A3D3D]">
-              <ChevronLeft className="w-4 h-4" /> Volver al inicio
-            </button>
+            <div className="flex items-center gap-5">
+              {slugGuardado.current && (
+                <button type="button" onClick={() => navigate(`/alumno/${slugGuardado.current}`)} className="text-[14px] font-semibold text-[#2D6A6A] hover:text-[#1A3D3D] underline underline-offset-4">
+                  Ver mi perfil
+                </button>
+              )}
+              <button type="button" onClick={() => navigate('/ecosistema')} className="inline-flex items-center gap-1 text-[14px] font-semibold text-[#2D6A6A] hover:text-[#1A3D3D]">
+                <ChevronLeft className="w-4 h-4" /> Volver al inicio
+              </button>
+            </div>
           )}
         </div>
       </header>

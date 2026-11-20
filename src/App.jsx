@@ -17,6 +17,7 @@ const Cartilla = lazy(() => import('./pages/Cartilla'));
 const Perfil = lazy(() => import('./pages/perfiles/perfil-profesional'));
 const PerfilProveedor = lazy(() => import('./pages/perfiles/perfil-proveedores'));
 const PerfilClinica = lazy(() => import('./pages/perfiles/perfil-clinica'));
+const PerfilAlumnx = lazy(() => import('./pages/perfiles/perfil-alumnx'));
 const Editor = lazy(() => import('./pages/editores/editor-profesional'));
 const EditorClinica = lazy(() => import('./pages/editores/editor-clinica'));
 const EditorProveedor = lazy(() => import('./pages/editores/editor-proveedores'));
@@ -167,6 +168,7 @@ export default function App() {
             <Route path="/profesional" element={<Navigate to="/Cartilla" replace />} />
             <Route path="/profesional/:slug" element={<Perfil />} />
             <Route path="/clinica/:slug" element={<PerfilClinica />} />
+            <Route path="/alumno/:slug" element={<PerfilAlumnx />} />
             <Route path="/proveedor/:slug" element={<PerfilProveedor />} />
 
             {/* Secciones públicas */}
