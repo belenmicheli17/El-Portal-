@@ -154,7 +154,7 @@ setLugares(contarLugares([
         
         const profesionales = usuarios.filter(u => u.rol === 'profesional').length;
         const clinicas = usuarios.filter(u => u.rol === 'clinica').length;
-        const alumnos = usuarios.filter(u => u.rol === 'alumno').length;
+        const alumnos = usuarios.filter(u => u.rol === 'alumnx').length;
         const proveedores = usuarios.filter(u => u.rol === 'proveedor').length;
         const pendientesValidacion = usuarios.filter(u => u.estado === 'pendiente' && u.onboardingCompleto !== false).length;
         // Nuevos de hoy: usuarios cuya fechaRegistro es posterior a las 00:00 de hoy

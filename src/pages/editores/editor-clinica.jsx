@@ -304,7 +304,7 @@ export default function EditorClinico() {
 
   // Este editor es solo para clínicas: los otros roles vuelven al Ecosistema
   useEffect(() => {
-    if (currentUser?.rol && ['profesional', 'empresa', 'proveedor', 'alumno'].includes(currentUser.rol)) {
+    if (currentUser?.rol && ['profesional', 'empresa', 'proveedor', 'alumnx'].includes(currentUser.rol)) {
       navigate('/ecosistema', { replace: true });
     }
   }, [currentUser?.rol]);
