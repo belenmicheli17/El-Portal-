@@ -211,7 +211,6 @@ Perfil de estudiantes de veterinaria (el id del documento es el uid). Cuenta gra
 | `foto` | String | URL de la foto en Storage (`alumnos/{uid}/`) |
 | `universidad` | String | Facultad o universidad |
 | `provincia` | String | Provincia donde vive |
-| `localidad` | String | Localidad o barrio (opcional) |
 | `presentacion` | String | Presentación (mín. 30, máx. 400 letras) |
 | `redes` | Objeto | `{ instagram: URL, linkedin: URL }` (opcionales, se ven en el perfil) |
 | `visible` | Boolean | Nace en `false`; la admin lo pone en `true` al verificar el certificado |
@@ -223,6 +222,7 @@ Perfil de estudiantes de veterinaria (el id del documento es el uid). Cuenta gra
 - `id`: Number
 - `titulo`: String (Ej: "Pasantía en guardia")
 - `desc`: String (Ej: "Clínica del Parque, 2025")
+- `detalle`: String (opcional, máx. 300 letras: qué hacía o qué aprendió)
 
 ### Datos del alumno/a que van en otros lugares
 - `usuarios/{uid}`: `rol: 'alumnx'`, `whatsapp` (privado, solo para avisarle la aprobación), `universidad`, `pideSerProfesional` + `fechaPedidoProfesional` (cuando avisa que se recibió).
