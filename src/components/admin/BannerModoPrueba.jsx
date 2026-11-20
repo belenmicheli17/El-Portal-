@@ -11,6 +11,7 @@ const CUENTAS = [
   { rol: 'profesional', etiqueta: 'Profesional' },
   { rol: 'clinica', etiqueta: 'Clínica' },
   { rol: 'proveedor', etiqueta: 'Proveedor' },
+  { rol: 'alumnx', etiqueta: 'Alumno/a' },
 ];
 
 // Barra fina fija abajo: aparece cuando estás en tu cuenta de admin o dentro de una cuenta de prueba
@@ -123,10 +124,10 @@ export default function BannerModoPrueba() {
               {etiqueta}
             </button>
           ))}
-          {enModoPrueba && (currentUser?.rol === 'profesional' || currentUser?.rol === 'clinica') && (
+          {enModoPrueba && ['profesional', 'clinica', 'alumnx'].includes(currentUser?.rol) && (
             <button
               onClick={() => navigate(
-                currentUser.rol === 'clinica' ? '/onboarding-clinica' : '/onboarding',
+                currentUser.rol === 'clinica' ? '/onboarding-clinica' : currentUser.rol === 'alumnx' ? '/onboarding-alumnx' : '/onboarding',
                 { state: { correccion: true, vistaPrueba: true } }
               )}
               disabled={isLoading}
