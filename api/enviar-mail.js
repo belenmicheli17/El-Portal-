@@ -18,6 +18,10 @@ const ID_PLANTILLA_BIENVENIDA = 1;
 const ID_PLANTILLA_APROBADA = 3;
 const ID_PLANTILLA_RECHAZADA = 4;
 
+// Plantillas propias de alumnos/as (las de arriba hablan de matrícula y de la Cartilla).
+// Mientras estén en null, a los alumnos/as no se les manda ese mail.
+const PLANTILLAS_ALUMNX = { bienvenida: null, aprobacion: null, rechazo: null };
+
 // Tiempo máximo (en minutos) desde que se creó la cuenta para poder pedir la bienvenida
 const MINUTOS_PARA_BIENVENIDA = 15;
 
@@ -85,7 +89,12 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: 'Sesión inválida' });
   }
 
-  const { tipo, email, nombre, motivo } = req.body || {};
+  const { tipo, email, nombre, motivo, rol } = req.body || {};
+  const esAlumnx = rol === 'alumnx';
+  // Si es de un alumno/a y todavía no hay plantilla para ese mail, no se manda (sin error)
+  if (esAlumnx && ['bienvenida', 'aprobacion', 'rechazo'].includes(tipo) && !PLANTILLAS_ALUMNX[tipo]) {
+    return res.status(200).json({ omitido: true });
+  }
 
   // 2a) Bienvenida: cada persona, solo para su propio mail y recién registrada
   if (tipo === 'bienvenida') {
@@ -95,7 +104,7 @@ export default async function handler(req, res) {
     }
     return enviarPorBrevo(res, {
       to: [{ email: sesion.email }],
-      templateId: ID_PLANTILLA_BIENVENIDA,
+      templateId: esAlumnx ? PLANTILLAS_ALUMNX.bienvenida : ID_PLANTILLA_BIENVENIDA,
       // Usamos el nombre que mandó la persona (recortado por seguridad); si no vino, "colega"
       params: { nombre: String(nombre || 'colega').trim().slice(0, 60) || 'colega' }
     });
@@ -114,7 +123,7 @@ export default async function handler(req, res) {
 
   return enviarPorBrevo(res, {
     to: [{ email, name: nombre || undefined }],
-    templateId: tipo === 'aprobacion' ? ID_PLANTILLA_APROBADA : ID_PLANTILLA_RECHAZADA,
+    templateId: esAlumnx ? PLANTILLAS_ALUMNX[tipo] : (tipo === 'aprobacion' ? ID_PLANTILLA_APROBADA : ID_PLANTILLA_RECHAZADA),
     params: { nombre: nombre || 'colega', motivo: motivo || '' }
   });
 }

@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { 
   Search, Edit2, Ban, X, Save, Trash2,
-  User, Building, ShieldAlert, Store, Loader2, Crown, Image as ImageIcon, ExternalLink
+  User, Building, ShieldAlert, Store, Loader2, Crown, Image as ImageIcon, ExternalLink, GraduationCap
 } from 'lucide-react';
 import { db } from '../../firebase';
 import PiezaBienvenida, { extraerInstagram } from '../../components/PiezaBienvenida';
-import { collection, getDocs, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, deleteDoc, writeBatch } from 'firebase/firestore';
 
 // La fecha puede venir como Timestamp, texto o número: la pasamos a fecha común
 const aFecha = (valor) => {
@@ -122,6 +122,25 @@ export default function GestionUsuarios() {
     }
   };
 
+  // Alumno/a que se recibió: la cuenta pasa a profesional y vuelve a hacer el cuestionario con su matrícula
+  const handlePasarAProfesional = async (user) => {
+    if (!window.confirm(`¿Pasar a ${user.nombre} a cuenta profesional? Va a completar el cuestionario de profesionales con su matrícula y vas a tener que verificarla de nuevo. Su perfil de estudiante se oculta (no se borra).`)) return;
+    try {
+      const lote = writeBatch(db);
+      lote.update(doc(db, 'usuarios', user.uid), {
+        rol: 'profesional', estado: 'pendiente', onboardingCompleto: false, onboardingPaso: 0, pideSerProfesional: false
+      });
+      lote.set(doc(db, 'alumnos', user.uid), { visible: false }, { merge: true });
+      // La verificación de estudiante se borra para que arranque una nueva con la matrícula
+      lote.delete(doc(db, 'verificaciones', user.uid));
+      await lote.commit();
+      setUsuarios(prev => prev.map(u => u.uid === user.uid ? { ...u, rol: 'profesional', estado: 'pendiente', pideSerProfesional: false } : u));
+    } catch (error) {
+      console.error('Error pasando a profesional:', error);
+      alert('Hubo un error. No se cambió nada, probá de nuevo.');
+    }
+  };
+
   const handleSuspender = async (uid, nombre) => {
     if (!window.confirm(`¿Suspender temporalmente a ${nombre}? Podrás reactivarla después.`)) return;
     try {
@@ -167,6 +186,7 @@ export default function GestionUsuarios() {
     const iconoPorRol = (rol) => {
     if (rol === 'clinica') return <Building className="w-5 h-5 text-[#4DB6AC]" />;
     if (rol === 'proveedor') return <Store className="w-5 h-5 text-purple-400" />;
+    if (rol === 'alumnx') return <GraduationCap className="w-5 h-5 text-rose-400" />;
     return <User className="w-5 h-5 text-[#2D6A6A]" />;
   };
 
@@ -199,7 +219,7 @@ export default function GestionUsuarios() {
               onClick={() => setFiltroRol(rol)}
               className={`px-4 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all whitespace-nowrap ${filtroRol === rol ? 'bg-white text-[#1A3D3D] shadow-sm' : 'text-[#666666] hover:text-[#1A3D3D]'}`}
             >
-              {rol}
+              {rol === 'alumnx' ? 'Alumnos' : rol}
             </button>
           ))}
         </div>
@@ -238,7 +258,7 @@ export default function GestionUsuarios() {
                     </td>
                     <td className="px-6 py-5">
                       <span className="inline-flex items-center px-3 py-1 rounded-lg text-[11px] font-bold uppercase tracking-widest bg-[#2D6A6A]/10 text-[#2D6A6A]">
-                        {user.rol}
+                        {user.rol === 'alumnx' ? 'Alumno/a' : user.rol}
                       </span>
                     </td>
                     <td className="px-6 py-5">
@@ -246,6 +266,16 @@ export default function GestionUsuarios() {
                     </td>
                     <td className="px-6 py-5 text-right">
                       <div className="flex items-center justify-end gap-2">
+                        {/* Alumno/a que avisó que se recibió */}
+                        {user.rol === 'alumnx' && user.pideSerProfesional && (
+                          <button
+                            onClick={() => handlePasarAProfesional(user)}
+                            className="text-[11px] font-bold uppercase tracking-widest bg-rose-50 text-rose-500 px-2.5 py-1 rounded-lg hover:bg-rose-100 transition-all"
+                            title="Avisó que ya se recibió"
+                          >
+                            Pasar a profesional
+                          </button>
+                        )}
                         {/* Badge de estado */}
                         {user.estado === 'suspendido' && (
                           <span className="text-[11px] font-bold uppercase tracking-widest bg-[#FF9800]/10 text-[#FF9800] px-2.5 py-1 rounded-lg">

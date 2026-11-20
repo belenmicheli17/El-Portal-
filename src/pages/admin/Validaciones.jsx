@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   CheckCircle, XCircle, User, Calendar, Mail, AlertTriangle, Loader2,
-  Hash, MapPin, FileText, ExternalLink, X, Megaphone, MessageCircle, Image as ImageIcon
+  Hash, MapPin, FileText, ExternalLink, X, Megaphone, MessageCircle, Image as ImageIcon, GraduationCap
 } from 'lucide-react';
 import { armarLinkWhatsapp } from '../../utils/whatsapp';
 import { armarLinkPerfil } from '../../components/CompartirPerfil';
@@ -107,9 +107,20 @@ export default function Validaciones() {
 
   // ----- Aprobar: todo junto o nada (si algo falla, no queda a medias) -----
   const handleAprobar = async (req) => {
-    if (!window.confirm(`¿Aprobar a ${req.nombre}? Su perfil va a quedar visible en la cartilla.`)) return;
+    const esAlumnx = req.tipo === 'alumnx';
+    if (!window.confirm(esAlumnx
+      ? `¿Aprobar a ${req.nombre}? Va a poder postularse en la Bolsa y su perfil se va a ver con el link.`
+      : `¿Aprobar a ${req.nombre}? Su perfil va a quedar visible en la cartilla.`)) return;
     setProcesando(req.uid);
     try {
+      // Alumnos/as: sin cupo de socios ni número de fundador; solo se activa la cuenta y el perfil
+      if (esAlumnx) {
+        const loteAlumnx = writeBatch(db);
+        loteAlumnx.update(doc(db, 'verificaciones', req.uid), { estado: 'verificado', motivoRechazo: '', revisadoEn: serverTimestamp() });
+        loteAlumnx.update(doc(db, 'usuarios', req.uid), { estado: 'activo' });
+        loteAlumnx.set(doc(db, 'alumnos', req.uid), { visible: true }, { merge: true });
+        await loteAlumnx.commit();
+      } else {
       // ¿Todavía hay lugar entre los primeros socios vitalicios?
       // Profesionales y clínicas tienen cupos separados
       const esClinica = req.tipo === 'clinica';
@@ -133,6 +144,7 @@ export default function Validaciones() {
         { merge: true }
       );
       await lote.commit();
+      }
     } catch (error) {
       console.error('Error aprobando:', error);
       alert('Hubo un error al aprobar. No se cambió nada, probá de nuevo.');
@@ -175,7 +187,8 @@ export default function Validaciones() {
         body: JSON.stringify({
           tipo: 'aprobacion',
           email: req.email,
-          nombre: req.nombrePila || req.nombre
+          nombre: req.nombrePila || req.nombre,
+          rol: req.tipo
         })
       });
       if (!respuesta.ok) throw new Error(`Respuesta ${respuesta.status}`);
@@ -185,12 +198,28 @@ export default function Validaciones() {
         uid: req.uid,
         nombre: req.nombre,
         tipo: 'aprobación',
-        cuerpo: { tipo: 'aprobacion', email: req.email, nombre: req.nombrePila || req.nombre }
+        cuerpo: { tipo: 'aprobacion', email: req.email, nombre: req.nombrePila || req.nombre, rol: req.tipo }
       }]);
     }
 
-    // Aviso por WhatsApp: solo si dejó un número y no lo marcó como "nadie"
+    // Aviso por WhatsApp de alumnos/as: solo si dejó un número
     try {
+      if (esAlumnx) {
+        // El WhatsApp del alumno/a está en su documento privado de usuarios
+        const snapUsuario = await getDoc(doc(db, 'usuarios', req.uid));
+        const numero = snapUsuario.exists() ? snapUsuario.data().whatsapp : '';
+        if (numero && req.slug) {
+          const primerNombre = (req.nombrePila || req.nombre || '').split(' ')[0];
+          const texto = `Hola ${primerNombre}! Soy Belén, del Portal Veterinario 🐾 Ya revisé tu certificado y tu cuenta de estudiante está verificada. Desde ahora podés postularte a las búsquedas de asistente en la Bolsa de Trabajo y mostrarte disponible. Tu perfil: ${armarLinkPerfil('alumnx', req.slug)}. Gracias por sumarte!`;
+          setAvisosWp((prev) => [...prev, { uid: req.uid, nombre: req.nombre, url: armarLinkWhatsapp(numero, texto) }]);
+        }
+      }
+    } catch (error) {
+      console.error('No se pudo armar el aviso de WhatsApp:', error);
+    }
+
+    // Aviso por WhatsApp de profesionales y clínicas
+    if (!esAlumnx) try {
       const esClin = req.tipo === 'clinica';
       const snapPerfil = await getDoc(doc(db, esClin ? 'clinicas' : 'profesionales', req.uid));
       const perfilAprobado = snapPerfil.exists() ? snapPerfil.data() : {};
@@ -209,7 +238,8 @@ export default function Validaciones() {
     }
 
     // Pieza de bienvenida para las redes: solo si la persona cargó su Instagram (es para etiquetarla). No se publica nada solo
-    try {
+    // (no va para alumnos/as: la pieza es de la Cartilla)
+    if (!esAlumnx) try {
       const tipoPieza = req.tipo === 'clinica' ? 'clinica' : 'profesional';
       const datosPieza = await cargarDatosPieza(req.uid, tipoPieza);
       if (datosPieza.instagram) setPiezasBienvenida((prev) => [...prev, { uid: req.uid, nombre: req.nombre, tipo: tipoPieza }]);
@@ -242,7 +272,7 @@ export default function Validaciones() {
 
   // ----- Rechazar: abre la ventana para escribir el motivo -----
   const abrirRechazo = (req) => {
-    setModalRechazo({ uid: req.uid, nombre: req.nombre, nombrePila: req.nombrePila, email: req.email });
+    setModalRechazo({ uid: req.uid, nombre: req.nombre, nombrePila: req.nombrePila, email: req.email, tipo: req.tipo });
     setMotivo('');
     setErrorModal('');
   };
@@ -281,7 +311,8 @@ export default function Validaciones() {
             tipo: 'rechazo',
             email: modalRechazo.email,
             nombre: modalRechazo.nombrePila || modalRechazo.nombre,
-            motivo: motivoLimpio
+            motivo: motivoLimpio,
+            rol: modalRechazo.tipo
           })
         });
         if (!respuesta.ok) throw new Error(`Respuesta ${respuesta.status}`);
@@ -291,7 +322,7 @@ export default function Validaciones() {
           uid: modalRechazo.uid,
           nombre: modalRechazo.nombre,
           tipo: 'rechazo',
-          cuerpo: { tipo: 'rechazo', email: modalRechazo.email, nombre: modalRechazo.nombrePila || modalRechazo.nombre, motivo: motivoLimpio }
+          cuerpo: { tipo: 'rechazo', email: modalRechazo.email, nombre: modalRechazo.nombrePila || modalRechazo.nombre, motivo: motivoLimpio, rol: modalRechazo.tipo }
         }]);
       }
 
@@ -518,15 +549,15 @@ export default function Validaciones() {
                   {/* Encabezado de tarjeta */}
                   <div className="flex items-start justify-between gap-3 mb-5">
                     <div className="flex items-center gap-4 min-w-0">
-                      <div className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 bg-[#2D6A6A]/10 text-[#2D6A6A]">
-                        <User className="w-7 h-7" />
+                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${req.tipo === 'alumnx' ? 'bg-rose-50 text-rose-500' : 'bg-[#2D6A6A]/10 text-[#2D6A6A]'}`}>
+                        {req.tipo === 'alumnx' ? <GraduationCap className="w-7 h-7" /> : <User className="w-7 h-7" />}
                       </div>
                       <div className="min-w-0">
                         <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[18px] leading-tight mb-1 break-words">
                           {req.nombre}
                         </h3>
                         <span className="inline-block bg-[#F4F7F7] text-[#666666] text-[11px] md:text-[12px] font-bold px-2.5 py-1 rounded-lg uppercase tracking-widest">
-                          {req.tipo === 'clinica' ? 'Nueva clínica' : 'Nuevo profesional'}
+                          {req.tipo === 'clinica' ? 'Nueva clínica' : req.tipo === 'alumnx' ? 'Estudiante' : 'Nuevo profesional'}
                         </span>
                       </div>
                     </div>
@@ -556,13 +587,21 @@ export default function Validaciones() {
                       <span className="text-[#666666] text-[12px] font-medium w-24 shrink-0">Llegó por:</span>
                       <span className="text-[#1A3D3D] text-[13px] font-bold">{req.comoLlego || '—'}</span>
                     </div>
-                    <div className="flex items-center gap-3 bg-white rounded-xl px-4 py-3">
-                      <Hash className="w-4 h-4 text-[#2D6A6A] shrink-0" />
-                      <span className="text-[#666666] text-[12px] font-medium w-24 shrink-0">Matrícula:</span>
-                      <span className="text-[#1A3D3D] text-[13px] font-bold">
-                        {datos.tipoMatricula} {datos.matricula || '—'}
-                      </span>
-                    </div>
+                    {req.tipo === 'alumnx' ? (
+                      <div className="flex items-center gap-3 bg-white rounded-xl px-4 py-3">
+                        <GraduationCap className="w-4 h-4 text-[#2D6A6A] shrink-0" />
+                        <span className="text-[#666666] text-[12px] font-medium w-24 shrink-0">Facultad:</span>
+                        <span className="text-[#1A3D3D] text-[13px] font-bold">{datos.universidad || '—'}</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-3 bg-white rounded-xl px-4 py-3">
+                        <Hash className="w-4 h-4 text-[#2D6A6A] shrink-0" />
+                        <span className="text-[#666666] text-[12px] font-medium w-24 shrink-0">Matrícula:</span>
+                        <span className="text-[#1A3D3D] text-[13px] font-bold">
+                          {datos.tipoMatricula} {datos.matricula || '—'}
+                        </span>
+                      </div>
+                    )}
 
                     {datos.matricula2 && (
                       <div className="flex items-center gap-3 bg-white rounded-xl px-4 py-3">
@@ -591,19 +630,19 @@ export default function Validaciones() {
                         {abriendoTitulo === req.uid
                           ? <Loader2 className="w-4 h-4 animate-spin text-[#2D6A6A]" />
                           : <FileText className="w-4 h-4 text-[#2D6A6A]" />}
-                        Ver título o carnet
+                        {req.tipo === 'alumnx' ? 'Ver certificado de alumno regular' : 'Ver título o carnet'}
                       </button>
                     ) : (
                       <div className="bg-[#FF9800]/10 border border-[#FF9800]/30 rounded-xl p-3 flex items-center gap-3">
                         <AlertTriangle className="w-5 h-5 text-[#FF9800] shrink-0" />
-                        <p className="text-[#e68900] text-[13px] font-medium">No subió el título o carnet.</p>
+                        <p className="text-[#e68900] text-[13px] font-medium">{req.tipo === 'alumnx' ? 'No subió el certificado de alumno regular.' : 'No subió el título o carnet.'}</p>
                       </div>
                     )}
 
                     {/* Perfil que armó mientras espera */}
                     {req.slug && (
                       <a
-                        href={`/${req.tipo === 'clinica' ? 'clinica' : 'profesional'}/${req.slug}`}
+                        href={`/${req.tipo === 'clinica' ? 'clinica' : req.tipo === 'alumnx' ? 'alumno' : 'profesional'}/${req.slug}`}
                         target="_blank"
                         rel="noreferrer"
                         className="w-full bg-white border border-gray-200 text-[#1A3D3D] py-3 rounded-xl font-bold text-[12px] uppercase tracking-widest hover:border-[#2D6A6A] transition-all flex items-center justify-center gap-2"
