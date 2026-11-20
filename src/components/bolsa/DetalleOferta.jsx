@@ -92,6 +92,9 @@ export default function DetalleOferta({ oferta, permisos, currentUser, onVolver,
     if (currentUser.rol === 'alumnx' && oferta.rol !== 'asistente') {
       return <p className="text-white/70 text-[14px] leading-relaxed">Esta búsqueda es para profesionales. Como estudiante podés postularte a las búsquedas de asistente.</p>;
     }
+    if (currentUser.rol === 'profesional' && oferta.rol === 'asistente') {
+      return <p className="text-white/70 text-[14px] leading-relaxed">Esta búsqueda es para estudiantes de veterinaria (asistente).</p>;
+    }
     if (!permisos.puedePostularse) {
       return (
         <>
