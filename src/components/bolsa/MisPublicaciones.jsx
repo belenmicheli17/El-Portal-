@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { collection, doc, getDoc, getDocs, query, where, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, doc, getDocs, query, where, updateDoc, deleteDoc } from 'firebase/firestore';
 import { ChevronLeft, ChevronDown, Pencil, RefreshCw, Trash2, Plus, Briefcase, User, Users } from 'lucide-react';
 import { db } from '../../firebase';
-import { etiquetaRol, diasRestantes, estaVencida, nuevoVencimiento, zonaTexto } from '../../utils/bolsa';
+import { etiquetaRol, diasRestantes, estaVencida, nuevoVencimiento, zonaTexto, leerPerfilPostulante, etiquetaAlumnx } from '../../utils/bolsa';
 import { VentanaConfirmar, BotonImagenOferta } from './ElementosBolsa';
 
 function Estado({ item }) {
@@ -127,7 +127,10 @@ function Fila({ icono: Icono, titulo, subtitulo, item, coleccion, onEditar, onCa
                       <div className="w-9 h-9 shrink-0 rounded-full bg-[#F4F7F7] text-[#2D6A6A] flex items-center justify-center"><User className="w-4 h-4" /></div>
                     )}
                     <div className="min-w-0 flex-1">
-                      <p className="text-[14px] font-bold text-[#1A3D3D] truncate">{nombreCompleto(p, perfiles[p.postulanteId])}</p>
+                      <p className="text-[14px] font-bold text-[#1A3D3D] truncate">
+                        {nombreCompleto(p, perfiles[p.postulanteId])}
+                        {perfiles[p.postulanteId]?.esAlumnx && <span className="ml-2 align-middle bg-rose-50 text-rose-500 text-[11px] font-bold uppercase tracking-[0.08em] rounded-full px-2 py-0.5">{etiquetaAlumnx(perfiles[p.postulanteId].tituloGenero)}</span>}
+                      </p>
                       <p className="text-[12px] text-[#666666]">Se postuló el {fechaPost(p)}{p.conCV ? ' · con currículum' : ' · con perfil'}</p>
                     </div>
                     <span className={`shrink-0 text-[12px] font-semibold px-2.5 py-0.5 rounded-full ${ESTADOS_POST[p.estado]?.clase || ESTADOS_POST.nueva.clase}`}>{ESTADOS_POST[p.estado]?.label || 'Nueva'}</span>
@@ -159,7 +162,8 @@ const actualizarPublicacion = (coleccion, id, cambios) => updateDoc(doc(db, cole
 
 export default function MisPublicaciones({ currentUser, misOfertas, miDisponible, abrirPostulantes = '', onVolver, onNuevaOferta, onEditarOferta, onEditarDisponible, onCambio }) {
   const esClinica = currentUser?.rol === 'clinica' || currentUser?.rol === 'admin';
-  const esProfesional = currentUser?.rol === 'profesional';
+  // Profesionales y alumnos/as: tienen disponibilidad y postulaciones propias
+  const esProfesional = ['profesional', 'alumnx'].includes(currentUser?.rol);
   const [postulaciones, setPostulaciones] = useState([]);
   const [perfiles, setPerfiles] = useState({});
 
@@ -173,8 +177,8 @@ export default function MisPublicaciones({ currentUser, misOfertas, miDisponible
         setPostulaciones(lista);
         // Perfil público de cada postulante (apellido y foto)
         [...new Set(lista.map((p) => p.postulanteId))].forEach((uid) => {
-          getDoc(doc(db, 'profesionales', uid))
-            .then((s) => { if (s.exists()) setPerfiles((prev) => ({ ...prev, [uid]: s.data() })); })
+          leerPerfilPostulante(uid)
+            .then((perfil) => { if (perfil) setPerfiles((prev) => ({ ...prev, [uid]: perfil })); })
             .catch(() => {});
         });
       })
@@ -211,7 +215,7 @@ export default function MisPublicaciones({ currentUser, misOfertas, miDisponible
         <section>
           <h2 className="text-[14px] font-bold text-[#1A3D3D] mb-4">Mi disponibilidad</h2>
           {miDisponible ? (
-            <Fila icono={User} titulo={(miDisponible.areas || []).join(' · ') || 'Disponible'} subtitulo={miDisponible.provincia} item={miDisponible} coleccion="profesionalesDisponibles" onEditar={onEditarDisponible} onCambio={onCambio} />
+            <Fila icono={User} titulo={miDisponible.puesto === 'asistente' ? 'Asistente (alumno/a)' : (miDisponible.areas || []).join(' · ') || 'Disponible'} subtitulo={miDisponible.provincia} item={miDisponible} coleccion="profesionalesDisponibles" onEditar={onEditarDisponible} onCambio={onCambio} />
           ) : (
             <div className="bg-white rounded-[24px] border border-gray-100 p-6">
               <p className="text-[14px] text-[#666666] mb-4">Todavía no te marcaste como disponible.</p>

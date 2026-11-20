@@ -4,13 +4,14 @@ import { db } from '../../firebase';
 import { MessageCircle, Mail, Loader2, Check, FileText, UserCircle2 } from 'lucide-react';
 import { VentanaBolsa } from './ElementosBolsa';
 import CajaCV, { useMiCV } from './CajaCV';
-import { etiquetaRol, linkWhatsapp, linkPerfilProfesional, linkPostulacion, mensajePostulacion, cierrePostulacion } from '../../utils/bolsa';
+import { etiquetaRol, linkWhatsapp, linkPerfilProfesional, linkPerfilAlumnx, linkPostulacion, mensajePostulacion, cierrePostulacion } from '../../utils/bolsa';
 
 // Se abre al tocar "Postularme". A la izquierda elige con qué se postula (currículum o perfil);
 // a la derecha ve el mensaje que le llega a la clínica y lo manda por WhatsApp o mail.
 export default function VentanaPostulacion({ abierta, onCerrar, oferta, contacto, currentUser }) {
   const { cv, setCv, cargando } = useMiCV(abierta ? currentUser?.uid : null);
-  const perfilUrl = linkPerfilProfesional(currentUser?.slug);
+  // Alumnos/as mandan el link de su perfil de estudiante
+  const perfilUrl = currentUser?.rol === 'alumnx' ? linkPerfilAlumnx(currentUser?.slug) : linkPerfilProfesional(currentUser?.slug);
   const [opcion, setOpcion] = useState('cv');
   const [mensaje, setMensaje] = useState('');
   const [error, setError] = useState('');

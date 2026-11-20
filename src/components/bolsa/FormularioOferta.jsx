@@ -370,7 +370,7 @@ export default function FormularioOferta({ currentUser, ofertaExistente, onVolve
 
       {/* CONTACTO */}
       <section className={claseCaja}>
-        <CampoBolsa titulo="¿Cómo querés recibir las postulaciones?" requerido campo="tipoContacto" ayuda="Solo lo ven profesionales registrados en el Portal." error={errores.tipoContacto}>
+        <CampoBolsa titulo="¿Cómo querés recibir las postulaciones?" requerido campo="tipoContacto" ayuda="Solo lo ven profesionales y estudiantes registrados en el Portal." error={errores.tipoContacto}>
           <SelectorPills opciones={[{ id: 'whatsapp', label: 'WhatsApp' }, { id: 'email', label: 'Mail' }]} seleccion={form.tipoContacto} onCambio={(v) => cambiar('tipoContacto', v)} />
         </CampoBolsa>
 

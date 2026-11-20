@@ -86,13 +86,16 @@ export default function DetalleOferta({ oferta, permisos, currentUser, onVolver,
     if (esMia) {
       return <p className="text-white/70 text-[14px] leading-relaxed">Es tu publicación. La podés editar, extender o borrar desde «Mis publicaciones».</p>;
     }
-    if (currentUser?.rol !== 'profesional') {
-      return <p className="text-white/70 text-[14px] leading-relaxed">Las postulaciones son para profesionales veterinarios registrados.</p>;
+    if (!['profesional', 'alumnx'].includes(currentUser?.rol)) {
+      return <p className="text-white/70 text-[14px] leading-relaxed">Las postulaciones son para profesionales y estudiantes de veterinaria registrados.</p>;
+    }
+    if (currentUser.rol === 'alumnx' && oferta.rol !== 'asistente') {
+      return <p className="text-white/70 text-[14px] leading-relaxed">Esta búsqueda es para profesionales. Como estudiante podés postularte a las búsquedas de asistente.</p>;
     }
     if (!permisos.puedePostularse) {
       return (
         <>
-          <p className="text-white/70 text-[14px] leading-relaxed mb-5">Vas a poder postularte apenas verifiquemos tu matrícula.</p>
+          <p className="text-white/70 text-[14px] leading-relaxed mb-5">Vas a poder postularte apenas verifiquemos tu {currentUser?.rol === 'alumnx' ? 'certificado de alumno regular' : 'matrícula'}.</p>
           <button type="button" onClick={onPedirVerificacion} className={claseSecundario}>Ver estado de mi cuenta</button>
         </>
       );

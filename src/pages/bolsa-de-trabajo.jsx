@@ -60,8 +60,8 @@ export default function BolsaTrabajo() {
 
   // La provincia de su perfil: así le mostramos primero las publicaciones de su zona
   useEffect(() => {
-    if (!currentUser?.uid || !['profesional', 'clinica'].includes(currentUser.rol)) { setMiProvincia(''); return; }
-    const coleccion = currentUser.rol === 'clinica' ? 'clinicas' : 'profesionales';
+    if (!currentUser?.uid || !['profesional', 'clinica', 'alumnx'].includes(currentUser.rol)) { setMiProvincia(''); return; }
+    const coleccion = currentUser.rol === 'clinica' ? 'clinicas' : currentUser.rol === 'alumnx' ? 'alumnos' : 'profesionales';
     getDoc(doc(db, coleccion, currentUser.uid))
       .then((snap) => setMiProvincia(snap.exists() ? (snap.data().provincia || '') : ''))
       .catch(() => setMiProvincia(''));
@@ -143,14 +143,14 @@ export default function BolsaTrabajo() {
   };
   const pedirDisponible = () => {
     if (!permisos.conSesion) return setCartel('registro-publicar');
-    if (currentUser.rol !== 'profesional') return setCartel('solo-profesionales');
+    if (!['profesional', 'alumnx'].includes(currentUser.rol)) return setCartel('solo-profesionales');
     if (!permisos.puedeMarcarseDisponible) return setCartel('verificacion');
     irA('disponible');
   };
 
   // Botón único "Me interesa publicar una búsqueda": reconoce el tipo de cuenta y abre el formulario que corresponde
   const pedirPublicarBusqueda = () => {
-    if (currentUser?.rol === 'profesional') return pedirDisponible();
+    if (['profesional', 'alumnx'].includes(currentUser?.rol)) return pedirDisponible();
     return pedirPublicarOferta();
   };
 
@@ -171,8 +171,8 @@ export default function BolsaTrabajo() {
     if (provincia && item.provincia !== provincia) return false;
     if (jornada && !(item.jornada || []).includes(jornada)) return false;
     if (area && !(item.areas || []).includes(area)) return false;
-    // Los disponibles son siempre veterinarios/as
-    if (rol && (tipo === 'oferta' ? item.rol !== rol : rol !== 'veterinario')) return false;
+    // Los disponibles son veterinarios/as, salvo los alumnos/as que figuran como asistentes
+    if (rol && (tipo === 'oferta' ? item.rol !== rol : (item.puesto || 'veterinario') !== rol)) return false;
     if (horario && !(item.horario || []).includes(horario)) return false;
     if (experiencia && item.experiencia !== experiencia) return false;
     if (busqueda.trim() && !coincideBusqueda(busqueda, textoDe(item, tipo))) return false;
@@ -224,7 +224,8 @@ export default function BolsaTrabajo() {
   };
 
   const esClinica = currentUser?.rol === 'clinica' || permisos.esAdmin;
-  const esProfesional = currentUser?.rol === 'profesional';
+  // Profesionales y alumnos/as usan la Bolsa del mismo lado (se marcan disponibles y se postulan)
+  const esProfesional = ['profesional', 'alumnx'].includes(currentUser?.rol);
   const tieneMias = misOfertas.length > 0 || !!miDisponible;
 
   // ---------- Vistas que no son la lista ----------
@@ -300,12 +301,12 @@ export default function BolsaTrabajo() {
       {/* ENCABEZADO: texto a la izquierda e ilustración a la derecha (solo PC), como en la Cartilla */}
       <div className="max-w-6xl mx-auto w-full px-4 lg:flex lg:items-center lg:gap-10">
       <section className="lg:w-[58%] pt-9 lg:pt-20 pb-2">
-        <p className="text-[12px] font-bold tracking-[0.15em] uppercase text-[#2D6A6A] mb-3 text-center lg:text-left">Para profesionales y clínicas</p>
+        <p className="text-[12px] font-bold tracking-[0.15em] uppercase text-[#2D6A6A] mb-3 text-center lg:text-left">Para profesionales, estudiantes y clínicas</p>
         <h1 className="text-[32px] md:text-[42px] lg:text-[48px] font-black font-['Montserrat'] text-[#1A3D3D] tracking-tighter leading-none mb-5 text-center lg:text-left">
           Encontrá trabajo o sumá<br className="hidden lg:block" /> talento a tu equipo
         </h1>
         <p className="text-[#666666] text-[14px] md:text-[16px] lg:text-[18px] font-medium mb-6 max-w-2xl mx-auto lg:mx-0 text-center lg:text-left leading-relaxed">
-          Búsquedas de clínicas de toda Argentina y colegas disponibles para trabajar. Mirá todo; para contactar, registrate gratis.
+          Búsquedas de clínicas de toda Argentina y colegas disponibles para trabajar. Si sos estudiante, ya podés tener tu perfil y postularte como asistente. Mirá todo; para contactar, registrate gratis.
         </p>
         <div className="flex flex-wrap gap-2 justify-center lg:justify-start">
           {(!permisos.conSesion || esClinica) && (
@@ -469,13 +470,13 @@ export default function BolsaTrabajo() {
 
             {mostrarDisponibles && (
               <section>
-                <h2 className="text-[13px] font-bold tracking-[0.12em] uppercase text-[#2D6A6A] mb-3 px-1">Profesionales disponibles · {disponiblesFiltrados.length}</h2>
+                <h2 className="text-[13px] font-bold tracking-[0.12em] uppercase text-[#2D6A6A] mb-3 px-1">Disponibles para trabajar · {disponiblesFiltrados.length}</h2>
                 {disponiblesFiltrados.length > 0 ? (
                   <div className={claseGrilla}>
                     {disponiblesFiltrados.map((d) => <TarjetaDisponible key={d.id} disponible={d} onAbrir={() => setDisponibleAbierto(d)} />)}
                   </div>
                 ) : (
-                  <p className="bg-white/70 rounded-[24px] border border-gray-100 p-5 text-[14px] text-[#666666]">{disponibles.length === 0 ? 'Todavía no hay profesionales disponibles.' : 'No hay profesionales disponibles con estos filtros.'}</p>
+                  <p className="bg-white/70 rounded-[24px] border border-gray-100 p-5 text-[14px] text-[#666666]">{disponibles.length === 0 ? 'Todavía no hay nadie disponible.' : 'No hay nadie disponible con estos filtros.'}</p>
                 )}
               </section>
             )}
@@ -491,7 +492,7 @@ export default function BolsaTrabajo() {
       <CartelVerificacion abierto={cartel === 'verificacion'} onCerrar={() => setCartel(null)} />
       <VentanaBolsa abierta={cartel === 'solo-clinicas' || cartel === 'solo-profesionales'} onCerrar={() => setCartel(null)} ancho="max-w-md">
         <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[20px] leading-tight mb-2 pr-10">
-          {cartel === 'solo-clinicas' ? 'Publicar ofertas es para clínicas' : 'Marcarse como disponible es para profesionales'}
+          {cartel === 'solo-clinicas' ? 'Publicar ofertas es para clínicas' : 'Marcarse como disponible es para profesionales y estudiantes'}
         </h3>
         <p className="text-[14px] text-[#666666] leading-relaxed">
           {cartel === 'solo-clinicas' ? 'Con tu cuenta podés marcarte como disponible y postularte a las ofertas.' : 'Con tu cuenta de clínica podés publicar ofertas y contactar a los profesionales disponibles.'}

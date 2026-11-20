@@ -36,6 +36,8 @@ const NOMBRES_CAMPOS = {
 
 export default function FormularioDisponible({ currentUser, onVolver, onGuardada }) {
   const uid = currentUser.uid;
+  // Alumnos/as figuran como asistentes: no eligen especialidades y su perfil está en "alumnos"
+  const esAlumnx = currentUser.rol === 'alumnx';
   const { cv, setCv } = useMiCV(uid);
   const [perfil, setPerfil] = useState(null);
   const [form, setForm] = useState(FORMULARIO_VACIO);
@@ -56,12 +58,13 @@ export default function FormularioDisponible({ currentUser, onVolver, onGuardada
     const cargar = async () => {
       try {
         const [snapPerfil, snapDisp, snapContacto] = await Promise.all([
-          getDoc(doc(db, 'profesionales', uid)),
+          getDoc(doc(db, esAlumnx ? 'alumnos' : 'profesionales', uid)),
           getDoc(doc(db, 'profesionalesDisponibles', uid)),
           getDoc(doc(db, 'profesionalesDisponibles', uid, 'privado', 'contacto')).catch(() => null)
         ]);
         if (cancelado) return;
         const datosPerfil = snapPerfil.exists() ? snapPerfil.data() : {};
+        if (esAlumnx) Object.assign(datosPerfil, { whatsappNum: currentUser.whatsapp || '', emailContacto: currentUser.email || '' });
         setPerfil(datosPerfil);
 
         if (snapDisp.exists()) {
@@ -120,7 +123,7 @@ export default function FormularioDisponible({ currentUser, onVolver, onGuardada
 
   const validar = () => {
     const e = {};
-    if (form.areas.length === 0) e.areas = 'Elegí al menos una especialidad.';
+    if (!esAlumnx && form.areas.length === 0) e.areas = 'Elegí al menos una especialidad.';
     if (!form.provincia) e.provincia = 'Elegí la provincia.';
     if (form.jornada.length === 0) e.jornada = 'Elegí al menos una jornada.';
     if (!form.experiencia) e.experiencia = 'Elegí tu experiencia.';
@@ -146,8 +149,11 @@ export default function FormularioDisponible({ currentUser, onVolver, onGuardada
         nombre,
         foto,
         slug: perfil?.slug || currentUser.slug || '',
-        especialidad: perfil?.especialidad || '',
-        areas: form.areas,
+        especialidad: esAlumnx ? '' : (perfil?.especialidad || ''),
+        areas: esAlumnx ? [] : form.areas,
+        // Puesto con el que figura: los alumnos/as, como asistentes
+        puesto: esAlumnx ? 'asistente' : 'veterinario',
+        ...(esAlumnx ? { tituloGenero: perfil?.tituloGenero || '', universidad: perfil?.universidad || '' } : {}),
         notaAreas: form.notaAreas.trim(),
         provincia: form.provincia,
         zonas: form.zonas,
@@ -200,7 +206,7 @@ export default function FormularioDisponible({ currentUser, onVolver, onGuardada
 
       {enEspera && (
         <div className="bg-amber-50 border border-amber-200 text-amber-900 rounded-2xl px-4 py-3 text-[14px] mb-6">
-          <strong>Tu cuenta todavía está en revisión.</strong> Podés completar todo ahora: queda guardado y figurás como disponible apenas verifiquemos tu matrícula.
+          <strong>Tu cuenta todavía está en revisión.</strong> Podés completar todo ahora: queda guardado y figurás como disponible apenas verifiquemos tu {esAlumnx ? 'certificado de alumno regular' : 'matrícula'}.
         </div>
       )}
       {hayErrores && (
@@ -209,6 +215,11 @@ export default function FormularioDisponible({ currentUser, onVolver, onGuardada
         </div>
       )}
 
+      {esAlumnx ? (
+        <div className="bg-rose-50 border border-rose-100 text-[#1A3D3D] rounded-2xl px-4 py-3 text-[14px] mb-5">
+          Como estudiante, figurás como <strong>Asistente (alumno/a)</strong>. Las clínicas que buscan asistentes te van a ver en la Bolsa.
+        </div>
+      ) : (
       <section className={claseCaja}>
         <CampoBolsa titulo="¿En qué especialidades querés que te llamen?" requerido campo="areas" ayuda={`Elegí hasta ${MAX_AREAS_DISPONIBLE}, las principales. Las de tu perfil están a mano; las demás, buscalas o abrí cada grupo.`} error={errores.areas}>
           <SelectorAreas seleccion={form.areas} onCambio={(v) => cambiar('areas', v)} maximo={MAX_AREAS_DISPONIBLE} sugeridas={areasDelPerfil} />
@@ -218,6 +229,7 @@ export default function FormularioDisponible({ currentUser, onVolver, onGuardada
           <input value={form.notaAreas} onChange={(e) => cambiar('notaAreas', e.target.value)} maxLength={200} className={claseInput} />
         </CampoBolsa>
       </section>
+      )}
 
       <section className={claseCaja}>
         <CampoBolsa titulo="Provincia" requerido campo="provincia" error={errores.provincia}>
@@ -260,7 +272,7 @@ export default function FormularioDisponible({ currentUser, onVolver, onGuardada
       </section>
 
       <section className={claseCaja}>
-        <CampoBolsa titulo="¿Cómo querés que te contacten?" requerido campo="tipoContacto" ayuda="Solo lo ven clínicas y profesionales registrados." error={errores.tipoContacto}>
+        <CampoBolsa titulo="¿Cómo querés que te contacten?" requerido campo="tipoContacto" ayuda="Solo lo ven clínicas, profesionales y estudiantes registrados." error={errores.tipoContacto}>
           <SelectorPills opciones={FORMAS_CONTACTO_DISPONIBLE} seleccion={form.tipoContacto} onCambio={(v) => cambiar('tipoContacto', v)} />
           <p className="text-[12px] text-[#666666] mt-2">Te recomendamos WhatsApp: es lo que más usan las clínicas.</p>
         </CampoBolsa>

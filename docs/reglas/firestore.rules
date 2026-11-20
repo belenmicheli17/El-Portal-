@@ -173,13 +173,13 @@ service cloud.firestore {
       }
     }
 
-    // Profesionales disponibles: un documento por persona (el id es su uid)
+    // Profesionales disponibles (y alumnos/as como asistentes): un documento por persona (el id es su uid)
     match /profesionalesDisponibles/{uid} {
       allow read: if resource.data.get('estado', '') == 'activo'
         || (request.auth != null && request.auth.uid == uid)
         || esAdmin();
 
-      allow create: if request.auth != null && rolPropio() == 'profesional' && estadoInicialValido()
+      allow create: if request.auth != null && rolPropio() in ['profesional', 'alumnx'] && estadoInicialValido()
         && request.auth.uid == uid
         && request.resource.data.get('creadorId', '') == request.auth.uid
         && vencimientoValido();

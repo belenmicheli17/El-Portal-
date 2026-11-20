@@ -4,7 +4,7 @@ import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { ref, getDownloadURL } from 'firebase/storage';
 import { Loader2, Lock, ExternalLink, User, FileText, Check, ChevronLeft, MessageCircle, Mail } from 'lucide-react';
 import { db, storage } from '../firebase';
-import { linkWhatsapp } from '../utils/bolsa';
+import { linkWhatsapp, leerPerfilPostulante, etiquetaAlumnx } from '../utils/bolsa';
 import { useAuth } from '../context/AuthContext';
 
 const ESTADOS = [
@@ -47,8 +47,8 @@ export default function VerPostulacion() {
         setPost(datos);
         setEstado('listo');
         // Perfil público de la persona: apellido, foto y contacto
-        getDoc(doc(db, 'profesionales', datos.postulanteId))
-          .then((s) => { if (!cancelado && s.exists()) setPerfil(s.data()); })
+        leerPerfilPostulante(datos.postulanteId)
+          .then((p) => { if (!cancelado && p) setPerfil(p); })
           .catch(() => {});
         if (datos.conCV && datos.cvRuta) {
           try { const link = await getDownloadURL(ref(storage, datos.cvRuta)); if (!cancelado) setCvUrl(link); }
@@ -121,7 +121,11 @@ export default function VerPostulacion() {
             ) : (
               <div className="w-16 h-16 shrink-0 rounded-full bg-[#F4F7F7] text-[#2D6A6A] flex items-center justify-center"><User className="w-7 h-7" /></div>
             )}
-            <h1 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[26px] md:text-[32px] leading-tight">{nombreCompleto}</h1>
+            <div className="min-w-0">
+              {perfil?.esAlumnx && <span className="inline-block mb-1 bg-rose-50 text-rose-500 text-[12px] font-bold uppercase tracking-[0.1em] rounded-full px-3 py-1">{etiquetaAlumnx(perfil.tituloGenero)} de Veterinaria</span>}
+              <h1 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[26px] md:text-[32px] leading-tight">{nombreCompleto}</h1>
+              {perfil?.esAlumnx && perfil.universidad && <p className="text-[14px] font-semibold text-[#2D6A6A] mt-0.5">{perfil.universidad}</p>}
+            </div>
           </div>
           <p className="text-[13px] text-[#666666] mt-1">Se postuló el {fechaLarga(post.creadaEn)}{post.clinicaNombre ? ` a la oferta de ${post.clinicaNombre}` : ''}</p>
 
@@ -159,7 +163,7 @@ export default function VerPostulacion() {
           )}
 
           <div className="flex flex-wrap gap-2 mt-3">
-            {post.slug && <button type="button" onClick={() => navigate(`/profesional/${post.slug}`)} className={claseSecundario}><User className="w-4 h-4" /> Ver su perfil</button>}
+            {post.slug && <button type="button" onClick={() => navigate(`/${perfil?.esAlumnx ? 'alumno' : 'profesional'}/${post.slug}`)} className={claseSecundario}><User className="w-4 h-4" /> Ver su perfil</button>}
             {post.perfilUrl && !post.slug && <a href={post.perfilUrl} target="_blank" rel="noopener noreferrer" className={claseSecundario}><User className="w-4 h-4" /> Ver su perfil</a>}
           </div>
         </div>
