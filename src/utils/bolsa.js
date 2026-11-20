@@ -8,6 +8,10 @@ export const ADMIN_UID = 'JDiu4lkVyJXeoyZ3eAxuBfvc5bZ2';
 
 export const etiquetaRol = (id) => ROLES.find((r) => r.id === id)?.label || 'Veterinario/a';
 
+// Etiqueta de una cuenta de alumno/a según cómo se identifica (campo tituloGenero)
+export const etiquetaAlumnx = (tituloGenero) =>
+  ({ alumna: 'Alumna', alumno: 'Alumno', alumnx: 'Alumnx' }[tituloGenero] || 'Alumno/a');
+
 // Título corto del puesto: "Ecografía · Cardiología" para veterinarios, o el rol para los demás
 export const tituloPuesto = (oferta) => {
   const areas = Array.isArray(oferta?.areas) ? oferta.areas : [];

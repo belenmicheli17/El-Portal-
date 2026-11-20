@@ -20,6 +20,7 @@ const PerfilClinica = lazy(() => import('./pages/perfiles/perfil-clinica'));
 const Editor = lazy(() => import('./pages/editores/editor-profesional'));
 const EditorClinica = lazy(() => import('./pages/editores/editor-clinica'));
 const EditorProveedor = lazy(() => import('./pages/editores/editor-proveedores'));
+const OnboardingAlumnx = lazy(() => import('./pages/OnboardingAlumnx'));
 const Papers = lazy(() => import('./pages/Papers'));
 const BolsaDeTrabajo = lazy(() => import('./pages/bolsa-de-trabajo'));
 const LegalPage = lazy(() => import('./pages/legales/privacidad'));
@@ -195,6 +196,7 @@ export default function App() {
 <Route element={<RutaProtegida />}>
   <Route path="/onboarding" element={<Onboarding />} />
   <Route path="/onboarding-clinica" element={<OnboardingClinica />} />
+  <Route path="/onboarding-alumnx" element={<OnboardingAlumnx />} />
   <Route path="/editor-profesional" element={<Editor />} />
   <Route path="/editor-clinica" element={<EditorClinica />} />
   <Route path="/editor-proveedores" element={<EditorProveedor />} />

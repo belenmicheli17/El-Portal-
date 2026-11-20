@@ -32,6 +32,22 @@ service cloud.firestore {
       allow create, update, delete: if esAdmin();
     }
 
+    // ─── Perfiles de alumnos/as: se leen con el link (no aparecen en la Cartilla); solo la dueña (o la admin) los escribe ───
+    match /alumnos/{uid} {
+      allow read: if true;
+
+      // Un perfil nuevo nace oculto (visible en false) y solo lo crea una cuenta de alumno/a
+      allow create: if request.auth != null && request.auth.uid == uid
+        && get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.get('rol', '') == 'alumnx'
+        && request.resource.data.get('visible', true) == false;
+
+      // La dueña edita su perfil, pero no puede cambiar "visible"
+      allow update: if request.auth != null && request.auth.uid == uid
+        && campoSinCambios('visible', true);
+
+      allow create, update, delete: if esAdmin();
+    }
+
        // ─── Perfiles de clínicas: cualquiera los lee; solo la dueña (o la admin) los escribe ───
     match /clinicas/{slug} {
       allow read: if true;

@@ -23,6 +23,15 @@ service firebase.storage {
       allow write: if request.auth != null && request.auth.uid == uid;
     }
 
+    // Fotos de perfil de alumnos/as: públicas; solo la dueña sube imágenes de hasta 5 MB
+    match /alumnos/{uid}/{allPaths=**} {
+      allow read: if true;
+      allow create, update: if request.auth != null && request.auth.uid == uid
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+      allow delete: if request.auth != null && request.auth.uid == uid;
+    }
+
     // Títulos y carnets para verificar la matrícula: privados.
     // Solo los ve la propia persona y la admin; nunca son públicos.
     match /titulos/{uid}/{allPaths=**} {
