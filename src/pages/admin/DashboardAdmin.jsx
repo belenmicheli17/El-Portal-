@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Users, Building, FileCheck, 
   Activity, ChevronRight, Clock, AlertCircle, Loader2,
-  Repeat, Stethoscope, Store, UserPlus, ChevronDown
+  Repeat, Stethoscope, Store, UserPlus, ChevronDown, GraduationCap
 } from 'lucide-react';
 import { db, auth, functions } from '../../firebase';
 import { collection, getDocs, query, where } from 'firebase/firestore';
@@ -96,11 +96,12 @@ export default function DashboardAdmin() {
   const [metricas, setMetricas] = useState({
     profesionales: 0,
     clinicas: 0,
-    // alumnos: 0, // oculto por ahora (acá se comenta con //, no con llaves)
+    alumnos: 0,
+    alumnosActivos: 0,
     proveedores: 0,
     pendientesValidacion: 0,
     // Cuántos se registraron hoy (desde las 00:00), para el "+N" de cada tarjeta
-    nuevosHoy: { profesionales: 0, clinicas: 0, proveedores: 0, validaciones: 0 }
+    nuevosHoy: { profesionales: 0, clinicas: 0, alumnos: 0, proveedores: 0, validaciones: 0 }
   });
   const [pendientes, setPendientes] = useState([]);
   const [llegaronPor, setLlegaronPor] = useState([]);
@@ -155,6 +156,8 @@ setLugares(contarLugares([
         const profesionales = usuarios.filter(u => u.rol === 'profesional').length;
         const clinicas = usuarios.filter(u => u.rol === 'clinica').length;
         const alumnos = usuarios.filter(u => u.rol === 'alumnx').length;
+        // Alumnos/as verificados (los que ya se pueden postular)
+        const alumnosActivos = usuarios.filter(u => u.rol === 'alumnx' && u.estado === 'activo').length;
         const proveedores = usuarios.filter(u => u.rol === 'proveedor').length;
         const pendientesValidacion = usuarios.filter(u => u.estado === 'pendiente' && u.onboardingCompleto !== false).length;
         // Nuevos de hoy: usuarios cuya fechaRegistro es posterior a las 00:00 de hoy
@@ -167,6 +170,7 @@ setLugares(contarLugares([
         const nuevosHoy = {
           profesionales: usuarios.filter(u => u.rol === 'profesional' && esDeHoy(u)).length,
           clinicas: usuarios.filter(u => u.rol === 'clinica' && esDeHoy(u)).length,
+          alumnos: usuarios.filter(u => u.rol === 'alumnx' && esDeHoy(u)).length,
           proveedores: usuarios.filter(u => u.rol === 'proveedor' && esDeHoy(u)).length,
           validaciones: usuarios.filter(u => u.estado === 'pendiente' && u.onboardingCompleto !== false && esDeHoy(u)).length
         };
@@ -175,7 +179,7 @@ setLugares(contarLugares([
           .map(d => ({ uid: d.id, ...d.data() }))
           .slice(0, 3);
 
-               setMetricas({ profesionales, clinicas, alumnos, proveedores, pendientesValidacion, profesionalesActivos, clinicasActivas, nuevosHoy });
+               setMetricas({ profesionales, clinicas, alumnos, alumnosActivos, proveedores, pendientesValidacion, profesionalesActivos, clinicasActivas, nuevosHoy });
         setPendientes(pendientesList);
         // Registros por día (todos los tipos de cuenta, sin admin ni cuentas de prueba)
         const porDia = {};
@@ -317,10 +321,10 @@ setLugares(contarLugares([
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-10">
         <StatCard titulo="Profesionales" onClick={() => navigate('/admin/usuarios?rol=profesional')} valor={metricas.profesionalesActivos} nuevosHoy={metricas.nuevosHoy.profesionales} subtitulo={`de ${metricas.profesionales} registrados`} icono={<Users className="w-6 h-6 text-[#2D6A6A]" />} color="bg-[#2D6A6A]/10 border border-[#2D6A6A]/20" />
         <StatCard titulo="Clínicas" onClick={() => navigate('/admin/usuarios?rol=clinica')} valor={metricas.clinicasActivas} nuevosHoy={metricas.nuevosHoy.clinicas} subtitulo={`de ${metricas.clinicas} registradas`} icono={<Building className="w-6 h-6 text-[#4DB6AC]" />} color="bg-[#4DB6AC]/10 border border-[#4DB6AC]/20" />
-      {/* <StatCard titulo="Alumnos" valor={metricas.alumnos} icono={<Users className="w-6 h-6 text-blue-500" />} color="bg-blue-50 border border-blue-100" /> */}
+        <StatCard titulo="Alumnos" onClick={() => navigate('/admin/usuarios?rol=alumnx')} valor={metricas.alumnosActivos} nuevosHoy={metricas.nuevosHoy.alumnos} subtitulo={`de ${metricas.alumnos} registrados`} icono={<GraduationCap className="w-6 h-6 text-rose-500" />} color="bg-rose-50 border border-rose-100" />
       {/* <StatCard titulo="Proveedores" onClick={() => navigate('/admin/usuarios?rol=proveedor')} valor={metricas.proveedores} nuevosHoy={metricas.nuevosHoy.proveedores} icono={<Briefcase className="w-6 h-6 text-purple-600" />} color="bg-purple-100 border border-purple-200" /> */}
         <StatCard titulo="Validaciones" onClick={() => navigate('/admin/validaciones')} valor={metricas.pendientesValidacion} nuevosHoy={metricas.nuevosHoy.validaciones} icono={<FileCheck className="w-6 h-6 text-[#e68900]" />} color="bg-[#FF9800]/20 border border-[#FF9800]/30" />
         <StatCard titulo="Nuevos hoy" onClick={() => setVerDias((v) => !v)} valor={nuevosDeHoy} subtitulo={diaRecord ? `Récord: ${maximoDia} el ${etiquetaDia(diaRecord[0], true)}` : 'Tocá para ver por día'} icono={<UserPlus className="w-6 h-6 text-green-600" />} color="bg-green-50 border border-green-100" />
