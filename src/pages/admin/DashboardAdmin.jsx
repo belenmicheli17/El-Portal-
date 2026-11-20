@@ -322,7 +322,7 @@ setLugares(contarLugares([
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-10">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
         <StatCard titulo="Profesionales" onClick={() => navigate('/admin/usuarios?rol=profesional')} valor={metricas.profesionalesActivos} nuevosHoy={metricas.nuevosHoy.profesionales} subtitulo={`de ${metricas.profesionales} registrados`} icono={<Users className="w-6 h-6 text-[#2D6A6A]" />} color="bg-[#2D6A6A]/10 border border-[#2D6A6A]/20" />
         <StatCard titulo="Clínicas" onClick={() => navigate('/admin/usuarios?rol=clinica')} valor={metricas.clinicasActivas} nuevosHoy={metricas.nuevosHoy.clinicas} subtitulo={`de ${metricas.clinicas} registradas`} icono={<Building className="w-6 h-6 text-[#4DB6AC]" />} color="bg-[#4DB6AC]/10 border border-[#4DB6AC]/20" />
         <StatCard titulo="Alumnos" onClick={() => navigate('/admin/usuarios?rol=alumnx')} valor={metricas.alumnosActivos} nuevosHoy={metricas.nuevosHoy.alumnos} subtitulo={`de ${metricas.alumnos} registrados`} icono={<GraduationCap className="w-6 h-6 text-rose-500" />} color="bg-rose-50 border border-rose-100" />

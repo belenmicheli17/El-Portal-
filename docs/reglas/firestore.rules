@@ -140,11 +140,11 @@ service cloud.firestore {
     function vencimientoValido() {
       return request.resource.data.get('vencimientoMillis', 0) <= request.time.toMillis() + 2678400000;
     }
-    // Puede postularse a esa oferta: profesionales a cualquiera; alumnos/as solo a las de asistente
+    // Puede postularse a esa oferta: alumnos/as solo a las de asistente; profesionales a todas menos esas
     function puedePostularseA(ofertaId) {
-      return rolPropio() == 'profesional'
-        || (rolPropio() == 'alumnx'
-            && get(/databases/$(database)/documents/ofertasEmpleo/$(ofertaId)).data.get('rol', '') == 'asistente');
+      let puesto = get(/databases/$(database)/documents/ofertasEmpleo/$(ofertaId)).data.get('rol', '');
+      return (rolPropio() == 'profesional' && puesto != 'asistente')
+        || (rolPropio() == 'alumnx' && puesto == 'asistente');
     }
 
     // Ofertas de las clínicas: las activas las ve cualquiera; la dueña ve también las suyas vencidas o pausadas
