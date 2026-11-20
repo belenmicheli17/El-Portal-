@@ -749,8 +749,8 @@ export default function Ecosistema() {
 
   // Profesionales nuevos: primero completan el cuestionario de alta.
   // Los usuarios que ya existían no tienen este campo, así que pasan directo.
-  if ((currentUser.rol === 'profesional' || currentUser.rol === 'clinica') && currentUser.onboardingCompleto === false) {
-    return <Navigate to={currentUser.rol === 'clinica' ? '/onboarding-clinica' : '/onboarding'} replace />;
+  if (['profesional', 'clinica', 'alumnx'].includes(currentUser.rol) && currentUser.onboardingCompleto === false) {
+    return <Navigate to={currentUser.rol === 'clinica' ? '/onboarding-clinica' : currentUser.rol === 'alumnx' ? '/onboarding-alumnx' : '/onboarding'} replace />;
   }
 
   // Pantalla para usuarios dados de baja
