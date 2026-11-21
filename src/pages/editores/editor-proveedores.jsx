@@ -1414,7 +1414,7 @@ const location = useLocation();
                                      setFormData(prev => ({
                                        ...prev,
                                        direccion: place.formatted_address || '',
-                                       mapaUrl: place.url || `https://www.google.com/maps/place/?q=place_id:${place.place_id}`
+                                       mapaUrl: place.url || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.formatted_address || '')}&query_place_id=${encodeURIComponent(place.place_id)}`
                                      }));
                                    });
                                  }}

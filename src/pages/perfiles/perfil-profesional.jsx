@@ -822,7 +822,7 @@ const mobileTabs = [
                       <ul className="space-y-0 px-2">
                         {clinicasValidas.map((c) => {
                           const mapsUrl = c.placeId
-                            ? `https://www.google.com/maps/place/?q=place_id:${c.placeId}`
+                            ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([c.nombrePropio || c.nombre, c.direccion].filter(Boolean).join(', '))}&query_place_id=${encodeURIComponent(c.placeId)}`
                             : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${c.direccion || ''}, ${data.provincia || ''}`)}`;
                           const waUrl = c.telefono
                             ? armarLinkWhatsapp(c.telefono, `Hola, los encontré en el perfil de ${data.nombre} en El Portal Veterinario y quería hacerles una consulta.`)
@@ -1516,7 +1516,7 @@ return (
                           <ul className="space-y-5">
                             {clinicasValidas.map((clinica) => {
                               const mapsUrl = clinica.placeId
-                                ? `https://www.google.com/maps/place/?q=place_id:${clinica.placeId}`
+                                ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([clinica.nombrePropio || clinica.nombre, clinica.direccion].filter(Boolean).join(', '))}&query_place_id=${encodeURIComponent(clinica.placeId)}`
                                 : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${clinica.direccion || ''}, ${data.provincia || ''}`)}`;
 
                               return (
