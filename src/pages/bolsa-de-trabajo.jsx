@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore';
-import { Search, X, Briefcase, User, Layers, MapPin, ChevronRight, ClipboardList, Plus, CheckCircle2, SlidersHorizontal, Stethoscope } from 'lucide-react';
+import { collection, doc, getDoc, getDocs, query, where, getCountFromServer } from 'firebase/firestore';
+import { Search, X, Briefcase, User, Layers, MapPin, ChevronRight, ClipboardList, Plus, CheckCircle2, SlidersHorizontal, Stethoscope, GraduationCap } from 'lucide-react';
 import { db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
 import { ROLES, ROLES_VISIBLES, JORNADAS, GRUPOS_AREAS } from '../data/bolsaOpciones';
@@ -24,6 +24,9 @@ const PESTANAS = [
 const masNuevasPrimero = (a, b) => aMilisegundos(b.publicadaEn) - aMilisegundos(a.publicadaEn);
 
 
+
+// Cantidad mínima de estudiantes verificados para mostrar el contador público
+const MINIMO_ALUMNOS = 15;
 
 export default function BolsaTrabajo() {
   const { currentUser, loading: cargandoSesion } = useAuth();
@@ -53,6 +56,13 @@ export default function BolsaTrabajo() {
   const [cartel, setCartel] = useState(null); // 'registro-publicar' | 'registro-contacto' | 'verificacion' | 'solo-clinicas' | 'solo-profesionales'
   const [aviso, setAviso] = useState('');
   const [miProvincia, setMiProvincia] = useState('');
+  // Estudiantes verificados: el contador se muestra recién desde MINIMO_ALUMNOS
+  const [cantidadAlumnos, setCantidadAlumnos] = useState(0);
+  useEffect(() => {
+    getCountFromServer(query(collection(db, 'alumnos'), where('visible', '==', true)))
+      .then((r) => setCantidadAlumnos(r.data().count))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     document.title = 'Bolsa de Trabajo Veterinaria | Portal Veterinario';
@@ -308,6 +318,11 @@ export default function BolsaTrabajo() {
         <p className="text-[#666666] text-[14px] md:text-[16px] lg:text-[18px] font-medium mb-6 max-w-2xl mx-auto lg:mx-0 text-center lg:text-left leading-relaxed">
           Búsquedas de clínicas de toda Argentina y colegas disponibles para trabajar. Si sos estudiante, ya podés tener tu perfil y postularte como asistente. Mirá todo; para contactar, registrate gratis.
         </p>
+        {cantidadAlumnos >= MINIMO_ALUMNOS && (
+          <p className="flex items-center justify-center lg:justify-start gap-2 text-[14px] font-semibold text-rose-500 -mt-3 mb-6">
+            <GraduationCap className="w-4 h-4" /> Ya somos {cantidadAlumnos} estudiantes en el Portal
+          </p>
+        )}
         <div className="flex flex-wrap gap-2 justify-center lg:justify-start">
           {(!permisos.conSesion || esClinica) && (
             <button type="button" onClick={pedirPublicarOferta} className="inline-flex items-center gap-2 bg-[#2D6A6A] hover:bg-[#1A3D3D] text-white px-6 py-3.5 rounded-2xl text-[14px] font-semibold shadow-md transition-colors">
