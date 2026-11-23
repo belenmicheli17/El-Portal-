@@ -157,9 +157,10 @@ exports.avisarNuevaSolicitud = onDocumentWritten(
         usuario.nombre ||
         "Alguien";
       const esClinica = usuario.rol === "clinica";
+      const esAlumnx = usuario.rol === "alumnx" || despues.tipo === "alumnx";
 
       await mandarAvisoALaAdmin(
-        esClinica ? "Nueva clínica para validar" : "Nuevo profesional para validar",
+        esClinica ? "Nueva clínica para validar" : esAlumnx ? "Nuevo alumno para validar" : "Nuevo profesional para validar",
         `${nombre} terminó su registro.`
       );
     } catch (error) {
