@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { db, storage } from '../firebase';
+import { db } from '../firebase';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import {
   User, BookOpen, Package, Newspaper, ChevronRight,
   Briefcase, Users, LogOut, Eye, Store, PawPrint, Clock,
@@ -152,72 +151,7 @@ function TarjetaAvance({ avance, cargando, onEditar, onVerPerfil, onIrA, compart
   );
 }
 
-// ── Subida de documento (foto/PDF) ─────────────────────────────────────────
-function PendingDocUpload({ currentUser, onSubido }) {
-  const [uploading, setUploading] = useState(false);
-  const [uploaded, setUploaded] = useState(!!currentUser.documentoUrl);
-  const [progress, setProgress] = useState(0);
-  const [error, setError] = useState('');
-
-  const handleUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const { getAuth } = await import('firebase/auth');
-    const authUser = getAuth().currentUser;
-    if (!authUser) { setError('No se detectó tu sesión. Cerrá sesión y volvé a ingresar.'); return; }
-    const uid = authUser.uid;
-    if (file.size > 10 * 1024 * 1024) { setError('El archivo no puede superar los 10MB.'); return; }
-    setError('');
-    setUploading(true);
-    try {
-      const fileRef = ref(storage, `validaciones/${uid}/${Date.now()}_${file.name}`);
-      const uploadTask = uploadBytesResumable(fileRef, file);
-      uploadTask.on('state_changed',
-        (snapshot) => { setProgress(Math.round(snapshot.bytesTransferred / snapshot.totalBytes * 100)); },
-        (err) => { console.error("Error subiendo:", err); setError('Hubo un error al subir. Intentá de nuevo.'); setUploading(false); },
-        async () => {
-          const url = await getDownloadURL(uploadTask.snapshot.ref);
-          await updateDoc(doc(db, 'usuarios', uid), { documentoUrl: url });
-          setUploaded(true);
-          setUploading(false);
-          if (onSubido) onSubido();
-        }
-      );
-    } catch (err) { console.error("Error general:", err); setError('Error inesperado. Revisá tu conexión.'); setUploading(false); }
-  };
-
-  if (uploaded) return (
-    <div className="flex items-center gap-3 bg-green-50 border border-green-200 rounded-xl p-4">
-      <Check className="w-5 h-5 text-green-500 shrink-0" />
-      <div>
-        <p className="text-green-700 font-bold text-sm">Documento recibido</p>
-        <p className="text-green-600 text-xs font-medium">Te avisaremos cuando sea aprobado.</p>
-      </div>
-    </div>
-  );
-
-  return (
-    <div>
-      {error && <p className="text-red-500 text-xs font-bold mb-3">{error}</p>}
-      {/* Botón principal: abre galería en móvil y PC */}
-      <label className={`w-full py-4 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-all ${uploading ? 'border-[#2D6A6A] bg-[#2D6A6A]/5 cursor-not-allowed' : 'border-[#2D6A6A]/40 hover:border-[#2D6A6A] hover:bg-[#2D6A6A]/5 cursor-pointer'}`}>
-        {uploading
-          ? (<><Loader2 className="w-6 h-6 text-[#2D6A6A] animate-spin" /><span className="text-sm font-bold text-[#2D6A6A]">{progress}% subiendo...</span></>)
-          : (<><Upload className="w-6 h-6 text-[#2D6A6A]" /><span className="text-sm font-bold text-[#2D6A6A]">Subir foto o PDF</span><span className="text-xs text-[#666666] font-medium">JPG, PNG o PDF — máx. 10MB</span></>)
-        }
-        <input type="file" className="hidden" accept="image/*,application/pdf" onChange={handleUpload} disabled={uploading} />
-      </label>
-      {/* Botón cámara: solo visible en móvil */}
-      <label className="mt-2 w-full py-3 rounded-xl border border-[#2D6A6A]/20 bg-white flex items-center justify-center gap-2 cursor-pointer hover:border-[#2D6A6A] hover:bg-[#2D6A6A]/5 transition-all md:hidden">
-        <Camera className="w-5 h-5 text-[#2D6A6A]" />
-        <span className="text-sm font-bold text-[#2D6A6A]">Sacar foto con la cámara</span>
-        <input type="file" className="hidden" accept="image/*" capture="environment" onChange={handleUpload} disabled={uploading} />
-      </label>
-    </div>
-  );
-}
-
-// ── Formulario de matrícula (alternativa sin documento físico) ──────────────
+// ── Formulario de matrícula (datos de matrícula) ──────────────
 function FormMatricula({ currentUser, onGuardado }) {
   const [matricula, setMatricula] = useState(currentUser.matricula || '');
   const [facultad, setFacultad] = useState(currentUser.facultad || '');
@@ -369,7 +303,6 @@ function FormDirectorTecnico({ currentUser, onGuardado }) {
 // ── Pantalla de estado (verificación / rechazo) ────────────────────────────
 const PantallaEstado = ({ tipo, currentUser, handleLogout }) => {
   const esRechazo = tipo === 'rechazado';
-  const [metodoProf, setMetodoProf] = useState('documento'); // 'documento' | 'matricula'
   const [reenviando, setReenviando] = useState(false);
   const [reenviado, setReenviado] = useState(false);
 
@@ -419,29 +352,10 @@ const PantallaEstado = ({ tipo, currentUser, handleLogout }) => {
                   📄 Acreditá tu identidad profesional
                 </h3>
                 <p className="text-[#666666] text-sm font-medium mb-4 leading-relaxed">
-                  Podés subir una foto o PDF de tu título o carnet veterinario, o completar tus datos de matrícula si no lo tenés a mano.
+                  Completá los datos de tu matrícula para que podamos verificarte.
                 </p>
 
-                {/* Selector de método */}
-                <div className="flex gap-2 mb-4">
-                  <button
-                    onClick={() => setMetodoProf('documento')}
-                    className={`flex-1 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${metodoProf === 'documento' ? 'bg-[#2D6A6A] text-white shadow-md' : 'bg-white border border-gray-200 text-[#666666] hover:border-[#2D6A6A]'}`}
-                  >
-                    Subir documento
-                  </button>
-                  <button
-                    onClick={() => setMetodoProf('matricula')}
-                    className={`flex-1 py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${metodoProf === 'matricula' ? 'bg-[#2D6A6A] text-white shadow-md' : 'bg-white border border-gray-200 text-[#666666] hover:border-[#2D6A6A]'}`}
-                  >
-                    Cargar matrícula
-                  </button>
-                </div>
-
-                {metodoProf === 'documento'
-                  ? <PendingDocUpload currentUser={currentUser} />
-                  : <FormMatricula currentUser={currentUser} />
-                }
+                <FormMatricula currentUser={currentUser} />
               </>
             )}
 
