@@ -19,7 +19,7 @@ const MOTIVOS_RAPIDOS = [
 ];
 
 // Cuántos socios vitalicios hay como máximo (cuenta a todos los que ya lo son)
-const LIMITE_SOCIOS_VITALICIOS = 60;
+const LIMITE_SOCIOS_VITALICIOS = 75;
 // Las primeras 30 clínicas que se aprueben entran como socias vitalicias
 const LIMITE_SOCIAS_CLINICAS = 30;
 

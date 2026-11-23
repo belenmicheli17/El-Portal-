@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 
-// Barra de cupos: muestra cuántos lugares quedan (ej. "Quedan 37 lugares de 60 para acceso vitalicio").
+// Barra de cupos: muestra cuántos lugares quedan (ej. "Quedan 37 lugares de 75 para acceso vitalicio").
 // El número se lo pedimos a una función de Vercel, así no dependemos de las reglas de seguridad de Firestore.
 // Se puede reutilizar cambiando las propiedades (por ejemplo, para clínicas).
 export default function BarraCupos({
   endpoint = '/api/cupos-vitalicios',
-  limite = 60,
+  limite = 75,
   textoQuedan = 'para ser socio vitalicio.',
   textoAgotado = 'lugares vitalicios ya fueron ocupados.',
   pie = <>Después del límite, el acceso será por suscripción. <strong className="text-white font-black">¡Registrate ahora!</strong></>,

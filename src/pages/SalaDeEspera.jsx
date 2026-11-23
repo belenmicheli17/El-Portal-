@@ -8,6 +8,7 @@ import {
   FlaskConical,
   ArrowRight,
   Stethoscope,
+  GraduationCap,
   PawPrint,
   Users,
   ArrowDown,
@@ -99,6 +100,7 @@ const CardExclusiva = ({ icono: Icono, titulo, descripcion, highlight, ruta }) =
 const OPCIONES_CUENTA = [
   { valor: 'profesional', label: 'Soy Profesional', sub: 'Veterinario/a que busca conectar y crecer.', Icono: Stethoscope, acento: 'bg-blue-50 text-blue-600', proximamente: false },
   { valor: 'clinica', label: 'Soy una Clínica', sub: 'Institución que busca talento y visibilidad.', Icono: Hospital, acento: 'bg-violet-50 text-violet-600', proximamente: false },
+  { valor: 'alumnx', label: 'Soy Estudiante', sub: 'Alumno/a de veterinaria que busca sus primeras experiencias.', Icono: GraduationCap, acento: 'bg-rose-50 text-rose-500', proximamente: false },
   { valor: 'proveedor', label: 'Proveedor o empresa', sub: 'Ofrezco insumos mayoristas, equipamiento o servicios para los usuarios mencionados anteriormente.', Icono: Store, acento: 'bg-emerald-50 text-emerald-600', proximamente: true },
 ];
 
@@ -535,6 +537,22 @@ Creá tu perfil, aparecé en búsquedas y conectate con colegas, clínicas y pro
                   <div className="flex-1">
                     <h4 className="font-bold text-[14px] text-[#1A3D3D]">Soy una Clínica</h4>
                     <p className="text-[#666666] text-[13px] leading-tight mt-0.5">Institución que busca talento y visibilidad.</p>
+                  </div>
+                  <ArrowRight size={16} className="text-[#2D6A6A] shrink-0" />
+                </button>
+
+                {/* Botón "Soy Estudiante" (rosa, igual que en Login) */}
+                <button
+                  type="button"
+                  onClick={() => navigate('/login', { state: { registro: 'alumnx' } })}
+                  className="w-full mt-3 text-left p-3 rounded-2xl bg-white border border-transparent hover:bg-[#F4F7F7] active:scale-[0.98] transition-all flex items-center gap-3 group"
+                >
+                  <div className="p-2 rounded-full bg-rose-50 text-rose-500 group-hover:scale-110 transition-transform shrink-0">
+                    <GraduationCap size={18} />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-bold text-[14px] text-[#1A3D3D]">Soy Estudiante</h4>
+                    <p className="text-[#666666] text-[13px] leading-tight mt-0.5">Alumno/a de veterinaria que busca sus primeras experiencias.</p>
                   </div>
                   <ArrowRight size={16} className="text-[#2D6A6A] shrink-0" />
                 </button>
