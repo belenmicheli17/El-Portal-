@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { collection, addDoc, serverTimestamp, query, where, getDocs } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, query, where, getDocs, getCountFromServer } from "firebase/firestore";
 import {
   BookOpen,
   Briefcase,
@@ -94,6 +94,23 @@ const CardExclusiva = ({ icono: Icono, titulo, descripcion, highlight, ruta }) =
   return ruta
     ? <a href={ruta} className={`${clases} cursor-pointer`}>{contenido}</a>
     : <div className={clases}>{contenido}</div>;
+};
+
+// ── Contador de estudiantes: sin barra ni cupos, aparece recién desde MINIMO_ESTUDIANTES (igual que en la Bolsa) ──
+const MINIMO_ESTUDIANTES = 15;
+const ContadorEstudiantes = ({ className = '' }) => {
+  const [cantidad, setCantidad] = useState(0);
+  useEffect(() => {
+    getCountFromServer(query(collection(db, 'alumnos'), where('visible', '==', true)))
+      .then((r) => setCantidad(r.data().count))
+      .catch(() => {});
+  }, []);
+  if (cantidad < MINIMO_ESTUDIANTES) return null;
+  return (
+    <p className={`flex items-center gap-2 font-semibold text-rose-300 ${className}`}>
+      <GraduationCap className="w-4 h-4 shrink-0" /> Ya somos {cantidad} estudiantes en el Portal
+    </p>
+  );
 };
 
 // ── Selector de tipo de cuenta (igual al de Login) ─────────────────────────
@@ -484,6 +501,7 @@ Creá tu perfil, aparecé en búsquedas y conectate con colegas, clínicas y pro
                 textoAgotado="lugares vitalicios para clínicas ya fueron ocupados."
                 pie={null}
               />
+              <ContadorEstudiantes className="text-[15px] mb-3" />
               <p className="text-[14px] text-white/50 font-medium">
                 Después del límite, el acceso será por suscripción. <strong className="text-white font-black">¡Registrate ahora!</strong>
               </p>
@@ -510,6 +528,7 @@ Creá tu perfil, aparecé en búsquedas y conectate con colegas, clínicas y pro
                   textoQuedan="para ser clínica vitalicia."
                   textoAgotado="lugares vitalicios para clínicas ya fueron ocupados."
                 />
+                <ContadorEstudiantes className="text-[13px] mb-4" />
                 <button
                   type="button"
                   onClick={() => navigate('/login', { state: { registro: 'profesional' } })}
