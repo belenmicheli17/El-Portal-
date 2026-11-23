@@ -263,9 +263,9 @@ service cloud.firestore {
       allow update, delete: if esAdmin();
     }
 
-    // Lista de espera — cualquier visitante puede anotarse
+    // Lista de espera — ya no la usa el código; solo la admin puede leerla (tiene mails de personas)
     match /lista_espera/{docId} {
-      allow read, write: if true;
+      allow read, write: if esAdmin();
     }
 
     // ─── Documento privado de cada usuario ───
