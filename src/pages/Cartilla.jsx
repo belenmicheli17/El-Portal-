@@ -11,6 +11,7 @@ import { useAuth } from '../context/AuthContext';
 import TourGuia from '../components/TourGuia';
 import BarraFiltros from '../components/BarraFiltros';
 import { coincideBusqueda } from '../utils/busquedaTolerante';
+import { normalizarLocalidad } from '../utils/zonas';
 import especialidadesData from '../data/especialidades.json';
 
 // Íconos de cada grupo de especialidades (para las pastillas de "Explorá por especialidad")
@@ -35,6 +36,10 @@ const localidadDeDireccion = (direccion) => {
   return (partes[1] || '').replace(/^[A-Z]?\d{4}(?:\s?[A-Z]{3}(?![a-zA-Z]))?\s*/, '');
 };
 
+// Localidad ya unificada (CABA siempre se escribe igual, venga como venga de Google)
+const localidadUnificada = (localidad, direccion, provincia, barrio) =>
+  normalizarLocalidad(localidad || localidadDeDireccion(direccion), { direccion, provincia, barrio });
+
 // "Barrio, Localidad" sin repetir (si son iguales, queda uno solo)
 const barrioConLocalidad = (barrio, localidad) => {
   const b = (barrio || '').trim();
@@ -46,7 +51,7 @@ const barrioConLocalidad = (barrio, localidad) => {
 const ubicacionProfesional = (item) => {
   const lugares = [];
   (item.zonas || []).forEach(z => (z.clinicas || []).forEach(c => {
-    const lugar = barrioConLocalidad(c.barrio, c.localidad || localidadDeDireccion(c.direccion));
+    const lugar = barrioConLocalidad(c.barrio, localidadUnificada(c.localidad, c.direccion, c.provincia || item.provincia, c.barrio));
     if (lugar && !lugares.includes(lugar)) lugares.push(lugar);
   }));
   if (lugares.length) return lugares.slice(0, 2).join(' · ') + (lugares.length > 2 ? ` +${lugares.length - 2}` : '');
@@ -63,27 +68,27 @@ const ubicacionClinica = (item) => {
 };
 
 const ubicacionBaseClinica = (item) => {
-  const localidad = (item.localidad || '').trim() || localidadDeDireccion(item.direccion);
+  const localidad = localidadUnificada((item.localidad || '').trim(), item.direccion, item.provincia, item.barrio);
   return barrioConLocalidad(item.barrio, localidad) || item.provincia || '';
 };
 
 // Todos los lugares donde atiende un perfil: provincia, ciudad y barrio (para buscar por zona)
 const lugaresDe = (v) => {
   const lista = [];
-  const agregar = (provincia, localidad, barrio) => {
+  const agregar = (provincia, localidad, barrio, direccion) => {
     const prov = (provincia || v.provincia || '').trim();
-    const loc = (localidad || '').trim();
     const bar = (barrio || '').trim();
+    const loc = localidadUnificada((localidad || '').trim(), direccion, prov, bar);
     if (prov) lista.push({ valor: prov, tipo: 'Provincia', etiqueta: prov, detalle: '' });
     if (loc) lista.push({ valor: loc, tipo: 'Ciudad', etiqueta: loc, detalle: prov });
     if (bar && bar.toLowerCase() !== loc.toLowerCase()) lista.push({ valor: `${bar} · ${loc || prov}`, tipo: 'Barrio', etiqueta: bar, detalle: loc || prov });
   };
   agregar(v.provincia, '', '');
   if (v.tipo === 'profesional') {
-    (v.zonas || []).forEach(z => (z.clinicas || []).forEach(c => agregar(c.provincia, c.localidad || localidadDeDireccion(c.direccion), c.barrio)));
+    (v.zonas || []).forEach(z => (z.clinicas || []).forEach(c => agregar(c.provincia, c.localidad, c.barrio, c.direccion)));
   } else {
-    agregar(v.provincia, v.localidad || localidadDeDireccion(v.direccion), v.barrio);
-    (v.sedes || []).forEach(s => agregar(s.provincia, s.localidad || localidadDeDireccion(s.direccion), s.barrio));
+    agregar(v.provincia, v.localidad, v.barrio, v.direccion);
+    (v.sedes || []).forEach(s => agregar(s.provincia, s.localidad, s.barrio, s.direccion));
   }
   return lista;
 };
