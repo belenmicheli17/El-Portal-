@@ -716,7 +716,7 @@ export default function OnboardingAlumnx() {
           </button>
 
           <span className={`${CLASE_LABEL} mt-8`}>Dónde trabajaste o trabajás actualmente <span className="text-[#666666] font-medium">(opcional)</span></span>
-          <p className={CLASE_AYUDA}>Buscá la veterinaria en Google. En tu perfil aparece como «Referencias laborales».</p>
+          <p className={CLASE_AYUDA}>Buscala por el nombre de la veterinaria, no por la dirección, y elegila de la lista que sugiere Google. En tu perfil aparece como «Referencias laborales».</p>
           {datos.lugares.length < MAX_LUGARES && (
             <div className="mt-3">
               <BuscadorDireccionGoogle
@@ -724,7 +724,7 @@ export default function OnboardingAlumnx() {
                 valor={textoLugar}
                 onEscribir={setTextoLugar}
                 onElegir={elegirLugar}
-                placeholder="Buscá el nombre de la veterinaria"
+                placeholder="Nombre de la veterinaria (no la dirección)"
                 listaProvincias={provincias}
                 soloLocales
               />
@@ -771,7 +771,7 @@ export default function OnboardingAlumnx() {
           <span className="shrink-0 bg-[#F4F7F7] rounded-2xl px-4 py-4 text-[17px] font-bold text-[#1A3D3D]">+54</span>
           <input id="al-wa" type="tel" inputMode="numeric" value={datos.wa} maxLength={15} onChange={(e) => cambiar('wa', e.target.value.replace(/\D/g, ''))} placeholder="1123456789" autoComplete="off" className={CLASE_INPUT} />
         </div>
-        <p className={CLASE_AYUDA}>Es privado: no aparece en tu perfil ni lo ven las clínicas. El equipo del Portal lo usa solo para avisarte por WhatsApp cuando tu cuenta esté aprobada.</p>
+        <p className={CLASE_AYUDA}>No aparece en tu perfil público. Si te mostrás disponible en la Bolsa de Trabajo, las clínicas y profesionales registrados pueden usarlo para contactarte.</p>
 
         <label className={CLASE_LABEL} htmlFor="al-ig">Instagram</label>
         <div className="flex gap-2">

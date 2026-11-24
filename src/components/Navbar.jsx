@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { db } from '../firebase';
@@ -43,6 +44,9 @@ const MENU_POR_ROL = {
   ],
 };
 
+// ─── Secciones que todavía no están habilitadas: se ven grisadas con "Próximamente" ───
+const RUTAS_PROXIMAMENTE = ['/capacitaciones', '/cartilla-proveedores'];
+
 // ─── Rutas que son perfiles públicos ────────────────────────────────────────
 const esRutaDePerfil = (pathname) =>
   /^\/(profesional|clinica|proveedor)\/.+/.test(pathname);
@@ -56,6 +60,7 @@ export default function Navbar() {
   const [isNavbarScrolled, setIsNavbarScrolled] = useState(false);
   const [banner, setBanner] = useState({ mostrar: false, texto: '' });
   const menuRef = useRef(null);
+  const panelRef = useRef(null); // ventanita lateral del menú
   // Cartelito de login (visitantes): abierto/cerrado y referencia para detectar clics afuera
   const [showLogin, setShowLogin] = useState(false);
   const loginRef = useRef(null);
@@ -93,7 +98,7 @@ export default function Navbar() {
   // ── Cierra menú al hacer click afuera ──────────────────────────────────────
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (menuRef.current && !menuRef.current.contains(e.target)) {
+      if (menuRef.current && !menuRef.current.contains(e.target) && !(panelRef.current && panelRef.current.contains(e.target))) {
         setIsMenuOpen(false);
       }
     };
@@ -218,57 +223,83 @@ export default function Navbar() {
 <X className={`w-5 h-5 absolute transition-all duration-300 ${isMenuOpen ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 -rotate-90 scale-50'}`} />
                 </button>
 
-                {isMenuOpen && (
-                  <div className="absolute right-0 mt-3 w-64 bg-white rounded-[24px] shadow-[0_20px_50px_rgba(26,61,61,0.15)] border border-gray-100 overflow-hidden animate-in fade-in slide-in-from-top-4 duration-300">
-                    <div className="p-3">
+                {/* Ventanita lateral (se abre desde la derecha) */}
+                {isMenuOpen && createPortal(
+                  <div className="fixed inset-0 z-[300]">
+                    <button type="button" aria-label="Cerrar menú" onClick={() => setIsMenuOpen(false)} className="absolute inset-0 w-full h-full bg-[#1A3D3D]/40 backdrop-blur-sm animate-in fade-in duration-300 cursor-default" />
+                    <aside ref={panelRef} className="absolute top-0 right-0 h-full w-[85%] max-w-sm bg-white shadow-[-20px_0_50px_rgba(26,61,61,0.15)] flex flex-col animate-in slide-in-from-right duration-300">
+                      <div className="flex items-center justify-between px-6 h-[72px] border-b border-gray-100 shrink-0">
+                        <span className="font-['Montserrat'] font-extrabold text-lg text-[#1A3D3D]">Menú</span>
+                        <button type="button" aria-label="Cerrar menú" onClick={() => setIsMenuOpen(false)} className="w-10 h-10 rounded-2xl bg-[#F4F7F7] flex items-center justify-center text-[#1A3D3D] hover:bg-gray-200 transition-colors">
+                          <X className="w-5 h-5" />
+                        </button>
+                      </div>
 
-                      {/* Buscar — visible en mobile dentro del menú */}
-                      <button
-                        onClick={() => navigate('/Cartilla')}
-                        className="md:hidden w-full flex items-center gap-3 px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"
-                      >
-                        <Search className="w-4 h-4 text-[#2D6A6A]" />
-                        <span className="text-sm font-bold text-[#1A3D3D]">Buscar Profesionales</span>
-                      </button>
+                      <div className="flex-1 overflow-y-auto p-3">
 
-                      {/* Contactar — visible en mobile, solo en perfiles */}
-                      {esPerfil && (
+                        {/* Buscar — visible en mobile dentro del menú */}
                         <button
-                          onClick={handleContactar}
+                          onClick={() => navigate('/Cartilla')}
                           className="md:hidden w-full flex items-center gap-3 px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"
                         >
-                          <ChevronRight className="w-4 h-4 text-[#2D6A6A]" />
-                          <span className="text-sm font-bold text-[#1A3D3D]">Contactar</span>
+                          <Search className="w-4 h-4 text-[#2D6A6A]" />
+                          <span className="text-sm font-bold text-[#1A3D3D]">Buscar Profesionales</span>
                         </button>
-                      )}
 
-                      {/* Links según rol */}
-                      {linksMenu.map(({ label, icon: Icon, path }) => (
-                        <button
-                          key={path}
-                          onClick={() => navigate(path)}
-                          className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"
-                        >
-                          <div className="flex items-center gap-3 min-w-0">
-                            <Icon className="w-4 h-4 text-[#1A3D3D] shrink-0" />
-                            <span className="text-sm font-bold text-[#1A3D3D] truncate">{label}</span>
-                          </div>
-                          <ChevronRight className="w-4 h-4 text-gray-300" />
-                        </button>
-                      ))}
+                        {/* Contactar — visible en mobile, solo en perfiles */}
+                        {esPerfil && (
+                          <button
+                            onClick={() => { handleContactar(); setIsMenuOpen(false); }}
+                            className="md:hidden w-full flex items-center gap-3 px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"
+                          >
+                            <ChevronRight className="w-4 h-4 text-[#2D6A6A]" />
+                            <span className="text-sm font-bold text-[#1A3D3D]">Contactar</span>
+                          </button>
+                        )}
+
+                        {/* Links según rol */}
+                        {linksMenu.map(({ label, icon: Icon, path }) => (
+                          RUTAS_PROXIMAMENTE.includes(path) ? (
+                            <div
+                              key={path}
+                              aria-disabled="true"
+                              className="w-full flex items-center justify-between px-4 py-3 rounded-xl opacity-50 cursor-not-allowed select-none"
+                            >
+                              <div className="flex items-center gap-3 min-w-0">
+                                <Icon className="w-4 h-4 text-gray-400 shrink-0" />
+                                <span className="text-sm font-bold text-gray-400 truncate">{label}</span>
+                              </div>
+                              <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-gray-500 bg-gray-100 rounded-full px-2.5 py-1 shrink-0">Próximamente</span>
+                            </div>
+                          ) : (
+                            <button
+                              key={path}
+                              onClick={() => navigate(path)}
+                              className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"
+                            >
+                              <div className="flex items-center gap-3 min-w-0">
+                                <Icon className="w-4 h-4 text-[#1A3D3D] shrink-0" />
+                                <span className="text-sm font-bold text-[#1A3D3D] truncate">{label}</span>
+                              </div>
+                              <ChevronRight className="w-4 h-4 text-gray-300" />
+                            </button>
+                          )
+                        ))}
+                      </div>
 
                       {/* Cerrar sesión */}
-                      <div className="h-px bg-gray-100 mx-4 my-2" />
-                      <button
-                        onClick={handleLogout}
-                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 rounded-xl transition-colors group"
-                      >
-                        <LogOut className="w-4 h-4 text-gray-400 group-hover:text-red-500" />
-                        <span className="text-sm font-bold text-[#1A3D3D] group-hover:text-red-500">Cerrar sesión</span>
-                      </button>
-
-                    </div>
-                  </div>
+                      <div className="p-3 border-t border-gray-100 shrink-0">
+                        <button
+                          onClick={handleLogout}
+                          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 rounded-xl transition-colors group"
+                        >
+                          <LogOut className="w-4 h-4 text-gray-400 group-hover:text-red-500" />
+                          <span className="text-sm font-bold text-[#1A3D3D] group-hover:text-red-500">Cerrar sesión</span>
+                        </button>
+                      </div>
+                    </aside>
+                  </div>,
+                  document.body
                 )}
               </div>
             )}
