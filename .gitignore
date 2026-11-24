@@ -28,3 +28,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Carpeta recall: es otro repositorio, no va en este
+recall/
