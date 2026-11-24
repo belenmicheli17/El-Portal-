@@ -89,6 +89,8 @@ Guarda los perfiles institucionales de clínicas veterinarias.
 | `redes.facebook` | String | URL de Facebook |
 | `horarios.semanaDesde` | String | Horario de apertura semanal |
 | `horarios.semanaHasta` | String | Horario de cierre semanal |
+| `horarios.semanaDesde2` | String | Apertura de la tarde (solo si cortan al mediodía) |
+| `horarios.semanaHasta2` | String | Cierre de la tarde (solo si cortan al mediodía) |
 | `horarios.sabadoDesde` | String | Horario de apertura sabado |
 | `horarios.sabadoHasta` | String | Horario de cierre sabado |
 

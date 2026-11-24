@@ -122,7 +122,7 @@ const DATOS_INICIALES = {
   atiendeDomicilio: false,
   guardia24hs: false,
   telefonoGuardia: '',
-  horarios: { semanaDesde: '', semanaHasta: '', sabadoDesde: '', sabadoHasta: '' },
+  horarios: { semanaDesde: '', semanaHasta: '', semanaDesde2: '', semanaHasta2: '', sabadoDesde: '', sabadoHasta: '', corte: false, sabadoAbre: false },
   servicios: {},
   staff: [],
   faqs: faqsConSugeridas([]),
@@ -177,7 +177,11 @@ const prepararDatosCargados = (data) => ({
   atiendeDomicilio: data.atiendeDomicilio === true,
   guardia24hs: data.guardia24hs === true,
   telefonoGuardia: conPrefijo54(data.telefonoGuardia),
-  horarios: { ...DATOS_INICIALES.horarios, ...(data.horarios || {}) },
+  horarios: (() => {
+    const h = { ...DATOS_INICIALES.horarios, ...(data.horarios || {}) };
+    // Los interruptores se arman según los horarios cargados
+    return { ...h, corte: !!(h.semanaDesde2 && h.semanaHasta2), sabadoAbre: !!(h.sabadoDesde && h.sabadoHasta) };
+  })(),
   servicios: normalizarServicios(data.servicios, GRUPOS_CLINICA),
   staff: Array.isArray(data.staff) ? data.staff.map((m) => ({
     id: m.id || Date.now() + Math.random(),
@@ -419,6 +423,16 @@ export default function EditorClinico() {
     setFormData((prev) => ({ ...prev, horarios: { ...prev.horarios, [campo]: soloNumeros } }));
   };
 
+  // Interruptores de horario: "corte" (cierran al mediodía) y "sabadoAbre". Al apagarlos se borran sus horas
+  const toggleHorario = (campo, activo) => {
+    setFormData((prev) => {
+      const h = { ...prev.horarios, [campo]: activo };
+      if (!activo && campo === 'corte') { h.semanaDesde2 = ''; h.semanaHasta2 = ''; }
+      if (!activo && campo === 'sabadoAbre') { h.sabadoDesde = ''; h.sabadoHasta = ''; }
+      return { ...prev, horarios: h };
+    });
+  };
+
   const handleArrayAdd = (listName, defaultObj) => {
     setFormData((prev) => ({ ...prev, [listName]: [...prev[listName], { id: Date.now(), ...defaultObj }] }));
   };
@@ -637,11 +651,14 @@ export default function EditorClinico() {
         return { tab: 'perfil', seccion: 'urgencias', titulo: 'Falta el WhatsApp de guardia', mensaje: 'Si tenés guardia 24hs, cargá el WhatsApp al que te escriben los tutores en una urgencia.' };
       }
     } else {
-      const { semanaDesde, semanaHasta, sabadoDesde, sabadoHasta } = f.horarios;
+      const { semanaDesde, semanaHasta, semanaDesde2, semanaHasta2, sabadoDesde, sabadoHasta, corte, sabadoAbre } = f.horarios;
       if (!horaValida(semanaDesde) || !horaValida(semanaHasta) || Number(semanaDesde) >= Number(semanaHasta)) {
         return { tab: 'perfil', seccion: 'contacto', titulo: 'Revisá los horarios', mensaje: 'Completá el horario de lunes a viernes con números del 0 al 24 (la hora de apertura tiene que ser menor que la de cierre).' };
       }
-      if ((sabadoDesde || sabadoHasta) && (!horaValida(sabadoDesde) || !horaValida(sabadoHasta) || Number(sabadoDesde) >= Number(sabadoHasta))) {
+      if (corte && (!horaValida(semanaDesde2) || !horaValida(semanaHasta2) || Number(semanaDesde2) >= Number(semanaHasta2) || Number(semanaDesde2) <= Number(semanaHasta))) {
+        return { tab: 'perfil', seccion: 'contacto', titulo: 'Revisá el horario de la tarde', mensaje: 'Completá el horario de la tarde: tiene que empezar después de que cierran al mediodía y terminar más tarde de lo que empieza.' };
+      }
+      if (sabadoAbre && (!horaValida(sabadoDesde) || !horaValida(sabadoHasta) || Number(sabadoDesde) >= Number(sabadoHasta))) {
         return { tab: 'perfil', seccion: 'contacto', titulo: 'Revisá el horario del sábado', mensaje: 'Completá las dos horas del sábado (o dejalas vacías si no atienden).' };
       }
     }
@@ -1786,7 +1803,7 @@ export default function EditorClinico() {
                           </div>
                         )}
 
-                        <div className={`grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 transition-all duration-300 ${formData.guardia24hs ? 'opacity-40 grayscale pointer-events-none' : ''}`}>
+                        <div className={`grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5 transition-all duration-300 ${formData.guardia24hs ? 'opacity-40 grayscale pointer-events-none' : ''}`}>
                           <div>
                             <label className="text-[11px] font-black text-[#666666] uppercase tracking-widest mb-2 block ml-1">Lunes a viernes <span className="text-red-400 ml-1">*</span></label>
                             <div className="flex items-center gap-3">
@@ -1795,16 +1812,37 @@ export default function EditorClinico() {
                               <input type="text" inputMode="numeric" placeholder="20" value={formData.horarios.semanaHasta} onChange={(e) => handleHorarioChange('semanaHasta', e.target.value)} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-center text-lg font-black text-[#1A3D3D] focus:border-[#2D6A6A] outline-none transition-all shadow-sm" />
                               <span className="text-xs font-black text-gray-400 uppercase tracking-widest">hs</span>
                             </div>
+
+                            <label className="mt-3 flex items-center gap-2.5 cursor-pointer select-none ml-1">
+                              <input type="checkbox" checked={!!formData.horarios.corte} onChange={(e) => toggleHorario('corte', e.target.checked)} className="w-4 h-4 accent-[#2D6A6A]" />
+                              <span className="text-[13px] font-bold text-[#1A3D3D]">Cortan al mediodía (vuelven a abrir a la tarde)</span>
+                            </label>
+                            {formData.horarios.corte && (
+                              <div className="mt-3">
+                                <label className="text-[11px] font-black text-[#666666] uppercase tracking-widest mb-2 block ml-1">Horario de la tarde <span className="text-red-400 ml-1">*</span></label>
+                                <div className="flex items-center gap-3">
+                              <input type="text" inputMode="numeric" placeholder="16" value={formData.horarios.semanaDesde2} onChange={(e) => handleHorarioChange('semanaDesde2', e.target.value)} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-center text-lg font-black text-[#1A3D3D] focus:border-[#2D6A6A] outline-none transition-all shadow-sm" />
+                              <span className="text-xs font-black text-gray-400 uppercase tracking-widest">hasta</span>
+                              <input type="text" inputMode="numeric" placeholder="20" value={formData.horarios.semanaHasta2} onChange={(e) => handleHorarioChange('semanaHasta2', e.target.value)} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-center text-lg font-black text-[#1A3D3D] focus:border-[#2D6A6A] outline-none transition-all shadow-sm" />
+                              <span className="text-xs font-black text-gray-400 uppercase tracking-widest">hs</span>
+                            </div>
+                              </div>
+                            )}
                           </div>
 
                           <div>
-                            <label className="text-[11px] font-black text-[#666666] uppercase tracking-widest mb-2 block ml-1">Sábados <span className="text-gray-400 ml-1 normal-case text-[11px]">(opcional)</span></label>
-                            <div className="flex items-center gap-3">
+                            <label className="flex items-center gap-2.5 cursor-pointer select-none ml-1 mb-2">
+                              <input type="checkbox" checked={!!formData.horarios.sabadoAbre} onChange={(e) => toggleHorario('sabadoAbre', e.target.checked)} className="w-4 h-4 accent-[#2D6A6A]" />
+                              <span className="text-[11px] font-black text-[#666666] uppercase tracking-widest">Abren los sábados</span>
+                            </label>
+                            {formData.horarios.sabadoAbre && (
+                              <div className="flex items-center gap-3">
                               <input type="text" inputMode="numeric" placeholder="10" value={formData.horarios.sabadoDesde} onChange={(e) => handleHorarioChange('sabadoDesde', e.target.value)} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-center text-lg font-black text-[#1A3D3D] focus:border-[#2D6A6A] outline-none transition-all shadow-sm" />
                               <span className="text-xs font-black text-gray-400 uppercase tracking-widest">hasta</span>
                               <input type="text" inputMode="numeric" placeholder="14" value={formData.horarios.sabadoHasta} onChange={(e) => handleHorarioChange('sabadoHasta', e.target.value)} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3.5 text-center text-lg font-black text-[#1A3D3D] focus:border-[#2D6A6A] outline-none transition-all shadow-sm" />
                               <span className="text-xs font-black text-gray-400 uppercase tracking-widest">hs</span>
                             </div>
+                            )}
                           </div>
                         </div>
                       </div>

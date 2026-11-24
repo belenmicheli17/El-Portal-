@@ -108,8 +108,9 @@ const ESTADO_INICIAL = {
   telefono: '', email: '', web: '',
   domicilio: false,
   guardia: false, waGuardia: '',   // waGuardia: solo los dígitos, sin el 54
-  horarios: { semanaDesde: '', semanaHasta: '', sabadoDesde: '', sabadoHasta: '' },
+  horarios: { semanaDesde: '', semanaHasta: '', semanaDesde2: '', semanaHasta2: '', sabadoDesde: '', sabadoHasta: '' },
   sabadoAbre: false,
+  corte: false,
   servicios: {},
   historia: '', ig: '', fb: '', tiktok: '', linkedin: '',
   staff: [],       // [{ id, nombre, tipoMatricula, matricula, especialidad, bio, foto }]
@@ -516,9 +517,12 @@ export default function OnboardingClinica() {
           horarios: {
             semanaDesde: horaA2(clinica.horarios?.semanaDesde),
             semanaHasta: horaA2(clinica.horarios?.semanaHasta),
+            semanaDesde2: horaA2(clinica.horarios?.semanaDesde2),
+            semanaHasta2: horaA2(clinica.horarios?.semanaHasta2),
             sabadoDesde: horaA2(clinica.horarios?.sabadoDesde),
             sabadoHasta: horaA2(clinica.horarios?.sabadoHasta)
           },
+          corte: !!(clinica.horarios?.semanaDesde2 && clinica.horarios?.semanaHasta2),
           sabadoAbre: !!(clinica.horarios?.sabadoDesde && clinica.horarios?.sabadoHasta),
           servicios: normalizarServicios(clinica.servicios, GRUPOS_CLINICA),
           historia: clinica.historia || '',
@@ -822,9 +826,14 @@ export default function OnboardingClinica() {
       if (contarDigitos(datos.wa) < 8) return 'Cargá el WhatsApp de la clínica (con código de área, ej: 11 2345 6789).';
       if (datos.email.trim() && !esEmailValido(datos.email)) return 'Revisá el email: parece que falta algo.';
       if (!datos.guardia) {
-        const { semanaDesde, semanaHasta, sabadoDesde, sabadoHasta } = datos.horarios;
+        const { semanaDesde, semanaHasta, semanaDesde2, semanaHasta2, sabadoDesde, sabadoHasta } = datos.horarios;
         if (!semanaDesde || !semanaHasta) return 'Elegí el horario de lunes a viernes.';
         if (Number(semanaDesde) >= Number(semanaHasta)) return 'En lunes a viernes, la hora de apertura tiene que ser menor que la de cierre.';
+        if (datos.corte) {
+          if (!semanaDesde2 || !semanaHasta2) return 'Elegí el horario de la tarde o desmarcá que cortan al mediodía.';
+          if (Number(semanaDesde2) >= Number(semanaHasta2)) return 'En el horario de la tarde, la hora de apertura tiene que ser menor que la de cierre.';
+          if (Number(semanaDesde2) <= Number(semanaHasta)) return 'El horario de la tarde tiene que empezar después de que cierran al mediodía.';
+        }
         if (datos.sabadoAbre) {
           if (!sabadoDesde || !sabadoHasta) return 'Elegí el horario de los sábados o marcá "Cerrado".';
           if (Number(sabadoDesde) >= Number(sabadoHasta)) return 'En sábados, la hora de apertura tiene que ser menor que la de cierre.';
@@ -885,6 +894,7 @@ export default function OnboardingClinica() {
           telefonoGuardia: d.guardia && d.wa ? `54${d.wa}` : '',
           horarios: {
             semanaDesde: d.horarios.semanaDesde, semanaHasta: d.horarios.semanaHasta,
+            semanaDesde2: d.corte ? d.horarios.semanaDesde2 : '', semanaHasta2: d.corte ? d.horarios.semanaHasta2 : '',
             sabadoDesde: d.sabadoAbre ? d.horarios.sabadoDesde : '', sabadoHasta: d.sabadoAbre ? d.horarios.sabadoHasta : ''
           }
         },
@@ -1278,6 +1288,29 @@ export default function OnboardingClinica() {
                 hasta={datos.horarios.semanaHasta}
                 onCambio={cambiarHorario('semanaDesde', 'semanaHasta')}
               />
+
+              <div className="flex gap-2 mt-3">
+                {[[false, 'Horario corrido'], [true, 'Cortan al mediodía']].map(([valor, texto]) => (
+                  <button
+                    key={texto}
+                    type="button"
+                    onClick={() => cambiar('corte', valor)}
+                    className={`${CLASE_CHIP} ${!!datos.corte === valor ? 'bg-[#2D6A6A] border-[#2D6A6A] text-white' : 'bg-white border-gray-200 text-[#666666] hover:border-[#2D6A6A]'}`}
+                  >
+                    {texto}
+                  </button>
+                ))}
+              </div>
+              {datos.corte && (
+                <>
+                  <span className={CLASE_LABEL}>Horario de la tarde<Obligatorio /></span>
+                  <SelectorHorario
+                    desde={datos.horarios.semanaDesde2}
+                    hasta={datos.horarios.semanaHasta2}
+                    onCambio={cambiarHorario('semanaDesde2', 'semanaHasta2')}
+                  />
+                </>
+              )}
 
               <span className={CLASE_LABEL}>Sábados</span>
               <div className="flex gap-2 mb-3">

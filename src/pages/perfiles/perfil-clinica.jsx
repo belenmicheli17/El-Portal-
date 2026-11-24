@@ -452,7 +452,8 @@ export default function PerfilClinica() {
 
   // Horarios (solo se muestran si están completos, así no aparece "09 – undefined hs")
   const h = data.horarios || {};
-  const horarioSemana = h.semanaDesde && h.semanaHasta ? `${h.semanaDesde} – ${h.semanaHasta} hs` : null;
+  const tramoTarde = h.semanaDesde2 && h.semanaHasta2 ? ` y ${h.semanaDesde2} – ${h.semanaHasta2}` : '';
+  const horarioSemana = h.semanaDesde && h.semanaHasta ? `${h.semanaDesde} – ${h.semanaHasta}${tramoTarde} hs` : null;
   const horarioSabado = h.sabadoDesde && h.sabadoHasta ? `${h.sabadoDesde} – ${h.sabadoHasta} hs` : null;
 
   // Zona y provincia sin repetir: "Castelar, Buenos Aires" (si barrio y localidad son iguales, se muestra una sola vez)
