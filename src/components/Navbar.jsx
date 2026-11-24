@@ -15,7 +15,7 @@ import {
 // ─── Links del menú hamburguesa según rol ───────────────────────────────────
 const MENU_POR_ROL = {
   profesional: [
-    { label: 'Inicio', icon: Home, path: '/ecosistema' },
+    { label: 'Mi cuenta', icon: User, path: '/ecosistema' },
     { label: 'Cartilla veterinaria', icon: Search, path: '/Cartilla' },
     { label: 'Capacitaciones', icon: BookOpen, path: '/capacitaciones' },
     { label: 'Bolsa de trabajo', icon: Briefcase, path: '/bolsa-de-trabajo' },
@@ -23,7 +23,7 @@ const MENU_POR_ROL = {
     { label: 'Publicaciones científicas', icon: FileText, path: '/papers' },
   ],
   clinica: [
-    { label: 'Inicio', icon: Home, path: '/ecosistema' },
+    { label: 'Mi cuenta', icon: User, path: '/ecosistema' },
     { label: 'Cartilla veterinaria', icon: Search, path: '/Cartilla' },
     { label: 'Capacitaciones', icon: BookOpen, path: '/capacitaciones' },
     { label: 'Bolsa de trabajo', icon: Briefcase, path: '/bolsa-de-trabajo' },
@@ -31,13 +31,13 @@ const MENU_POR_ROL = {
     { label: 'Publicaciones científicas', icon: FileText, path: '/papers' },
   ],
   alumnx: [
-    { label: 'Inicio', icon: Home, path: '/ecosistema' },
+    { label: 'Mi cuenta', icon: User, path: '/ecosistema' },
     { label: 'Cartilla veterinaria', icon: Search, path: '/Cartilla' },
     { label: 'Capacitaciones', icon: BookOpen, path: '/capacitaciones' },
     { label: 'Bolsa de trabajo', icon: Briefcase, path: '/bolsa-de-trabajo' },
   ],
   proveedor: [
-    { label: 'Inicio', icon: Home, path: '/ecosistema' },
+    { label: 'Mi cuenta', icon: User, path: '/ecosistema' },
     { label: 'Capacitaciones', icon: BookOpen, path: '/capacitaciones' },
     { label: 'Cartilla de proveedores', icon: Package, path: '/cartilla-proveedores' },
     { label: 'Publicaciones científicas', icon: FileText, path: '/papers' },

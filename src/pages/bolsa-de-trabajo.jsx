@@ -316,7 +316,7 @@ export default function BolsaTrabajo() {
           Encontrá trabajo o sumá<br className="hidden lg:block" /> talento a tu equipo
         </h1>
         <p className="text-[#666666] text-[14px] md:text-[16px] lg:text-[18px] font-medium mb-7 max-w-xl mx-auto lg:mx-0 text-center lg:text-left leading-relaxed px-2 lg:px-0">
-          Clínicas que buscan equipo y colegas que buscan trabajo, en todo el país. Registrate gratis para contactar o publicar.
+          Clínicas que buscan equipo y colegas que buscan trabajo, en todo el país. Publicar es gratis.
         </p>
         {cantidadAlumnos >= MINIMO_ALUMNOS && (
           <p className="flex items-center justify-center lg:justify-start gap-2 text-[14px] font-semibold text-rose-500 -mt-3 mb-6">
