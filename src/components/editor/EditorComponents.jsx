@@ -475,7 +475,7 @@ export function CampoWhatsapp({ id, label, requerido, valor, onCambio, tooltip, 
 // tamanoSalida: el tamaño final de la imagen en píxeles (más grande = más nítida)
 // formato: 'jpeg' (fondo blanco) | 'png' (respeta el fondo transparente de los logos)
 // ==========================================
-export function RecortadorImagen({ imagen, forma = 'cuadrado', tamanoSalida = 512, formato = 'jpeg', onAplicar, onCancelar }) {
+export function RecortadorImagen({ imagen, forma = 'cuadrado', tamanoSalida = 512, formato = 'jpeg', arrancarEntera = false, onAplicar, onCancelar }) {
   const VISOR = 256; // tamaño del recuadro en pantalla
   const [zoom, setZoom] = useState(1);
   const [zoomMinimo, setZoomMinimo] = useState(1);
@@ -494,7 +494,8 @@ export function RecortadorImagen({ imagen, forma = 'cuadrado', tamanoSalida = 51
     const contener = Math.min(VISOR / img.naturalWidth, VISOR / img.naturalHeight);
     setEscalaBase(cubrir);
     setZoomMinimo(contener / cubrir);
-    setZoom(1);
+    // Si arrancarEntera: se ve la foto completa de entrada y la persona acerca si quiere
+    setZoom(arrancarEntera ? contener / cubrir : 1);
     setPosicion({ x: 0, y: 0 });
   };
 

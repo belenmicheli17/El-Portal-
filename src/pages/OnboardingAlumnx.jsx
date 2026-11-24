@@ -804,7 +804,7 @@ export default function OnboardingAlumnx() {
               </button>
             </div>
             <div className="bg-[#F4F7F7] p-8 flex justify-center items-center">
-              <RecortadorImagen imagen={recorte} forma="circulo" tamanoSalida={400} formato="jpeg" onAplicar={subirFoto} onCancelar={() => setRecorte(null)} />
+              <RecortadorImagen imagen={recorte} forma="circulo" tamanoSalida={400} formato="jpeg" arrancarEntera onAplicar={subirFoto} onCancelar={() => setRecorte(null)} />
             </div>
           </div>
         </div>
