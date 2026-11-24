@@ -10,11 +10,12 @@ import {
 } from 'lucide-react';
 import provincias from '../data/provincias.js';
 import { etiquetaAlumnx } from '../utils/bolsa';
-import { RecortadorImagen, generarSlug, usuarioDeInstagram, instagramAURL } from '../components/editor/EditorComponents';
+import { RecortadorImagen, generarSlug, usuarioDeInstagram, instagramAURL, leerArchivoComoDataURL, comprimirImagen } from '../components/editor/EditorComponents';
 
 // Cuestionario de alta de alumnos/as. El mismo archivo sirve después para editar el perfil.
 
 const TOTAL_PASOS = 4;
+const MAX_FOTOS = 4; // fotos de galería por alumno/a
 const NOMBRES_PASOS = ['Tus datos', 'Tu facultad', 'Sobre vos', 'Contacto'];
 const TITULOS = ['Contanos quién sos', 'Tu facultad', 'Sobre vos', 'Redes y WhatsApp'];
 const SUBTITULOS = [
@@ -69,7 +70,7 @@ const ESTADO_INICIAL = {
   nombre: '', apellido: '', tituloGenero: '', foto: '',
   universidad: '', provincia: '',
   certificadoPath: '', certificadoNombre: '',
-  presentacion: '', trayectoria: [],
+  presentacion: '', trayectoria: [], galeria: [],
   wa: '', ig: '', linkedin: '',
   comoLlego: '', comoLlegoOtro: ''
 };
@@ -243,6 +244,7 @@ export default function OnboardingAlumnx() {
   const [aviso, setAviso] = useState('');
   const [guardando, setGuardando] = useState(false);
   const [subiendoFoto, setSubiendoFoto] = useState(false);
+  const [subiendoGaleria, setSubiendoGaleria] = useState(false);
   const [subiendoCertificado, setSubiendoCertificado] = useState(false);
   const [progresoCertificado, setProgresoCertificado] = useState(0);
   const [recorte, setRecorte] = useState(null);
@@ -290,6 +292,7 @@ export default function OnboardingAlumnx() {
           certificadoPath: v.tipo === 'alumnx' ? (v.tituloPath || '') : '',
           certificadoNombre: v.tipo === 'alumnx' ? (v.tituloNombre || '') : '',
           presentacion: a.presentacion || '',
+          galeria: Array.isArray(a.galeria) ? a.galeria.filter(Boolean).slice(0, MAX_FOTOS) : [],
           trayectoria: Array.isArray(a.trayectoria)
             ? a.trayectoria.map((t) => ({ id: t.id || Date.now() + Math.random(), titulo: t.titulo || '', desc: t.desc || '', detalle: t.detalle || '' }))
             : [],
@@ -337,6 +340,41 @@ export default function OnboardingAlumnx() {
     } finally {
       setSubiendoFoto(false);
     }
+  };
+
+  // ----- Galería: hasta MAX_FOTOS fotos, se comprimen y se suben a la carpeta del alumno -----
+  const subirFotosGaleria = async (evento) => {
+    const archivos = Array.from(evento.target.files || []);
+    evento.target.value = null;
+    if (!archivos.length) return;
+    const lugar = MAX_FOTOS - datos.galeria.length;
+    if (lugar <= 0) { setError(`Podés subir hasta ${MAX_FOTOS} fotos.`); return; }
+    const aSubir = archivos.filter((a) => a.type.startsWith('image/')).slice(0, lugar);
+    if (!aSubir.length) { setError('Elegí imágenes (JPG o PNG).'); return; }
+    setSubiendoGaleria(true);
+    setError('');
+    try {
+      const urls = [];
+      for (const archivo of aSubir) {
+        const imagen = await comprimirImagen(await leerArchivoComoDataURL(archivo), 1400, 0.85);
+        const archivoRef = ref(storage, `alumnos/${currentUser.uid}/galeria_${Date.now()}_${urls.length}.jpg`);
+        await uploadString(archivoRef, imagen, 'data_url');
+        urls.push(await getDownloadURL(archivoRef));
+      }
+      setDatos((previo) => ({ ...previo, galeria: [...previo.galeria, ...urls].slice(0, MAX_FOTOS) }));
+      if (archivos.length > aSubir.length) setError(`Solo entran ${MAX_FOTOS} fotos en total.`);
+    } catch (e) {
+      console.error('Error subiendo fotos de la galería:', e);
+      setError('No pudimos subir las fotos. Revisá tu conexión y probá de nuevo.');
+    } finally {
+      setSubiendoGaleria(false);
+    }
+  };
+
+  const quitarFotoGaleria = (url) => {
+    setDatos((previo) => ({ ...previo, galeria: previo.galeria.filter((u) => u !== url) }));
+    // Borramos el archivo de Storage; si ya no existe no pasa nada
+    try { deleteObject(ref(storage, url)).catch(() => {}); } catch { /* sin acción */ }
   };
 
   // ----- Certificado de alumno regular (carpeta privada, solo lo ve el equipo) -----
@@ -441,6 +479,7 @@ export default function OnboardingAlumnx() {
     } else if (p === 2) {
       alumno = {
         presentacion: d.presentacion.trim(),
+        galeria: d.galeria.slice(0, MAX_FOTOS),
         trayectoria: d.trayectoria.filter((t) => t.titulo.trim()).map((t) => ({ id: t.id, titulo: t.titulo.trim(), desc: t.desc.trim(), detalle: t.detalle.trim() }))
       };
     } else {
@@ -667,6 +706,23 @@ export default function OnboardingAlumnx() {
           <button type="button" onClick={agregarExperiencia} className={`${CLASE_BTN_SECUNDARIO} mt-4 inline-flex items-center gap-2`}>
             <Plus className="w-4 h-4" /> {datos.trayectoria.length ? 'Agregar otra' : 'Agregar experiencia'}
           </button>
+
+          <label className={`${CLASE_LABEL} mt-8`}>Tus fotos <span className="text-[#666666] font-medium normal-case tracking-normal">(opcional, hasta {MAX_FOTOS})</span></label>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {datos.galeria.map((url) => (
+              <div key={url} className="relative aspect-square rounded-2xl overflow-hidden bg-[#F4F7F7]">
+                <img src={url} alt="Foto de tu galería" className="w-full h-full object-cover" />
+                <button type="button" aria-label="Quitar foto" onClick={() => quitarFotoGaleria(url)} className="absolute top-1.5 right-1.5 p-1.5 bg-white/90 rounded-full text-red-500 shadow hover:bg-white"><Trash2 className="w-4 h-4" /></button>
+              </div>
+            ))}
+            {datos.galeria.length < MAX_FOTOS && (
+              <label className={`aspect-square rounded-2xl border-2 border-dashed border-[#2D6A6A]/40 flex flex-col items-center justify-center gap-1 text-[#2D6A6A] text-[13px] font-bold cursor-pointer hover:bg-[#2D6A6A]/5 transition-all ${subiendoGaleria ? 'opacity-60 pointer-events-none' : ''}`}>
+                {subiendoGaleria ? <Loader2 className="w-6 h-6 animate-spin" /> : <Camera className="w-6 h-6" strokeWidth={1.5} />}
+                {subiendoGaleria ? 'Subiendo…' : 'Agregar fotos'}
+                <input type="file" accept="image/*" multiple className="hidden" onChange={subirFotosGaleria} disabled={subiendoGaleria} />
+              </label>
+            )}
+          </div>
         </>
       );
     }

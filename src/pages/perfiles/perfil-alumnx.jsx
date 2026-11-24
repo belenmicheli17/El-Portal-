@@ -78,6 +78,7 @@ export default function PerfilAlumnx() {
 
   const ubicacion = [data.localidad, data.provincia].filter(Boolean).join(', ');
   const experiencias = (data.trayectoria || []).filter((t) => t.titulo);
+  const fotos = Array.isArray(data.galeria) ? data.galeria.filter(Boolean).slice(0, 4) : [];
   const link = armarLinkPerfil('alumnx', data.slug);
 
   return (
@@ -164,6 +165,20 @@ export default function PerfilAlumnx() {
                 </li>
               ))}
             </ul>
+          </section>
+        )}
+
+        {/* Fotos */}
+        {fotos.length > 0 && (
+          <section className="bg-white rounded-[32px] border border-gray-100 shadow-sm p-6 md:p-10">
+            <h2 className="text-[13px] font-bold tracking-[0.12em] uppercase text-[#2D6A6A] mb-4">Fotos</h2>
+            <div className="grid grid-cols-2 gap-3">
+              {fotos.map((url) => (
+                <a key={url} href={url} target="_blank" rel="noreferrer" className="aspect-square rounded-2xl overflow-hidden bg-[#F4F7F7] block">
+                  <img src={url} alt={`Foto de ${data.nombreCompleto || 'estudiante'}`} loading="lazy" className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" />
+                </a>
+              ))}
+            </div>
           </section>
         )}
 
