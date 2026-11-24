@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { collection, doc, getDoc, getDocs, query, where, getCountFromServer } from 'firebase/firestore';
-import { Search, X, Briefcase, User, Layers, MapPin, ChevronRight, ClipboardList, Plus, CheckCircle2, SlidersHorizontal, Stethoscope, GraduationCap } from 'lucide-react';
+import { Search, X, Briefcase, Layers, MapPin, ChevronRight, ClipboardList, Plus, CheckCircle2, SlidersHorizontal, Stethoscope, GraduationCap, Hospital } from 'lucide-react';
 import { db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
 import { ROLES, ROLES_VISIBLES, JORNADAS, GRUPOS_AREAS } from '../data/bolsaOpciones';
@@ -17,8 +17,8 @@ import { CartelRegistro, CartelVerificacion, VentanaBolsa } from '../components/
 
 const PESTANAS = [
   { id: 'todo', label: 'Todo', icon: Layers },
-  { id: 'ofertas', label: 'Ofertas', icon: Briefcase },
-  { id: 'disponibles', label: 'Disponibles', icon: User }
+  { id: 'ofertas', label: 'Ofertas', icon: Hospital }, // ofertas = las publican las clínicas
+  { id: 'disponibles', label: 'Disponibles', icon: Stethoscope } // disponibles = profesionales que buscan trabajo
 ];
 
 const masNuevasPrimero = (a, b) => aMilisegundos(b.publicadaEn) - aMilisegundos(a.publicadaEn);
@@ -310,13 +310,13 @@ export default function BolsaTrabajo() {
 
       {/* ENCABEZADO: texto a la izquierda e ilustración a la derecha (solo PC), como en la Cartilla */}
       <div className="max-w-6xl mx-auto w-full px-4 lg:flex lg:items-center lg:gap-10">
-      <section className="lg:w-[58%] pt-9 lg:pt-20 pb-2">
+      <section className="lg:w-[58%] pt-12 lg:pt-20 pb-2">
         <p className="text-[12px] font-bold tracking-[0.15em] uppercase text-[#2D6A6A] mb-3 text-center lg:text-left">Para profesionales, estudiantes y clínicas</p>
-        <h1 className="text-[32px] md:text-[42px] lg:text-[48px] font-black font-['Montserrat'] text-[#1A3D3D] tracking-tighter leading-none mb-5 text-center lg:text-left">
+        <h1 className="text-[32px] md:text-[42px] lg:text-[48px] font-black font-['Montserrat'] text-[#1A3D3D] tracking-tighter leading-[1.05] mb-5 text-center lg:text-left">
           Encontrá trabajo o sumá<br className="hidden lg:block" /> talento a tu equipo
         </h1>
-        <p className="text-[#666666] text-[14px] md:text-[16px] lg:text-[18px] font-medium mb-6 max-w-2xl mx-auto lg:mx-0 text-center lg:text-left leading-relaxed">
-          Búsquedas de clínicas de toda Argentina y colegas disponibles para trabajar. Si sos estudiante, ya podés tener tu perfil y postularte como asistente. Mirá todo; para contactar, registrate gratis.
+        <p className="text-[#666666] text-[14px] md:text-[16px] lg:text-[18px] font-medium mb-7 max-w-xl mx-auto lg:mx-0 text-center lg:text-left leading-relaxed px-2 lg:px-0">
+          Clínicas que buscan equipo y colegas que buscan trabajo, en todo el país. Registrate gratis para contactar o publicar.
         </p>
         {cantidadAlumnos >= MINIMO_ALUMNOS && (
           <p className="flex items-center justify-center lg:justify-start gap-2 text-[14px] font-semibold text-rose-500 -mt-3 mb-6">
@@ -324,13 +324,19 @@ export default function BolsaTrabajo() {
           </p>
         )}
         <div className="flex flex-wrap gap-2 justify-center lg:justify-start">
-          {(!permisos.conSesion || esClinica) && (
+          {/* Visitantes: un solo botón que abre la ventanita de registrarse / iniciar sesión */}
+          {!permisos.conSesion && (
+            <button type="button" onClick={() => setCartel('registro-publicar')} className="inline-flex items-center gap-2 bg-[#2D6A6A] hover:bg-[#1A3D3D] text-white px-6 py-3.5 rounded-2xl text-[14px] font-semibold shadow-md transition-colors">
+              Registrate o iniciá sesión para publicar
+            </button>
+          )}
+          {permisos.conSesion && esClinica && (
             <button type="button" onClick={pedirPublicarOferta} className="inline-flex items-center gap-2 bg-[#2D6A6A] hover:bg-[#1A3D3D] text-white px-6 py-3.5 rounded-2xl text-[14px] font-semibold shadow-md transition-colors">
               <Plus className="w-4 h-4" /> Publicar oferta 
             </button>
           )}
-          {(!permisos.conSesion || esProfesional) && (
-            <button type="button" onClick={pedirDisponible} className={`inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl text-[14px] font-semibold transition-colors ${!permisos.conSesion ? 'bg-white border border-gray-200 text-[#1A3D3D] hover:border-[#2D6A6A]' : 'bg-[#2D6A6A] hover:bg-[#1A3D3D] text-white shadow-md'}`}>
+          {permisos.conSesion && esProfesional && (
+            <button type="button" onClick={pedirDisponible} className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl text-[14px] font-semibold transition-colors bg-[#2D6A6A] hover:bg-[#1A3D3D] text-white shadow-md">
               <CheckCircle2 className="w-4 h-4" /> {miDisponible ? 'Editar mi disponibilidad' : 'Marcarme como disponible'}
             </button>
           )}
@@ -427,7 +433,7 @@ export default function BolsaTrabajo() {
           <div className="grid grid-cols-3 md:hidden bg-[#F4F7F7] p-1.5 rounded-[20px]">
             {PESTANAS.map((t) => (
               <button key={t.id} type="button" onClick={() => cambiarFiltro('tab', t.id === 'todo' ? '' : t.id)} className={`flex items-center justify-center gap-1.5 px-2 py-2.5 rounded-2xl text-[13px] font-medium transition-all ${pestana === t.id ? 'bg-white text-[#1A3D3D] shadow-sm' : 'text-[#666666]'}`}>
-                {t.label}
+                <t.icon className="w-4 h-4 shrink-0" /> {t.label}
               </button>
             ))}
           </div>

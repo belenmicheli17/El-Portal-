@@ -16,7 +16,7 @@ import {
 const MENU_POR_ROL = {
   profesional: [
     { label: 'Inicio', icon: Home, path: '/ecosistema' },
-    { label: 'Cartilla', icon: Search, path: '/Cartilla' },
+    { label: 'Cartilla veterinaria', icon: Search, path: '/Cartilla' },
     { label: 'Capacitaciones', icon: BookOpen, path: '/capacitaciones' },
     { label: 'Bolsa de trabajo', icon: Briefcase, path: '/bolsa-de-trabajo' },
     { label: 'Cartilla de proveedores', icon: Package, path: '/cartilla-proveedores' },
@@ -24,7 +24,7 @@ const MENU_POR_ROL = {
   ],
   clinica: [
     { label: 'Inicio', icon: Home, path: '/ecosistema' },
-    { label: 'Cartilla', icon: Search, path: '/Cartilla' },
+    { label: 'Cartilla veterinaria', icon: Search, path: '/Cartilla' },
     { label: 'Capacitaciones', icon: BookOpen, path: '/capacitaciones' },
     { label: 'Bolsa de trabajo', icon: Briefcase, path: '/bolsa-de-trabajo' },
     { label: 'Cartilla de proveedores', icon: Package, path: '/cartilla-proveedores' },
@@ -32,7 +32,7 @@ const MENU_POR_ROL = {
   ],
   alumnx: [
     { label: 'Inicio', icon: Home, path: '/ecosistema' },
-    { label: 'Cartilla', icon: Search, path: '/Cartilla' },
+    { label: 'Cartilla veterinaria', icon: Search, path: '/Cartilla' },
     { label: 'Capacitaciones', icon: BookOpen, path: '/capacitaciones' },
     { label: 'Bolsa de trabajo', icon: Briefcase, path: '/bolsa-de-trabajo' },
   ],
@@ -68,7 +68,10 @@ export default function Navbar() {
   const esPerfil = esRutaDePerfil(location.pathname);
   const enCartilla = location.pathname.toLowerCase() === '/cartilla';
   const rol = currentUser?.rol || null;
-  const linksMenu = rol ? MENU_POR_ROL[rol] || [] : [];
+  // Las secciones "Próximamente" van al final de la lista
+  const linksMenu = (rol ? MENU_POR_ROL[rol] || [] : [])
+    .slice()
+    .sort((a, b) => Number(RUTAS_PROXIMAMENTE.includes(a.path)) - Number(RUTAS_PROXIMAMENTE.includes(b.path)));
 
   // ── Banner desde Firestore ─────────────────────────────────────────────────
   useEffect(() => {
@@ -223,63 +226,55 @@ export default function Navbar() {
 <X className={`w-5 h-5 absolute transition-all duration-300 ${isMenuOpen ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 -rotate-90 scale-50'}`} />
                 </button>
 
-                {/* Ventanita lateral (se abre desde la derecha) */}
-                {isMenuOpen && createPortal(
-                  <div className="fixed inset-0 z-[300]">
-                    <button type="button" aria-label="Cerrar menú" onClick={() => setIsMenuOpen(false)} className="absolute inset-0 w-full h-full bg-[#1A3D3D]/40 backdrop-blur-sm animate-in fade-in duration-300 cursor-default" />
-                    <aside ref={panelRef} className="absolute top-0 right-0 h-full w-[85%] max-w-sm bg-white shadow-[-20px_0_50px_rgba(26,61,61,0.15)] flex flex-col animate-in slide-in-from-right duration-300">
-                      <div className="flex items-center justify-between px-6 h-[72px] border-b border-gray-100 shrink-0">
-                        <span className="font-['Montserrat'] font-extrabold text-lg text-[#1A3D3D]">Menú</span>
-                        <button type="button" aria-label="Cerrar menú" onClick={() => setIsMenuOpen(false)} className="w-10 h-10 rounded-2xl bg-[#F4F7F7] flex items-center justify-center text-[#1A3D3D] hover:bg-gray-200 transition-colors">
+                {/* Ventanita lateral: siempre está armada y se desliza desde la derecha al abrir */}
+                {createPortal(
+                  <div className={`fixed inset-0 z-[300] ${isMenuOpen ? '' : 'pointer-events-none'}`} aria-hidden={!isMenuOpen}>
+                    {/* Fondo oscuro suave: tocarlo cierra el menú */}
+                    <button type="button" tabIndex={-1} aria-label="Cerrar menú" onClick={() => setIsMenuOpen(false)} className={`absolute inset-0 w-full h-full bg-[#1A3D3D]/25 cursor-default transition-opacity duration-500 ease-out ${isMenuOpen ? 'opacity-100' : 'opacity-0'}`} />
+                    <aside ref={panelRef} className={`absolute top-0 right-0 h-full w-[82%] max-w-[340px] bg-white rounded-l-[28px] shadow-[-20px_0_50px_rgba(26,61,61,0.12)] flex flex-col transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+                      <div className="flex items-center justify-between pl-7 pr-5 h-[72px] shrink-0">
+                        <span className="font-['Montserrat'] font-extrabold text-xl text-[#1A3D3D]">Menú</span>
+                        <button type="button" aria-label="Cerrar menú" onClick={() => setIsMenuOpen(false)} className="w-10 h-10 rounded-full flex items-center justify-center text-[#666666] hover:bg-[#F4F7F7] hover:text-[#1A3D3D] transition-colors">
                           <X className="w-5 h-5" />
                         </button>
                       </div>
 
-                      <div className="flex-1 overflow-y-auto p-3">
-
-                        {/* Buscar — visible en mobile dentro del menú */}
-                        <button
-                          onClick={() => navigate('/Cartilla')}
-                          className="md:hidden w-full flex items-center gap-3 px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"
-                        >
-                          <Search className="w-4 h-4 text-[#2D6A6A]" />
-                          <span className="text-sm font-bold text-[#1A3D3D]">Buscar Profesionales</span>
-                        </button>
+                      <div className="flex-1 overflow-y-auto px-3 pb-3">
 
                         {/* Contactar — visible en mobile, solo en perfiles */}
                         {esPerfil && (
                           <button
                             onClick={() => { handleContactar(); setIsMenuOpen(false); }}
-                            className="md:hidden w-full flex items-center gap-3 px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"
+                            className="md:hidden w-full flex items-center gap-3.5 px-4 py-3.5 hover:bg-[#F4F7F7] rounded-2xl transition-colors"
                           >
-                            <ChevronRight className="w-4 h-4 text-[#2D6A6A]" />
-                            <span className="text-sm font-bold text-[#1A3D3D]">Contactar</span>
+                            <ChevronRight className="w-5 h-5 text-[#2D6A6A]" />
+                            <span className="text-[16px] font-bold text-[#1A3D3D]">Contactar</span>
                           </button>
                         )}
 
-                        {/* Links según rol */}
+                        {/* Links según rol (los "Próximamente" quedan al final, grisados) */}
                         {linksMenu.map(({ label, icon: Icon, path }) => (
                           RUTAS_PROXIMAMENTE.includes(path) ? (
                             <div
                               key={path}
                               aria-disabled="true"
-                              className="w-full flex items-center justify-between px-4 py-3 rounded-xl opacity-50 cursor-not-allowed select-none"
+                              className="w-full flex items-center justify-between gap-2 px-4 py-3.5 rounded-2xl cursor-not-allowed select-none"
                             >
-                              <div className="flex items-center gap-3 min-w-0">
-                                <Icon className="w-4 h-4 text-gray-400 shrink-0" />
-                                <span className="text-sm font-bold text-gray-400 truncate">{label}</span>
+                              <div className="flex items-center gap-3.5 min-w-0">
+                                <Icon className="w-5 h-5 text-gray-300 shrink-0" />
+                                <span className="text-[16px] font-bold text-gray-400 truncate">{label}</span>
                               </div>
-                              <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-gray-500 bg-gray-100 rounded-full px-2.5 py-1 shrink-0">Próximamente</span>
+                              <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-gray-400 bg-gray-100 rounded-full px-2.5 py-1 shrink-0">Próximamente</span>
                             </div>
                           ) : (
                             <button
                               key={path}
                               onClick={() => navigate(path)}
-                              className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#F4F7F7] rounded-xl transition-colors group"
+                              className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-[#F4F7F7] rounded-2xl transition-colors"
                             >
-                              <div className="flex items-center gap-3 min-w-0">
-                                <Icon className="w-4 h-4 text-[#1A3D3D] shrink-0" />
-                                <span className="text-sm font-bold text-[#1A3D3D] truncate">{label}</span>
+                              <div className="flex items-center gap-3.5 min-w-0">
+                                <Icon className="w-5 h-5 text-[#2D6A6A] shrink-0" />
+                                <span className="text-[16px] font-bold text-[#1A3D3D] truncate">{label}</span>
                               </div>
                               <ChevronRight className="w-4 h-4 text-gray-300" />
                             </button>
@@ -288,13 +283,13 @@ export default function Navbar() {
                       </div>
 
                       {/* Cerrar sesión */}
-                      <div className="p-3 border-t border-gray-100 shrink-0">
+                      <div className="px-3 py-4 border-t border-gray-100 shrink-0">
                         <button
                           onClick={handleLogout}
-                          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 rounded-xl transition-colors group"
+                          className="w-full flex items-center gap-3.5 px-4 py-3.5 hover:bg-red-50 rounded-2xl transition-colors group"
                         >
-                          <LogOut className="w-4 h-4 text-gray-400 group-hover:text-red-500" />
-                          <span className="text-sm font-bold text-[#1A3D3D] group-hover:text-red-500">Cerrar sesión</span>
+                          <LogOut className="w-5 h-5 text-gray-400 group-hover:text-red-500" />
+                          <span className="text-[16px] font-bold text-[#1A3D3D] group-hover:text-red-500">Cerrar sesión</span>
                         </button>
                       </div>
                     </aside>
