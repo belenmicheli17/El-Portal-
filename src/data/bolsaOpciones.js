@@ -16,10 +16,10 @@ export const MAX_AREAS_DISPONIBLE = 3;
 // "sinAreas: true" = para ese puesto no se eligen especialidades (se apagan)
 export const ROLES = [
   { id: 'veterinario', label: 'Profesional' },
-  { id: 'asistente', label: 'Asistente (alumno/a)', sinAreas: true },
+  { id: 'asistente', label: 'Asistente (estudiante)', sinAreas: true },
   { id: 'peluquero', label: 'Peluquero/a', sinAreas: true },
   { id: 'recepcion', label: 'Recepción', sinAreas: true, oculto: true },
-  { id: 'alumno', label: 'Alumno/a', sinAreas: true, oculto: true }
+  { id: 'alumno', label: 'Estudiante', sinAreas: true, oculto: true }
 ];
 export const ROLES_VISIBLES = ROLES.filter((r) => !r.oculto);
 export const rolSinAreas = (id) => !!ROLES.find((r) => r.id === id)?.sinAreas;

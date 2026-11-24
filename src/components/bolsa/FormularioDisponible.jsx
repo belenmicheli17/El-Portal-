@@ -217,7 +217,7 @@ export default function FormularioDisponible({ currentUser, onVolver, onGuardada
 
       {esAlumnx ? (
         <div className="bg-rose-50 border border-rose-100 text-[#1A3D3D] rounded-2xl px-4 py-3 text-[14px] mb-5">
-          Como estudiante, figurás como <strong>Asistente (alumno/a)</strong>. Las clínicas que buscan asistentes te van a ver en la Bolsa.
+          Como estudiante, figurás como <strong>Asistente (estudiante)</strong>. Las clínicas que buscan asistentes te van a ver en la Bolsa.
         </div>
       ) : (
       <section className={claseCaja}>

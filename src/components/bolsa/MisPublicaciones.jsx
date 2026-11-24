@@ -215,7 +215,7 @@ export default function MisPublicaciones({ currentUser, misOfertas, miDisponible
         <section>
           <h2 className="text-[14px] font-bold text-[#1A3D3D] mb-4">Mi disponibilidad</h2>
           {miDisponible ? (
-            <Fila icono={User} titulo={miDisponible.puesto === 'asistente' ? 'Asistente (alumno/a)' : (miDisponible.areas || []).join(' · ') || 'Disponible'} subtitulo={miDisponible.provincia} item={miDisponible} coleccion="profesionalesDisponibles" onEditar={onEditarDisponible} onCambio={onCambio} />
+            <Fila icono={User} titulo={miDisponible.puesto === 'asistente' ? 'Asistente (estudiante)' : (miDisponible.areas || []).join(' · ') || 'Disponible'} subtitulo={miDisponible.provincia} item={miDisponible} coleccion="profesionalesDisponibles" onEditar={onEditarDisponible} onCambio={onCambio} />
           ) : (
             <div className="bg-white rounded-[24px] border border-gray-100 p-6">
               <p className="text-[14px] text-[#666666] mb-4">Todavía no te marcaste como disponible.</p>

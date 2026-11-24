@@ -300,7 +300,7 @@ export default function Login() {
                   {[
                     { valor: 'profesional', label: 'Soy Profesional', sub: 'Veterinario/a que busca conectar y crecer.', Icono: Stethoscope, acento: 'bg-blue-50 text-blue-600', proximamente: false },
                     { valor: 'clinica', label: 'Soy una Clínica', sub: 'Institución que busca talento y visibilidad.', Icono: Hospital, acento: 'bg-violet-50 text-violet-600', proximamente: false },
-                    { valor: 'alumnx', label: 'Soy Estudiante', sub: 'Alumno/a de veterinaria que busca sus primeras experiencias.', Icono: GraduationCap, acento: 'bg-rose-50 text-rose-500', proximamente: false },
+                    { valor: 'alumnx', label: 'Soy Estudiante', sub: 'Estudiante de veterinaria que busca sus primeras experiencias.', Icono: GraduationCap, acento: 'bg-rose-50 text-rose-500', proximamente: false },
                     { valor: 'proveedor', label: 'Proveedor o empresa', sub: 'Insumos, equipamiento o servicios para el sector.', Icono: Store, acento: 'bg-emerald-50 text-emerald-600', proximamente: true },
                   ].map(({ valor, label, sub, Icono, acento, proximamente }) => (
                     <div key={valor} className="relative mt-4 md:mt-2.5 first:mt-0">

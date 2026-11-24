@@ -11,7 +11,7 @@ const CUENTAS = [
   { rol: 'profesional', etiqueta: 'Profesional' },
   { rol: 'clinica', etiqueta: 'Clínica' },
   { rol: 'proveedor', etiqueta: 'Proveedor' },
-  { rol: 'alumnx', etiqueta: 'Alumno/a' },
+  { rol: 'alumnx', etiqueta: 'Estudiante' },
 ];
 
 // Barra fina fija abajo: aparece cuando estás en tu cuenta de admin o dentro de una cuenta de prueba

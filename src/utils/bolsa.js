@@ -19,9 +19,8 @@ export const leerPerfilPostulante = async (uid) => {
   return snapAlumno.exists() ? { ...snapAlumno.data(), esAlumnx: true } : null;
 };
 
-// Etiqueta de una cuenta de alumno/a según cómo se identifica (campo tituloGenero)
-export const etiquetaAlumnx = (tituloGenero) =>
-  ({ alumna: 'Alumna', alumno: 'Alumno', alumnx: 'Alumnx' }[tituloGenero] || 'Alumno/a');
+// Etiqueta de una cuenta de estudiante (ya no depende de cómo se identifica)
+export const etiquetaAlumnx = () => 'Estudiante';
 
 // Título corto del puesto: "Ecografía · Cardiología" para veterinarios, o el rol para los demás
 export const tituloPuesto = (oferta) => {
@@ -168,7 +167,7 @@ const FUENTE_TEXTO = 'Inter, sans-serif';
 const RUTA_IMAGENES = '/bolsa-imagen';
 const ARCHIVO_LOGO = 'logo-portal-veterinario.svg';
 const ARCHIVO_PERSONAJE = 'veterinario-con-planilla-v2.svg';
-const PUESTOS_IMAGEN = { veterinario: 'Veterinario/a', asistente: 'Asistente', peluquero: 'Peluquero/a', recepcion: 'Recepción', alumno: 'Alumno/a' };
+const PUESTOS_IMAGEN = { veterinario: 'Veterinario/a', asistente: 'Asistente', peluquero: 'Peluquero/a', recepcion: 'Recepción', alumno: 'Estudiante' };
 
 // Zona para el texto: CABA, zona grande del Gran Buenos Aires, o la ciudad
 export const zonaParaImagen = (oferta) => {

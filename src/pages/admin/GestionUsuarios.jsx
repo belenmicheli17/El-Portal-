@@ -258,7 +258,7 @@ export default function GestionUsuarios() {
                     </td>
                     <td className="px-6 py-5">
                       <span className="inline-flex items-center px-3 py-1 rounded-lg text-[11px] font-bold uppercase tracking-widest bg-[#2D6A6A]/10 text-[#2D6A6A]">
-                        {user.rol === 'alumnx' ? 'Alumno/a' : user.rol}
+                        {user.rol === 'alumnx' ? 'Estudiante' : user.rol}
                       </span>
                     </td>
                     <td className="px-6 py-5">
@@ -425,7 +425,7 @@ export default function GestionUsuarios() {
                   <option value="profesional">Profesional</option>
                   <option value="clinica">Clínica</option>
                   <option value="proveedor">Proveedor</option>
-                  <option value="alumnx">Alumno/a</option>
+                  <option value="alumnx">Estudiante</option>
                  
                 </select>
                 <p className="text-[11px] text-[#666666] mt-2 font-medium">⚠️ Cambiar el rol afecta qué secciones ve el usuario al loguearse.</p>

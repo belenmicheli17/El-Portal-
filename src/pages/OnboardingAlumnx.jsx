@@ -9,13 +9,13 @@ import {
   CheckCircle2, AlertCircle, Plus, Trash2, ArrowUp, ArrowDown, ChevronLeft
 } from 'lucide-react';
 import provincias from '../data/provincias.js';
-import { etiquetaAlumnx } from '../utils/bolsa';
-import { RecortadorImagen, generarSlug, usuarioDeInstagram, instagramAURL, leerArchivoComoDataURL, comprimirImagen } from '../components/editor/EditorComponents';
+import { RecortadorImagen, generarSlug, usuarioDeInstagram, instagramAURL, leerArchivoComoDataURL, comprimirImagen, BuscadorDireccionGoogle } from '../components/editor/EditorComponents';
 
-// Cuestionario de alta de alumnos/as. El mismo archivo sirve después para editar el perfil.
+// Cuestionario de alta de estudiantes. El mismo archivo sirve después para editar el perfil.
 
 const TOTAL_PASOS = 4;
-const MAX_FOTOS = 4; // fotos de galería por alumno/a
+const MAX_FOTOS = 4; // fotos de galería por estudiante
+const MAX_LUGARES = 5; // lugares donde trabajó o trabaja
 const NOMBRES_PASOS = ['Tus datos', 'Tu facultad', 'Sobre vos', 'Contacto'];
 const TITULOS = ['Contanos quién sos', 'Tu facultad', 'Sobre vos', 'Redes y WhatsApp'];
 const SUBTITULOS = [
@@ -70,7 +70,7 @@ const ESTADO_INICIAL = {
   nombre: '', apellido: '', tituloGenero: '', foto: '',
   universidad: '', provincia: '',
   certificadoPath: '', certificadoNombre: '',
-  presentacion: '', trayectoria: [], galeria: [],
+  presentacion: '', trayectoria: [], galeria: [], lugares: [],
   wa: '', ig: '', linkedin: '',
   comoLlego: '', comoLlegoOtro: ''
 };
@@ -78,7 +78,7 @@ const ESTADO_INICIAL = {
 const guardarCampos = (coleccion, uid, datos) =>
   setDoc(doc(db, coleccion, uid), datos, { mergeFields: Object.keys(datos) });
 
-// Busca un link (slug) que no use otro alumno/a
+// Busca un link (slug) que no use otro estudiante
 const buscarSlugLibre = async (base, uid) => {
   for (let i = 0; i < 20; i++) {
     const candidato = i === 0 ? base : `${base}-${i + 1}`;
@@ -152,7 +152,7 @@ function TarjetaViva({ datos, verificado }) {
           {nombre || 'Tu nombre'}
         </p>
         <span className="inline-block mt-2 bg-rose-50 text-rose-500 text-[12px] font-bold uppercase tracking-[0.1em] rounded-full px-3 py-1">
-          {etiquetaAlumnx(datos.tituloGenero)}
+          Estudiante
         </span>
         <div className="bg-[#F4F7F7] rounded-xl px-2.5 py-2 mt-3">
           <span className={`text-[13px] font-semibold leading-snug ${datos.universidad ? 'text-[#2D6A6A]' : 'text-[#B4BCBC]'}`}>
@@ -245,6 +245,7 @@ export default function OnboardingAlumnx() {
   const [guardando, setGuardando] = useState(false);
   const [subiendoFoto, setSubiendoFoto] = useState(false);
   const [subiendoGaleria, setSubiendoGaleria] = useState(false);
+  const [textoLugar, setTextoLugar] = useState('');
   const [subiendoCertificado, setSubiendoCertificado] = useState(false);
   const [progresoCertificado, setProgresoCertificado] = useState(0);
   const [recorte, setRecorte] = useState(null);
@@ -292,7 +293,9 @@ export default function OnboardingAlumnx() {
           certificadoPath: v.tipo === 'alumnx' ? (v.tituloPath || '') : '',
           certificadoNombre: v.tipo === 'alumnx' ? (v.tituloNombre || '') : '',
           presentacion: a.presentacion || '',
-          galeria: Array.isArray(a.galeria) ? a.galeria.filter(Boolean).slice(0, MAX_FOTOS) : [],
+          // Cada foto es { url, texto }; las primeras versiones guardaban solo la dirección
+          galeria: Array.isArray(a.galeria) ? a.galeria.map((f) => (typeof f === 'string' ? { url: f, texto: '' } : { url: f?.url || '', texto: f?.texto || '' })).filter((f) => f.url).slice(0, MAX_FOTOS) : [],
+          lugares: Array.isArray(a.lugares) ? a.lugares.filter((l) => l && l.nombre).slice(0, MAX_LUGARES) : [],
           trayectoria: Array.isArray(a.trayectoria)
             ? a.trayectoria.map((t) => ({ id: t.id || Date.now() + Math.random(), titulo: t.titulo || '', desc: t.desc || '', detalle: t.detalle || '' }))
             : [],
@@ -361,7 +364,7 @@ export default function OnboardingAlumnx() {
         await uploadString(archivoRef, imagen, 'data_url');
         urls.push(await getDownloadURL(archivoRef));
       }
-      setDatos((previo) => ({ ...previo, galeria: [...previo.galeria, ...urls].slice(0, MAX_FOTOS) }));
+      setDatos((previo) => ({ ...previo, galeria: [...previo.galeria, ...urls.map((url) => ({ url, texto: '' }))].slice(0, MAX_FOTOS) }));
       if (archivos.length > aSubir.length) setError(`Solo entran ${MAX_FOTOS} fotos en total.`);
     } catch (e) {
       console.error('Error subiendo fotos de la galería:', e);
@@ -371,8 +374,22 @@ export default function OnboardingAlumnx() {
     }
   };
 
+  const cambiarTextoFoto = (url, texto) => {
+    setDatos((previo) => ({ ...previo, galeria: previo.galeria.map((f) => (f.url === url ? { ...f, texto: texto.slice(0, 100) } : f)) }));
+  };
+
+  // ----- Lugares donde trabajó: se eligen de Google Maps (nombre + dirección) -----
+  const elegirLugar = (lugar) => {
+    setTextoLugar('');
+    setDatos((previo) => {
+      if (previo.lugares.length >= MAX_LUGARES || previo.lugares.some((l) => l.placeId === lugar.placeId)) return previo;
+      return { ...previo, lugares: [...previo.lugares, { id: lugar.placeId, placeId: lugar.placeId, nombre: lugar.nombre, direccion: lugar.direccion }] };
+    });
+  };
+  const quitarLugar = (id) => setDatos((previo) => ({ ...previo, lugares: previo.lugares.filter((l) => l.id !== id) }));
+
   const quitarFotoGaleria = (url) => {
-    setDatos((previo) => ({ ...previo, galeria: previo.galeria.filter((u) => u !== url) }));
+    setDatos((previo) => ({ ...previo, galeria: previo.galeria.filter((f) => f.url !== url) }));
     // Borramos el archivo de Storage; si ya no existe no pasa nada
     try { deleteObject(ref(storage, url)).catch(() => {}); } catch { /* sin acción */ }
   };
@@ -479,7 +496,8 @@ export default function OnboardingAlumnx() {
     } else if (p === 2) {
       alumno = {
         presentacion: d.presentacion.trim(),
-        galeria: d.galeria.slice(0, MAX_FOTOS),
+        galeria: d.galeria.slice(0, MAX_FOTOS).map((f) => ({ url: f.url, texto: (f.texto || '').trim() })),
+        lugares: d.lugares.slice(0, MAX_LUGARES).map((l) => ({ id: l.id, placeId: l.placeId, nombre: l.nombre, direccion: l.direccion })),
         trayectoria: d.trayectoria.filter((t) => t.titulo.trim()).map((t) => ({ id: t.id, titulo: t.titulo.trim(), desc: t.desc.trim(), detalle: t.detalle.trim() }))
       };
     } else {
@@ -607,16 +625,6 @@ export default function OnboardingAlumnx() {
           <label className={CLASE_LABEL} htmlFor="al-apellido">Apellido<Obligatorio /></label>
           <input id="al-apellido" value={datos.apellido} maxLength={50} onChange={(e) => cambiar('apellido', capitalizar(e.target.value))} placeholder="Pérez" autoComplete="off" className={CLASE_INPUT} />
 
-          <span className={CLASE_LABEL}>Cómo te identificás</span>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-            {[['alumna', 'Alumna'], ['alumno', 'Alumno'], ['alumnx', 'Alumnx'], ['', 'No especificar']].map(([valor, texto]) => (
-              <button key={valor || 'ninguno'} type="button" onClick={() => cambiar('tituloGenero', valor)} className={`${chip(datos.tituloGenero === valor)} text-center px-2`}>
-                {texto}
-              </button>
-            ))}
-          </div>
-          <p className={CLASE_AYUDA}>Es la etiqueta de tu perfil. Si no especificás, aparece «Alumno/a».</p>
-
           <div className="flex items-center gap-4 mt-6">
             <div className="w-16 h-16 rounded-full bg-[#F4F7F7] text-gray-400 flex items-center justify-center shrink-0 overflow-hidden">
               {datos.foto ? <img src={datos.foto} alt="Tu foto" className="w-full h-full object-cover" /> : <Camera className="w-7 h-7" strokeWidth={1.5} />}
@@ -707,12 +715,40 @@ export default function OnboardingAlumnx() {
             <Plus className="w-4 h-4" /> {datos.trayectoria.length ? 'Agregar otra' : 'Agregar experiencia'}
           </button>
 
+          <span className={`${CLASE_LABEL} mt-8`}>Dónde trabajaste o trabajás actualmente <span className="text-[#666666] font-medium">(opcional)</span></span>
+          <p className={CLASE_AYUDA}>Buscá la veterinaria en Google. En tu perfil aparece como «Referencias laborales».</p>
+          {datos.lugares.length < MAX_LUGARES && (
+            <div className="mt-3">
+              <BuscadorDireccionGoogle
+                id="al-lugar"
+                valor={textoLugar}
+                onEscribir={setTextoLugar}
+                onElegir={elegirLugar}
+                placeholder="Buscá el nombre de la veterinaria"
+                listaProvincias={provincias}
+                soloLocales
+              />
+            </div>
+          )}
+          {datos.lugares.map((l) => (
+            <div key={l.id} className="mt-3 flex items-start gap-3 bg-[#F4F7F7] rounded-2xl px-4 py-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-[15px] font-bold text-[#1A3D3D] leading-snug">{l.nombre}</p>
+                <p className="text-[13px] font-medium text-[#666666] leading-snug mt-0.5">{l.direccion}</p>
+              </div>
+              <button type="button" aria-label="Quitar lugar" onClick={() => quitarLugar(l.id)} className="p-1.5 text-gray-400 hover:text-red-500 transition-colors"><Trash2 className="w-4 h-4" /></button>
+            </div>
+          ))}
+
           <label className={`${CLASE_LABEL} mt-8`}>Tus fotos <span className="text-[#666666] font-medium normal-case tracking-normal">(opcional, hasta {MAX_FOTOS})</span></label>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {datos.galeria.map((url) => (
-              <div key={url} className="relative aspect-square rounded-2xl overflow-hidden bg-[#F4F7F7]">
-                <img src={url} alt="Foto de tu galería" className="w-full h-full object-cover" />
-                <button type="button" aria-label="Quitar foto" onClick={() => quitarFotoGaleria(url)} className="absolute top-1.5 right-1.5 p-1.5 bg-white/90 rounded-full text-red-500 shadow hover:bg-white"><Trash2 className="w-4 h-4" /></button>
+          <div className="grid grid-cols-2 gap-3">
+            {datos.galeria.map((f) => (
+              <div key={f.url}>
+                <div className="relative aspect-square rounded-2xl overflow-hidden bg-[#F4F7F7]">
+                  <img src={f.url} alt="Foto de tu galería" className="w-full h-full object-cover" />
+                  <button type="button" aria-label="Quitar foto" onClick={() => quitarFotoGaleria(f.url)} className="absolute top-1.5 right-1.5 p-1.5 bg-white/90 rounded-full text-red-500 shadow hover:bg-white"><Trash2 className="w-4 h-4" /></button>
+                </div>
+                <input value={f.texto} maxLength={100} onChange={(e) => cambiarTextoFoto(f.url, e.target.value)} placeholder="Comentario (opcional)" aria-label="Comentario de la foto" autoComplete="off" className={`${CLASE_INPUT} mt-2 !py-2.5 !px-3.5 !text-[14px]`} />
               </div>
             ))}
             {datos.galeria.length < MAX_FOTOS && (
@@ -847,7 +883,10 @@ export default function OnboardingAlumnx() {
               <p className="min-h-[20px] text-sm font-medium text-red-500 mt-4" role="alert">{error}</p>
               {aviso && <p className="text-sm font-semibold text-[#2D6A6A] flex items-center gap-1.5"><CheckCircle2 className="w-4 h-4" /> {aviso}</p>}
 
-              <div className={`grid gap-3 mt-6 ${paso > 0 && modo !== 'edicion' ? 'grid-cols-2' : 'grid-cols-1'}`}>
+              <div className={`grid gap-3 mt-6 ${(paso > 0 && modo !== 'edicion') || (modo === 'edicion' && slugGuardado.current) ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                {modo === 'edicion' && slugGuardado.current && (
+                  <button type="button" onClick={() => navigate(`/alumno/${slugGuardado.current}`)} className={CLASE_BTN_VOLVER}>Ver mi perfil</button>
+                )}
                 {paso > 0 && modo !== 'edicion' && (
                   <button type="button" onClick={() => irAPaso(paso - 1)} disabled={guardando} className={CLASE_BTN_VOLVER}>Volver</button>
                 )}
@@ -856,6 +895,11 @@ export default function OnboardingAlumnx() {
                   {modo === 'edicion' ? 'Guardar cambios' : 'Siguiente'}
                 </button>
               </div>
+              {modo === 'edicion' && (
+                <p className="text-[13px] font-medium text-[#666666] leading-relaxed mt-4">
+                  Tu perfil es público: lo puede ver cualquiera que tenga tu link. No aparece en la Cartilla hasta que pases a perfil profesional.
+                </p>
+              )}
             </>
           ) : (
             /* Pantalla final */
@@ -872,6 +916,9 @@ export default function OnboardingAlumnx() {
               <div className="bg-[#F4F7F7] rounded-2xl px-4 py-3.5 my-6 text-left text-[15px] font-medium text-[#1A3D3D] leading-relaxed">
                 Cuando te verifiquemos vas a poder postularte a las búsquedas de asistente de la Bolsa de Trabajo.
               </div>
+              <p className="text-[13px] font-medium text-[#666666] leading-relaxed -mt-3 mb-6">
+                Tu perfil es público: lo puede ver cualquiera que tenga tu link. No aparece en la Cartilla hasta que pases a perfil profesional.
+              </p>
               <button type="button" onClick={() => navigate('/ecosistema')} className={`${CLASE_BTN_PRIMARIO} w-full`}>Ir al inicio</button>
             </div>
           )}
