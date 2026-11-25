@@ -1335,7 +1335,7 @@ return (
                                 </div>
                               ) : (
                                 // Formato nuevo: una tarjeta por grupo con título y pills
-                                <div key={s.grupoId} className="bg-white p-8 rounded-[36px] border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group text-left">
+                                <div key={s.grupoId} className="bg-white p-8 rounded-[36px] border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all group text-left md:has-[button[aria-expanded=true]]:col-span-2">
                                   {(() => {
                                     const iconosGrupo = {
                                       consulta_general: Stethoscope,

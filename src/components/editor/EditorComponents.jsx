@@ -1122,9 +1122,9 @@ export const descripcionServicio = (nombre) => DESCRIPCIONES[String(nombre || ''
 
 // Aviso naranja con flechita al final (mismo estilo que la Sala de espera), apuntando a la lista
 export const AvisoPresionar = ({ texto = 'Presioná cada una para saber qué es', className = '' }) => (
-  <p className={`flex items-center gap-1.5 text-[#FF9800] text-[14px] font-bold ${className}`}>
+  <p className={`flex items-center justify-end gap-1.5 text-[#FF9800] text-[14px] md:text-[19px] font-bold text-right ${className}`}>
     {texto}
-    <IconoFlecha size={18} strokeWidth={2.25} className="rotate-90 shrink-0" />
+    <IconoFlecha size={18} strokeWidth={2.25} className="rotate-[135deg] shrink-0 md:w-[22px] md:h-[22px]" />
   </p>
 );
 
@@ -1135,6 +1135,19 @@ const EVENTO_ABIERTA = 'servicioExplicable:abierta';
 // variante 'lista' = renglón con viñeta (perfil profesional): el texto se abre debajo, alineado con el nombre
 export function ServicioExplicable({ nombre, className = '', variante = 'cajita', children }) {
   const [abierta, setAbierta] = useState(false);
+  // Para que abra y cierre deslizándose: primero se ensancha la cajita, después baja el texto (y al cerrar, al revés)
+  const [ancha, setAncha] = useState(false);
+  const [desplegada, setDesplegada] = useState(false);
+  useEffect(() => {
+    if (abierta) {
+      setAncha(true);
+      const cuadro = requestAnimationFrame(() => requestAnimationFrame(() => setDesplegada(true)));
+      return () => cancelAnimationFrame(cuadro);
+    }
+    setDesplegada(false);
+    const espera = setTimeout(() => setAncha(false), 450);
+    return () => clearTimeout(espera);
+  }, [abierta]);
   const idPropio = useId(); // identificador único de esta cajita
   const texto = descripcionServicio(nombre);
 
@@ -1144,15 +1157,6 @@ export function ServicioExplicable({ nombre, className = '', variante = 'cajita'
     window.addEventListener(EVENTO_ABIERTA, alAbrirOtra);
     return () => window.removeEventListener(EVENTO_ABIERTA, alAbrirOtra);
   }, [idPropio]);
-
-  // Si scrolleás un poco con la cajita abierta, se cierra sola
-  useEffect(() => {
-    if (!abierta) return undefined;
-    const desde = window.scrollY;
-    const alScroll = () => { if (Math.abs(window.scrollY - desde) > 160) setAbierta(false); };
-    window.addEventListener('scroll', alScroll, { passive: true });
-    return () => window.removeEventListener('scroll', alScroll);
-  }, [abierta]);
 
   if (!texto) return <div className={className}>{children}</div>;
 
@@ -1166,15 +1170,22 @@ export function ServicioExplicable({ nombre, className = '', variante = 'cajita'
       type="button"
       onClick={alternar}
       aria-expanded={abierta}
-      className={`${className} text-left cursor-pointer transition-all duration-300 focus-visible:outline-2 focus-visible:outline-[#FF9800] ${abierta
-        // Abierta: se nota con el borde y un fondo naranja suave (igual en la lista y en las cajitas)
-        ? `basis-full w-full flex-wrap !bg-[#FFF7EC] !border-[#FF9800] border ${variante === 'lista' ? '!mx-0 !px-3 !py-2.5 rounded-xl' : ''} shadow-[0_4px_14px_rgba(255,152,0,0.18)]`
-        : `border ${variante === 'lista' ? 'border-transparent' : ''} hover:border-[#FF9800]/40`}`}
+      className={`${className} text-left cursor-pointer border transition-[background-color,border-color,box-shadow,padding] duration-500 ease-out focus-visible:outline-2 focus-visible:outline-[#FF9800]
+        ${ancha ? `basis-full w-full flex-wrap ${variante === 'lista' ? '!mx-0 !px-3 !py-2.5 rounded-xl' : ''}` : ''}
+        ${desplegada
+          // Abierta: se nota con el borde y un fondo naranja suave (igual en la lista y en las cajitas)
+          ? '!bg-[#FFF7EC] !border-[#FF9800] shadow-[0_4px_14px_rgba(255,152,0,0.18)]'
+          : `${variante === 'lista' ? 'border-transparent' : ''} hover:border-[#FF9800]/40`}`}
     >
       {children}
-      {abierta && (
-        <span className={`block basis-full w-full mt-2 ${variante === 'lista' ? 'pl-3.5 pb-1.5' : ''} text-[14px] md:text-[15px] font-normal leading-relaxed text-[#333333] normal-case tracking-normal animate-in fade-in duration-300`}>
-          {texto}
+      {ancha && (
+        // El texto baja de a poco (la fila pasa de alto 0 a su alto real)
+        <span className={`grid basis-full w-full transition-[grid-template-rows,opacity] duration-[450ms] ease-out ${desplegada ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+          <span className="overflow-hidden">
+            <span className={`block pt-2 ${variante === 'lista' ? 'pl-3.5 pb-1.5' : ''} text-[14px] md:text-[17px] font-normal leading-relaxed text-[#333333] normal-case tracking-normal`}>
+              {texto}
+            </span>
+          </span>
         </span>
       )}
     </button>
