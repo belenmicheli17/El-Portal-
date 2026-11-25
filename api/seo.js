@@ -24,7 +24,38 @@ function recortar(texto, max) {
   return limpio.length > max ? limpio.slice(0, max - 3).trim() + '...' : limpio;
 }
 
-function pagina({ titulo, descripcion, ruta, cuerpo }) {
+// Datos estructurados (schema.org) para que Google entienda qué es cada página.
+// Devuelve el bloque <script> listo para pegar en el <head>. No incluye datos de contacto.
+function bloqueJsonLd(objeto) {
+  if (!objeto) return '';
+  // El "<" se escapa para que nada del texto pueda cerrar el script
+  const json = JSON.stringify(objeto).replace(/</g, '\\u003c');
+  return `<script type="application/ld+json">${json}</script>`;
+}
+
+// "09:30" -> "09:30" (solo si tiene formato de hora válido)
+const horaValida = (h) => (/^\d{1,2}:\d{2}$/.test(String(h || '')) ? String(h).padStart(5, '0') : null);
+
+// Horarios de una clínica en el formato de schema.org
+function armarHorarios(h) {
+  if (!h || typeof h !== 'object') return [];
+  const tramos = [];
+  const sumar = (dias, desde, hasta) => {
+    const abre = horaValida(desde);
+    const cierra = horaValida(hasta);
+    if (abre && cierra) tramos.push({ '@type': 'OpeningHoursSpecification', dayOfWeek: dias, opens: abre, closes: cierra });
+  };
+  const semana = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+  sumar(semana, h.semanaDesde, h.semanaHasta);
+  if (h.corte) sumar(semana, h.semanaDesde2, h.semanaHasta2);
+  if (h.sabadoAbre) {
+    sumar(['Saturday'], h.sabadoDesde, h.sabadoHasta);
+    if (h.corte) sumar(['Saturday'], h.sabadoDesde2, h.sabadoHasta2);
+  }
+  return tramos;
+}
+
+function pagina({ titulo, descripcion, ruta, cuerpo, jsonld }) {
   return `<!doctype html>
 <html lang="es">
 <head>
@@ -37,6 +68,7 @@ function pagina({ titulo, descripcion, ruta, cuerpo }) {
 <meta property="og:url" content="${esc(DOMINIO + ruta)}">
 <meta property="og:type" content="website">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+${bloqueJsonLd(jsonld)}
 </head>
 <body>
 <main>
@@ -72,11 +104,23 @@ ${data.bio ? `<p>${esc(data.bio)}</p>` : ''}
 ${trayectoria ? `<h2>Trayectoria</h2>\n<ul>\n${trayectoria}\n</ul>` : ''}
 ${lugares ? `<h2>Dónde atiende</h2>\n<ul>\n${lugares}\n</ul>` : ''}`;
 
+  const jsonld = {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    name: nombre,
+    jobTitle: tipoTitulo,
+    url: `${DOMINIO}/profesional/${encodeURIComponent(slug)}`,
+    ...(data.especialidad ? { knowsAbout: data.especialidad } : {}),
+    ...(provincia ? { address: { '@type': 'PostalAddress', addressRegion: provincia, addressCountry: 'AR' } } : {}),
+    ...(typeof data.foto === 'string' && /^https?:\/\//.test(data.foto) ? { image: data.foto } : {})
+  };
+
   return pagina({
     titulo: `${nombre} | ${tipoTitulo} | Cartilla Veterinaria`,
     descripcion,
     ruta: `/profesional/${encodeURIComponent(slug)}`,
-    cuerpo
+    cuerpo,
+    jsonld
   });
 }
 
@@ -101,11 +145,31 @@ ${data.direccion ? `<p>${esc(data.direccion)}</p>` : ''}
 ${texto ? `<p>${esc(texto)}</p>` : ''}
 ${servicios ? `<h2>Servicios</h2>\n<ul>\n${servicios}\n</ul>` : ''}`;
 
+  const horarios = armarHorarios(data.horarios);
+  const jsonld = {
+    '@context': 'https://schema.org',
+    '@type': 'VeterinaryCare',
+    name: nombreConTipo,
+    url: `${DOMINIO}/clinica/${encodeURIComponent(slug)}`,
+    ...(texto ? { description: recortar(texto, 300) } : {}),
+    address: {
+      '@type': 'PostalAddress',
+      ...(data.direccion ? { streetAddress: data.direccion } : {}),
+      ...(data.localidad || data.barrio ? { addressLocality: data.localidad || data.barrio } : {}),
+      ...(provincia ? { addressRegion: provincia } : {}),
+      addressCountry: 'AR'
+    },
+    ...(typeof data.lat === 'number' && typeof data.lng === 'number' ? { geo: { '@type': 'GeoCoordinates', latitude: data.lat, longitude: data.lng } } : {}),
+    ...(data.guardia24hs ? { openingHours: 'Mo-Su 00:00-24:00' } : horarios.length ? { openingHoursSpecification: horarios } : {}),
+    ...(typeof data.foto === 'string' && /^https?:\/\//.test(data.foto) ? { image: data.foto } : {})
+  };
+
   return pagina({
     titulo: `${nombreConTipo} | Cartilla Veterinaria`,
     descripcion,
     ruta: `/clinica/${encodeURIComponent(slug)}`,
-    cuerpo
+    cuerpo,
+    jsonld
   });
 }
 
