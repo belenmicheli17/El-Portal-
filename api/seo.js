@@ -109,9 +109,71 @@ ${servicios ? `<h2>Servicios</h2>\n<ul>\n${servicios}\n</ul>` : ''}`;
   });
 }
 
+// Versión simple de la Cartilla: lista de profesionales y clínicas visibles, agrupada por provincia.
+// Sin datos de contacto: solo nombre, especialidad/zona y link al perfil.
+async function armarCartilla(db) {
+  const [snapProf, snapCli] = await Promise.all([
+    db.collection('profesionales').get(),
+    db.collection('clinicas').get()
+  ]);
+
+  const porProvincia = {};
+  const agregar = (provincia, html) => {
+    const clave = (provincia || 'Argentina').replace(/^Provincia de\s+/i, '').trim() || 'Argentina';
+    (porProvincia[clave] = porProvincia[clave] || []).push(html);
+  };
+
+  let totalProf = 0;
+  let totalCli = 0;
+
+  snapProf.forEach((doc) => {
+    const d = doc.data();
+    if (d.visible === false || !d.slug) return;
+    const nombre = `${d.nombre || ''} ${d.apellido || ''}`.trim();
+    if (!nombre) return;
+    totalProf += 1;
+    const detalle = [d.especialidad, d.localidad || d.barrio].filter(Boolean).join(' · ');
+    agregar(d.provincia, `<li><a href="${DOMINIO}/profesional/${encodeURIComponent(d.slug)}">${esc(nombre)}</a>${detalle ? ' — ' + esc(detalle) : ''}</li>`);
+  });
+
+  snapCli.forEach((doc) => {
+    const d = doc.data();
+    if (d.visible === false) return;
+    const id = d.slug || doc.id;
+    const nombre = (d.nombre || '').trim();
+    if (!id || !nombre) return;
+    totalCli += 1;
+    const conTipo = /veterinari/i.test(nombre) ? nombre : `Veterinaria ${nombre}`;
+    const detalle = [d.barrio || d.localidad, d.guardia24hs ? 'Guardia 24 hs' : ''].filter(Boolean).join(' · ');
+    agregar(d.provincia, `<li><a href="${DOMINIO}/clinica/${encodeURIComponent(id)}">${esc(conTipo)}</a>${detalle ? ' — ' + esc(detalle) : ''}</li>`);
+  });
+
+  const secciones = Object.keys(porProvincia)
+    .sort((x, y) => x.localeCompare(y, 'es'))
+    .map((prov) => `<h2>Veterinarios y veterinarias en ${esc(prov)}</h2>\n<ul>\n${porProvincia[prov].join('\n')}\n</ul>`)
+    .join('\n');
+
+  const cuerpo = `<h1>Cartilla Veterinaria de Argentina</h1>
+<p>Encontrá veterinarios, especialistas y clínicas veterinarias verificados en todo el país. Hoy hay ${totalProf} profesionales y ${totalCli} clínicas en El Portal Veterinario.</p>
+${secciones}`;
+
+  return pagina({
+    titulo: 'Cartilla Veterinaria de Argentina | Veterinarios y clínicas | El Portal Veterinario',
+    descripcion: 'Buscá veterinarios, especialistas y clínicas veterinarias verificados en Argentina, por zona y especialidad. Perfiles con servicios, horarios y contacto.',
+    ruta: '/cartilla',
+    cuerpo
+  });
+}
+
 export default async function handler(req, res) {
   const { tipo, slug } = req.query;
   try {
+    if (tipo === 'cartilla') {
+      const html = await armarCartilla(obtenerFirestore());
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
+      return res.status(200).send(html);
+    }
     if (!slug || (tipo !== 'profesional' && tipo !== 'clinica')) {
       return res.status(404).send('No encontrado');
     }
