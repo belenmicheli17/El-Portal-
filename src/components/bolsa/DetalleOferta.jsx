@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
-import { ChevronLeft, MapPin, Clock, Info, Link2, Check, Loader2, Lock, ExternalLink, ArrowRight } from 'lucide-react';
+import { ChevronLeft, MapPin, Clock, Info, Share2, Check, Loader2, Lock, ExternalLink, ArrowRight } from 'lucide-react';
 import { db } from '../../firebase';
 import { etiquetaRol, publicadoHace, linkOferta, zonaTexto } from '../../utils/bolsa';
 import VentanaPostulacion from './VentanaPostulacion';
@@ -51,9 +51,20 @@ export default function DetalleOferta({ oferta, permisos, currentUser, onVolver,
     return () => { cancelado = true; };
   }, [oferta.id, permisos.conSesion]);
 
+  // Compartir búsqueda: en el celu abre el menú de compartir (WhatsApp, Instagram…); en la compu copia el link
   const copiarLink = async () => {
+    const link = linkOferta(oferta.id);
+    const esCelular = window.matchMedia('(pointer: coarse)').matches;
+    if (esCelular && navigator.share) {
+      try {
+        await navigator.share({ title: `Búsqueda en ${oferta.clinicaNombre || 'una clínica'}`, url: link });
+        return;
+      } catch (e) {
+        if (e?.name === 'AbortError') return; // cerró el menú sin compartir
+      }
+    }
     try {
-      await navigator.clipboard.writeText(linkOferta(oferta.id));
+      await navigator.clipboard.writeText(link);
       setCopiado(true);
       setTimeout(() => setCopiado(false), 2000);
     } catch (e) {
@@ -129,8 +140,12 @@ export default function DetalleOferta({ oferta, permisos, currentUser, onVolver,
         {/* LA OFERTA: una sola hoja, con secciones separadas por líneas */}
         <div className="bg-white rounded-[28px] border border-gray-100 shadow-[0_8px_30px_rgba(26,61,61,0.06)] overflow-hidden">
           {/* Encabezado */}
-          <header className="p-6 md:p-8">
-            <div className="flex items-start gap-4">
+          <header className="p-6 md:p-8 relative">
+            {/* Compartir búsqueda: esquina superior derecha de la hoja */}
+            <button type="button" onClick={copiarLink} className="absolute top-4 right-4 md:top-5 md:right-5 inline-flex items-center gap-1.5 bg-white border border-gray-200 hover:border-[#2D6A6A] text-[#2D6A6A] hover:text-[#1A3D3D] text-[13px] font-semibold rounded-full px-3.5 py-2 shadow-sm transition-colors">
+              {copiado ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />} {copiado ? 'Link copiado' : 'Compartir búsqueda'}
+            </button>
+            <div className="flex items-start gap-4 pt-10 md:pt-0 md:pr-44">
               {oferta.clinicaFoto ? (
                 <img src={oferta.clinicaFoto} alt={oferta.clinicaNombre} className="w-16 h-16 md:w-20 md:h-20 shrink-0 object-cover rounded-[20px] border border-gray-50 shadow-sm" />
               ) : (
@@ -194,11 +209,8 @@ export default function DetalleOferta({ oferta, permisos, currentUser, onVolver,
             </Seccion>
           )}
 
-          {/* Pie de la hoja: copiar link y cuándo se publicó */}
+          {/* Pie de la hoja: cuándo se publicó */}
           <div className="flex flex-wrap items-center justify-between gap-3 px-6 md:px-8 py-4 border-t border-gray-100 bg-[#F4F7F7]/60">
-            <button type="button" onClick={copiarLink} className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#2D6A6A] hover:text-[#1A3D3D]">
-              {copiado ? <Check className="w-4 h-4" /> : <Link2 className="w-4 h-4" />} {copiado ? 'Link copiado' : 'Copiar link de la oferta'}
-            </button>
             <span className="inline-flex items-center gap-1 text-[13px] text-[#666666] font-medium ml-auto">
               <Clock className="w-3.5 h-3.5" /> {publicadoHace(oferta.publicadaEn)}
             </span>
