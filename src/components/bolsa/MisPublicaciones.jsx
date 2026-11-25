@@ -204,7 +204,7 @@ export default function MisPublicaciones({ currentUser, misOfertas, miDisponible
           ) : (
             <div className="flex flex-col gap-3">
               {misOfertas.map((o) => (
-                <Fila key={o.id} icono={Briefcase} titulo={`Puesto: ${etiquetaRol(o.rol)}`} subtitulo={[zonaTexto(o), (o.areas || []).join(', ')].filter(Boolean).join(' · ')} item={o} coleccion="ofertasEmpleo" onEditar={() => onEditarOferta(o)} onCambio={onCambio} postulaciones={postulaciones.filter((p) => p.ofertaId === o.id)} abierto={abrirPostulantes === o.id} perfiles={perfiles} />
+                <Fila key={o.id} icono={Briefcase} titulo={`Puesto: ${o.puestoTexto?.trim() || etiquetaRol(o.rol)}`} subtitulo={[zonaTexto(o), (o.areas || []).join(', ')].filter(Boolean).join(' · ')} item={o} coleccion="ofertasEmpleo" onEditar={() => onEditarOferta(o)} onCambio={onCambio} postulaciones={postulaciones.filter((p) => p.ofertaId === o.id)} abierto={abrirPostulantes === o.id} perfiles={perfiles} />
               ))}
             </div>
           )}

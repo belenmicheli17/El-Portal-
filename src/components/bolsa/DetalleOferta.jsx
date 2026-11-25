@@ -140,7 +140,7 @@ export default function DetalleOferta({ oferta, permisos, currentUser, onVolver,
               )}
               <div className="flex-1 min-w-0">
                 <p className="text-[12px] font-bold tracking-[0.12em] uppercase text-[#2D6A6A] mb-1">Buscan</p>
-                <h1 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[24px] md:text-[32px] leading-tight tracking-tight">{etiquetaRol(oferta.rol)}</h1>
+                <h1 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[24px] md:text-[32px] leading-tight tracking-tight">{oferta.puestoTexto?.trim() || etiquetaRol(oferta.rol)}</h1>
                 {oferta.clinicaSlug ? (
                   <button type="button" onClick={() => navigate(`/clinica/${oferta.clinicaSlug}`)} className="flex w-fit items-center gap-1.5 text-[#2D6A6A] text-[15px] font-semibold mt-1 hover:underline underline-offset-2 text-left">
                     {oferta.clinicaNombre} · ver página de la clínica <ExternalLink className="w-3.5 h-3.5 shrink-0" />

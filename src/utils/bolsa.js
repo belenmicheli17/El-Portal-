@@ -24,6 +24,9 @@ export const etiquetaAlumnx = () => 'Estudiante';
 
 // Título corto del puesto: "Ecografía · Cardiología" para veterinarios, o el rol para los demás
 export const tituloPuesto = (oferta) => {
+  // Si la clínica escribió el nombre del puesto (ej: «Director/a técnico/a»), ese es el título
+  const propio = String(oferta?.puestoTexto || '').trim();
+  if (propio) return propio;
   const areas = Array.isArray(oferta?.areas) ? oferta.areas : [];
   if (oferta?.rol === 'veterinario' && areas.length > 0) return areas.join(' · ');
   return etiquetaRol(oferta?.rol);

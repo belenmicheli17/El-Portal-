@@ -31,7 +31,7 @@ export function TarjetaOferta({ oferta, onAbrir }) {
             </p>
           )}
           <p className="flex items-center gap-1 text-[#2D6A6A] text-[13px] font-semibold mt-1">
-            <Briefcase className="w-3.5 h-3.5 shrink-0" /> Puesto: {etiquetaRol(oferta.rol)}
+            <Briefcase className="w-3.5 h-3.5 shrink-0" /> Puesto: {oferta.puestoTexto?.trim() || etiquetaRol(oferta.rol)}
           </p>
         </div>
         <ChevronRight className="w-5 h-5 shrink-0 self-center text-[#9CA3AF] group-hover:text-[#2D6A6A] group-hover:translate-x-0.5 transition-all duration-300" />

@@ -243,11 +243,17 @@ ${secciones}`;
 // Nombres de los puestos (copia de src/data/bolsaOpciones.js; acá no se puede importar el código del sitio)
 const PUESTOS = { veterinario: 'Veterinario/a', asistente: 'Asistente veterinario/a (estudiante)', peluquero: 'Peluquero/a canino/a', recepcion: 'Recepcionista', alumno: 'Estudiante' };
 
+// Jornada y horario se guardan como listas: los pasamos a texto
+const textoDe = (v) => (Array.isArray(v) ? v.filter(Boolean).join(', ') : String(v || ''));
+
 const aMs = (v) => (!v ? 0 : typeof v === 'number' ? v : typeof v.toMillis === 'function' ? v.toMillis() : new Date(v).getTime() || 0);
 const ofertaVigente = (o) => o.estado === 'activo' && aMs(o.vencimientoMillis) > Date.now();
 
 // Título del puesto: "Veterinario/a — Cirugía · Ecografía" o "Peluquero/a canino/a"
 function tituloOferta(o) {
+  // Nombre del puesto escrito por la clínica (ej: «Director/a técnico/a»)
+  const propio = String(o.puestoTexto || '').trim();
+  if (propio) return propio;
   const base = PUESTOS[o.rol] || 'Veterinario/a';
   const areas = Array.isArray(o.areas) ? o.areas.filter(Boolean) : [];
   return o.rol === 'veterinario' && areas.length ? `${base} — ${areas.join(' · ')}` : base;
@@ -277,7 +283,7 @@ async function leerOfertasVigentes(db) {
 async function armarBolsa(db) {
   const ofertas = await leerOfertasVigentes(db);
   const items = ofertas.map((o) => {
-    const detalle = [o.clinicaNombre, zonaOferta(o), o.jornada].filter(Boolean).map(esc).join(' · ');
+    const detalle = [o.clinicaNombre, zonaOferta(o), textoDe(o.jornada)].filter(Boolean).map(esc).join(' · ');
     return `<li><a href="${DOMINIO}/bolsa-de-trabajo/oferta/${encodeURIComponent(o.id)}">${esc(tituloOferta(o))}</a>${detalle ? ' — ' + detalle : ''}</li>`;
   }).join('\n');
 
@@ -305,8 +311,8 @@ async function armarOferta(db, id) {
   const descripcionLibre = sinContacto(o.descripcion);
   const lista = (arr) => (Array.isArray(arr) && arr.length ? `<ul>\n${arr.filter(Boolean).map((x) => `<li>${esc(x)}</li>`).join('\n')}\n</ul>` : '');
   const datos = [
-    o.jornada ? `<li>Jornada: ${esc(o.jornada)}${o.notaJornada ? ' (' + esc(sinContacto(o.notaJornada)) + ')' : ''}</li>` : '',
-    o.horario ? `<li>Horario: ${esc(o.horario)}${o.notaHorario ? ' (' + esc(sinContacto(o.notaHorario)) + ')' : ''}</li>` : '',
+    textoDe(o.jornada) ? `<li>Jornada: ${esc(textoDe(o.jornada))}${o.notaJornada ? ' (' + esc(sinContacto(o.notaJornada)) + ')' : ''}</li>` : '',
+    textoDe(o.horario) ? `<li>Horario: ${esc(textoDe(o.horario))}${o.notaHorario ? ' (' + esc(sinContacto(o.notaHorario)) + ')' : ''}</li>` : '',
     o.experiencia ? `<li>Experiencia: ${esc(o.experiencia)}</li>` : ''
   ].join('\n');
 
@@ -319,7 +325,7 @@ ${lista(o.equipo) ? `<h2>La clínica cuenta con</h2>\n${lista(o.equipo)}` : ''}
 <p>Para postularte, ingresá a El Portal Veterinario con tu cuenta.</p>
 <p><a href="${DOMINIO}/bolsa-de-trabajo">Ver todas las ofertas de la Bolsa de Trabajo</a></p>`;
 
-  const textoGoogle = [descripcionLibre, o.jornada ? `Jornada: ${o.jornada}.` : '', o.experiencia ? `Experiencia: ${o.experiencia}.` : '',
+  const textoGoogle = [descripcionLibre, textoDe(o.jornada) ? `Jornada: ${textoDe(o.jornada)}.` : '', o.experiencia ? `Experiencia: ${o.experiencia}.` : '',
     Array.isArray(o.requisitos) && o.requisitos.length ? `Requisitos: ${o.requisitos.join(', ')}.` : ''].filter(Boolean).join(' ') || titulo;
 
   const region = String(o.provincia || '').replace(/^Provincia de\s+/i, '').trim();

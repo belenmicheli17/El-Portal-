@@ -14,6 +14,7 @@ const claseInput = "w-full border border-gray-200 focus:border-[#2D6A6A] rounded
 
 const FORMULARIO_VACIO = {
   rol: 'veterinario',
+  puestoTexto: '', // nombre del puesto escrito a mano (opcional), ej: «Director/a técnico/a»
   areas: [],
   jornada: [],
   notaJornada: '',
@@ -135,7 +136,8 @@ export default function FormularioOferta({ currentUser, ofertaExistente, onVolve
   const validar = () => {
     const e = {};
     if (!form.rol) e.rol = 'Elegí el puesto.';
-    if (!sinAreas && form.areas.length === 0) e.areas = 'Marcá al menos una especialidad.';
+    // Si escribieron el nombre del puesto (ej: director técnico), la especialidad pasa a ser opcional
+    if (!sinAreas && form.areas.length === 0 && !form.puestoTexto.trim()) e.areas = 'Marcá al menos una especialidad.';
     if (form.jornada.length === 0) e.jornada = 'Elegí al menos una jornada.';
     if (!form.experiencia) e.experiencia = 'Elegí la experiencia que buscás.';
     if (!form.descripcion.trim()) e.descripcion = 'Contá brevemente de qué se trata el puesto.';
@@ -158,6 +160,7 @@ export default function FormularioOferta({ currentUser, ofertaExistente, onVolve
       const datos = {
         creadorId: currentUser.uid,
         rol: form.rol,
+        puestoTexto: form.puestoTexto.trim(),
         areas: sinAreas ? [] : form.areas,
         jornada: form.jornada,
         notaJornada: form.notaJornada.trim(),
@@ -256,7 +259,17 @@ export default function FormularioOferta({ currentUser, ofertaExistente, onVolve
           <SelectorPills opciones={ROLES_VISIBLES.some((r) => r.id === form.rol) ? ROLES_VISIBLES : ROLES.filter((r) => !r.oculto || r.id === form.rol)} seleccion={form.rol} onCambio={(v) => cambiar('rol', v)} multiple={false} />
         </CampoBolsa>
 
-        <CampoBolsa titulo="Especialidad" requerido={!sinAreas} campo="areas" ayuda={sinAreas ? '' : 'Marcá la especialidad del profesional que estás buscando. Podés elegir más de una.'} error={errores.areas}>
+        <CampoBolsa titulo="Nombre del puesto" ayuda="Opcional. Para búsquedas puntuales, como «Director/a técnico/a» o «Jefe/a de guardia». Es el título que se ve en la oferta.">
+          <input
+            value={form.puestoTexto}
+            onChange={(e) => cambiar('puestoTexto', e.target.value)}
+            maxLength={60}
+            placeholder="Ej: Director/a técnico/a"
+            className={claseInput}
+          />
+        </CampoBolsa>
+
+        <CampoBolsa titulo="Especialidad" requerido={!sinAreas && !form.puestoTexto.trim()} campo="areas" ayuda={sinAreas ? '' : form.puestoTexto.trim() ? 'Opcional si escribiste el nombre del puesto. Podés elegir más de una.' : 'Marcá la especialidad del profesional que estás buscando. Podés elegir más de una.'} error={errores.areas}>
           <SelectorAreas
             seleccion={form.areas}
             onCambio={(v) => cambiar('areas', v)}
