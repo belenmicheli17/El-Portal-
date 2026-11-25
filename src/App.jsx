@@ -1,5 +1,5 @@
 import React, { useEffect, Suspense, lazy } from 'react';
-import { Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, Outlet, useLocation, useParams } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { doc, setDoc } from "firebase/firestore";
 import { db } from './firebase';
@@ -37,6 +37,13 @@ const VerPostulacion = lazy(() => import('./pages/ver-postulacion'));
 
 // Panel Admin
 import RutaProtegidaAdmin from './components/admin/RutaProtegidaAdmin';
+
+// Link propio de cada oferta (/bolsa-de-trabajo/oferta/ID): la abre dentro de la Bolsa.
+// Google ve una versión aparte de esta misma dirección (api/seo.js).
+function IrAOferta() {
+  const { id } = useParams();
+  return <Navigate to={`/bolsa-de-trabajo?oferta=${encodeURIComponent(id || '')}`} replace />;
+}
 import RutaProtegida from './components/admin/RutaProtegida';
 import BannerModoPrueba from './components/admin/BannerModoPrueba';
 const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'));
@@ -173,6 +180,7 @@ export default function App() {
 
             {/* Secciones públicas */}
             <Route path="/bolsa-de-trabajo" element={<BolsaDeTrabajo />} />
+            <Route path="/bolsa-de-trabajo/oferta/:id" element={<IrAOferta />} />
             <Route path="/capacitaciones" element={<Capacitaciones />} />
             <Route path="/cartilla-proveedores" element={<CartillaProveedores />} />
             <Route path="/papers" element={<Papers />} />

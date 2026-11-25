@@ -107,7 +107,8 @@ export const linkWhatsapp = (numero, mensaje) => armarLinkWhatsapp(conPrefijo54(
 export const linkPerfilProfesional = (slug) => (slug ? `${SITIO}/profesional/${slug}` : '');
 export const linkPerfilAlumnx = (slug) => (slug ? `${SITIO}/alumno/${slug}` : '');
 
-export const linkOferta = (id) => `${SITIO}/bolsa-de-trabajo?oferta=${id}`;
+// Link propio de cada oferta (abre la oferta en la Bolsa; los links viejos con ?oferta= siguen andando)
+export const linkOferta = (id) => `${SITIO}/bolsa-de-trabajo/oferta/${id}`;
 
 // Link a la postulación de una persona a una oferta (la clínica la abre y ve el CV ahí mismo)
 export const linkPostulacion = (ofertaId, uid) => `${SITIO}/postulacion/${ofertaId}_${uid}`;

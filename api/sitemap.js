@@ -78,6 +78,14 @@ export default async function handler(req, res) {
       bloques.push(armarUrl(`/clinica/${encodeURIComponent(identificador)}`, '0.8', 'weekly'));
     });
 
+    // 3) Ofertas activas y sin vencer de la Bolsa (cada una con su link propio)
+    const aMs = (v) => (!v ? 0 : typeof v === 'number' ? v : typeof v.toMillis === 'function' ? v.toMillis() : 0);
+    const snapOfertas = await db.collection('ofertasEmpleo').where('estado', '==', 'activo').get();
+    snapOfertas.forEach((doc) => {
+      if (aMs(doc.data().vencimientoMillis) <= Date.now()) return;
+      bloques.push(armarUrl(`/bolsa-de-trabajo/oferta/${encodeURIComponent(doc.id)}`, '0.6', 'daily'));
+    });
+
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${bloques.join('\n')}

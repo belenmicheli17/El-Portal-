@@ -239,9 +239,136 @@ ${secciones}`;
   });
 }
 
+// ===================== BOLSA DE TRABAJO =====================
+// Nombres de los puestos (copia de src/data/bolsaOpciones.js; acá no se puede importar el código del sitio)
+const PUESTOS = { veterinario: 'Veterinario/a', asistente: 'Asistente veterinario/a (estudiante)', peluquero: 'Peluquero/a canino/a', recepcion: 'Recepcionista', alumno: 'Estudiante' };
+
+const aMs = (v) => (!v ? 0 : typeof v === 'number' ? v : typeof v.toMillis === 'function' ? v.toMillis() : new Date(v).getTime() || 0);
+const ofertaVigente = (o) => o.estado === 'activo' && aMs(o.vencimientoMillis) > Date.now();
+
+// Título del puesto: "Veterinario/a — Cirugía · Ecografía" o "Peluquero/a canino/a"
+function tituloOferta(o) {
+  const base = PUESTOS[o.rol] || 'Veterinario/a';
+  const areas = Array.isArray(o.areas) ? o.areas.filter(Boolean) : [];
+  return o.rol === 'veterinario' && areas.length ? `${base} — ${areas.join(' · ')}` : base;
+}
+
+// Zona sin calle ni número: "Castelar, Zona Oeste" o "Palermo, CABA"
+function zonaOferta(o) {
+  const lugar = String(o.barrio || o.localidad || '').trim();
+  let region = String(o.provincia || '').replace(/^Provincia de\s+/i, '').trim();
+  if (/ciudad aut[oó]noma|^capital federal/i.test(region)) region = 'CABA';
+  if (region === 'Buenos Aires' && o.zonaBA) region = o.zonaBA;
+  return [lugar, region].filter((x, i, a) => x && a.indexOf(x) === i).join(', ');
+}
+
+// Saca del texto libre cualquier mail o teléfono, por si la clínica los escribió en la descripción
+const sinContacto = (texto) => String(texto || '')
+  .replace(/[\w.+-]+@[\w-]+\.[\w.]+/g, '[contacto en el Portal]')
+  .replace(/(\+?\d[\d\s().-]{7,}\d)/g, '[contacto en el Portal]');
+
+async function leerOfertasVigentes(db) {
+  const snap = await db.collection('ofertasEmpleo').where('estado', '==', 'activo').get();
+  const lista = [];
+  snap.forEach((d) => { const o = { id: d.id, ...d.data() }; if (ofertaVigente(o)) lista.push(o); });
+  return lista.sort((a, b) => aMs(b.publicadaEn) - aMs(a.publicadaEn));
+}
+
+async function armarBolsa(db) {
+  const ofertas = await leerOfertasVigentes(db);
+  const items = ofertas.map((o) => {
+    const detalle = [o.clinicaNombre, zonaOferta(o), o.jornada].filter(Boolean).map(esc).join(' · ');
+    return `<li><a href="${DOMINIO}/bolsa-de-trabajo/oferta/${encodeURIComponent(o.id)}">${esc(tituloOferta(o))}</a>${detalle ? ' — ' + detalle : ''}</li>`;
+  }).join('\n');
+
+  const cuerpo = `<h1>Bolsa de trabajo veterinaria en Argentina</h1>
+<p>Ofertas de empleo para veterinarios, asistentes veterinarios y peluqueros caninos en clínicas veterinarias de todo el país: guardias, reemplazos y puestos fijos. Publicar es gratis.</p>
+${items ? `<h2>Ofertas activas (${ofertas.length})</h2>\n<ul>\n${items}\n</ul>` : '<p>Ahora no hay ofertas activas. Volvé a mirar pronto.</p>'}
+<p><a href="${DOMINIO}/bolsa-de-trabajo">Ver la Bolsa de Trabajo</a></p>`;
+
+  return pagina({
+    titulo: 'Bolsa de trabajo veterinaria en Argentina | Empleos para veterinarios | El Portal Veterinario',
+    descripcion: 'Empleos para veterinarios, asistentes y peluqueros caninos en clínicas de toda Argentina: guardias, reemplazos y puestos fijos. Publicar es gratis.',
+    ruta: '/bolsa-de-trabajo',
+    cuerpo
+  });
+}
+
+async function armarOferta(db, id) {
+  const snap = await db.collection('ofertasEmpleo').doc(id).get();
+  if (!snap.exists) return null;
+  const o = { id: snap.id, ...snap.data() };
+  if (!ofertaVigente(o)) return null;
+
+  const titulo = tituloOferta(o);
+  const zona = zonaOferta(o);
+  const descripcionLibre = sinContacto(o.descripcion);
+  const lista = (arr) => (Array.isArray(arr) && arr.length ? `<ul>\n${arr.filter(Boolean).map((x) => `<li>${esc(x)}</li>`).join('\n')}\n</ul>` : '');
+  const datos = [
+    o.jornada ? `<li>Jornada: ${esc(o.jornada)}${o.notaJornada ? ' (' + esc(sinContacto(o.notaJornada)) + ')' : ''}</li>` : '',
+    o.horario ? `<li>Horario: ${esc(o.horario)}${o.notaHorario ? ' (' + esc(sinContacto(o.notaHorario)) + ')' : ''}</li>` : '',
+    o.experiencia ? `<li>Experiencia: ${esc(o.experiencia)}</li>` : ''
+  ].join('\n');
+
+  const cuerpo = `<h1>${esc(titulo)}</h1>
+<p>${[o.clinicaNombre, zona].filter(Boolean).map(esc).join(' · ')}</p>
+${datos.trim() ? `<ul>\n${datos}\n</ul>` : ''}
+${descripcionLibre ? `<h2>Descripción</h2>\n<p>${esc(descripcionLibre)}</p>` : ''}
+${lista(o.requisitos) ? `<h2>Requisitos</h2>\n${lista(o.requisitos)}` : ''}
+${lista(o.equipo) ? `<h2>La clínica cuenta con</h2>\n${lista(o.equipo)}` : ''}
+<p>Para postularte, ingresá a El Portal Veterinario con tu cuenta.</p>
+<p><a href="${DOMINIO}/bolsa-de-trabajo">Ver todas las ofertas de la Bolsa de Trabajo</a></p>`;
+
+  const textoGoogle = [descripcionLibre, o.jornada ? `Jornada: ${o.jornada}.` : '', o.experiencia ? `Experiencia: ${o.experiencia}.` : '',
+    Array.isArray(o.requisitos) && o.requisitos.length ? `Requisitos: ${o.requisitos.join(', ')}.` : ''].filter(Boolean).join(' ') || titulo;
+
+  const region = String(o.provincia || '').replace(/^Provincia de\s+/i, '').trim();
+  const jsonld = {
+    '@context': 'https://schema.org',
+    '@type': 'JobPosting',
+    title: titulo,
+    description: esc(textoGoogle),
+    datePosted: new Date(aMs(o.publicadaEn) || Date.now()).toISOString(),
+    validThrough: new Date(aMs(o.vencimientoMillis)).toISOString(),
+    directApply: false,
+    hiringOrganization: {
+      '@type': 'Organization',
+      name: o.clinicaNombre || 'Clínica veterinaria',
+      ...(o.clinicaSlug ? { sameAs: `${DOMINIO}/clinica/${encodeURIComponent(o.clinicaSlug)}` } : {}),
+      ...(typeof o.clinicaFoto === 'string' && /^https?:\/\//.test(o.clinicaFoto) ? { logo: o.clinicaFoto } : {})
+    },
+    jobLocation: {
+      '@type': 'Place',
+      address: {
+        '@type': 'PostalAddress',
+        ...(o.barrio || o.localidad ? { addressLocality: o.barrio || o.localidad } : {}),
+        ...(region ? { addressRegion: region } : {}),
+        addressCountry: 'AR'
+      }
+    }
+  };
+
+  return pagina({
+    titulo: `${titulo}${zona ? ' en ' + zona : ''} | Bolsa de trabajo veterinaria`,
+    descripcion: recortar(`${titulo}${o.clinicaNombre ? ' en ' + o.clinicaNombre : ''}${zona ? ', ' + zona : ''}. ${descripcionLibre}`, 155),
+    ruta: `/bolsa-de-trabajo/oferta/${encodeURIComponent(o.id)}`,
+    cuerpo,
+    jsonld
+  });
+}
+
 export default async function handler(req, res) {
   const { tipo, slug } = req.query;
   try {
+    if (tipo === 'bolsa' || tipo === 'oferta') {
+      const db = obtenerFirestore();
+      const html = tipo === 'bolsa' ? await armarBolsa(db) : (req.query.id ? await armarOferta(db, String(req.query.id)) : null);
+      if (!html) return res.status(404).send('No encontrado');
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      // Las ofertas cambian más seguido: se guardan 30 minutos
+      res.setHeader('Cache-Control', 'public, s-maxage=1800, stale-while-revalidate=3600');
+      return res.status(200).send(html);
+    }
     if (tipo === 'cartilla') {
       const html = await armarCartilla(obtenerFirestore());
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
