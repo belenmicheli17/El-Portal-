@@ -32,6 +32,7 @@
     "id": "quirurgico_critico",
     "grupo": "Quirúrgico",
     "opciones": [
+      "Cirugía General",
       "Cirugía de Tejidos Blandos",
       "Traumatología y Ortopedia",
       "Cirugía Neurológica",
