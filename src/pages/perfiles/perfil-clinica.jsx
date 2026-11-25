@@ -6,6 +6,7 @@ import { db } from '../../firebase';
 import { useAuth } from '../../context/AuthContext';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { BotonCompartirPerfil, BotonCompartirLink, armarLinkPerfil } from '../../components/CompartirPerfil';
+import { ServicioExplicable, AvisoPresionar } from '../../components/editor/EditorComponents';
 import {
   ChevronLeft, ChevronRight, ChevronDown, MapPin, Phone, Mail, Globe,
   Clock, Star, AlertTriangle, Building2, Instagram, Facebook, Users,
@@ -688,10 +689,10 @@ export default function PerfilClinica() {
                 const [titulo, ...resto] = a.split(': ');
                 const detalle = resto.join(': ');
                 return (
-                  <div key={i} className="px-4 py-2.5 rounded-2xl bg-[#E8EFEF]">
+                  <ServicioExplicable key={i} nombre={a} className="px-4 py-2.5 rounded-2xl bg-[#E8EFEF] border border-transparent">
                     <span className="block text-[15px] font-bold text-[#1A3D3D]">{titulo}</span>
                     {detalle && <span className="block text-[14px] font-medium text-[#666666] mt-0.5">{detalle}</span>}
-                  </div>
+                  </ServicioExplicable>
                 );
               })}
             </div>
@@ -726,10 +727,11 @@ export default function PerfilClinica() {
         {esPro && todosLosServicios.length > 0 && (
           <section className="pt-9">
             <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#2D6A6A]">Qué ofrecemos</p>
-            <h2 className="font-['Montserrat'] font-black text-[#1A3D3D] text-2xl lg:text-3xl tracking-tight mt-2 mb-3.5">Servicios</h2>
+            <h2 className="font-['Montserrat'] font-black text-[#1A3D3D] text-2xl lg:text-3xl tracking-tight mt-2 mb-2">Servicios</h2>
+            <AvisoPresionar className="mb-3" />
             <div className="bg-[#F4F7F7] border border-gray-100 rounded-3xl p-5 flex flex-wrap gap-1.5">
               {todosLosServicios.map((s, i) => (
-                <span key={i} className="px-3.5 py-2 rounded-[10px] bg-white border border-gray-100 text-[13px] lg:text-sm font-semibold text-[#666666]">{s}</span>
+                <ServicioExplicable key={i} nombre={s} className="px-3.5 py-2 rounded-[10px] bg-white border border-gray-100 text-[13px] lg:text-sm font-semibold text-[#666666]">{s}</ServicioExplicable>
               ))}
             </div>
           </section>

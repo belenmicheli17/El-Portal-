@@ -1,7 +1,8 @@
 import { useState as useEstado, useRef as useReferencia } from 'react';
 import animalesData from '../../data/animales.json';
+import especialidadesData from '../../data/especialidades.json';
 import { RotateCcw as IconoGiroIzq, RotateCw as IconoGiroDer, Check as IconoListo, Copy as IconoCopiar, ArrowRight as IconoFlecha } from 'lucide-react';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useId } from 'react';
 import { BotonCompartirPerfil } from '../CompartirPerfil';
 import {
   Info, ExternalLink, Eye, EyeOff, ChevronDown, Crop, Check, Search, X, Plus, MapPin, Maximize2, Stethoscope
@@ -1104,5 +1105,78 @@ export function CajaTuPagina({ tipo, slug, className = '', datosCompartir = null
         />
       )}
     </div>
+  );
+}
+
+// ==========================================
+// EXPLICACIÓN DE CADA ESPECIALIDAD O SERVICIO (perfiles públicos)
+// Al tocar una especialidad se abre una ventanita con un texto corto que explica qué es.
+// Los textos viven en src/data/especialidades.json (campo "descripciones" de cada grupo).
+// ==========================================
+
+// Todas las descripciones juntas: { "Cardiología": "El cardiólogo...", ... }
+const DESCRIPCIONES = especialidadesData.reduce((todas, g) => ({ ...todas, ...(g.descripciones || {}) }), {});
+
+// Busca el texto de una especialidad. "Animales Exóticos: Aves, Reptiles" usa el de "Animales Exóticos".
+export const descripcionServicio = (nombre) => DESCRIPCIONES[String(nombre || '').split(': ')[0].trim()] || '';
+
+// Aviso naranja con flechita al final (mismo estilo que la Sala de espera), apuntando a la lista
+export const AvisoPresionar = ({ texto = 'Presioná cada una para saber qué es', className = '' }) => (
+  <p className={`flex items-center gap-1.5 text-[#FF9800] text-[14px] font-bold ${className}`}>
+    {texto}
+    <IconoFlecha size={18} strokeWidth={2.25} className="rotate-90 shrink-0" />
+  </p>
+);
+
+// Envuelve una especialidad: si tiene explicación, al tocarla la misma cajita se agranda y muestra el texto.
+// Se abre una sola por vez: al abrir otra, la anterior se cierra.
+// Si no tiene explicación (por ejemplo, un servicio que escribió el profesional), se muestra igual que siempre.
+const EVENTO_ABIERTA = 'servicioExplicable:abierta';
+// variante 'lista' = renglón con viñeta (perfil profesional): el texto se abre debajo, alineado con el nombre
+export function ServicioExplicable({ nombre, className = '', variante = 'cajita', children }) {
+  const [abierta, setAbierta] = useState(false);
+  const idPropio = useId(); // identificador único de esta cajita
+  const texto = descripcionServicio(nombre);
+
+  // Si se abre otra, esta se cierra
+  useEffect(() => {
+    const alAbrirOtra = (e) => { if (e.detail !== idPropio) setAbierta(false); };
+    window.addEventListener(EVENTO_ABIERTA, alAbrirOtra);
+    return () => window.removeEventListener(EVENTO_ABIERTA, alAbrirOtra);
+  }, [idPropio]);
+
+  // Si scrolleás un poco con la cajita abierta, se cierra sola
+  useEffect(() => {
+    if (!abierta) return undefined;
+    const desde = window.scrollY;
+    const alScroll = () => { if (Math.abs(window.scrollY - desde) > 160) setAbierta(false); };
+    window.addEventListener('scroll', alScroll, { passive: true });
+    return () => window.removeEventListener('scroll', alScroll);
+  }, [abierta]);
+
+  if (!texto) return <div className={className}>{children}</div>;
+
+  const alternar = () => {
+    if (!abierta) window.dispatchEvent(new CustomEvent(EVENTO_ABIERTA, { detail: idPropio }));
+    setAbierta(!abierta);
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={alternar}
+      aria-expanded={abierta}
+      className={`${className} text-left cursor-pointer transition-all duration-300 focus-visible:outline-2 focus-visible:outline-[#FF9800] ${abierta
+        // Abierta: se nota con el borde y un fondo naranja suave (igual en la lista y en las cajitas)
+        ? `basis-full w-full flex-wrap !bg-[#FFF7EC] !border-[#FF9800] border ${variante === 'lista' ? '!mx-0 !px-3 !py-2.5 rounded-xl' : ''} shadow-[0_4px_14px_rgba(255,152,0,0.18)]`
+        : `border ${variante === 'lista' ? 'border-transparent' : ''} hover:border-[#FF9800]/40`}`}
+    >
+      {children}
+      {abierta && (
+        <span className={`block basis-full w-full mt-2 ${variante === 'lista' ? 'pl-3.5 pb-1.5' : ''} text-[14px] md:text-[15px] font-normal leading-relaxed text-[#333333] normal-case tracking-normal animate-in fade-in duration-300`}>
+          {texto}
+        </span>
+      )}
+    </button>
   );
 }

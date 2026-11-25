@@ -10,7 +10,16 @@
       "Enfermedades Infecciosas",
       "Aplicación de Microchip",
       "Trámites de Viaje"
-    ]
+    ],
+    "descripciones": {
+      "Clínica Médica General": "Es la consulta de siempre: control anual, vacunas, desparasitación y la primera revisión cuando tu mascota no está bien. El veterinario clínico la revisa completa y, si hace falta, te deriva a un especialista.",
+      "Geriatría": "Atención para perros y gatos mayores, en general desde los 7 u 8 años. Se ocupa de controles más seguidos, dolores articulares, cambios de comportamiento y enfermedades que aparecen con la edad, para que tu mascota envejezca con buena calidad de vida.",
+      "Pediatría y Neonatología": "Cuidado de cachorros y gatitos desde que nacen: primeras vacunas, desparasitación, alimentación y controles de crecimiento. También atiende a los recién nacidos que necesitan cuidados especiales.",
+      "Reproducción y Obstetricia": "Acompaña todo lo relacionado con la reproducción: celos, servicios, control de preñez, partos y problemas de fertilidad. Si tu perra o gata está preñada, el veterinario especialista en reproducción la controla hasta el parto.",
+      "Enfermedades Infecciosas": "Diagnóstico y tratamiento de enfermedades causadas por virus, bacterias, hongos o parásitos, como parvovirus, moquillo, leptospirosis o enfermedades transmitidas por garrapatas. Incluye planes de prevención y vacunación.",
+      "Aplicación de Microchip": "El microchip es un chip del tamaño de un grano de arroz que se coloca bajo la piel con una inyección rápida. Lleva un número único que permite identificar a tu mascota si se pierde, y suele pedirse para viajar al exterior.",
+      "Trámites de Viaje": "Ayuda con todo lo que necesitás para viajar con tu mascota: certificado de salud, vacunas al día, microchip y la documentación que pide cada destino o aerolínea. Conviene consultar con tiempo, porque algunos países piden estudios con meses de anticipación."
+    }
   },
   {
     "id": "especialidades_medicas",
@@ -26,7 +35,19 @@
       "Oncología",
       "Oftalmología",
       "Odontología"
-    ]
+    ],
+    "descripciones": {
+      "Cardiología": "El cardiólogo veterinario estudia el corazón de tu mascota: soplos, arritmias, cansancio, tos o desmayos. Hace controles con electrocardiograma y ecocardiograma, y es clave antes de una cirugía en animales mayores.",
+      "Dermatología": "Atiende problemas de piel, pelo, oídos y uñas: picazón, alergias, caída de pelo, otitis o heridas que no cierran. El dermatólogo veterinario busca la causa para que no vuelva a aparecer.",
+      "Endocrinología": "Se ocupa de las hormonas y del metabolismo. Trata enfermedades como diabetes, problemas de tiroides o de las glándulas suprarrenales, que suelen notarse en cambios de peso, sed o apetito.",
+      "Gastroenterología": "Atiende el aparato digestivo: vómitos, diarreas que se repiten, falta de apetito o problemas de hígado y páncreas. Puede usar estudios como ecografía o endoscopía para encontrar la causa.",
+      "Nefrología y Urología": "Cuida los riñones y las vías urinarias: infecciones, cálculos, dificultad para orinar o enfermedad renal crónica, muy común en gatos mayores. Un diagnóstico temprano ayuda mucho.",
+      "Neumonología": "Se ocupa de la respiración: tos, falta de aire, ronquidos fuertes o problemas en nariz, tráquea y pulmones. Es importante en razas de hocico corto, como bulldogs y pugs.",
+      "Neurología": "El neurólogo veterinario atiende el cerebro, la médula y los nervios: convulsiones, epilepsia, pérdida de equilibrio, debilidad en las patas o dolor de columna.",
+      "Oncología": "Diagnóstico y tratamiento del cáncer en mascotas. El oncólogo veterinario evalúa bultos o tumores, indica el tratamiento más adecuado y acompaña a la familia para cuidar la calidad de vida.",
+      "Oftalmología": "Cuida los ojos de tu mascota: ojos rojos o lagrimosos, úlceras, cataratas, glaucoma o pérdida de visión. Algunas razas tienen más tendencia a problemas oculares y conviene controlarlas.",
+      "Odontología": "Atiende la boca y los dientes: sarro, mal aliento, encías inflamadas, dientes rotos o flojos. Una boca sana evita dolor e infecciones que pueden afectar a otros órganos."
+    }
   },
   {
     "id": "quirurgico_critico",
@@ -38,9 +59,19 @@
       "Cirugía Neurológica",
       "Cirugía de Columna",
       "Anestesiología y Manejo del Dolor",
-            "Cuidados Intensivos y Emergencias",
+      "Cuidados Intensivos y Emergencias",
       "Limpieza Dental y Cirugía Odontológica"
-    ]
+    ],
+    "descripciones": {
+      "Cirugía General": "Cirugías frecuentes como castraciones, extracción de bultos, heridas o cuerpos extraños tragados. El cirujano veterinario evalúa a tu mascota antes de operar y controla la recuperación.",
+      "Cirugía de Tejidos Blandos": "Operaciones de órganos y tejidos que no son huesos: abdomen, piel, aparato digestivo, urinario o respiratorio. Incluye cirugías de mayor complejidad que una castración.",
+      "Traumatología y Ortopedia": "El traumatólogo veterinario atiende huesos y articulaciones: fracturas, renguera, displasia de cadera, luxación de rótula o rotura de ligamentos de la rodilla. Puede indicar tratamiento o cirugía.",
+      "Cirugía Neurológica": "Cirugías del sistema nervioso, como las que se hacen para tratar algunas lesiones de médula o tumores. La indica el neurólogo o neurocirujano veterinario después de estudios específicos.",
+      "Cirugía de Columna": "Se ocupa de problemas de la columna, como las hernias de disco, muy comunes en razas como el salchicha. Puede ayudar a recuperar la movilidad cuando hay dolor o parálisis de patas.",
+      "Anestesiología y Manejo del Dolor": "El anestesiólogo veterinario se encarga de que tu mascota esté segura y sin dolor durante y después de una cirugía. También trata el dolor crónico, por ejemplo en animales mayores con artrosis.",
+      "Cuidados Intensivos y Emergencias": "Atención urgente cuando tu mascota corre peligro: accidentes, intoxicaciones, dificultad para respirar o convulsiones. Incluye internación y monitoreo continuo en casos graves.",
+      "Limpieza Dental y Cirugía Odontológica": "Limpieza profunda del sarro con anestesia, extracción de dientes dañados y tratamiento de encías. Ayuda a terminar con el mal aliento y el dolor al comer."
+    }
   },
   {
     "id": "imagenes",
@@ -53,7 +84,16 @@
       "Ecocardiograma Doppler",
       "Electrocardiograma",
       "Endoscopía"
-    ]
+    ],
+    "descripciones": {
+      "Ecografía": "Estudio sin dolor que usa ultrasonido para ver los órganos por dentro: abdomen, vejiga, útero o corazón. Se usa mucho para controlar preñeces y buscar la causa de muchos síntomas.",
+      "Radiología": "Las radiografías permiten ver huesos, pulmones y algunos órganos. Son útiles ante fracturas, renguera, tos o si sospechás que tu mascota se tragó algo.",
+      "Tomografía (TAC)": "Estudio de imágenes más detallado que la radiografía, que muestra el cuerpo en cortes. Se usa para planificar cirugías o estudiar tumores, y requiere anestesia o sedación.",
+      "Resonancia Magnética (RMN)": "El estudio más preciso para ver el cerebro, la médula y los tejidos blandos. Suele pedirla el neurólogo ante convulsiones o problemas de columna, y se hace con anestesia.",
+      "Ecocardiograma Doppler": "Ecografía del corazón que muestra cómo late y cómo circula la sangre. Es el estudio clave para evaluar soplos y enfermedades cardíacas.",
+      "Electrocardiograma": "Registra la actividad eléctrica del corazón para detectar arritmias. Es rápido, no duele y suele pedirse antes de una cirugía en animales mayores.",
+      "Endoscopía": "Una cámara pequeña permite ver por dentro el estómago, el intestino o las vías respiratorias, tomar muestras o sacar objetos tragados sin abrir. Se hace con anestesia."
+    }
   },
   {
     "id": "laboratorio",
@@ -64,7 +104,14 @@
       "Microbiología",
       "PCR e Infecciosas",
       "Anatomía Patológica"
-    ]
+    ],
+    "descripciones": {
+      "Hematología": "Análisis de la sangre que cuenta glóbulos rojos, blancos y plaquetas. Ayuda a detectar anemias, infecciones o problemas de coagulación, y es parte de los chequeos antes de una cirugía.",
+      "Bioquímica Clínica": "Análisis de sangre que muestra cómo funcionan órganos como el hígado y los riñones, además de la glucosa y otros valores. Es clave en controles de animales mayores.",
+      "Microbiología": "Estudia muestras (orina, piel, oído, heridas) para identificar qué bacteria u hongo causa una infección. Con el antibiograma se elige el antibiótico que realmente funciona.",
+      "PCR e Infecciosas": "Pruebas que detectan virus, bacterias o parásitos con mucha precisión, como las enfermedades transmitidas por garrapatas. Permiten confirmar un diagnóstico rápido.",
+      "Anatomía Patológica": "Estudio al microscopio de bultos o tejidos (biopsias y citologías). Dice si un tumor es benigno o maligno y ayuda a decidir el tratamiento."
+    }
   },
   {
     "id": "atencion_por_especie",
@@ -73,7 +120,12 @@
       "Medicina Felina Especializada",
       "Animales Exóticos",
       "Grandes Animales y Medicina Rural"
-    ]
+    ],
+    "descripciones": {
+      "Medicina Felina Especializada": "Atención pensada para gatos, que no son perros chiquitos: tienen enfermedades propias y se estresan fácil en la consulta. Un veterinario de gatos maneja el trato y los tiempos para que la visita sea más tranquila.",
+      "Animales Exóticos": "Atención de conejos, hurones, cobayos, aves, tortugas, reptiles y otras mascotas no tradicionales. Cada especie necesita cuidados, alimentación y medicamentos distintos, por eso conviene un veterinario de exóticos.",
+      "Grandes Animales y Medicina Rural": "Atención de caballos, vacas, ovejas, cabras y cerdos, en general en el campo. Incluye sanidad, partos, vacunaciones y controles del rodeo o la majada."
+    }
   },
   {
     "id": "bienestar_comportamiento",
@@ -82,7 +134,12 @@
       "Etología Clínica",
       "Nutrición Clínica",
       "Fisioterapia y Rehabilitación"
-    ]
+    ],
+    "descripciones": {
+      "Etología Clínica": "El etólogo veterinario trata problemas de conducta: miedos, agresividad, ansiedad por separación, ladridos o maullidos excesivos, o hacer pis fuera de lugar. Busca la causa y arma un plan junto a la familia.",
+      "Nutrición Clínica": "Arma una alimentación a medida de tu mascota: para bajar de peso, para enfermedades como la renal o la diabetes, o si querés darle dieta casera o natural de forma segura.",
+      "Fisioterapia y Rehabilitación": "Ejercicios, masajes y otras técnicas para recuperar movilidad después de una cirugía o lesión, o para aliviar dolores en animales mayores con artrosis."
+    }
   },
   {
     "id": "terapias_holisticas",
@@ -110,6 +167,30 @@
       "Medicina Regenerativa (PRP y Células Madre)",
       "Medicina Antroposófica",
       "Biorresonancia"
-    ]
+    ],
+    "descripciones": {
+      "Acupuntura": "Técnica de origen chino que coloca agujas muy finas en puntos específicos del cuerpo. En veterinaria se usa sobre todo como complemento para el dolor y problemas de movilidad.",
+      "Cannabis Medicinal": "Uso de aceites a base de cannabis, indicados y dosificados por un veterinario. Se usa como complemento en casos de dolor crónico, ansiedad o convulsiones. Nunca hay que darlo sin indicación profesional.",
+      "Ozonoterapia": "Aplicación de ozono medicinal sobre la piel, en heridas o por otras vías. Se usa como complemento en heridas que cuestan cicatrizar y en algunos problemas de piel.",
+      "Flores de Bach": "Gotas preparadas con esencias de flores, pensadas para acompañar el estado emocional, por ejemplo en mascotas con miedos o estrés. Se usan como complemento.",
+      "Reiki": "Técnica de origen japonés en la que el terapeuta apoya o acerca las manos al animal buscando relajarlo. Se ofrece como acompañamiento.",
+      "Homeopatía": "Sistema que usa preparados muy diluidos de distintas sustancias. Algunos tutores la eligen como complemento del tratamiento veterinario.",
+      "Magnetoterapia": "Uso de campos magnéticos sobre zonas del cuerpo. Se ofrece como complemento en dolores articulares y procesos de recuperación.",
+      "Electroacupuntura": "Variante de la acupuntura que suma una corriente eléctrica suave entre las agujas. Se usa como complemento para el dolor y la rehabilitación.",
+      "Moxibustión": "Técnica de la medicina china que aplica calor en puntos del cuerpo quemando una hierba (artemisa) cerca de la piel, sin tocarla. Suele combinarse con acupuntura.",
+      "Medicina Tradicional China": "Enfoque que combina acupuntura, hierbas, alimentación y otras técnicas según los principios de la medicina china. Se usa como complemento de la atención veterinaria.",
+      "Fitoterapia": "Uso de plantas medicinales y sus extractos. Siempre debe indicarlo un veterinario, porque algunas plantas son tóxicas para perros y gatos.",
+      "Aromaterapia": "Uso de aceites esenciales buscando relajar o mejorar el bienestar. Requiere mucho cuidado: varios aceites esenciales son tóxicos para gatos, por eso solo con indicación profesional.",
+      "Esencias Florales": "Preparados de flores (de Bach u otros sistemas) pensados para acompañar el estado emocional de la mascota. Se usan como complemento.",
+      "Quiropraxia Veterinaria": "Ajustes manuales sobre la columna y las articulaciones. Se ofrece como complemento en problemas de movilidad y contracturas.",
+      "Osteopatía": "Terapia manual que trabaja sobre músculos, articulaciones y tejidos con movimientos suaves. Se usa como complemento en dolores y rigidez.",
+      "Masoterapia y Masajes Terapéuticos": "Masajes para relajar músculos, mejorar la circulación y aliviar tensiones. Suele sumarse a la rehabilitación o al cuidado de animales mayores.",
+      "Láserterapia": "Uso de láser terapéutico de baja potencia, sin dolor, sobre la zona afectada. Se usa en rehabilitación, heridas e inflamaciones.",
+      "Terapia Neural": "Aplicación de inyecciones de anestésico local en puntos específicos o cicatrices. Se ofrece como complemento en el manejo del dolor.",
+      "Medicina Ortomolecular": "Enfoque basado en suplementos de vitaminas, minerales y otros nutrientes. Debe indicarlo un veterinario para evitar excesos.",
+      "Medicina Regenerativa (PRP y Células Madre)": "Tratamientos que usan derivados de la propia sangre (plasma rico en plaquetas) o células madre para ayudar a reparar tejidos. Se usa sobre todo en problemas articulares y lesiones.",
+      "Medicina Antroposófica": "Enfoque que combina preparados naturales con una mirada integral del animal. Algunos tutores la eligen como complemento.",
+      "Biorresonancia": "Terapia con aparatos que dicen trabajar sobre las frecuencias del cuerpo. No tiene respaldo científico y se ofrece solo como complemento."
+    }
   }
 ]

@@ -5,6 +5,7 @@ import { doc, collection, query, where, getDocs, getDoc } from 'firebase/firesto
 import { useAuth } from '../../context/AuthContext';
 import { BotonCompartirPerfil, BotonCompartirLink, armarLinkPerfil } from '../../components/CompartirPerfil';
 import especialidadesData from '../../data/especialidades.json';
+import { ServicioExplicable, AvisoPresionar } from '../../components/editor/EditorComponents';
 import { direccionCorta } from '../../utils/bolsa';
 import { Video as IconoVideo, Siren as IconoSirena } from 'lucide-react';
 import { 
@@ -895,6 +896,7 @@ const mobileTabs = [
                   return (
                     <div>
                       <h3 className="font-extrabold text-[16px] text-[#1A3D3D] font-['Montserrat'] uppercase tracking-widest mb-3 pl-2 text-left">Actualmente</h3>
+                      {!Array.isArray(data.servicios) && <AvisoPresionar className="mb-3 pl-2" />}
                       <div className="space-y-3">
                         {serviciosNormalizados.map((s, i) => (
                           Array.isArray(data.servicios)
@@ -942,13 +944,13 @@ const mobileTabs = [
                                     const [titulo, ...resto] = opcion.split(': ');
                                     const detalle = resto.join(': ');
                                     return (
-                                      <div key={opcion} className="flex items-start gap-2">
+                                      <ServicioExplicable key={opcion} nombre={opcion} variante="lista" className="flex items-start gap-2 w-full rounded-lg -mx-1 px-1 py-0.5">
                                         <span className="w-1.5 h-1.5 rounded-full bg-[#2D6A6A] shrink-0 mt-[7px]" />
                                         <span>
                                           <span className="block text-[14px] font-medium text-[#333333]">{titulo}</span>
                                           {detalle && <span className="block text-[13px] font-medium text-[#666666] mt-0.5">{detalle}</span>}
                                         </span>
-                                      </div>
+                                      </ServicioExplicable>
                                     );
                                   })}
                                 </div>
@@ -1319,6 +1321,7 @@ return (
                         <div className="mb-10 text-left">
                           <h2 className="text-[24px] md:text-[30px] font-extrabold text-[#1A3D3D] font-['Montserrat'] mb-2 uppercase tracking-tight">Actualmente</h2>
                           <p className="text-[#666666] text-[17px] font-bold uppercase tracking-[0.2em] opacity-80 leading-none">¿En qué me especializo hoy en día?</p>
+                          {!Array.isArray(data.servicios) && <AvisoPresionar className="mt-5" />}
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                           {serviciosNormalizados.map((s, i) => (
@@ -1365,13 +1368,13 @@ return (
                                       const [titulo, ...resto] = opcion.split(': ');
                                       const detalle = resto.join(': ');
                                       return (
-                                        <div key={opcion} className="flex items-start gap-2">
+                                        <ServicioExplicable key={opcion} nombre={opcion} variante="lista" className="flex items-start gap-2 w-full rounded-lg -mx-1 px-1 py-0.5">
                                           <span className="w-1.5 h-1.5 rounded-full bg-[#2D6A6A] shrink-0 mt-[9px]" />
                                           <span>
                                             <span className="block text-[15px] font-medium text-[#333333]">{titulo}</span>
                                             {detalle && <span className="block text-[14px] font-medium text-[#666666] mt-0.5">{detalle}</span>}
                                           </span>
-                                        </div>
+                                        </ServicioExplicable>
                                       );
                                     })}
                                   </div>
