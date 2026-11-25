@@ -476,14 +476,36 @@ const Cartilla = () => {
           });
         });
 
-        const shuffleArray = (array) => {
-          let shuffled = [...array];
-          for (let i = shuffled.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        // Orden "mezclado" que se mantiene quieto un rato: así, si entrás a un perfil y volvés,
+        // las tarjetas siguen en el mismo lugar. Cada 3 horas se sortea un orden nuevo.
+        const DURACION_ORDEN = 3 * 60 * 60 * 1000; // 3 horas
+        let semilla = '';
+        try {
+          const guardado = JSON.parse(localStorage.getItem('ordenCartilla') || 'null');
+          if (guardado && guardado.semilla && Date.now() - guardado.creado < DURACION_ORDEN) {
+            semilla = guardado.semilla;
+          } else {
+            semilla = Math.random().toString(36).slice(2);
+            localStorage.setItem('ordenCartilla', JSON.stringify({ semilla, creado: Date.now() }));
           }
-          return shuffled;
+        } catch {
+          // Si el navegador no deja guardar, se mezcla igual (como antes)
+          semilla = Math.random().toString(36).slice(2);
+        }
+
+        // Cada perfil recibe un "número de sorteo" fijo según la semilla y su id:
+        // misma semilla = mismo orden, aunque se sumen perfiles nuevos
+        const numeroDeSorteo = (texto) => {
+          let h = 2166136261;
+          for (let i = 0; i < texto.length; i++) {
+            h ^= texto.charCodeAt(i);
+            h = Math.imul(h, 16777619);
+          }
+          return h >>> 0;
         };
+        const shuffleArray = (array) => [...array].sort(
+          (x, y) => numeroDeSorteo(`${semilla}|${x.tipo}|${x.id}`) - numeroDeSorteo(`${semilla}|${y.tipo}|${y.id}`)
+        );
 
         const todosLosItems = [...profesionalesData, ...clinicasData];
         const premium = shuffleArray(todosLosItems.filter(d => d.planActual === 'pro'));
