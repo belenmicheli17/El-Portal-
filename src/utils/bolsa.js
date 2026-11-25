@@ -186,6 +186,9 @@ export const zonaParaImagen = (oferta) => {
 
 // Especialidades (máximo 2) o el puesto, para el texto grande de la imagen
 const especialidadesParaImagen = (oferta) => {
+  // Nombre del puesto escrito por la clínica (ej: «Director/a técnico/a»)
+  const propio = String(oferta?.puestoTexto || '').trim();
+  if (propio) return [propio];
   const areas = Array.isArray(oferta?.areas) ? oferta.areas.filter(Boolean) : [];
   if (oferta?.rol === 'veterinario' && areas.length > 0) {
     const lista = areas.slice(0, 2);

@@ -18,7 +18,8 @@ export default function VentanaPostulacion({ abierta, onCerrar, oferta, contacto
   const [enviando, setEnviando] = useState(false);
   const [yaPostulada, setYaPostulada] = useState(false);
 
-  const puesto = etiquetaRol(oferta?.rol);
+  // Si la clínica escribió el nombre del puesto, se usa ese
+  const puesto = oferta?.puestoTexto?.trim() || etiquetaRol(oferta?.rol);
 
   // ¿Ya se postuló a esta oferta? (se puede una sola vez por oferta)
   useEffect(() => {
