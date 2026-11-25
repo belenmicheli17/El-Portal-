@@ -917,53 +917,7 @@ const location = useLocation();
           </div>
         )}
 
-        {/* MODAL DE SUSCRIPCIÓN */}
-        {isSubModalOpen && (
-          <div className="fixed inset-0 bg-[#1A3D3D]/95 z-[300] flex items-center justify-center p-4 backdrop-blur-sm">
-            <div className="bg-white rounded-[32px] w-full max-w-md overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-200">
-              <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-[#009EE3]/10 flex items-center justify-center"><CreditCard className="w-5 h-5 text-[#009EE3]" /></div>
-                  <h3 className="font-bold font-['Montserrat'] text-xl text-[#1A3D3D]">Facturación</h3>
-                </div>
-                <button onClick={() => setIsSubModalOpen(false)} className="p-2.5 bg-white rounded-full hover:bg-gray-100 transition-colors border border-gray-200"><X className="w-5 h-5 text-[#666666]" /></button>
-              </div>
-              
-              <div className="p-8">
-                <div className="text-center mb-8">
-                  <p className="text-sm text-[#666666] font-bold uppercase tracking-widest mb-2">Plan Actual</p>
-                  <h2 className="text-4xl font-black text-[#1A3D3D] font-['Montserrat']">Proveedor PRO</h2>
-                  <div className={`inline-flex items-center gap-2 mt-3 px-3 py-1.5 rounded-full text-xs font-bold border ${isSubscriptionActive ? 'bg-[#4DB6AC]/10 text-[#4DB6AC] border-[#4DB6AC]/30' : 'bg-red-500/10 text-red-500 border-red-500/30'}`}>
-                    <span className={`w-2 h-2 rounded-full ${isSubscriptionActive ? 'bg-[#4DB6AC]' : 'bg-red-500'}`}></span>
-                    {isSubscriptionActive ? 'Activo' : 'Inactivo (Falta de pago)'}
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-3">
-                  <button 
-                    onClick={() => {
-                      setIsSubscriptionActive(true);
-                      setIsSubModalOpen(false);
-                      setModalConfig({ isOpen: true, title: '¡Pago Exitoso!', message: 'Tu cuenta ha sido reactivada y tu perfil vuelve a ser visible.', type: 'success' });
-                    }}
-                    className="w-full py-4 rounded-xl font-bold text-sm bg-[#009EE3] text-white hover:bg-[#0080B7] transition-all flex items-center justify-center gap-2 shadow-md"
-                  >
-                    Simular Pago (Mercado Pago) <ArrowUpRight className="w-4 h-4" />
-                  </button>
-                  <button 
-                    onClick={() => {
-                      setIsSubscriptionActive(false);
-                      setIsSubModalOpen(false);
-                    }}
-                    className="w-full py-4 rounded-xl font-bold text-sm text-[#666666] hover:bg-gray-50 transition-all border border-transparent hover:border-gray-200"
-                  >
-                    Simular Vencimiento
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Cartel de facturación: se borró la versión simulada (datos de prueba). Se arma de nuevo con Mercado Pago real. */}
 
         {/* NAVBAR */}
         <nav className="fixed top-0 w-full z-[80] h-[64px] bg-white/90 backdrop-blur-md border-b border-gray-100 flex items-center px-6 md:px-10 shadow-sm">

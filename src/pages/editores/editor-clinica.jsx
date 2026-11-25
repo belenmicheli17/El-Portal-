@@ -1117,61 +1117,7 @@ export default function EditorClinico() {
         </div>
       )}
 
-      {/* MODAL DE PAGO (FACTURACIÓN) — simulador hasta integrar Mercado Pago */}
-      {isSubModalOpen && !esSocioVitalicio && (
-        <div className="fixed inset-0 bg-[#1A3D3D]/40 backdrop-blur-md z-[300] overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4 sm:p-6">
-            <div className="bg-white rounded-[32px] w-full max-w-md flex flex-col overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-200">
-              <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 shrink-0">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-[#009EE3]/10 flex items-center justify-center"><CreditCard className="w-5 h-5 text-[#009EE3]" /></div>
-                  <h3 className="font-bold font-['Montserrat'] text-xl text-[#1A3D3D]">Facturación</h3>
-                </div>
-                <button onClick={() => setIsSubModalOpen(false)} className="p-2.5 bg-white rounded-full hover:bg-gray-100 transition-colors border border-gray-200"><X className="w-5 h-5 text-[#666666]" /></button>
-              </div>
-
-              <div className="p-6 md:p-8 bg-white">
-                <div className="text-center mb-8">
-                  <p className="text-sm text-[#666666] font-bold uppercase tracking-widest mb-2">Plan actual</p>
-                  <h2 className="text-4xl font-black text-[#1A3D3D] font-['Montserrat']">Clínica PRO</h2>
-                  <div className={`inline-flex items-center gap-2 mt-3 px-3 py-1.5 rounded-full text-xs font-bold border ${isSubscriptionActive ? 'bg-[#4DB6AC]/10 text-[#4DB6AC] border-[#4DB6AC]/30' : 'bg-red-500/10 text-red-500 border-red-500/30'}`}>
-                    <span className={`w-2 h-2 rounded-full ${isSubscriptionActive ? 'bg-[#4DB6AC]' : 'bg-red-500'}`}></span>
-                    {isSubscriptionActive ? 'Activo' : 'Inactivo (falta de pago)'}
-                  </div>
-                </div>
-
-                {isSubscriptionActive && (
-                  <div className="bg-gray-50 rounded-2xl p-5 border border-gray-100 mb-8">
-                    <div className="flex justify-between items-center mb-3">
-                      <span className="text-sm text-[#666666] font-medium">Próximo cobro</span>
-                      <span className="text-sm font-bold text-[#1A3D3D]">15 de Junio, 2026</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-[#666666] font-medium">Método de pago</span>
-                      <span className="text-sm font-bold text-[#1A3D3D] flex items-center gap-2">Visa terminada en 4242</span>
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex flex-col gap-3">
-                  <button
-                    onClick={() => { setIsSubscriptionActive(true); setIsSubModalOpen(false); setModalConfig({ isOpen: true, title: '¡Pago exitoso!', message: 'Tu cuenta fue reactivada y tu perfil vuelve a ser visible.', type: 'success' }); }}
-                    className="w-full py-4 rounded-xl font-bold text-sm bg-[#009EE3] text-white hover:bg-[#0080B7] transition-all flex items-center justify-center gap-2 shadow-md"
-                  >
-                    Simular Pago (Mercado Pago) <ArrowUpRight className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => { setIsSubscriptionActive(false); setIsSubModalOpen(false); }}
-                    className="w-full py-4 rounded-xl font-bold text-sm text-[#666666] hover:bg-gray-50 transition-all border border-transparent hover:border-gray-200"
-                  >
-                    Simular Vencimiento
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Cartel de facturación: se borró la versión simulada (datos de prueba). Se arma de nuevo con Mercado Pago real. */}
 
       {/* NAVBAR DE APLICACIÓN (h: 64px) */}
       <nav className="fixed top-0 w-full z-[80] h-[64px] bg-white/90 backdrop-blur-md border-b border-gray-100 flex items-center px-6 md:px-10 shadow-sm">

@@ -231,8 +231,18 @@ const Cartilla = () => {
   // Las pestañas Especialistas / Clínicas filtran; si tocás la que ya está elegida, volvés a 'todos'.
   const [activeTab, setActiveTab] = useState(() => {
     const params = new URLSearchParams(window.location.search);
+    // Si venís de vuelta de un perfil, la pestaña elegida quedó guardada en la dirección (?vista=)
+    const vista = params.get('vista');
+    if (vista === 'clinicas' || vista === 'especialistas') return vista;
     return params.get('guardia24hs') === 'true' ? 'clinicas' : 'todos';
   });
+  // Guardamos la pestaña en la dirección, así al volver atrás desde un perfil sigue elegida
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if ((params.get('vista') || 'todos') === activeTab) return;
+    if (activeTab === 'todos') params.delete('vista'); else params.set('vista', activeTab);
+    setSearchParams(params, { replace: true });
+  }, [activeTab, setSearchParams]);
   const [mostrarTourCartilla, setMostrarTourCartilla] = useState(false);
   const [veterinarios, setVeterinarios] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -554,7 +564,8 @@ const Cartilla = () => {
     texto ? texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() : "";
 
   const limpiarFiltros = () => {
-    setSearchParams({});
+    // Borra los filtros pero deja la pestaña elegida (Clínicas / Especialistas)
+    setSearchParams(activeTab === 'todos' ? {} : { vista: activeTab });
     setSearchTerm('');
   };
 

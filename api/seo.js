@@ -55,6 +55,15 @@ function armarHorarios(h) {
   return tramos;
 }
 
+// Código postal: si la clínica lo tiene guardado se usa; si no, se saca de la dirección de Google
+// (ej: "Av. Rivadavia 1234, C1033 CABA" -> "C1033")
+function codigoPostalDe(data) {
+  if (data.codigoPostal) return String(data.codigoPostal).trim();
+  // Solo el formato con letra (C1033, B1704…): un número suelto de 4 cifras puede ser la altura de la calle
+  const m = String(data.direccion || '').match(/\b([A-Z]\d{4})(?:[A-Z]{3})?\b/);
+  return m ? m[1] : '';
+}
+
 function pagina({ titulo, descripcion, ruta, cuerpo, jsonld }) {
   return `<!doctype html>
 <html lang="es">
@@ -157,6 +166,7 @@ ${servicios ? `<h2>Servicios</h2>\n<ul>\n${servicios}\n</ul>` : ''}`;
       ...(data.direccion ? { streetAddress: data.direccion } : {}),
       ...(data.localidad || data.barrio ? { addressLocality: data.localidad || data.barrio } : {}),
       ...(provincia ? { addressRegion: provincia } : {}),
+      ...(codigoPostalDe(data) ? { postalCode: codigoPostalDe(data) } : {}),
       addressCountry: 'AR'
     },
     ...(typeof data.lat === 'number' && typeof data.lng === 'number' ? { geo: { '@type': 'GeoCoordinates', latitude: data.lat, longitude: data.lng } } : {}),
