@@ -16,13 +16,13 @@ import { RecortadorImagen, generarSlug, usuarioDeInstagram, instagramAURL, leerA
 const TOTAL_PASOS = 4;
 const MAX_FOTOS = 4; // fotos de galería por estudiante
 const MAX_LUGARES = 5; // lugares donde trabajó o trabaja
-const NOMBRES_PASOS = ['Tus datos', 'Tu facultad', 'Sobre vos', 'Contacto'];
-const TITULOS = ['Contanos quién sos', 'Tu facultad', 'Sobre vos', 'Redes y WhatsApp'];
+const NOMBRES_PASOS = ['Tus datos', 'Tu facultad', 'Sobre vos', 'Certificado'];
+const TITULOS = ['Contanos quién sos', 'Tu facultad', 'Sobre vos', 'Último paso'];
 const SUBTITULOS = [
   'Con tu perfil de estudiante te podés postular a las búsquedas de asistente de la Bolsa de Trabajo y mostrarte disponible para las clínicas.',
-  'Con el certificado de alumno regular verificamos que estás cursando.',
+  'Así las clínicas saben dónde estudiás.',
   'Es lo que leen las clínicas cuando te postulás en la Bolsa de Trabajo.',
-  'Todo es opcional. Tus redes se muestran en tu perfil.'
+  'Tus redes y tu WhatsApp son opcionales. Al final, subí tu certificado de alumno regular para que verifiquemos que estás cursando.'
 ];
 
 // Facultades con Veterinaria (sugerencias: también se puede escribir otra)
@@ -462,7 +462,6 @@ export default function OnboardingAlumnx() {
     if (p === 1) {
       if (!d.universidad.trim()) return 'Contanos en qué facultad estudiás.';
       if (!d.provincia) return 'Elegí la provincia donde vivís.';
-      if (!d.certificadoPath) return 'Subí tu certificado de alumno regular.';
     }
     if (p === 2) {
       if (d.presentacion.trim().length < 30) return 'Escribí una presentación de al menos 30 letras.';
@@ -471,6 +470,8 @@ export default function OnboardingAlumnx() {
     if (p === 3) {
       const digitos = d.wa.replace(/\D/g, '').length;
       if (digitos > 0 && digitos < 8) return 'Revisá el WhatsApp: le faltan números.';
+      // El certificado va al final para que nadie abandone a mitad del cuestionario
+      if (!d.certificadoPath && !verificado) return 'Subí tu certificado de alumno regular.';
     }
     return '';
   };
@@ -654,25 +655,6 @@ export default function OnboardingAlumnx() {
             {provincias.map((p) => <option key={p} value={p}>{p}</option>)}
           </select>
 
-          <span className={CLASE_LABEL}>Certificado de alumno regular<Obligatorio /></span>
-          {verificado ? (
-            <div className="flex items-center gap-3 bg-[#F4F7F7] rounded-2xl px-4 py-3.5 text-[15px] font-medium text-[#1A3D3D]">
-              <CheckCircle2 className="w-5 h-5 text-[#2D6A6A] shrink-0" /> Certificado verificado
-            </div>
-          ) : (
-            <>
-              <label className={`flex items-center gap-3 cursor-pointer rounded-2xl border-2 border-dashed px-4 py-4 transition-all duration-300 ${datos.certificadoPath ? 'border-[#2D6A6A]/40 bg-[#2D6A6A]/5' : 'border-[#2D6A6A]/40 hover:bg-[#2D6A6A]/5 hover:border-[#2D6A6A]'} ${subiendoCertificado ? 'opacity-60 pointer-events-none' : ''}`}>
-                {subiendoCertificado ? <Loader2 className="w-5 h-5 text-[#2D6A6A] animate-spin shrink-0" />
-                  : datos.certificadoPath ? <FileCheck className="w-5 h-5 text-[#2D6A6A] shrink-0" />
-                  : <Upload className="w-5 h-5 text-[#2D6A6A] shrink-0" />}
-                <span className="text-[15px] font-semibold text-[#2D6A6A] min-w-0 truncate">
-                  {subiendoCertificado ? `Subiendo… ${progresoCertificado}%` : datos.certificadoPath ? (datos.certificadoNombre || 'Certificado subido') : 'Subir certificado (foto o PDF)'}
-                </span>
-                <input type="file" accept="image/*,application/pdf" className="hidden" onChange={subirCertificado} disabled={subiendoCertificado} />
-              </label>
-              <p className={CLASE_AYUDA}>Lo pedís en tu facultad. Es privado: lo vemos solo nosotros para verificarte.</p>
-            </>
-          )}
         </>
       );
     }
@@ -781,6 +763,25 @@ export default function OnboardingAlumnx() {
 
         <label className={CLASE_LABEL} htmlFor="al-linkedin">LinkedIn</label>
         <input id="al-linkedin" value={datos.linkedin} maxLength={200} onChange={(e) => cambiar('linkedin', e.target.value)} placeholder="Link a tu perfil (opcional)" autoComplete="off" className={CLASE_INPUT} />
+        <span className={`${CLASE_LABEL} mt-8`}>Certificado de alumno regular<Obligatorio /></span>
+        {verificado ? (
+          <div className="flex items-center gap-3 bg-[#F4F7F7] rounded-2xl px-4 py-3.5 text-[15px] font-medium text-[#1A3D3D]">
+            <CheckCircle2 className="w-5 h-5 text-[#2D6A6A] shrink-0" /> Certificado verificado
+          </div>
+        ) : (
+          <>
+            <label className={`flex items-center gap-3 cursor-pointer rounded-2xl border-2 border-dashed px-4 py-4 transition-all duration-300 ${datos.certificadoPath ? 'border-[#2D6A6A]/40 bg-[#2D6A6A]/5' : 'border-[#2D6A6A]/40 hover:bg-[#2D6A6A]/5 hover:border-[#2D6A6A]'} ${subiendoCertificado ? 'opacity-60 pointer-events-none' : ''}`}>
+              {subiendoCertificado ? <Loader2 className="w-5 h-5 text-[#2D6A6A] animate-spin shrink-0" />
+                : datos.certificadoPath ? <FileCheck className="w-5 h-5 text-[#2D6A6A] shrink-0" />
+                : <Upload className="w-5 h-5 text-[#2D6A6A] shrink-0" />}
+              <span className="text-[15px] font-semibold text-[#2D6A6A] min-w-0 truncate">
+                {subiendoCertificado ? `Subiendo… ${progresoCertificado}%` : datos.certificadoPath ? (datos.certificadoNombre || 'Certificado subido') : 'Subir certificado (foto o PDF)'}
+              </span>
+              <input type="file" accept="image/*,application/pdf" className="hidden" onChange={subirCertificado} disabled={subiendoCertificado} />
+            </label>
+            <p className={CLASE_AYUDA}>Lo pedís en tu facultad. Es privado: lo vemos solo nosotros para verificarte.</p>
+          </>
+        )}
       </>
     );
   };
