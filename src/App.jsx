@@ -190,6 +190,8 @@ export default function App() {
 
             {/* Secciones públicas */}
             <Route path="/bolsa-de-trabajo" element={<BolsaDeTrabajo />} />
+            {/* Estudiantes del Portal: pública (se ve con el link, sin iniciar sesión) */}
+            <Route path="/estudiantes" element={<PaginaEstudiantes />} />
             <Route path="/bolsa-de-trabajo/oferta/:id" element={<IrAOferta />} />
             <Route path="/capacitaciones" element={<Capacitaciones />} />
             <Route path="/cartilla-proveedores" element={<CartillaProveedores />} />
@@ -212,7 +214,6 @@ export default function App() {
           <Route path="/restablecer-clave" element={<RestablecerClave />} />
           <Route element={<RutaProtegida useLayout />}>
   <Route path="/ecosistema" element={<Ecosistema />} />
-  <Route path="/estudiantes" element={<PaginaEstudiantes />} />
 </Route>
 <Route element={<RutaProtegida />}>
   <Route path="/onboarding" element={<Onboarding />} />

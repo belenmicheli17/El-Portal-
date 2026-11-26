@@ -504,14 +504,13 @@ const FuturosColegas = ({ uidPropio, navigate }) => {
   );
 };
 
-// Página con todos los estudiantes (/estudiantes). Vive en este archivo para no sumar uno nuevo.
+// Página con todos los estudiantes (/estudiantes). Es pública: la puede ver cualquiera que tenga el link.
+// Vive en este archivo para no sumar uno nuevo.
 export function PaginaEstudiantes() {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
   const estudiantes = useEstudiantes(currentUser?.uid);
   const [busqueda, setBusqueda] = useState('');
-  if (!currentUser) return <Navigate to="/login" replace />;
-  if (currentUser.rol !== 'alumnx' && currentUser.rol !== 'admin') return <Navigate to="/ecosistema" replace />;
   const limpiar = (t) => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
   const filtrados = (estudiantes || []).filter((a) => !busqueda.trim() || limpiar(`${a.nombreCompleto} ${a.universidad}`).includes(limpiar(busqueda.trim())));
 
@@ -519,7 +518,7 @@ export function PaginaEstudiantes() {
     <div className="min-h-screen bg-[#F4F7F7] font-['Inter'] text-[#333333] flex flex-col">
       <div className="flex-1 p-4 md:p-10 lg:p-12">
         <div className="max-w-[1200px] mx-auto">
-          <button type="button" onClick={() => navigate('/ecosistema')} className="inline-flex items-center gap-1.5 text-[14px] font-bold text-[#2D6A6A] hover:text-[#1A3D3D] mb-6">
+          <button type="button" onClick={() => navigate(currentUser ? '/ecosistema' : '/')} className="inline-flex items-center gap-1.5 text-[14px] font-bold text-[#2D6A6A] hover:text-[#1A3D3D] mb-6">
             <ChevronRight className="w-4 h-4 rotate-180" /> Volver
           </button>
           <h1 className="text-3xl md:text-4xl font-black text-[#1A3D3D] font-['Montserrat'] tracking-tight">Estudiantes del Portal</h1>

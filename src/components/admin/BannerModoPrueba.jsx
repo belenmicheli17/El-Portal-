@@ -185,9 +185,7 @@ export default function BannerModoPrueba() {
         onPointerCancel={() => { gesto.current = null; }}
         aria-label="Cambiar de cuenta de prueba (arrastrá para moverla)"
         aria-expanded={abierto}
-        className={`h-14 w-8 rounded-l-xl flex items-center justify-center shadow-lg transition-colors duration-300 touch-none cursor-grab active:cursor-grabbing ${
-          enModoPrueba ? 'bg-yellow-400 text-yellow-950' : 'bg-[#1A3D3D] text-white'
-        }`}
+        className="h-14 w-8 rounded-l-xl flex items-center justify-center shadow-lg transition-colors duration-300 touch-none cursor-grab active:cursor-grabbing bg-yellow-400 text-yellow-950"
       >
         <FlaskConical className="w-4 h-4" strokeWidth={2} />
       </button>

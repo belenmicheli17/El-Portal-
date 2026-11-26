@@ -10,6 +10,7 @@ import { BotonImagenOferta } from '../../components/bolsa/ElementosBolsa';
 
 export default function GestionBolsa() {
   const [tabActiva, setTabActiva] = useState('metricas'); // abre primero en Métricas
+  const [verTodasPublicaciones, setVerTodasPublicaciones] = useState(false);
   const [ofertas, setOfertas] = useState([]);
   const [profesionales, setProfesionales] = useState([]);
   const [postulaciones, setPostulaciones] = useState([]);
@@ -151,16 +152,11 @@ export default function GestionBolsa() {
   postsReales.forEach(p => { postsPorOferta[p.ofertaId] = (postsPorOferta[p.ofertaId] || 0) + 1; });
   const sinPostulantes = ofertasActivas.filter(o => !postsPorOferta[o.id]);
   const postsUlt7 = postsReales.filter(p => Date.now() - aMilisegundos(p.creadaEn) <= 7 * DIA).length;
-  const provMapa = {};
-  const sumarProv = (prov, campo) => {
-    const nombre = provinciaCorta(prov) || 'Sin dato';
-    provMapa[nombre] = provMapa[nombre] || { nombre, ofertas: 0, disponibles: 0, postulaciones: 0 };
-    provMapa[nombre][campo] += 1;
-  };
-  ofertasActivas.forEach(o => sumarProv(o.provincia, 'ofertas'));
-  dispActivos.forEach(p => sumarProv(p.provincia, 'disponibles'));
-  postsReales.forEach(p => sumarProv(ofertasReales.find(o => o.id === p.ofertaId)?.provincia, 'postulaciones'));
-  const provinciasMetricas = Object.values(provMapa).sort((a, b) => (b.ofertas + b.disponibles + b.postulaciones) - (a.ofertas + a.disponibles + a.postulaciones));
+  // Todas las publicaciones activas (ofertas de clínicas + profesionales disponibles), de la más nueva a la más vieja
+  const publicacionesActivas = [
+    ...ofertasActivas.map(o => ({ tipo: 'oferta', item: o })),
+    ...dispActivos.map(d => ({ tipo: 'disponible', item: d }))
+  ].sort((a, b) => aMilisegundos(b.item.publicadaEn || b.item.createdAt) - aMilisegundos(a.item.publicadaEn || a.item.createdAt));
 
   return (
     <div className="animate-in fade-in duration-500 pb-10">
@@ -217,48 +213,42 @@ export default function GestionBolsa() {
                 ))}
               </div>
 
+              {/* Publicaciones activas: ofertas de clínicas y profesionales disponibles, para compartir en redes */}
               <div className="bg-white rounded-[24px] border border-gray-100 p-6 shadow-sm">
-                <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[16px] mb-1">Ofertas sin postulantes</h3>
-                <p className="text-[#666666] text-[13px] mb-4">Son las que conviene mostrar en redes, entre profesionales de esa provincia.</p>
-                {sinPostulantes.length === 0 ? (
-                  <p className="text-[14px] text-[#666666]">Todas las ofertas activas tienen postulantes.</p>
+                <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[16px] mb-1">Publicaciones activas ({publicacionesActivas.length})</h3>
+                <p className="text-[#666666] text-[13px] mb-4">Ofertas de clínicas y profesionales disponibles. Compartilas en redes para que lleguen a más gente.</p>
+                {publicacionesActivas.length === 0 ? (
+                  <p className="text-[14px] text-[#666666]">No hay publicaciones activas.</p>
                 ) : (
-                  <div className="space-y-2">
-                    {sinPostulantes.slice(0, 8).map(o => (
-                      <div key={o.id} className="flex items-center justify-between gap-3 p-4 bg-[#F4F7F7] rounded-2xl border border-gray-100">
-                        <div className="min-w-0">
-                          <p className="text-[#1A3D3D] font-bold text-[14px] truncate">{tituloPuesto(o)}</p>
-                          <p className="text-[#666666] text-[13px] truncate">{[o.clinicaNombre, provinciaCorta(o.provincia)].filter(Boolean).join(' · ')}</p>
+                  <>
+                    <div className="space-y-2">
+                      {publicacionesActivas.slice(0, verTodasPublicaciones ? undefined : 5).map(({ tipo, item }) => (
+                        <div key={`${tipo}-${item.id}`} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-[#F4F7F7] rounded-2xl border border-gray-100">
+                          <div className="min-w-0">
+                            <span className={`inline-block text-[11px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md mb-1 ${tipo === 'oferta' ? 'bg-[#2D6A6A]/10 text-[#2D6A6A]' : 'bg-[#FF9800]/15 text-[#e68900]'}`}>
+                              {tipo === 'oferta' ? 'Clínica busca' : 'Profesional disponible'}
+                            </span>
+                            <p className="text-[#1A3D3D] font-bold text-[14px] truncate">
+                              {tipo === 'oferta' ? tituloPuesto(item) : item.nombre}
+                            </p>
+                            <p className="text-[#666666] text-[13px] truncate">
+                              {tipo === 'oferta'
+                                ? [item.clinicaNombre, provinciaCorta(item.provincia), `${postsPorOferta[item.id] || 0} postulantes`].filter(Boolean).join(' · ')
+                                : [(item.areas || []).join(' · ') || (item.puesto === 'asistente' ? 'Asistente' : ''), provinciaCorta(item.provincia)].filter(Boolean).join(' · ')}
+                            </p>
+                          </div>
+                          <div className="shrink-0">
+                            {tipo === 'oferta' ? <BotonImagenOferta oferta={item} /> : <BotonImagenOferta disponible={item} />}
+                          </div>
                         </div>
-                        <span className="shrink-0 bg-[#FF9800]/20 text-[#e68900] text-[12px] font-bold px-2.5 py-1 rounded-lg">
-                          {Math.floor((Date.now() - aMilisegundos(o.publicadaEn)) / DIA)} días
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="bg-white rounded-[24px] border border-gray-100 p-6 shadow-sm">
-                <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[16px] mb-1">Por provincia</h3>
-                <p className="text-[#666666] text-[13px] mb-4">Si hay más ofertas que profesionales disponibles, conviene difundir entre profesionales. Si hay más disponibles que ofertas, entre clínicas.</p>
-                {provinciasMetricas.length === 0 ? (
-                  <p className="text-[14px] text-[#666666]">Todavía no hay datos.</p>
-                ) : (
-                  <div className="divide-y divide-gray-50">
-                    <div className="grid grid-cols-[1.4fr_0.7fr_0.8fr_0.8fr_1.2fr] gap-2 pb-2 text-[11px] font-bold uppercase tracking-widest text-[#666666]">
-                      <span>Provincia</span><span>Ofertas</span><span>Disp.</span><span>Post.</span><span>Difundir en</span>
+                      ))}
                     </div>
-                    {provinciasMetricas.map(p => (
-                      <div key={p.nombre} className="grid grid-cols-[1.4fr_0.7fr_0.8fr_0.8fr_1.2fr] gap-2 py-3 text-[14px] items-center">
-                        <span className="font-bold text-[#1A3D3D] truncate">{p.nombre}</span>
-                        <span className="text-[#333333]">{p.ofertas}</span>
-                        <span className="text-[#333333]">{p.disponibles}</span>
-                        <span className="text-[#333333]">{p.postulaciones}</span>
-                        <span className="text-[13px] font-semibold text-[#2D6A6A]">{p.ofertas > p.disponibles ? 'Profesionales' : p.disponibles > p.ofertas ? 'Clínicas' : '—'}</span>
-                      </div>
-                    ))}
-                  </div>
+                    {publicacionesActivas.length > 5 && (
+                      <button type="button" onClick={() => setVerTodasPublicaciones(!verTodasPublicaciones)} className="mt-4 text-[14px] font-bold text-[#2D6A6A] hover:text-[#1A3D3D]">
+                        {verTodasPublicaciones ? 'Ver menos' : `Ver más (${publicacionesActivas.length - 5})`}
+                      </button>
+                    )}
+                  </>
                 )}
               </div>
             </div>
