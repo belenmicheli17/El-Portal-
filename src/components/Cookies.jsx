@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Info } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { prenderMedicion } from '../firebase';
 
 
 export default function Cookies({ isFooterVisible = false }) {
@@ -13,6 +14,7 @@ export default function Cookies({ isFooterVisible = false }) {
     // 1. Revisamos si el usuario ya aceptó las cookies en esta u otras páginas
     const checkConsent = () => {
       const consent = localStorage.getItem('cookieConsent');
+      if (consent === 'true') prenderMedicion();
       if (!consent) {
         setShowCookieBanner(true);
         // Pequeño delay para que la animación de entrada sea suave al cargar la página
@@ -46,11 +48,18 @@ export default function Cookies({ isFooterVisible = false }) {
     // Guardamos la preferencia de forma permanente en el navegador para todo el sitio
     localStorage.setItem('cookieConsent', 'true');
     setShowCookieBanner(false);
+    prenderMedicion();
    
     // Forzamos un evento storage manual para asegurar la sincronización inmediata
     window.dispatchEvent(new Event('storage'));
   };
 
+
+  // Si no acepta, no se prende la medición (y no le volvemos a preguntar)
+  const handleReject = () => {
+    localStorage.setItem('cookieConsent', 'false');
+    setShowCookieBanner(false);
+  };
 
   // Si el banner está cerrado definitivamente, no renderizamos nada
   if (!showCookieBanner) return null;
@@ -66,22 +75,30 @@ export default function Cookies({ isFooterVisible = false }) {
       <div className="flex items-center gap-3 text-white/60 text-[11px] font-medium text-center md:text-left">
         <Info size={14} className="text-[#2D6A6A] shrink-0" />
         <p>
-          Utilizamos cookies para mejorar tu experiencia. Al continuar navegando, aceptás nuestros{' '}
+          Usamos cookies propias y las de Google Analytics y Microsoft Clarity para entender cómo se usa el sitio y mejorarlo. Más info en la{' '}
           <button
-            onClick={() => navigate('/terminos-y-condiciones')}
+            onClick={() => navigate('/politica-de-privacidad')}
             className="underline hover:text-white text-white/80 font-bold transition-colors outline-none"
           >
-            términos
+            Política de Privacidad
           </button>
           .
         </p>
       </div>
+      <div className="flex items-center gap-4 shrink-0">
+      <button
+        onClick={handleReject}
+        className="text-white/60 hover:text-white text-[13px] font-semibold transition-colors"
+      >
+        No, gracias
+      </button>
       <button
         onClick={handleAccept}
         className="bg-[#2D6A6A] hover:bg-white text-white hover:text-[#1A3D3D] px-6 py-2 rounded-xl text-[11px] font-black  tracking-widest transition-all shadow-lg shrink-0"
       >
-        Entendido
+        Aceptar
       </button>
+      </div>
     </div>
   );
 }

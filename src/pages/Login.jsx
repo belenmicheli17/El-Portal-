@@ -8,7 +8,7 @@ import {
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { pedirRecuperacionClave } from '../utils/recuperarClave';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { db } from '../firebase';
+import { db, registrarEvento } from '../firebase';
 import { useAuth } from '../context/AuthContext';
 import BarraCupos from '../components/BarraCupos';
 
@@ -44,6 +44,11 @@ export default function Login() {
   const { refreshUser } = useAuth();
 
   // Si llegan desde el botón "¿Sos veterinario? Registrate" de la navbar, abrimos el registro mostrando las opciones de tipo de cuenta
+  // Medición: cuando elige el tipo de cuenta y ve el formulario, empezó el registro
+  useEffect(() => {
+    if (view === 'register' && accountType) registrarEvento('registro_iniciado', { tipo_cuenta: accountType });
+  }, [view, accountType]);
+
   useEffect(() => {
     // El aviso de "ir a registro" puede venir de dos lugares:
     // 1) de adentro de la app (navbar, sala de espera) -> location.state.registro
@@ -142,6 +147,7 @@ export default function Login() {
           .catch((errorMail) => console.error('Error enviando el mail de bienvenida:', errorMail));
 
         // Releemos los datos del usuario para que la app sepa que es profesional y debe pasar por el cuestionario
+        registrarEvento('registro_completado', { tipo_cuenta: accountType || 'profesional' });
         await refreshUser();
         navigate(accountType === 'clinica' ? '/onboarding-clinica' : accountType === 'alumnx' ? '/onboarding-alumnx' : '/onboarding');
       } catch (error) {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { db, storage } from '../firebase';
+import { db, storage, registrarEvento } from '../firebase';
 import { doc, getDoc, setDoc, getDocs, collection, query, where, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytesResumable, uploadString, getDownloadURL, deleteObject } from 'firebase/storage';
 import {
@@ -551,6 +551,7 @@ export default function OnboardingAlumnx() {
         comoLlego: datos.comoLlego,
         comoLlegoOtro: datos.comoLlego === 'Otro' ? datos.comoLlegoOtro.trim() : ''
       });
+      registrarEvento('perfil_completado', { tipo_cuenta: 'alumnx' });
       await refreshUser();
       setEnEncuesta(false);
       setPaso(TOTAL_PASOS);

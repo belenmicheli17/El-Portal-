@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { db, storage } from '../firebase';
+import { db, storage, registrarEvento } from '../firebase';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytesResumable, uploadString, getDownloadURL, deleteObject } from 'firebase/storage';
 import { direccionCorta } from '../utils/bolsa';
@@ -1286,6 +1286,7 @@ export default function Onboarding() {
       comoLlego: d.comoLlego,
       comoLlegoOtro: d.comoLlego === 'Otro' ? d.comoLlegoOtro.trim() : ''
     });
+    registrarEvento('perfil_completado', { tipo_cuenta: 'profesional' });
     await refreshUser();
     setPaso(TOTAL_PASOS);
   };

@@ -58,6 +58,12 @@ export default function LegalPage() {
       title: "3. Derechos del Usuario (Ley 25.326)",
       icon: <Scale className="w-5 h-5 text-[#2D6A6A]" />,
       content: "Usted tiene derecho a acceder, rectificar, actualizar o suprimir sus datos en cualquier momento. El Portal garantiza el ejercicio gratuito de estos derechos conforme a la normativa argentina vigente."
+    },
+    {
+      id: 4,
+      title: "4. Cookies y medición del sitio",
+      icon: <Info className="w-5 h-5 text-[#2D6A6A]" />,
+      content: "Si usted lo acepta en el aviso de cookies, usamos Google Analytics (Google LLC) y Microsoft Clarity (Microsoft Corporation) para entender cómo se usa el sitio: páginas visitadas, tiempo de navegación, tipo de dispositivo, ubicación aproximada y cómo se interactúa con las pantallas (clics, desplazamientos y grabaciones anónimas de la sesión). Esta información es estadística, no la usamos para identificarlo personalmente y los campos donde se escriben datos se ocultan en las grabaciones. Estos servicios pueden procesar datos fuera de Argentina. Si no acepta, no se activan. Puede cambiar su decisión borrando las cookies y datos del sitio en su navegador."
     }
   ];
 

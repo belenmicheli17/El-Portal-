@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { db, storage } from '../firebase';
+import { db, storage, registrarEvento } from '../firebase';
 import { doc, getDoc, setDoc, getDocs, collection, query, where, serverTimestamp } from 'firebase/firestore';
 import { BotonCompartirPerfil } from '../components/CompartirPerfil';
 import { direccionCorta } from '../utils/bolsa';
@@ -995,6 +995,7 @@ export default function OnboardingClinica() {
       comoLlego: d.comoLlego,
       comoLlegoOtro: d.comoLlego === 'Otro' ? d.comoLlegoOtro.trim() : ''
     });
+    registrarEvento('perfil_completado', { tipo_cuenta: 'clinica' });
     await refreshUser();
     setPaso(TOTAL_PASOS);
   };

@@ -55,6 +55,7 @@ function IrAOferta() {
 }
 import RutaProtegida from './components/admin/RutaProtegida';
 import BannerModoPrueba from './components/admin/BannerModoPrueba';
+import Cookies from './components/Cookies';
 const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'));
 const DashboardAdmin = lazy(() => import('./pages/admin/DashboardAdmin'));
 const GestionUsuarios = lazy(() => import('./pages/admin/GestionUsuarios'));
@@ -162,6 +163,7 @@ export default function App() {
         <ScrollToTop />
         <CanonicalAutomatico />
         <BannerModoPrueba />
+        <OcultarEnAdmin><Cookies /></OcultarEnAdmin>
         <OcultarEnAdmin><AccessibilityWidget /></OcultarEnAdmin> 
 
         <Suspense fallback={
