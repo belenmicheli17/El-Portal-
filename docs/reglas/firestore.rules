@@ -173,7 +173,9 @@ service cloud.firestore {
 
       // Contacto de la oferta (WhatsApp y mail): solo lo leen cuentas con sesión
       match /privado/{docPrivado} {
-        allow read: if request.auth != null;
+        // El contacto solo lo ven las cuentas verificadas y la clínica que publicó
+        allow read: if puedeUsarBolsa()
+          || (request.auth != null && get(/databases/$(database)/documents/ofertasEmpleo/$(docId)).data.get('creadorId', '') == request.auth.uid);
         allow write: if request.auth != null
           && getAfter(/databases/$(database)/documents/ofertasEmpleo/$(docId)).data.get('creadorId', '') == request.auth.uid;
         allow read, write: if esAdmin();
@@ -202,7 +204,8 @@ service cloud.firestore {
 
       // Contacto y CV: solo lo leen cuentas con sesión; lo escribe la persona
       match /privado/{docPrivado} {
-        allow read: if request.auth != null;
+        // El contacto solo lo ven las cuentas verificadas y la propia persona
+        allow read: if puedeUsarBolsa() || (request.auth != null && request.auth.uid == uid);
         allow write: if request.auth != null && request.auth.uid == uid;
         allow read, write: if esAdmin();
       }

@@ -507,7 +507,7 @@ export default function BolsaTrabajo() {
 
 
 
-      <DetalleDisponible disponible={disponibleAbierto} abierto={!!disponibleAbierto} onCerrar={() => setDisponibleAbierto(null)} conSesion={permisos.conSesion} currentUser={currentUser} />
+      <DetalleDisponible disponible={disponibleAbierto} abierto={!!disponibleAbierto} onCerrar={() => setDisponibleAbierto(null)} conSesion={permisos.conSesion} verificada={permisos.verificada} currentUser={currentUser} />
 
       <CartelRegistro abierto={cartel === 'registro-publicar'} onCerrar={() => setCartel(null)} motivo="publicar" />
       <CartelVerificacion abierto={cartel === 'verificacion'} onCerrar={() => setCartel(null)} />

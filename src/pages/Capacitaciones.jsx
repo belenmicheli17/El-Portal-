@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import TourGuia from '../components/TourGuia';
 // IMPORTS DE FIREBASE ACÁ ARRIBA
-import { db, storage } from '../firebase.js'; 
+import { db, storage, pedirMail } from '../firebase.js'; 
 import { collection, getDocs, addDoc, updateDoc, doc, getDoc, increment, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import imageCompression from 'browser-image-compression';
@@ -16,27 +16,25 @@ const CATEGORIAS = ["Cirugía General", "Diagnóstico por Imágenes", "Gestión 
 const COMISION_DEFAULT = 10;
 const MODALIDADES = ["Online", "Presencial", "Híbrido"];
 
-const enviarMailBrevo = async (destinatario, asunto, contenido) => {
-  const apiKey = import.meta.env.VITE_BREVO_API_KEY;
-  await fetch('https://api.brevo.com/v3/smtp/email', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'api-key': apiKey },
-    body: JSON.stringify({
-      sender: { name: 'El Portal Veterinario', email: 'portalveterinario.ar@gmail.com' },
-      to: [{ email: destinatario }],
-      subject: asunto,
-      textContent: contenido,
-    }),
-  });
+// Convierte un link de YouTube o Vimeo en el link para mostrarlo dentro de la página.
+// Si es un archivo de video directo (.mp4, .webm) devuelve null y se usa el reproductor común.
+const linkParaIncrustar = (url) => {
+  const texto = String(url || '');
+  const youtube = texto.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{11})/);
+  if (youtube) return `https://www.youtube.com/embed/${youtube[1]}?autoplay=1`;
+  const vimeo = texto.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+  if (vimeo) return `https://player.vimeo.com/video/${vimeo[1]}?autoplay=1`;
+  return null;
 };
 
-const FAQ_CATEGORIES = [
+// Preguntas frecuentes: la comisión sale de la configuración del admin (no va escrita a mano)
+const faqConComision = (comision) => [
   {
     title: "Honorarios",
     items: [
-      { q: "¿De cuánto es la comisión por venta?", a: "Retenemos un 5% por cada alumnx generado efectivamente. Este margen ya cubre los costos de las pasarelas de pago y nuestras campañas de marketing. No hay costos ocultos." },
+      { q: "¿De cuánto es la comisión por venta?", a: `Retenemos un ${comision}% por cada alumnx generado efectivamente. Este margen ya cubre los costos de las pasarelas de pago y nuestras campañas de marketing. No hay costos ocultos.` },
       { q: "¿Cómo y cuándo recibo mis ganancias?", a: "Realizamos liquidaciones quincenales. El dinero de las ventas (menos la comisión) se transfiere directamente a tu cuenta bancaria institucional." },
-      { q: "¿Quién emite la factura al alumno?", a: "La institución o docente le factura el 100% del curso al alumnx. El Portal emite una factura a la institución por el servicio de intermediación (la comisión del 5%)." }
+      { q: "¿Quién emite la factura al alumno?", a: `La institución o docente le factura el 100% del curso al alumnx. El Portal emite una factura a la institución por el servicio de intermediación (la comisión del ${comision}%).` }
     ]
   },
   {
@@ -136,6 +134,7 @@ setSeminarios(todos.filter(c => {
   }, []);
 
   const [selectedCourse, setSelectedCourse] = useState(null);
+  const [viendoVideo, setViendoVideo] = useState(false); // se reproduce el video del curso abierto
   const [filtroCategoria, setFiltroCategoria] = useState(null);
   const [modalidadesSeleccionadas, setModalidadesSeleccionadas] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -253,6 +252,7 @@ const [inscripcionErrors, setInscripcionErrors] = useState({});
 
   const handleCourseClick = (curso) => {
     setSelectedCourse(curso);
+    setViendoVideo(false);
     setActiveTab('about'); 
     setView('detail');
     window.scrollTo(0,0);
@@ -648,45 +648,13 @@ const handleAbrirInscripcion = () => {
         createdAt: new Date().toISOString(),
       });
 
-      // Mail al docente con los datos del inscripto
-      if (selectedCourse.email) {
-        await enviarMailBrevo(
-          selectedCourse.email,
-          `🎓 Nueva inscripción — ${selectedCourse.titulo}`,
-          `Hola, ${selectedCourse.instructor || 'equipo docente'}.
-
-¡Tenés una nueva inscripción en tu curso "${selectedCourse.titulo}"!
-
-Datos del inscripto:
-Nombre: ${inscripcionForm.nombre}
-Email: ${inscripcionForm.email}
-Matrícula: ${inscripcionForm.matricula || 'No aplica'}
-Celular: ${inscripcionForm.celular || 'No informado'}
-
-Ya podés agregarlo a tu plataforma de dictado.
-
-El equipo de El Portal Veterinario`
-        );
-      }
-
-      // Mail de confirmación al inscripto
-      await enviarMailBrevo(
-        inscripcionForm.email,
-        `✅ Confirmación de inscripción — ${selectedCourse.titulo}`,
-        `Hola, ${inscripcionForm.nombre}.
-
-Confirmamos tu inscripción al curso "${selectedCourse.titulo}".
-
-Datos del curso:
-Modalidad: ${selectedCourse.modalidad}
-Duración: ${selectedCourse.duracion}
-${selectedCourse.linkExterno ? `Link de acceso: ${selectedCourse.linkExterno}` : ''}
-
-Si tenés consultas sobre el curso, podés escribirle directamente al docente a: ${selectedCourse.email || 'el contacto que figura en la plataforma'}.
-
-¡Gracias por confiar en El Portal!
-El equipo de El Portal Veterinario`
-      );
+      // Mails al docente y de confirmación (los manda el servidor, que es el único que tiene la clave de Brevo)
+      const mailOk = await pedirMail({
+        tipo: 'curso_inscripcion',
+        cursoId: selectedCourse.id,
+        inscripto: { nombre: inscripcionForm.nombre, email: inscripcionForm.email, matricula: inscripcionForm.matricula || '', celular: inscripcionForm.celular || '' }
+      });
+      if (!mailOk) alert('Tu inscripción quedó guardada, pero no pudimos enviarte el mail de confirmación. Si no te llega, escribinos.');
 
       setInscripcionModal(false);
       setView('inscripcion-confirmada');
@@ -970,13 +938,26 @@ El equipo de El Portal Veterinario`
             </h1>
           </header>
 
-          <div className="w-full md:w-[95%] aspect-video md:max-h-[360px] rounded-[32px] overflow-hidden bg-black shadow-lg relative group cursor-pointer mb-10 border border-gray-100">
-            <img src={selectedCourse.imagen} className="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-[2s]" alt="Portada del curso" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-16 h-16 md:w-20 md:h-20 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border border-white/30 group-hover:scale-110 transition-all shadow-xl">
-                <PlayCircle className="w-8 h-8 md:w-10 md:h-10 text-white fill-white/80" />
-              </div>
-            </div>
+          {/* Portada: si el curso tiene video, el botón de play lo reproduce; si no, se muestra solo la imagen */}
+          <div className={`w-full md:w-[95%] aspect-video md:max-h-[360px] rounded-[32px] overflow-hidden bg-black shadow-lg relative group mb-10 border border-gray-100 ${selectedCourse.videoUrl && !viendoVideo ? 'cursor-pointer' : ''}`} onClick={() => { if (selectedCourse.videoUrl) setViendoVideo(true); }}>
+            {viendoVideo && selectedCourse.videoUrl ? (
+              linkParaIncrustar(selectedCourse.videoUrl) ? (
+                <iframe src={linkParaIncrustar(selectedCourse.videoUrl)} title={`Video de ${selectedCourse.titulo}`} className="w-full h-full" allow="autoplay; fullscreen; picture-in-picture" allowFullScreen />
+              ) : (
+                <video src={selectedCourse.videoUrl} className="w-full h-full" controls autoPlay />
+              )
+            ) : (
+              <>
+                <img src={selectedCourse.imagen} className={`w-full h-full object-cover ${selectedCourse.videoUrl ? 'opacity-80 group-hover:scale-105 transition-transform duration-[2s]' : ''}`} alt="Portada del curso" />
+                {selectedCourse.videoUrl && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-16 h-16 md:w-20 md:h-20 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border border-white/30 group-hover:scale-110 transition-all shadow-xl">
+                      <PlayCircle className="w-8 h-8 md:w-10 md:h-10 text-white fill-white/80" />
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
           </div>
 
           <nav className="flex flex-wrap gap-x-6 gap-y-3 md:gap-12 border-b border-gray-200 mb-8" aria-label="Pestañas del curso">
@@ -1173,8 +1154,8 @@ El equipo de El Portal Veterinario`
                 </div>
                 
                 <h2 className="pdf-h2">4. Condiciones económicas y administrativas</h2>
-                <h3 className="pdf-h3">Comisión del 5% sobre inscripciones</h3>
-                <p className="pdf-p">El Portal retiene un 5% del valor abonado por el alumno inscrito a través de la plataforma. Este porcentaje es de carácter final y cubre integralmente los aranceles por transacciones bancarias, el mantenimiento de los servidores y las acciones de difusión.</p>
+                <h3 className="pdf-h3">Comisión del {comision}% sobre inscripciones</h3>
+                <p className="pdf-p">El Portal retiene un {comision}% del valor abonado por el alumno inscrito a través de la plataforma. Este porcentaje es de carácter final y cubre integralmente los aranceles por transacciones bancarias, el mantenimiento de los servidores y las acciones de difusión.</p>
                 <h3 className="pdf-h3">Rendiciones quincenales</h3>
                 <p className="pdf-p">Efectuamos un proceso de rendición claro y estructurado cada 15 días. El monto neto de las inscripciones se transfiere directamente a la cuenta bancaria designada por el profesional o la institución académica.</p>
                 <h3 className="pdf-h3">Manejo de la facturación</h3>
@@ -1349,7 +1330,7 @@ El equipo de El Portal Veterinario`
           </div>
           
           <div className="lg:w-2/3 w-full text-left">
-            {FAQ_CATEGORIES.map((category, catIdx) => (
+            {faqConComision(comision).map((category, catIdx) => (
               <div key={catIdx} className="mb-12 last:mb-0">
                 <h4 className="text-[11px] font-bold uppercase tracking-[0.3em] text-[#2D6A6A] mb-4 border-b border-gray-200 pb-3">
                   {category.title}

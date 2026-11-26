@@ -3,26 +3,8 @@ import {
   BookOpen, CheckCircle, XCircle, Trash2,
   Loader2, ChevronDown, ChevronUp, Mail, Clock, User, Edit, X, Save
 } from 'lucide-react';
-import { db } from '../../firebase';
+import { db, pedirMail } from '../../firebase';
 import { collection, getDocs, doc, updateDoc, deleteDoc, query, orderBy, addDoc, serverTimestamp } from 'firebase/firestore';
-
-// Función para enviar mails con Brevo
-const enviarMailBrevo = async (destinatario, asunto, contenido) => {
-  const apiKey = import.meta.env.VITE_BREVO_API_KEY;
-  await fetch('https://api.brevo.com/v3/smtp/email', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'api-key': apiKey,
-    },
-    body: JSON.stringify({
-      sender: { name: 'El Portal Veterinario', email: 'portalveterinario.ar@gmail.com' },
-      to: [{ email: destinatario }],
-      subject: asunto,
-      textContent: contenido,
-    }),
-  });
-};
 
 const crearNotificacion = async (datos) => {
   try {
@@ -94,22 +76,10 @@ export default function GestionCapacitaciones() {
         texto: `Nuevo curso disponible: "${curso.titulo}"`,
       });
 
-      // Mail de aprobación
+      // Mail de aprobación (lo manda el servidor)
       if (curso.email) {
-        await enviarMailBrevo(
-          curso.email,
-          '✅ Tu curso fue aprobado — El Portal',
-          `Hola, ${curso.instructor || 'equipo docente'}.
-
-Queríamos contarte que tu curso "${curso.titulo}" fue revisado y aprobado por nuestro equipo.
-
-A partir de ahora está visible en el repertorio de capacitaciones de El Portal y los profesionales ya pueden inscribirse.
-
-Si tenés alguna consulta, respondé este mail y te ayudamos.
-
-¡Muchas gracias por ser parte de El Portal!
-El equipo de El Portal Veterinario`
-        );
+        const mailOk = await pedirMail({ tipo: 'curso_aprobado', email: curso.email, titulo: curso.titulo, instructor: curso.instructor });
+        if (!mailOk) alert('El curso se aprobó, pero no se pudo enviar el mail a la institución.');
       }
     } catch (error) {
       console.error("Error aprobando:", error);
@@ -144,21 +114,10 @@ El equipo de El Portal Veterinario`
         });
       }
 
-      // Mail de rechazo
+      // Mail de rechazo (lo manda el servidor)
       if (curso.email) {
-        await enviarMailBrevo(
-          curso.email,
-          '⚠️ Tu curso necesita ajustes — El Portal',
-          `Hola, ${curso.instructor || 'equipo docente'}.
-
-Revisamos tu propuesta "${curso.titulo}" y por el momento no podemos publicarla porque encontramos lo siguiente:
-
-${motivo}
-
-No te preocupes, podés corregirlo y volver a enviarlo cuando esté listo. Si tenés dudas sobre los cambios necesarios, respondé este mail y te orientamos.
-
-El equipo de El Portal Veterinario`
-        );
+        const mailOk = await pedirMail({ tipo: 'curso_rechazado', email: curso.email, titulo: curso.titulo, instructor: curso.instructor, motivo });
+        if (!mailOk) alert('El curso quedó rechazado, pero no se pudo enviar el mail a la institución.');
       }
     } catch (error) {
       console.error("Error rechazando:", error);

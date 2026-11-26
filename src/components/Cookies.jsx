@@ -13,7 +13,7 @@ export default function Cookies({ isFooterVisible = false }) {
   useEffect(() => {
     // 1. Revisamos si el usuario ya aceptó las cookies en esta u otras páginas
     const checkConsent = () => {
-      const consent = localStorage.getItem('cookieConsent');
+      const consent = localStorage.getItem('cookieConsent_v2');
       if (consent === 'true') prenderMedicion();
       if (!consent) {
         setShowCookieBanner(true);
@@ -30,7 +30,8 @@ export default function Cookies({ isFooterVisible = false }) {
 
     // 2. Sincronizamos en tiempo real por si el usuario tiene varias pestañas abiertas
     const handleStorageChange = (e) => {
-      if (e.key === 'cookieConsent' && e.newValue === 'true') {
+      // (aceptó o eligió «Solo las esenciales» en otra pestaña)
+      if (e.key === 'cookieConsent_v2' && e.newValue) {
         setShowCookieBanner(false);
       }
     };
@@ -46,7 +47,7 @@ export default function Cookies({ isFooterVisible = false }) {
 
   const handleAccept = () => {
     // Guardamos la preferencia de forma permanente en el navegador para todo el sitio
-    localStorage.setItem('cookieConsent', 'true');
+    localStorage.setItem('cookieConsent_v2', 'true');
     setShowCookieBanner(false);
     prenderMedicion();
    
@@ -57,7 +58,7 @@ export default function Cookies({ isFooterVisible = false }) {
 
   // «Solo las esenciales»: no se prende la medición (y no le volvemos a preguntar)
   const handleReject = () => {
-    localStorage.setItem('cookieConsent', 'false');
+    localStorage.setItem('cookieConsent_v2', 'false');
     setShowCookieBanner(false);
   };
 

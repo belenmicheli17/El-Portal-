@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { BookOpen, FileDown, User, Loader2, ChevronDown, ChevronUp, GraduationCap, BookMarked } from 'lucide-react';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase'; 
 
 import BarraFiltros from '../components/BarraFiltros'; 
@@ -10,6 +10,7 @@ export default function Papers() {
   const navigate = useNavigate();
   const [papersGlobales, setPapersGlobales] = useState([]);
   const [papersFiltrados, setPapersFiltrados] = useState([]);
+  const [slugsAutores, setSlugsAutores] = useState({}); // autorId → slug de su perfil (para el link al perfil real)
   const [isLoading, setIsLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -51,6 +52,13 @@ const [currentPage, setCurrentPage] = useState(1);
 
         setPapersGlobales(todosLosPapers);
         setPapersFiltrados(todosLosPapers);
+
+        // Buscamos el slug del perfil de cada autor (los papers los publican profesionales)
+        const ids = [...new Set(todosLosPapers.map((p) => p.autorId).filter(Boolean))];
+        const pares = await Promise.all(ids.map((id) => getDoc(doc(db, 'profesionales', id))
+          .then((snap) => [id, snap.exists() ? snap.data().slug || '' : ''])
+          .catch(() => [id, ''])));
+        setSlugsAutores(Object.fromEntries(pares));
       } catch (error) {
         console.error("Error al traer los papers:", error);
       } finally {
@@ -228,8 +236,14 @@ const [currentPage, setCurrentPage] = useState(1);
                     </h3>
                     
                     <div 
-                      onClick={(e) => { e.stopPropagation(); navigate(`/perfil/${paper.autorId}`); }}
-                      className="flex items-center gap-3 mb-4 pb-4 border-b border-gray-50 hover:bg-gray-50/50 p-2 -ml-2 rounded-xl transition-colors"
+                      onClick={(e) => {
+                        // Lleva al perfil real del autor; si todavía no tiene perfil publicado, no hace nada
+                        const slug = slugsAutores[paper.autorId];
+                        if (!slug) return;
+                        e.stopPropagation();
+                        navigate(`/profesional/${slug}`);
+                      }}
+                      className={`flex items-center gap-3 mb-4 pb-4 border-b border-gray-50 p-2 -ml-2 rounded-xl transition-colors ${slugsAutores[paper.autorId] ? 'cursor-pointer hover:bg-gray-50/50' : ''}`}
                     >
                       <div className="w-9 h-9 rounded-full bg-gray-100 border border-gray-200 overflow-hidden shrink-0 flex items-center justify-center shadow-inner">
                         {paper.autorFoto ? <img src={paper.autorFoto} alt={paper.autorNombre} className="w-full h-full object-cover" /> : <User className="w-4 h-4 text-gray-400" />}

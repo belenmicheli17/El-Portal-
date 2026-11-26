@@ -22,14 +22,16 @@ function Fila({ icono: Icono, titulo, children }) {
 }
 
 // Ventana con el detalle de un profesional disponible y un botón claro para contactarlo
-export default function DetalleDisponible({ disponible, abierto, onCerrar, conSesion, currentUser }) {
+export default function DetalleDisponible({ disponible, abierto, onCerrar, conSesion, verificada = false, currentUser }) {
   const navigate = useNavigate();
   const [contacto, setContacto] = useState(null);
   const [cargando, setCargando] = useState(false);
   const esMio = currentUser?.uid === disponible?.creadorId;
+  // El contacto solo lo leen las cuentas verificadas y la propia persona
+  const puedeVerContacto = conSesion && (verificada || esMio);
 
   useEffect(() => {
-    if (!abierto || !conSesion || !disponible?.id) return;
+    if (!abierto || !puedeVerContacto || !disponible?.id) return;
     let cancelado = false;
     setCargando(true);
     getDoc(doc(db, 'profesionalesDisponibles', disponible.id, 'privado', 'contacto'))
@@ -37,7 +39,7 @@ export default function DetalleDisponible({ disponible, abierto, onCerrar, conSe
       .catch((e) => console.error('Error leyendo el contacto:', e))
       .finally(() => { if (!cancelado) setCargando(false); });
     return () => { cancelado = true; };
-  }, [abierto, conSesion, disponible?.id]);
+  }, [abierto, puedeVerContacto, disponible?.id]);
 
   if (!disponible) return null;
 
@@ -100,7 +102,14 @@ export default function DetalleDisponible({ disponible, abierto, onCerrar, conSe
 
           {conSesion && cargando && <div className="flex justify-center py-3"><Loader2 className="w-6 h-6 text-[#2D6A6A] animate-spin" /></div>}
 
-          {conSesion && !cargando && !esMio && (
+          {conSesion && !puedeVerContacto && (
+            <div className="bg-[#F4F7F7] rounded-2xl p-4">
+              <p className="text-[14px] font-bold text-[#1A3D3D] flex items-center gap-1.5 mb-1"><Lock className="w-4 h-4 text-[#2D6A6A]" /> Contacto para cuentas verificadas</p>
+              <p className="text-[13px] text-[#666666]">Vas a poder contactarlo apenas verifiquemos tu cuenta. Te avisamos por mail.</p>
+            </div>
+          )}
+
+          {puedeVerContacto && !cargando && !esMio && (
             <>
               <p className="text-[14px] font-bold text-[#1A3D3D] font-['Montserrat'] mb-1">Contactarlo para charlar la propuesta</p>
               {tieneWhatsapp && (
@@ -121,13 +130,13 @@ export default function DetalleDisponible({ disponible, abierto, onCerrar, conSe
 
           {esMio && <p className="text-[13px] text-[#666666] bg-[#F4F7F7] rounded-2xl p-3">Es tu publicación. La editás o la extendés desde «Mis publicaciones».</p>}
 
-          {(disponible.slug || (conSesion && contacto?.cvUrl)) && <div className="h-px bg-gray-100 my-2" />}
+          {(disponible.slug || (puedeVerContacto && contacto?.cvUrl)) && <div className="h-px bg-gray-100 my-2" />}
           {disponible.slug && (
             <button type="button" onClick={() => navigate(`/${disponible.puesto === 'asistente' ? 'alumno' : 'profesional'}/${disponible.slug}`)} className={`${claseBoton} bg-white border border-gray-200 text-[#1A3D3D] hover:border-[#2D6A6A]`}>
               <User className="w-4 h-4" /> Ver su perfil
             </button>
           )}
-          {conSesion && !cargando && contacto?.cvUrl && (
+          {puedeVerContacto && !cargando && contacto?.cvUrl && (
             <a href={contacto.cvUrl} target="_blank" rel="noopener noreferrer" className={`${claseBoton} bg-white border border-gray-200 text-[#1A3D3D] hover:border-[#2D6A6A]`}>
               <FileText className="w-4 h-4" /> Ver su currículum
             </a>

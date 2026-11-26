@@ -15,7 +15,7 @@ export default function AccessibilityWidget() {
   const [readingGuideY, setReadingGuideY] = useState(0);
   const widgetRef = useRef(null);
   const { currentUser } = useAuth();
-   const [hasCookiesBanner, setHasCookiesBanner] = useState(() => !localStorage.getItem('cookieConsent'));
+   const [hasCookiesBanner, setHasCookiesBanner] = useState(() => !localStorage.getItem('cookieConsent_v2'));
   const [settings, setSettings] = useState(() => {
     const saved = localStorage.getItem('accessibilitySettings');
     return saved ? JSON.parse(saved) : {
@@ -124,8 +124,8 @@ const location = useLocation();
 
   useEffect(() => {
     const handleStorageChange = (e) => {
-      if (!e.key || e.key === 'cookieConsent') {
-        setHasCookiesBanner(!localStorage.getItem('cookieConsent'));
+      if (!e.key || e.key === 'cookieConsent_v2') {
+        setHasCookiesBanner(!localStorage.getItem('cookieConsent_v2'));
       }
     };
     window.addEventListener('storage', handleStorageChange);

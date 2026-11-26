@@ -39,9 +39,10 @@ export default function DetalleOferta({ oferta, permisos, currentUser, onVolver,
 
   const esMia = currentUser?.uid && oferta.creadorId === currentUser.uid;
 
-  // El contacto vive aparte: solo lo puede leer quien inició sesión
+  // El contacto vive aparte: solo lo leen las cuentas verificadas y la clínica que publicó
+  const puedeVerContacto = permisos.conSesion && (permisos.verificada || esMia);
   useEffect(() => {
-    if (!permisos.conSesion) return;
+    if (!puedeVerContacto) return;
     let cancelado = false;
     setCargandoContacto(true);
     getDoc(doc(db, 'ofertasEmpleo', oferta.id, 'privado', 'contacto'))
@@ -49,7 +50,7 @@ export default function DetalleOferta({ oferta, permisos, currentUser, onVolver,
       .catch((e) => console.error('Error leyendo el contacto:', e))
       .finally(() => { if (!cancelado) setCargandoContacto(false); });
     return () => { cancelado = true; };
-  }, [oferta.id, permisos.conSesion]);
+  }, [oferta.id, puedeVerContacto]);
 
   // Compartir búsqueda: en el celu abre el menú de compartir (WhatsApp, Instagram…); en la compu copia el link
   const copiarLink = async () => {

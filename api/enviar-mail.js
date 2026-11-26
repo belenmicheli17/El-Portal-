@@ -8,6 +8,9 @@
 //  - rechazo / aprobacion: solo los puede pedir la admin.
 //  - bienvenida: la pide cada persona al registrarse, pero solo se manda
 //    a SU PROPIO mail y solo si la cuenta se creó hace pocos minutos.
+//  - curso_inscripcion: la pide quien se inscribe a una capacitación (con sesión).
+//    Los datos del curso (título, mail del docente) se leen de la base, no del navegador.
+//  - curso_aprobado / curso_rechazado: solo los puede pedir la admin.
 // ============================================================
 
 // UID de la admin (el mismo que usan las reglas de Firestore)
@@ -113,6 +116,20 @@ async function enviarPorBrevo(res, cuerpo) {
   }
 }
 
+// Lee un curso de la base (las capacitaciones son públicas, alcanza con la clave del proyecto)
+async function leerCurso(cursoId) {
+  const url = `https://firestore.googleapis.com/v1/projects/el-portal-veterinario-3ab72/databases/(default)/documents/capacitaciones/${encodeURIComponent(cursoId)}?key=${process.env.FIREBASE_API_KEY}`;
+  const respuesta = await fetch(url);
+  if (!respuesta.ok) return null;
+  const { fields = {} } = await respuesta.json();
+  const texto = (campo) => fields[campo]?.stringValue || '';
+  return { titulo: texto('titulo'), email: texto('email'), instructor: texto('instructor'), modalidad: texto('modalidad'), duracion: texto('duracion'), linkExterno: texto('linkExterno') };
+}
+
+const REMITENTE = { name: 'Portal Veterinario', email: 'hola@portalveterinario.ar' };
+const recortar = (t, max = 120) => String(t || '').trim().slice(0, max);
+const esMail = (t) => /^\S+@\S+\.\S+$/.test(String(t || ''));
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Método no permitido' });
@@ -153,10 +170,57 @@ export default async function handler(req, res) {
     });
   }
 
-  // 2b) Aprobación y rechazo: solo la admin
+  // 2b) Inscripción a una capacitación: mail al docente y confirmación a quien se inscribió
+  if (tipo === 'curso_inscripcion') {
+    const { cursoId, inscripto = {} } = req.body || {};
+    const curso = cursoId ? await leerCurso(cursoId).catch(() => null) : null;
+    if (!curso) return res.status(404).json({ error: 'Curso no encontrado' });
+    const nombreInscripto = recortar(inscripto.nombre, 80);
+    const mailInscripto = recortar(inscripto.email, 120);
+    if (!esMail(mailInscripto)) return res.status(400).json({ error: 'Email inválido' });
+
+    if (esMail(curso.email)) {
+      const respuestaDocente = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: { accept: 'application/json', 'content-type': 'application/json', 'api-key': process.env.BREVO_API_KEY },
+        body: JSON.stringify({
+          sender: REMITENTE,
+          to: [{ email: curso.email }],
+          subject: `Nueva inscripción — ${curso.titulo}`,
+          textContent: `Hola, ${curso.instructor || 'equipo docente'}.\n\n¡Tenés una nueva inscripción en tu curso "${curso.titulo}"!\n\nDatos del inscripto:\nNombre: ${nombreInscripto}\nEmail: ${mailInscripto}\nMatrícula: ${recortar(inscripto.matricula, 40) || 'No aplica'}\nCelular: ${recortar(inscripto.celular, 40) || 'No informado'}\n\nYa podés agregarlo a tu plataforma de dictado.\n\nEl equipo de Portal Veterinario`
+        })
+      }).catch(() => null);
+      if (!respuestaDocente?.ok) console.error('No se pudo mandar el mail al docente');
+    }
+
+    return enviarPorBrevo(res, {
+      sender: REMITENTE,
+      to: [{ email: mailInscripto }],
+      subject: `Confirmación de inscripción — ${curso.titulo}`,
+      textContent: `Hola, ${nombreInscripto}.\n\nConfirmamos tu inscripción al curso "${curso.titulo}".\n\nDatos del curso:\nModalidad: ${curso.modalidad}\nDuración: ${curso.duracion}\n${curso.linkExterno ? `Link de acceso: ${curso.linkExterno}\n` : ''}\nSi tenés consultas sobre el curso, podés escribirle directamente al docente a: ${curso.email || 'el contacto que figura en la plataforma'}.\n\n¡Gracias por confiar en Portal Veterinario!\nEl equipo de Portal Veterinario`
+    });
+  }
+
+  // 2c) Aprobación y rechazo (de cuentas y de cursos): solo la admin
   if (sesion.uid !== ADMIN_UID) {
     return res.status(403).json({ error: 'No autorizado' });
   }
+  // Cursos aprobados o rechazados (mail de texto simple a la institución)
+  if (tipo === 'curso_aprobado' || tipo === 'curso_rechazado') {
+    const { titulo, instructor } = req.body || {};
+    if (!esMail(email)) return res.status(400).json({ error: 'Email inválido' });
+    const saludo = `Hola, ${recortar(instructor, 80) || 'equipo docente'}.`;
+    const textoMail = tipo === 'curso_aprobado'
+      ? `${saludo}\n\nQueríamos contarte que tu curso "${recortar(titulo)}" fue revisado y aprobado por nuestro equipo.\n\nA partir de ahora está visible en el repertorio de capacitaciones de Portal Veterinario y los profesionales ya pueden inscribirse.\n\nSi tenés alguna consulta, respondé este mail y te ayudamos.\n\n¡Muchas gracias por ser parte de Portal Veterinario!\nEl equipo de Portal Veterinario`
+      : `${saludo}\n\nRevisamos tu propuesta "${recortar(titulo)}" y por el momento no podemos publicarla porque encontramos lo siguiente:\n\n${recortar(motivo, 1500)}\n\nPodés corregirlo y volver a enviarlo cuando esté listo. Si tenés dudas sobre los cambios necesarios, respondé este mail y te orientamos.\n\nEl equipo de Portal Veterinario`;
+    return enviarPorBrevo(res, {
+      sender: REMITENTE,
+      to: [{ email }],
+      subject: tipo === 'curso_aprobado' ? 'Tu curso fue aprobado — Portal Veterinario' : 'Tu curso necesita ajustes — Portal Veterinario',
+      textContent: textoMail
+    });
+  }
+
   if (tipo !== 'aprobacion' && tipo !== 'rechazo') {
     return res.status(400).json({ error: 'Tipo de mail desconocido' });
   }

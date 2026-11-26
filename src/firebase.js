@@ -25,6 +25,24 @@ export const storage = getStorage(app);
 // Conexión con las funciones en la nube (el "mini servidor" de Google)
 export const functions = getFunctions(app, 'us-central1');
 
+// Pide un mail a la función del servidor (/api/enviar-mail), que es la única que tiene la clave de Brevo.
+// Devuelve true si salió bien y false si falló, para poder avisarle a la persona.
+export const pedirMail = async (datos) => {
+  try {
+    const token = await auth.currentUser?.getIdToken();
+    if (!token) return false;
+    const respuesta = await fetch('/api/enviar-mail', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(datos)
+    });
+    return respuesta.ok;
+  } catch (e) {
+    console.error('No se pudo pedir el mail:', e);
+    return false;
+  }
+};
+
 // ----- Medición (Google Analytics + Microsoft Clarity) -----
 // Se prende solo si la persona aceptó las cookies, y solo en el sitio real (no en localhost ni en vistas previas)
 const CLARITY_ID = 'zjvepe7ksl'; // Project ID de Microsoft Clarity
@@ -33,7 +51,7 @@ let prendida = false;
 const esSitioReal = () => typeof window !== 'undefined' && window.location.hostname.endsWith('portalveterinario.ar');
 
 export const prenderMedicion = async () => {
-  if (prendida || !esSitioReal() || localStorage.getItem('cookieConsent') !== 'true') return;
+  if (prendida || !esSitioReal() || localStorage.getItem('cookieConsent_v2') !== 'true') return;
   prendida = true;
   try {
     // Google Analytics (se carga aparte para no hacer más pesada la primera carga)
