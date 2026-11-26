@@ -27,7 +27,7 @@ export const functions = getFunctions(app, 'us-central1');
 
 // ----- Medición (Google Analytics + Microsoft Clarity) -----
 // Se prende solo si la persona aceptó las cookies, y solo en el sitio real (no en localhost ni en vistas previas)
-const CLARITY_ID = ''; // ← acá va el Project ID de Microsoft Clarity
+const CLARITY_ID = 'zjvepe7ksl'; // Project ID de Microsoft Clarity
 let analytics = null;
 let prendida = false;
 const esSitioReal = () => typeof window !== 'undefined' && window.location.hostname.endsWith('portalveterinario.ar');
