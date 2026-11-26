@@ -77,6 +77,10 @@
   ],
   "headers": [
     {
+      "source": "/landing",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex" }]
+    },
+    {
       "source": "/alumno/(.*)",
       "headers": [
         {

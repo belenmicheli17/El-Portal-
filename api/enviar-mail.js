@@ -9,9 +9,13 @@
 //  - bienvenida: la pide cada persona al registrarse, pero solo se manda
 //    a SU PROPIO mail y solo si la cuenta se creó hace pocos minutos.
 //  - curso_inscripcion: la pide quien se inscribe a una capacitación (con sesión).
-//    Los datos del curso (título, mail del docente) se leen de la base, no del navegador.
+//    La confirmación va solo al mail de la sesión, si el curso está aprobado, si la inscripción
+//    existe en la base y una sola vez. Los datos del curso se leen de la base, no del navegador.
 //  - curso_aprobado / curso_rechazado: solo los puede pedir la admin.
 // ============================================================
+
+import { initializeApp, getApps, cert } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
 
 // UID de la admin (el mismo que usan las reglas de Firestore)
 const ADMIN_UID = 'JDiu4lkVyJXeoyZ3eAxuBfvc5bZ2';
@@ -116,14 +120,12 @@ async function enviarPorBrevo(res, cuerpo) {
   }
 }
 
-// Lee un curso de la base (las capacitaciones son públicas, alcanza con la clave del proyecto)
-async function leerCurso(cursoId) {
-  const url = `https://firestore.googleapis.com/v1/projects/el-portal-veterinario-3ab72/databases/(default)/documents/capacitaciones/${encodeURIComponent(cursoId)}?key=${process.env.FIREBASE_API_KEY}`;
-  const respuesta = await fetch(url);
-  if (!respuesta.ok) return null;
-  const { fields = {} } = await respuesta.json();
-  const texto = (campo) => fields[campo]?.stringValue || '';
-  return { titulo: texto('titulo'), email: texto('email'), instructor: texto('instructor'), modalidad: texto('modalidad'), duracion: texto('duracion'), linkExterno: texto('linkExterno') };
+// Acceso a la base con permisos de servidor (para comprobar la inscripción y el curso)
+function baseDeDatos() {
+  if (!getApps().length) {
+    initializeApp({ credential: cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)) });
+  }
+  return getFirestore();
 }
 
 const REMITENTE = { name: 'Portal Veterinario', email: 'hola@portalveterinario.ar' };
@@ -170,14 +172,43 @@ export default async function handler(req, res) {
     });
   }
 
-  // 2b) Inscripción a una capacitación: mail al docente y confirmación a quien se inscribió
+  // 2b) Inscripción a una capacitación: mail al docente y confirmación a quien se inscribió.
+  // La confirmación va SOLO al mail de la sesión, solo si el curso está aprobado,
+  // solo si la inscripción existe en la base y una sola vez por inscripción.
   if (tipo === 'curso_inscripcion') {
     const { cursoId, inscripto = {} } = req.body || {};
-    const curso = cursoId ? await leerCurso(cursoId).catch(() => null) : null;
-    if (!curso) return res.status(404).json({ error: 'Curso no encontrado' });
-    const nombreInscripto = recortar(inscripto.nombre, 80);
-    const mailInscripto = recortar(inscripto.email, 120);
-    if (!esMail(mailInscripto)) return res.status(400).json({ error: 'Email inválido' });
+    if (!cursoId || !esMail(sesion.email)) return res.status(400).json({ error: 'Datos incompletos' });
+    let curso;
+    let refInscripcion;
+    try {
+      const db = baseDeDatos();
+      const snapCurso = await db.collection('capacitaciones').doc(String(cursoId)).get();
+      curso = snapCurso.exists ? snapCurso.data() : null;
+      if (!curso || curso.estado !== 'aprobado') return res.status(404).json({ error: 'Curso no disponible' });
+
+      const inscripciones = await db.collection('inscripciones')
+        .where('cursoId', '==', String(cursoId))
+        .where('usuarioId', '==', sesion.uid)
+        .limit(1)
+        .get();
+      if (inscripciones.empty) return res.status(403).json({ error: 'No hay inscripción' });
+      refInscripcion = inscripciones.docs[0].ref;
+
+      // Marcamos la inscripción como avisada; si ya lo estaba, no se manda de nuevo
+      const yaAvisada = await db.runTransaction(async (t) => {
+        const snap = await t.get(refInscripcion);
+        if (snap.data()?.mailEnviado === true) return true;
+        t.update(refInscripcion, { mailEnviado: true });
+        return false;
+      });
+      if (yaAvisada) return res.status(200).json({ omitido: true });
+    } catch (error) {
+      console.error('Error comprobando la inscripción:', error);
+      return res.status(500).json({ error: 'No se pudo comprobar la inscripción' });
+    }
+
+    const nombreInscripto = recortar(inscripto.nombre, 80) || 'colega';
+    const titulo = recortar(curso.titulo);
 
     if (esMail(curso.email)) {
       const respuestaDocente = await fetch('https://api.brevo.com/v3/smtp/email', {
@@ -186,8 +217,8 @@ export default async function handler(req, res) {
         body: JSON.stringify({
           sender: REMITENTE,
           to: [{ email: curso.email }],
-          subject: `Nueva inscripción — ${curso.titulo}`,
-          textContent: `Hola, ${curso.instructor || 'equipo docente'}.\n\n¡Tenés una nueva inscripción en tu curso "${curso.titulo}"!\n\nDatos del inscripto:\nNombre: ${nombreInscripto}\nEmail: ${mailInscripto}\nMatrícula: ${recortar(inscripto.matricula, 40) || 'No aplica'}\nCelular: ${recortar(inscripto.celular, 40) || 'No informado'}\n\nYa podés agregarlo a tu plataforma de dictado.\n\nEl equipo de Portal Veterinario`
+          subject: `Nueva inscripción — ${titulo}`,
+          textContent: `Hola, ${recortar(curso.instructor, 80) || 'equipo docente'}.\n\n¡Tenés una nueva inscripción en tu curso "${titulo}"!\n\nDatos del inscripto:\nNombre: ${nombreInscripto}\nEmail: ${sesion.email}\nMatrícula: ${recortar(inscripto.matricula, 40) || 'No aplica'}\nCelular: ${recortar(inscripto.celular, 40) || 'No informado'}\n\nYa podés agregarlo a tu plataforma de dictado.\n\nEl equipo de Portal Veterinario`
         })
       }).catch(() => null);
       if (!respuestaDocente?.ok) console.error('No se pudo mandar el mail al docente');
@@ -195,9 +226,9 @@ export default async function handler(req, res) {
 
     return enviarPorBrevo(res, {
       sender: REMITENTE,
-      to: [{ email: mailInscripto }],
-      subject: `Confirmación de inscripción — ${curso.titulo}`,
-      textContent: `Hola, ${nombreInscripto}.\n\nConfirmamos tu inscripción al curso "${curso.titulo}".\n\nDatos del curso:\nModalidad: ${curso.modalidad}\nDuración: ${curso.duracion}\n${curso.linkExterno ? `Link de acceso: ${curso.linkExterno}\n` : ''}\nSi tenés consultas sobre el curso, podés escribirle directamente al docente a: ${curso.email || 'el contacto que figura en la plataforma'}.\n\n¡Gracias por confiar en Portal Veterinario!\nEl equipo de Portal Veterinario`
+      to: [{ email: sesion.email }],
+      subject: `Confirmación de inscripción — ${titulo}`,
+      textContent: `Hola, ${nombreInscripto}.\n\nConfirmamos tu inscripción al curso "${titulo}".\n\nDatos del curso:\nModalidad: ${recortar(curso.modalidad, 40)}\nDuración: ${recortar(curso.duracion, 40)}\n${curso.linkExterno ? `Link de acceso: ${recortar(curso.linkExterno, 300)}\n` : ''}\nSi tenés consultas sobre el curso, podés escribirle directamente al docente a: ${esMail(curso.email) ? curso.email : 'el contacto que figura en la plataforma'}.\n\n¡Gracias por confiar en Portal Veterinario!\nEl equipo de Portal Veterinario`
     });
   }
 

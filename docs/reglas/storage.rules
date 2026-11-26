@@ -57,14 +57,15 @@ service firebase.storage {
     }
 
     // Currículum de la Bolsa de Trabajo: PDF o foto (JPG, PNG, WEBP) de hasta 5 MB. Nunca es público.
-    // Lo leen: la dueña, la admin, la clínica a la que se postuló, y cualquier cuenta registrada
+    // Lo leen: la dueña, la admin, la clínica a la que se postuló, y cualquier cuenta VERIFICADA
     // solo si la persona eligió mostrar su currículum en su ficha de disponible.
     match /cvs/{uid}/{archivo} {
       allow read: if request.auth != null && (
         request.auth.uid == uid
         || request.auth.uid == 'JDiu4lkVyJXeoyZ3eAxuBfvc5bZ2'
         || firestore.exists(/databases/(default)/documents/accesosCV/$(request.auth.uid + '_' + uid))
-        || firestore.get(/databases/(default)/documents/profesionalesDisponibles/$(uid)/privado/contacto).data.get('mostrarCV', false) == true
+        || (firestore.get(/databases/(default)/documents/profesionalesDisponibles/$(uid)/privado/contacto).data.get('mostrarCV', false) == true
+            && firestore.get(/databases/(default)/documents/usuarios/$(request.auth.uid)).data.get('estado', '') == 'activo')
       );
 
       allow create, update: if request.auth != null && request.auth.uid == uid &&
