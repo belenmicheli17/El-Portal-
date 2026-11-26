@@ -171,31 +171,21 @@ const FUENTE_TEXTO = 'Inter, sans-serif';
 const RUTA_IMAGENES = '/bolsa-imagen';
 const ARCHIVO_LOGO = 'logo-portal-veterinario.svg';
 const ARCHIVO_PERSONAJE = 'veterinario-con-planilla-v2.svg';
-const PUESTOS_IMAGEN = { veterinario: 'Veterinario/a', asistente: 'Asistente', peluquero: 'Peluquero/a', recepcion: 'Recepción', alumno: 'Estudiante' };
 
 // Zona para el texto: CABA, zona grande del Gran Buenos Aires, o la ciudad
 export const zonaParaImagen = (oferta) => {
+  // Lo más preciso posible: barrio o ciudad + algo más amplio (ej: «Palermo, CABA», «Castelar, Zona Oeste»)
   const prov = provinciaCorta(oferta?.provincia);
-  if (prov === 'CABA') return 'CABA';
+  const localidad = String(oferta?.localidad || '').trim();
+  const barrio = String(oferta?.barrio || '').trim();
+  const juntar = (chico, grande) => (chico && grande && chico.toLowerCase() !== grande.toLowerCase() ? `${chico}, ${grande}` : (chico || grande));
+  if (prov === 'CABA') return juntar(barrio, 'CABA');
   if (prov === 'Buenos Aires') {
-    if (['Zona Norte', 'Zona Sur', 'Zona Oeste'].includes(oferta?.zonaBA)) return oferta.zonaBA;
-    return String(oferta?.localidad || oferta?.barrio || 'Buenos Aires').trim();
+    const zonaBA = ['Zona Norte', 'Zona Sur', 'Zona Oeste'].includes(oferta?.zonaBA) ? oferta.zonaBA : '';
+    return juntar(localidad || barrio, zonaBA) || 'Buenos Aires';
   }
-  return String(oferta?.localidad || prov || '').trim();
-};
-
-// Especialidades (máximo 2) o el puesto, para el texto grande de la imagen
-const especialidadesParaImagen = (oferta) => {
-  // Nombre del puesto escrito por la clínica (ej: «Director/a técnico/a»)
-  const propio = String(oferta?.puestoTexto || '').trim();
-  if (propio) return [propio];
-  const areas = Array.isArray(oferta?.areas) ? oferta.areas.filter(Boolean) : [];
-  if (oferta?.rol === 'veterinario' && areas.length > 0) {
-    const lista = areas.slice(0, 2);
-    if (areas.length > 2) lista[1] = `${lista[1]}…`;
-    return lista;
-  }
-  return [PUESTOS_IMAGEN[oferta?.rol] || 'Veterinario/a'];
+  if (barrio && localidad) return juntar(barrio, localidad);
+  return juntar(localidad || barrio, prov);
 };
 
 // Lo que se copia al portapapeles: solo el link de la oferta (para pegarlo como sticker en la historia)
@@ -241,38 +231,268 @@ const ajustarTexto = (ctx, texto, peso, familia, tamanos, ancho, maxRenglones) =
   return { tam, renglones, entra: false };
 };
 
-const ajustarEspecialidad = (ctx, texto) => {
-  for (const tam of [84, 72, 64]) {
-    ctx.font = `700 ${tam}px ${FUENTE_TITULO}`;
-    if (ctx.measureText(texto).width <= 600) return { tam, renglones: [texto] };
-  }
-  return ajustarTexto(ctx, texto, 700, FUENTE_TITULO, [64], 600, 2);
-};
-
 // Link a la pestaña de profesionales disponibles de la Bolsa
 export const linkDisponibles = () => `${SITIO}/bolsa-de-trabajo?tab=disponibles`;
 
-// Imagen para difundir a un profesional (o estudiante) disponible: usa el mismo diseño que las ofertas,
-// con su foto y nombre en la tarjeta y "está disponible" en vez de "está en búsqueda".
-export const generarImagenDisponible = (disponible) => {
-  const zona = Array.isArray(disponible?.zonas) && disponible.zonas[0] ? disponible.zonas[0] : {};
-  return generarImagenOferta({
-    rol: disponible?.puesto === 'asistente' ? 'asistente' : 'veterinario',
-    areas: disponible?.areas || [],
-    provincia: zona.provincia || disponible?.provincia || '',
-    localidad: zona.localidad || '',
-    barrio: zona.barrio || '',
-    clinicaNombre: disponible?.nombre || 'Un colega del Portal',
-    clinicaFoto: disponible?.foto || ''
-  }, 'disponible');
+// ----- Piezas que comparten las dos imágenes -----
+const NARANJA = '#F29B24';
+const VERDE_OSCURO = '#1F4140';
+const VERDE = '#2D6A6A';
+
+// Subrayado a mano alzada debajo de un texto
+const subrayar = (ctx, x, y, ancho, color = NARANJA) => {
+  const esc = ancho / 100;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 9;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(x + esc, y + 18);
+  ctx.quadraticCurveTo(x + 50 * esc, y + 4, x + 99 * esc, y + 13);
+  ctx.stroke();
 };
 
-// Dibuja la imagen de una oferta (o de un profesional disponible) y devuelve un PNG
-export const generarImagenOferta = async (oferta, modo = 'oferta') => {
-  const esDisponible = modo === 'disponible';
-  const NARANJA = '#F29B24';
+// Foto redonda (o iniciales si no hay foto)
+const dibujarFotoRedonda = (ctx, foto, nombre, cx, cy, diametro, colorFondo = VERDE_OSCURO) => {
+  if (foto) {
+    ctx.save();
+    ctx.beginPath(); ctx.arc(cx, cy, diametro / 2, 0, Math.PI * 2); ctx.clip();
+    const escala = Math.max(diametro / foto.width, diametro / foto.height);
+    ctx.drawImage(foto, cx - (foto.width * escala) / 2, cy - (foto.height * escala) / 2, foto.width * escala, foto.height * escala);
+    ctx.restore();
+  } else {
+    ctx.fillStyle = colorFondo;
+    ctx.beginPath(); ctx.arc(cx, cy, diametro / 2, 0, Math.PI * 2); ctx.fill();
+    const iniciales = String(nombre || '').trim().split(/\s+/).slice(0, 2).map((p) => p[0] || '').join('').toUpperCase() || 'PV';
+    ctx.font = `700 ${Math.round(diametro * 0.36)}px ${FUENTE_TITULO}`;
+    ctx.fillStyle = '#FFFFFF';
+    ctx.textAlign = 'center';
+    ctx.fillText(iniciales, cx, cy);
+    ctx.textAlign = 'left';
+  }
+};
 
-  await Promise.all(['700 84px Montserrat', '700 32px Inter', '500 36px Inter', '600 36px Inter', '700 40px Inter'].map((f) => document.fonts.load(f, '¿Tenés algún búsqueda·…?')));
+// Pregunta con una flecha naranja que apunta hacia ARRIBA, al lugar libre donde se pega el sticker del enlace
+const dibujarPregunta = (ctx, y, pregunta, bajada) => {
+  ctx.strokeStyle = NARANJA;
+  ctx.lineWidth = 6;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  ctx.moveTo(100, y + 100); ctx.lineTo(100, y);
+  ctx.moveTo(80, y + 20); ctx.lineTo(100, y); ctx.lineTo(120, y + 20);
+  ctx.stroke();
+  ctx.font = `700 52px ${FUENTE_TITULO}`;
+  ctx.fillStyle = VERDE_OSCURO;
+  ctx.fillText(pregunta, 145, y + 28);
+  ctx.font = `600 42px ${FUENTE_TEXTO}`;
+  ctx.fillStyle = '#284847';
+  ctx.fillText(bajada, 145, y + 90);
+};
+
+// Logo + píldora de arriba
+// A la derecha del logo va el @ de Instagram (de la clínica o del profesional), para etiquetarlo al compartir
+const dibujarEncabezado = (ctx, logo, textoPildora, fondoPildora, colorPildora, instagram = '') => {
+  if (logo) ctx.drawImage(logo, 80, 90, 220, 72);
+  if (instagram) {
+    ctx.font = `600 38px ${FUENTE_TEXTO}`;
+    let usuario = `@${instagram}`;
+    while (usuario.length > 4 && ctx.measureText(usuario).width > 560) usuario = `${usuario.slice(0, -2)}…`;
+    const anchoTexto = ctx.measureText(usuario).width;
+    const xIcono = 1000 - anchoTexto - 16 - 40;
+    // Iconito de Instagram (cuadrado redondeado + círculo + punto)
+    ctx.strokeStyle = VERDE_OSCURO;
+    ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.roundRect(xIcono, 106, 40, 40, 12); ctx.stroke();
+    ctx.beginPath(); ctx.arc(xIcono + 20, 126, 9, 0, Math.PI * 2); ctx.stroke();
+    ctx.fillStyle = VERDE_OSCURO;
+    ctx.beginPath(); ctx.arc(xIcono + 31, 115, 3, 0, Math.PI * 2); ctx.fill();
+    ctx.fillText(usuario, 1000 - anchoTexto, 127);
+  }
+  // Píldora más grande para que se lea bien
+  ctx.font = `700 38px ${FUENTE_TEXTO}`;
+  ctx.fillStyle = fondoPildora;
+  ctx.beginPath(); ctx.roundRect(80, 206, ctx.measureText(textoPildora).width + 72, 76, 38); ctx.fill();
+  ctx.fillStyle = colorPildora;
+  ctx.fillText(textoPildora, 116, 245);
+};
+// Pastillas centradas (o alineadas a la izquierda) que pasan de renglón si no entran. Devuelve dónde terminan.
+const dibujarPastillas = (ctx, textos, { y, centroX = null, izquierda = 80, anchoMax = 920, dibujar = true, fondo = '#FFFFFF', color = VERDE }) => {
+  ctx.font = `600 40px ${FUENTE_TEXTO}`;
+  const ALTO = 76;
+  const SEPARACION = 16;
+  // Armamos los renglones
+  const renglones = [[]];
+  let anchoRenglon = 0;
+  textos.forEach((t) => {
+    let texto = t;
+    while (texto.length > 4 && ctx.measureText(texto).width + 64 > anchoMax) texto = `${texto.slice(0, -2).trimEnd()}…`;
+    const ancho = ctx.measureText(texto).width + 64;
+    if (renglones[renglones.length - 1].length && anchoRenglon + SEPARACION + ancho > anchoMax) { renglones.push([]); anchoRenglon = 0; }
+    anchoRenglon += (renglones[renglones.length - 1].length ? SEPARACION : 0) + ancho;
+    renglones[renglones.length - 1].push({ texto, ancho });
+  });
+  renglones.forEach((renglon, i) => {
+    const total = renglon.reduce((suma, p) => suma + p.ancho, 0) + SEPARACION * (renglon.length - 1);
+    let x = centroX === null ? izquierda : centroX - total / 2;
+    const yRenglon = y + i * (ALTO + SEPARACION);
+    renglon.forEach(({ texto, ancho }) => {
+      if (dibujar) {
+        ctx.fillStyle = fondo;
+        ctx.beginPath(); ctx.roundRect(x, yRenglon, ancho, ALTO, ALTO / 2); ctx.fill();
+        ctx.fillStyle = color;
+        ctx.fillText(texto, x + 32, yRenglon + ALTO / 2 + 1);
+      }
+      x += ancho + SEPARACION;
+    });
+  });
+  return y + renglones.length * (ALTO + SEPARACION) - SEPARACION;
+};
+
+// Textos cortos de jornada y experiencia para la imagen
+const JORNADA_CORTA = { 'Guardia en clínica general (diurna)': 'Guardias diurnas', 'Guardia 24 h (nocturna)': 'Guardias 24 h', 'Reemplazo': 'Reemplazos', 'A convenir': 'Jornada a convenir' };
+const EXPERIENCIA_CORTA = { 'Sin experiencia (junior)': 'Junior', '1 a 3 años': '1 a 3 años de experiencia', 'Más de 3 años': 'Más de 3 años de experiencia', 'Especialista': 'Especialista' };
+
+// Imagen para difundir a un profesional (o estudiante) disponible.
+// Misma estructura que la de clínicas pero en naranja: título, tarjeta de la persona (la protagonista),
+// lugar del sticker del enlace y la pregunta.
+export const generarImagenDisponible = async (disponible, { instagram = '' } = {}) => {
+  await Promise.all(['700 84px Montserrat', '600 40px Montserrat', '700 30px Inter', '600 40px Inter', '500 40px Inter'].map((f) => document.fonts.load(f, '¿Tenés algún búsqueda·…?')));
+  const [logo, foto] = await Promise.all([
+    cargarImagen(`${RUTA_IMAGENES}/${ARCHIVO_LOGO}`),
+    cargarImagen(disponible?.foto, true)
+  ]);
+  const zonaDatos = Array.isArray(disponible?.zonas) && disponible.zonas[0] ? disponible.zonas[0] : {};
+  let zona = zonaParaImagen({ provincia: zonaDatos.provincia || disponible?.provincia || '', localidad: zonaDatos.localidad || '', barrio: zonaDatos.barrio || '' });
+  const esAsistente = disponible?.puesto === 'asistente';
+  const areas = Array.isArray(disponible?.areas) ? disponible.areas.filter(Boolean).slice(0, 4) : [];
+  const nombre = String(disponible?.nombre || 'Un colega del Portal').trim();
+  const rol = esAsistente ? 'Asistente veterinario/a' : 'Veterinario/a';
+  const jornadas = (Array.isArray(disponible?.jornada) ? disponible.jornada : []).map((j) => JORNADA_CORTA[j] || j).slice(0, 2);
+  // Un renglón para la experiencia y otro para la jornada
+  const detalles = [EXPERIENCIA_CORTA[disponible?.experiencia] || '', jornadas.join(' · ')].filter(Boolean);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 1080;
+  canvas.height = 1920;
+  const ctx = canvas.getContext('2d');
+  ctx.textBaseline = 'middle';
+  ctx.textAlign = 'left';
+
+  // Fondo cálido (las ofertas de clínicas son verdes)
+  const degradado = ctx.createLinearGradient(0, 0, 1080, 1920);
+  degradado.addColorStop(0, '#FFE7BF');
+  degradado.addColorStop(0.55, '#FFF6E6');
+  degradado.addColorStop(1, '#FBE3CF');
+  ctx.fillStyle = degradado;
+  ctx.fillRect(0, 0, 1080, 1920);
+
+  dibujarEncabezado(ctx, logo, esAsistente ? 'ESTUDIANTE DISPONIBLE' : 'PROFESIONAL DISPONIBLE', NARANJA, '#FFFFFF', instagram);
+
+  // Abajo (igual que en las de clínica): pregunta con flecha, y arriba el lugar del sticker del enlace
+  const yPregunta = 1660;
+  const arribaSticker = yPregunta - 30 - 150;
+
+  // Título
+  ctx.font = `700 68px ${FUENTE_TITULO}`;
+  ctx.fillStyle = VERDE_OSCURO;
+  ctx.fillText('Disponible para trabajar', 80, 380);
+
+  // Contenido de la tarjeta (se mide primero y se dibuja después)
+  const cx = 540;
+  const FOTO = 260;
+  const ajusteNombre = ajustarTexto(ctx, nombre, 700, FUENTE_TITULO, [72, 64, 56], 800, 2);
+  const ajustesDetalle = detalles.map((d) => ajustarTexto(ctx, d, 500, FUENTE_TEXTO, [38, 34, 30], 800, 2));
+  const contenido = (yInicio, dibujar) => {
+    let y = yInicio + 50;
+    if (dibujar) {
+      dibujarFotoRedonda(ctx, foto, nombre, cx, y + FOTO / 2, FOTO);
+      ctx.strokeStyle = '#FFE0B2';
+      ctx.lineWidth = 10;
+      ctx.beginPath(); ctx.arc(cx, y + FOTO / 2, FOTO / 2 + 5, 0, Math.PI * 2); ctx.stroke();
+    }
+    y += FOTO + 46;
+    ctx.textAlign = 'center';
+    // Nombre
+    ctx.font = `700 ${ajusteNombre.tam}px ${FUENTE_TITULO}`;
+    ctx.fillStyle = VERDE_OSCURO;
+    ajusteNombre.renglones.forEach((r) => { if (dibujar) ctx.fillText(r, cx, y + ajusteNombre.tam * 0.55); y += ajusteNombre.tam * 1.15; });
+    y += 8;
+    // Rol
+    ctx.font = `700 46px ${FUENTE_TITULO}`;
+    ctx.fillStyle = VERDE;
+    if (dibujar) ctx.fillText(rol, cx, y + 26);
+    y += 66;
+    // Zona con pin (centrada)
+    if (zona) {
+      ctx.font = `600 48px ${FUENTE_TITULO}`;
+      while (zona.length > 3 && ctx.measureText(zona).width > 760) zona = `${zona.slice(0, -2).trimEnd()}…`;
+      if (dibujar) {
+        const anchoZona = ctx.measureText(zona).width;
+        const anchoPin = 56 * 0.64;
+        const inicio = cx - (anchoPin + 16 + anchoZona) / 2;
+        dibujarPin(ctx, inicio, y + 30, 56, NARANJA);
+        ctx.textAlign = 'left';
+        ctx.fillStyle = VERDE_OSCURO;
+        ctx.fillText(zona, inicio + anchoPin + 16, y + 32);
+        ctx.textAlign = 'center';
+      }
+      y += 76;
+    }
+    // Experiencia y jornada
+    ajustesDetalle.forEach((ajusteDetalle) => {
+      ctx.font = `500 ${ajusteDetalle.tam}px ${FUENTE_TEXTO}`;
+      ctx.fillStyle = '#5A5A5A';
+      ajusteDetalle.renglones.forEach((r) => { if (dibujar) ctx.fillText(r, cx, y + ajusteDetalle.tam * 0.55); y += ajusteDetalle.tam * 1.3; });
+    });
+    if (ajustesDetalle.length) y += 10;
+    ctx.textAlign = 'left';
+    // Especialidades en pastillas
+    if (areas.length) {
+      y += 20;
+      y = dibujarPastillas(ctx, areas, { y, centroX: cx, anchoMax: 820, dibujar, fondo: '#FFF1DC', color: '#8A4B00' });
+    }
+    return y + 56;
+  };
+
+  // La tarjeta se centra en el espacio entre el título y el lugar del sticker
+  const altoTarjeta = contenido(0, false);
+  const libreArriba = 450;
+  const libreAbajo = arribaSticker - 40;
+  const arribaTarjeta = Math.max(libreArriba, libreArriba + (libreAbajo - libreArriba - altoTarjeta) / 2);
+  ctx.save();
+  ctx.shadowColor = 'rgba(120,70,20,0.14)';
+  ctx.shadowBlur = 40;
+  ctx.shadowOffsetY = 20;
+  ctx.fillStyle = '#FFFFFF';
+  ctx.beginPath(); ctx.roundRect(80, arribaTarjeta, 920, altoTarjeta, 48); ctx.fill();
+  ctx.restore();
+  contenido(arribaTarjeta, true);
+
+  dibujarPregunta(ctx, yPregunta, '¿Tu clínica busca a alguien así?', 'Contactalo desde el enlace');
+
+  return new Promise((resolver) => canvas.toBlob(resolver, 'image/png'));
+};
+
+// Pin de ubicación chiquito (para la zona)
+const dibujarPin = (ctx, x, cy, alto, color) => {
+  const r = alto * 0.32;
+  const cyCirculo = cy - alto * 0.18;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(x + r, cyCirculo, r, Math.PI * 0.85, Math.PI * 2.15);
+  ctx.lineTo(x + r, cy + alto * 0.42);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#FFFFFF';
+  ctx.beginPath(); ctx.arc(x + r, cyCirculo, r * 0.42, 0, Math.PI * 2); ctx.fill();
+  return r * 2;
+};
+
+// Dibuja la imagen de una oferta de una clínica y devuelve un PNG.
+// Formato "Se busca": 1) el puesto enorme (un solo protagonista), 2) zona con pin,
+// 3) tarjeta de quién busca (la clínica) con la ilustración, 4) la pregunta corta junto al enlace.
+export const generarImagenOferta = async (oferta, { instagram = '' } = {}) => {
+  await Promise.all(['700 84px Montserrat', '600 40px Montserrat', '700 30px Inter', '500 36px Inter', '600 36px Inter', '600 38px Inter'].map((f) => document.fonts.load(f, '¿Tenés algún búsqueda·…?')));
   const [logo, personaje, fotoClinica] = await Promise.all([
     cargarImagen(`${RUTA_IMAGENES}/${ARCHIVO_LOGO}`),
     cargarImagen(`${RUTA_IMAGENES}/${ARCHIVO_PERSONAJE}`),
@@ -286,169 +506,127 @@ export const generarImagenOferta = async (oferta, modo = 'oferta') => {
   ctx.textBaseline = 'middle';
   ctx.textAlign = 'left';
 
-  // Fondo
+  // Fondo verde claro (los profesionales disponibles son cálidos)
   const degradado = ctx.createLinearGradient(0, 0, 1080, 1920);
-  degradado.addColorStop(0, '#FBE7CE');
-  degradado.addColorStop(0.5, '#F8F3EA');
-  degradado.addColorStop(1, '#DFEEE8');
+  degradado.addColorStop(0, '#DFF0EA');
+  degradado.addColorStop(0.5, '#F3F8F6');
+  degradado.addColorStop(1, '#D6EAE3');
   ctx.fillStyle = degradado;
   ctx.fillRect(0, 0, 1080, 1920);
 
-  // Forma detrás del personaje
-  ctx.save();
-  ctx.translate(845, 1240);
-  ctx.rotate((-4 * Math.PI) / 180);
-  ctx.fillStyle = '#FFFFFF';
-  ctx.beginPath(); ctx.roundRect(-175, -500, 350, 1000, 175); ctx.fill();
-  ctx.restore();
+  dibujarEncabezado(ctx, logo, 'CLÍNICA EN BÚSQUEDA', VERDE, '#FFFFFF', instagram);
 
-  // Personaje: se ajusta a la caja sin deformarse y apoyado abajo
-  if (personaje) {
-    const caja = { x: 680, y: 760, ancho: 330, alto: 940 };
-    const anchoOriginal = personaje.naturalWidth || personaje.width || caja.ancho;
-    const altoOriginal = personaje.naturalHeight || personaje.height || caja.alto;
-    const escala = Math.min(caja.ancho / anchoOriginal, caja.alto / altoOriginal);
-    const ancho = anchoOriginal * escala;
-    const alto = altoOriginal * escala;
-    ctx.drawImage(personaje, caja.x + (caja.ancho - ancho) / 2, caja.y + caja.alto - alto, ancho, alto);
-  }
-
-  // Logo
-  if (logo) ctx.drawImage(logo, 80, 90, 220, 72);
-
-  // Píldora «Bolsa de trabajo»
-  ctx.font = `700 32px ${FUENTE_TEXTO}`;
-  const textoPildora = 'BOLSA DE TRABAJO';
-  ctx.fillStyle = '#D8EBE5';
-  ctx.beginPath(); ctx.roundRect(80, 222, ctx.measureText(textoPildora).width + 64, 64, 32); ctx.fill();
-  ctx.fillStyle = '#284847';
-  ctx.fillText(textoPildora, 112, 254);
-
-  // Pregunta fija (si no entra en 920 px, se achica)
-  const conAreas = oferta?.rol === 'veterinario' && Array.isArray(oferta?.areas) && oferta.areas.length > 0;
-  const pregunta = !esDisponible
-    ? ['¿Tenés algún colega', 'que esté buscando', 'trabajo como']
-    : conAreas ? ['¿Tu clínica busca', 'veterinario/a con', 'experiencia en'] : ['¿Tu clínica', 'está buscando', 'un/a'];
-  ctx.font = `700 84px ${FUENTE_TITULO}`;
-  const masAncho = Math.max(...pregunta.map((l) => ctx.measureText(l).width));
-  const tamPregunta = Math.min(84, Math.floor((84 * 920) / masAncho));
-  const altoPregunta = tamPregunta * 1.12;
-  ctx.font = `700 ${tamPregunta}px ${FUENTE_TITULO}`;
-  ctx.fillStyle = '#1F4140';
-  pregunta.forEach((linea, i) => ctx.fillText(linea, 80, 352 + altoPregunta * (i + 0.5)));
-
-  // Especialidades con subrayado naranja
-  let y = 352 + altoPregunta * 3 + 18;
-  especialidadesParaImagen(oferta).forEach((esp) => {
-    const { tam, renglones } = ajustarEspecialidad(ctx, esp);
-    const alto = tam * 1.12;
-    ctx.font = `700 ${tam}px ${FUENTE_TITULO}`;
-    ctx.fillStyle = '#2D6A6A';
-    renglones.forEach((r, i) => ctx.fillText(r, 80, y + alto * (i + 0.5)));
-    const anchoUltimo = ctx.measureText(renglones[renglones.length - 1]).width;
-    const arriba = y + alto * renglones.length - 6;
-    const esc = anchoUltimo / 100;
-    ctx.strokeStyle = NARANJA;
-    ctx.lineWidth = 9;
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(80 + esc, arriba + 8 * 2.2);
-    ctx.quadraticCurveTo(80 + 50 * esc, arriba - 2 * 2.2, 80 + 99 * esc, arriba + 6 * 2.2);
-    ctx.stroke();
-    y += alto * renglones.length + 30;
-  });
-
-  // Zona: «en Zona Oeste?»
+  // Textos: «Se busca veterinario/a» + en grande el puesto puntual + «Con experiencia en» y las especialidades
+  const ROL_TEXTO = { veterinario: 'veterinario/a', asistente: 'asistente veterinario/a', peluquero: 'peluquero/a', recepcion: 'recepcionista', alumno: 'estudiante' };
+  const rolTexto = ROL_TEXTO[oferta?.rol] || 'veterinario/a';
+  const areas = Array.isArray(oferta?.areas) ? oferta.areas.filter(Boolean) : [];
+  const propio = String(oferta?.puestoTexto || '').trim();
+  const antetitulo = propio ? `Se busca ${rolTexto}` : 'Se busca';
+  const principal = propio || (rolTexto.charAt(0).toUpperCase() + rolTexto.slice(1));
+  const resto = areas.slice(0, 4);
+  const etiquetaPastillas = resto.length ? 'Con experiencia en' : '';
   let zona = zonaParaImagen(oferta);
-  let tamZona = 72;
-  for (const tam of [72, 64, 56]) {
-    tamZona = tam;
-    ctx.font = `700 ${tam}px ${FUENTE_TITULO}`;
-    if (ctx.measureText(`en ${zona}?`).width <= 600) break;
-  }
-  while (zona.length > 3 && ctx.measureText(`en ${zona}?`).width > 600) zona = `${zona.slice(0, -2).trimEnd()}…`;
-  let x = 80;
-  [['en ', '#1F4140'], [zona, '#2D6A6A'], ['?', '#1F4140']].forEach(([texto, col]) => {
-    ctx.fillStyle = col;
-    ctx.fillText(texto, x, y + (tamZona * 1.12) / 2);
-    x += ctx.measureText(texto).width;
-  });
 
-  // Tarjeta de la clínica: foto o iniciales a la izquierda, nombre y «está en búsqueda» a la derecha
-  const FOTO = 104;
-  const ANCHO_TARJETA = 600;
-  const xTexto = 80 + 36 + FOTO + 28;
-  const anchoTexto = 80 + ANCHO_TARJETA - 36 - xTexto;
-  const nombre = String(oferta?.clinicaNombre || (esDisponible ? 'Un colega del Portal' : 'Una clínica del Portal')).trim();
-  let ajuste = ajustarTexto(ctx, nombre, 700, FUENTE_TITULO, [44], anchoTexto, 2);
+  // Medidas de la tarjeta de quién busca (va abajo, arriba del lugar del sticker)
+  const FOTO = 140;
+  const ANCHO_TARJETA = 920;
+  const ANCHO_ILUSTRACION = 300;
+  const xTexto = 80 + 40 + FOTO + 28;
+  const anchoTexto = 80 + ANCHO_TARJETA - ANCHO_ILUSTRACION - xTexto;
+  const nombre = String(oferta?.clinicaNombre || 'Una clínica del Portal').trim();
+  let ajuste = ajustarTexto(ctx, nombre, 700, FUENTE_TITULO, [48, 42], anchoTexto, 2);
   if (!ajuste.entra) ajuste = ajustarTexto(ctx, nombre, 700, FUENTE_TITULO, [38], anchoTexto, 3);
   const altoNombre = ajuste.tam * 1.2;
-  const altoContenido = altoNombre * ajuste.renglones.length + 12 + 36 * 1.2;
+  const altoEtiqueta = 46;
+  const altoContenido = altoEtiqueta + altoNombre * ajuste.renglones.length;
   const altoCuerpo = Math.max(FOTO, altoContenido);
-  const altoTarjeta = 36 + altoCuerpo + 36;
-  const arribaTarjeta = Math.min(y + tamZona * 1.12 + 70, 1700 - altoTarjeta);
+  const altoTarjeta = 44 + altoCuerpo + 44;
+  const arribaTarjeta = 1800 - altoTarjeta;
+  // Pregunta con flecha justo arriba de la tarjeta, y arriba de la pregunta el lugar del sticker del enlace
+  const yPregunta = arribaTarjeta - 40 - 116;
+  const arribaSticker = yPregunta - 30 - 150;
+
+  // Bloque de textos de arriba. Se llama dos veces: primero solo para medir y después para dibujar.
+  const ajusteAnte = ajustarTexto(ctx, antetitulo, 600, FUENTE_TITULO, [56, 50], 920, 2);
+  const ajustePuesto = ajustarTexto(ctx, principal, 700, FUENTE_TITULO, [124, 110, 96, 84], 920, 3);
+  const bloque = (y, dibujar) => {
+    ctx.font = `600 ${ajusteAnte.tam}px ${FUENTE_TITULO}`;
+    ctx.fillStyle = VERDE;
+    ajusteAnte.renglones.forEach((r, i) => { if (dibujar) ctx.fillText(r, 80, y + ajusteAnte.tam * 1.2 * (i + 0.5)); });
+    y += ajusteAnte.tam * 1.2 * ajusteAnte.renglones.length + 16;
+
+    // El puesto o la especialidad: lo más grande y lo único subrayado
+    const altoRenglon = ajustePuesto.tam * 1.08;
+    ctx.font = `700 ${ajustePuesto.tam}px ${FUENTE_TITULO}`;
+    ctx.fillStyle = VERDE_OSCURO;
+    if (dibujar) {
+      ajustePuesto.renglones.forEach((r, i) => ctx.fillText(r, 80, y + altoRenglon * (i + 0.5)));
+      const anchoUltimo = ctx.measureText(ajustePuesto.renglones[ajustePuesto.renglones.length - 1]).width;
+      subrayar(ctx, 80, y + altoRenglon * (ajustePuesto.renglones.length - 0.5) + ajustePuesto.tam * 0.38, anchoUltimo);
+    }
+    y += altoRenglon * ajustePuesto.renglones.length + 54;
+
+    // Las otras especialidades, como pastillas
+    if (etiquetaPastillas) {
+      ctx.font = `600 44px ${FUENTE_TITULO}`;
+      ctx.fillStyle = VERDE;
+      if (dibujar) ctx.fillText(etiquetaPastillas, 80, y + 26);
+      y += 70;
+    }
+    if (resto.length) y = dibujarPastillas(ctx, resto, { y, dibujar }) + 40;
+
+    // Zona con un pin
+    if (zona) {
+      ctx.font = `600 58px ${FUENTE_TITULO}`;
+      while (zona.length > 3 && ctx.measureText(zona).width > 830) zona = `${zona.slice(0, -2).trimEnd()}…`;
+      if (dibujar) {
+        const anchoPin = dibujarPin(ctx, 80, y + 34, 64, NARANJA);
+        ctx.fillStyle = VERDE_OSCURO;
+        ctx.fillText(zona, 80 + anchoPin + 20, y + 36);
+      }
+      y += 72;
+    }
+    return y;
+  };
+
+  // Repartimos el espacio: el bloque de arriba baja un poco si sobra lugar,
+  // y la ilustración crece (con un tope) para ocupar el resto
+  const altoBloque = bloque(0, false);
+  const libre = arribaSticker - 50 - 330 - altoBloque;
+  const arribaBloque = 330 + Math.max(0, Math.min(libre * 0.4, 260));
+  const finContenido = bloque(arribaBloque, true) + 40;
+
   ctx.save();
   ctx.shadowColor = 'rgba(31,65,64,0.12)';
   ctx.shadowBlur = 36;
   ctx.shadowOffsetY = 18;
   ctx.fillStyle = '#FFFFFF';
-  ctx.beginPath(); ctx.roundRect(80, arribaTarjeta, ANCHO_TARJETA, altoTarjeta, 36); ctx.fill();
+  ctx.beginPath(); ctx.roundRect(80, arribaTarjeta, ANCHO_TARJETA, altoTarjeta, 40); ctx.fill();
   ctx.restore();
 
-  // Foto de la clínica (círculo) o iniciales
-  const cx = 80 + 36 + FOTO / 2;
-  const cy = arribaTarjeta + 36 + altoCuerpo / 2;
-  if (fotoClinica) {
-    ctx.save();
-    ctx.beginPath(); ctx.arc(cx, cy, FOTO / 2, 0, Math.PI * 2); ctx.clip();
-    const escala = Math.max(FOTO / fotoClinica.width, FOTO / fotoClinica.height);
-    const ancho = fotoClinica.width * escala;
-    const alto = fotoClinica.height * escala;
-    ctx.drawImage(fotoClinica, cx - ancho / 2, cy - alto / 2, ancho, alto);
-    ctx.restore();
-    ctx.strokeStyle = '#E8EFEF';
-    ctx.lineWidth = 3;
-    ctx.beginPath(); ctx.arc(cx, cy, FOTO / 2, 0, Math.PI * 2); ctx.stroke();
-  } else {
-    ctx.fillStyle = '#1F4140';
-    ctx.beginPath(); ctx.arc(cx, cy, FOTO / 2, 0, Math.PI * 2); ctx.fill();
-    ctx.font = `700 40px ${FUENTE_TITULO}`;
-    ctx.fillStyle = '#FFFFFF';
-    ctx.textAlign = 'center';
-    ctx.fillText(nombre.slice(0, 2).toUpperCase(), cx, cy);
-    ctx.textAlign = 'left';
+  // Ilustración: parada sobre el borde de abajo de la tarjeta, asomando por arriba
+  if (personaje) {
+    const ancho0 = personaje.naturalWidth || personaje.width || 300;
+    const alto0 = personaje.naturalHeight || personaje.height || 600;
+    const altoMax = Math.min(640, arribaTarjeta + altoTarjeta - 24 - finContenido);
+    const escala = Math.min(320 / ancho0, altoMax / alto0);
+    const anchoDib = ancho0 * escala;
+    const altoDib = alto0 * escala;
+    ctx.drawImage(personaje, 80 + ANCHO_TARJETA - 30 - anchoDib, arribaTarjeta + altoTarjeta - 24 - altoDib, anchoDib, altoDib);
   }
 
-  // Nombre y «está en búsqueda»
-  const arribaTexto = arribaTarjeta + 36 + (altoCuerpo - altoContenido) / 2;
+  const cy = arribaTarjeta + 44 + altoCuerpo / 2;
+  dibujarFotoRedonda(ctx, fotoClinica, nombre, 80 + 40 + FOTO / 2, cy, FOTO);
+  const arribaTexto = arribaTarjeta + 44 + (altoCuerpo - altoContenido) / 2;
+  ctx.font = `700 32px ${FUENTE_TEXTO}`;
+  ctx.fillStyle = '#6B7F7D';
+  ctx.fillText('Quién busca', xTexto, arribaTexto + altoEtiqueta / 2 - 4);
   ctx.font = `700 ${ajuste.tam}px ${FUENTE_TITULO}`;
-  ctx.fillStyle = '#1F4140';
-  ajuste.renglones.forEach((r, i) => ctx.fillText(r, xTexto, arribaTexto + altoNombre * (i + 0.5)));
-  const ySub = arribaTexto + altoNombre * ajuste.renglones.length + 12 + (36 * 1.2) / 2;
-  ctx.font = `500 36px ${FUENTE_TEXTO}`;
-  ctx.fillStyle = '#284847';
-  const [antes, resaltado] = esDisponible ? ['está ', 'disponible'] : ['está en ', 'búsqueda'];
-  ctx.fillText(antes, xTexto, ySub);
-  const anchoEsta = ctx.measureText(antes).width;
-  ctx.font = `600 36px ${FUENTE_TEXTO}`;
-  ctx.fillText(resaltado, xTexto + anchoEsta, ySub);
+  ctx.fillStyle = VERDE_OSCURO;
+  ajuste.renglones.forEach((r, i) => ctx.fillText(r, xTexto, arribaTexto + altoEtiqueta + altoNombre * (i + 0.5)));
 
-  // Firma con flecha naranja hacia abajo
-  ctx.strokeStyle = NARANJA;
-  ctx.lineWidth = 4;
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  ctx.beginPath();
-  ctx.moveTo(98, 1794); ctx.lineTo(98, 1826);
-  ctx.moveTo(82, 1810); ctx.lineTo(98, 1826); ctx.lineTo(114, 1810);
-  ctx.stroke();
-  ctx.font = `700 40px ${FUENTE_TEXTO}`;
-  ctx.fillStyle = '#284847';
-  const firma = esDisponible
-    ? ['Contactalo desde el enlace y mirá más', 'colegas disponibles en la Bolsa de Trabajo']
-    : ['Postulate desde el enlace y mirá todas', 'las ofertas desde el link en la descripción'];
-  ctx.fillText(firma[0], 134, 1780);
-  ctx.fillText(firma[1], 134, 1836);
+  // Pregunta corta con la flecha que apunta al sticker del enlace (queda a la izquierda, al lado del muñeco)
+  dibujarPregunta(ctx, yPregunta, '¿Conocés a alguien?', 'Postulate o pasale el enlace');
 
   return new Promise((resolver) => canvas.toBlob(resolver, 'image/png'));
 };

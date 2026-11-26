@@ -71,7 +71,7 @@
       "destination": "/api/seo?tipo=clinica&slug=:slug"
     },
     {
-      "source": "/(.*)",
+      "source": "/((?!assets/).*)",
       "destination": "/index.html"
     }
   ],

@@ -3,7 +3,10 @@ import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { X, Check, Lock, Search, ChevronDown, Loader2, AlertTriangle, Info, Share2, Copy } from 'lucide-react';
 import { GRUPOS_AREAS } from '../../data/bolsaOpciones';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../../firebase';
 import { generarImagenOferta, generarImagenDisponible, textoParaCompartir, linkDisponibles } from '../../utils/bolsa';
+import { usuarioDeInstagram } from '../editor/EditorComponents';
 
 
 
@@ -291,12 +294,27 @@ export function CartelVerificacion({ abierto, onCerrar }) {
 // Si el navegador no lo permite, muestra la imagen con botones para copiarla.
 // Con "disponible" (en vez de "oferta") arma la imagen de un profesional disponible.
 export function BotonImagenOferta({ oferta, disponible = null }) {
-  const generar = () => (disponible ? generarImagenDisponible(disponible) : generarImagenOferta(oferta));
+  const generar = (opciones) => (disponible ? generarImagenDisponible(disponible, opciones) : generarImagenOferta(oferta, opciones));
   const linkParaCopiar = () => (disponible ? linkDisponibles() : textoParaCompartir(oferta));
   const [trabajando, setTrabajando] = useState(false);
   const [mensaje, setMensaje] = useState('');
   const [vista, setVista] = useState(null); // { url, blob }
   const [copiado, setCopiado] = useState('');
+  const [instagram, setInstagram] = useState(''); // usuario de Instagram de la clínica o del profesional (para etiquetarlo)
+
+  // Busca el Instagram en el perfil de quien publicó (clínica, profesional o estudiante)
+  const buscarInstagram = async () => {
+    const uid = disponible ? disponible.creadorId : oferta?.creadorId;
+    if (!uid) return '';
+    const coleccion = !disponible ? 'clinicas' : (disponible.puesto === 'asistente' ? 'alumnos' : 'profesionales');
+    try {
+      const snap = await getDoc(doc(db, coleccion, uid));
+      const datos = snap.exists() ? snap.data() : {};
+      return usuarioDeInstagram(datos?.redes?.instagram || datos?.instagram || '');
+    } catch {
+      return '';
+    }
+  };
 
   const avisar = (texto) => {
     setMensaje(texto);
@@ -310,7 +328,9 @@ export function BotonImagenOferta({ oferta, disponible = null }) {
     let textoCopiado = false;
     try { await navigator.clipboard.writeText(texto); textoCopiado = true; } catch { textoCopiado = false; }
     try {
-      const blob = await generar();
+      const usuarioIG = await buscarInstagram();
+      setInstagram(usuarioIG);
+      const blob = await generar({ instagram: usuarioIG });
       const archivo = new File([blob], disponible ? 'disponible.png' : 'oferta.png', { type: 'image/png' });
       if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
         try {
@@ -346,6 +366,16 @@ export function BotonImagenOferta({ oferta, disponible = null }) {
     }
   };
 
+  const copiarInstagram = async () => {
+    try {
+      await navigator.clipboard.writeText(`@${instagram}`);
+      setCopiado('instagram');
+    } catch (e) {
+      console.error('No se pudo copiar el Instagram:', e);
+      setCopiado('error');
+    }
+  };
+
   const copiarTexto = async () => {
     try {
       await navigator.clipboard.writeText(linkParaCopiar());
@@ -362,6 +392,12 @@ export function BotonImagenOferta({ oferta, disponible = null }) {
         {trabajando ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Share2 className="w-3.5 h-3.5 text-[#2D6A6A]" />} Compartir
       </button>
       {mensaje && <span className="text-[12px] font-semibold text-[#2D6A6A]">{mensaje}</span>}
+      {/* En el celu la ventana no se abre: dejamos a mano el botón para copiar el @ de la clínica */}
+      {instagram && !vista && (
+        <button type="button" onClick={copiarInstagram} className="inline-flex items-center gap-1.5 bg-[#F4F7F7] hover:bg-gray-200 text-[#1A3D3D] rounded-xl px-3.5 py-2 text-[13px] font-semibold transition-colors">
+          {copiado === 'instagram' ? <Check className="w-3.5 h-3.5 text-[#2D6A6A]" /> : <Copy className="w-3.5 h-3.5 text-[#2D6A6A]" />} {copiado === 'instagram' ? 'Copiado' : `Copiar @${instagram}`}
+        </button>
+      )}
 
       <VentanaBolsa abierta={!!vista} onCerrar={cerrarVista} ancho="max-w-md">
         <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[20px] leading-tight mb-4 pr-10">Imagen para compartir</h3>
@@ -373,10 +409,16 @@ export function BotonImagenOferta({ oferta, disponible = null }) {
           <button type="button" onClick={copiarTexto} className="w-full inline-flex items-center justify-center gap-2 bg-[#F4F7F7] hover:bg-gray-200 text-[#1A3D3D] py-3.5 rounded-2xl text-[14px] font-semibold transition-colors">
             <Copy className="w-4 h-4" /> Copiar link
           </button>
+          {instagram && (
+            <button type="button" onClick={copiarInstagram} className="w-full inline-flex items-center justify-center gap-2 bg-[#F4F7F7] hover:bg-gray-200 text-[#1A3D3D] py-3.5 rounded-2xl text-[14px] font-semibold transition-colors">
+              <Copy className="w-4 h-4" /> Copiar @{instagram}
+            </button>
+          )}
         </div>
         <p className="text-[13px] text-[#666666] mt-3 leading-relaxed">
           {copiado === 'imagen' && 'Imagen copiada: pegala en la historia. Después copiá el link.'}
           {copiado === 'texto' && 'Link copiado: pegalo como sticker en la historia.'}
+          {copiado === 'instagram' && 'Usuario copiado: pegalo en la historia para etiquetar a la clínica.'}
           {copiado === 'error' && 'No pudimos copiar. Probá con otro navegador.'}
           {!copiado && 'Copiá la imagen y pegala en la historia; después copiá el link y pegalo como sticker.'}
         </p>

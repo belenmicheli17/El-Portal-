@@ -102,6 +102,11 @@ function Fila({ icono: Icono, titulo, subtitulo, item, coleccion, onEditar, onCa
       )}
       {error && !confirmarBorrar && <p className="text-[13px] font-semibold text-red-600 mt-2 md:pl-16">{error}</p>}
 
+      {/* Compartir mi disponibilidad (profesionales y estudiantes) */}
+      {coleccion === 'profesionalesDisponibles' && (
+        <div className="mt-4 md:pl-16"><BotonImagenOferta disponible={item} /></div>
+      )}
+
       {/* Postulantes de esta oferta */}
       {coleccion === 'ofertasEmpleo' && (
         <div className="mt-4 md:pl-16">
