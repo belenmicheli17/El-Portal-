@@ -1,14 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Users, Building, FileCheck, 
   Activity, ChevronRight, Clock, AlertCircle, Loader2,
   Repeat, Stethoscope, Store, UserPlus, ChevronDown, GraduationCap
 } from 'lucide-react';
-import { db, auth, functions } from '../../firebase';
+import { db } from '../../firebase';
 import { collection, getDocs, query, where } from 'firebase/firestore';
-import { signInWithCustomToken } from 'firebase/auth';
-import { httpsCallable } from 'firebase/functions';
 import { provinciaCorta } from '../../utils/bolsa';
 
 // Traduce la fecha de registro a una fecha común.
@@ -110,26 +108,9 @@ export default function DashboardAdmin() {
   const [registrosPorDia, setRegistrosPorDia] = useState([]); // [["2026-11-19", 4], ...] del más nuevo al más viejo
   const [verDias, setVerDias] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [rolEntrando, setRolEntrando] = useState(null); // rol de la cuenta de prueba a la que se está entrando
-  const [errorCuenta, setErrorCuenta] = useState('');
-  // Cajitas desplegables y pestañita de cuentas de prueba
+  // Cajitas desplegables
   const [verLugares, setVerLugares] = useState(false);
   const [verLlegada, setVerLlegada] = useState(false);
-  const [cuentasAbierto, setCuentasAbierto] = useState(false);
-  const cuentasRef = useRef(null);
-
-  // Cierra la cajita de cuentas al tocar afuera o con Escape
-  useEffect(() => {
-    if (!cuentasAbierto) return undefined;
-    const afuera = (e) => { if (cuentasRef.current && !cuentasRef.current.contains(e.target)) setCuentasAbierto(false); };
-    const escape = (e) => { if (e.key === 'Escape') setCuentasAbierto(false); };
-    document.addEventListener('mousedown', afuera);
-    window.addEventListener('keydown', escape);
-    return () => {
-      document.removeEventListener('mousedown', afuera);
-      window.removeEventListener('keydown', escape);
-    };
-  }, [cuentasAbierto]);
 
   useEffect(() => {
     const fetchMetricas = async () => {
@@ -210,24 +191,6 @@ setLugares(contarLugares([
     fetchMetricas();
   }, []);
 
-  // Entra a la cuenta de prueba del rol elegido, sin cerrar la sesión de la admin
-  const handleCambiarCuenta = async (rol) => {
-    setRolEntrando(rol);
-    setErrorCuenta('');
-    try {
-      // El servidor verifica que seas admin y busca la cuenta de prueba de ese rol
-      const entrarComoPrueba = httpsCallable(functions, 'entrarComoPrueba');
-      const respuesta = await entrarComoPrueba({ rolDestino: rol });
-      await signInWithCustomToken(auth, respuesta.data.token);
-      // Recarga completa para que toda la plataforma arranque con la cuenta nueva
-      window.location.assign('/ecosistema');
-    } catch (error) {
-      console.error("Error entrando a la cuenta de prueba:", error);
-      setErrorCuenta(`No encontramos una cuenta de prueba de ${rol} o no pudimos entrar. Revisá que tenga rol y esPrueba: true.`);
-      setRolEntrando(null);
-    }
-  };
-
   // Nuevos usuarios: hoy y el día récord
   const nuevosDeHoy = (registrosPorDia.find(([clave]) => clave === claveDia(new Date())) || [null, 0])[1];
   const diaRecord = registrosPorDia.reduce((mejor, actual) => (actual[1] > (mejor?.[1] || 0) ? actual : mejor), null);
@@ -280,46 +243,6 @@ setLugares(contarLugares([
           </p>
         </div>
 
-      </div>
-
-      {/* Pestañita semioculta al costado: al tocarla se desliza una cajita con las cuentas de prueba, una arriba de la otra */}
-      <div ref={cuentasRef} className="fixed right-0 top-1/2 -translate-y-1/2 z-[9998] flex items-center">
-        {cuentasAbierto && (
-          <div className="mr-2 w-48 bg-white rounded-2xl border border-gray-100 shadow-[0_8px_30px_rgba(26,61,61,0.18)] p-3 flex flex-col gap-2 animate-in fade-in slide-in-from-right-2 duration-200">
-            <p className="text-[11px] font-bold uppercase tracking-widest text-[#2D6A6A] px-1 flex items-center gap-1.5">
-              <Repeat className="w-3.5 h-3.5" /> Entrar como
-            </p>
-            {[
-              { rol: 'profesional', etiqueta: 'Profesional', Icono: Stethoscope },
-              { rol: 'clinica', etiqueta: 'Clínica', Icono: Building },
-              { rol: 'proveedor', etiqueta: 'Proveedor', Icono: Store },
-              { rol: 'alumnx', etiqueta: 'Estudiante', Icono: GraduationCap },
-            ].map(({ rol, etiqueta, Icono }) => (
-              <button
-                key={rol}
-                onClick={() => handleCambiarCuenta(rol)}
-                disabled={rolEntrando !== null}
-                className="w-full flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#F4F7F7] text-[#1A3D3D] font-bold text-[13px] text-left hover:bg-[#2D6A6A] hover:text-white transition-all duration-300 ease-in-out disabled:opacity-60 group"
-              >
-                {rolEntrando === rol ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Icono className="w-4 h-4 text-[#2D6A6A] group-hover:text-white" strokeWidth={1.75} />
-                )}
-                {etiqueta}
-              </button>
-            ))}
-            {errorCuenta && <p className="text-[11px] text-red-500 font-medium px-1">{errorCuenta}</p>}
-          </div>
-        )}
-        <button
-          type="button"
-          onClick={() => setCuentasAbierto((v) => !v)}
-          aria-label="Entrar como otra cuenta de prueba"
-          className={`h-14 rounded-l-xl flex items-center justify-center shadow-lg bg-[#1A3D3D] text-white transition-all duration-300 ease-in-out ${cuentasAbierto ? 'w-9' : 'w-6 hover:w-9'}`}
-        >
-          <Repeat className="w-4 h-4" strokeWidth={2} />
-        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">

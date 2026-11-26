@@ -23,3 +23,10 @@ html, body {
   animation: fade-in-bubble 1s ease-out 0.4s forwards;
   opacity: 0;
 }
+/* Listas que se pueden scrollear sin mostrar la barra (ej: menú lateral del panel admin) */
+.hide-scrollbar {
+  scrollbar-width: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}

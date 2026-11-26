@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { X, Check, Lock, Search, ChevronDown, Loader2, AlertTriangle, Info, Share2, Copy } from 'lucide-react';
 import { GRUPOS_AREAS } from '../../data/bolsaOpciones';
-import { generarImagenOferta, textoParaCompartir } from '../../utils/bolsa';
+import { generarImagenOferta, generarImagenDisponible, textoParaCompartir, linkDisponibles } from '../../utils/bolsa';
 
 
 
@@ -289,7 +289,10 @@ export function CartelVerificacion({ abierto, onCerrar }) {
 }
 // Botón «Compartir» de una oferta: arma la imagen y abre el menú de compartir.
 // Si el navegador no lo permite, muestra la imagen con botones para copiarla.
-export function BotonImagenOferta({ oferta }) {
+// Con "disponible" (en vez de "oferta") arma la imagen de un profesional disponible.
+export function BotonImagenOferta({ oferta, disponible = null }) {
+  const generar = () => (disponible ? generarImagenDisponible(disponible) : generarImagenOferta(oferta));
+  const linkParaCopiar = () => (disponible ? linkDisponibles() : textoParaCompartir(oferta));
   const [trabajando, setTrabajando] = useState(false);
   const [mensaje, setMensaje] = useState('');
   const [vista, setVista] = useState(null); // { url, blob }
@@ -303,12 +306,12 @@ export function BotonImagenOferta({ oferta }) {
   const compartir = async () => {
     setTrabajando(true);
     setMensaje('');
-    const texto = textoParaCompartir(oferta);
+    const texto = linkParaCopiar();
     let textoCopiado = false;
     try { await navigator.clipboard.writeText(texto); textoCopiado = true; } catch { textoCopiado = false; }
     try {
-      const blob = await generarImagenOferta(oferta);
-      const archivo = new File([blob], 'oferta.png', { type: 'image/png' });
+      const blob = await generar();
+      const archivo = new File([blob], disponible ? 'disponible.png' : 'oferta.png', { type: 'image/png' });
       if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
         try {
           await navigator.share({ files: [archivo] });
@@ -345,7 +348,7 @@ export function BotonImagenOferta({ oferta }) {
 
   const copiarTexto = async () => {
     try {
-      await navigator.clipboard.writeText(textoParaCompartir(oferta));
+      await navigator.clipboard.writeText(linkParaCopiar());
       setCopiado('texto');
     } catch (e) {
       console.error('No se pudo copiar el texto:', e);

@@ -29,6 +29,8 @@ const Login = lazy(() => import('./pages/Login'));
 const Capacitaciones = lazy(() => import('./pages/Capacitaciones'));
 const CartillaProveedores = lazy(() => import('./pages/CartillaProveedores'));
 const Ecosistema = lazy(() => import('./pages/Ecosistema'));
+// Página con todos los estudiantes (está dentro del archivo del Ecosistema)
+const PaginaEstudiantes = lazy(() => import('./pages/Ecosistema').then((m) => ({ default: m.PaginaEstudiantes })));
 const Onboarding = lazy(() => import('./pages/Onboarding'));
 const RestablecerClave = lazy(() => import('./pages/restablecer-clave'));
 const OnboardingClinica = lazy(() => import('./pages/OnboardingClinica'));
@@ -210,6 +212,7 @@ export default function App() {
           <Route path="/restablecer-clave" element={<RestablecerClave />} />
           <Route element={<RutaProtegida useLayout />}>
   <Route path="/ecosistema" element={<Ecosistema />} />
+  <Route path="/estudiantes" element={<PaginaEstudiantes />} />
 </Route>
 <Route element={<RutaProtegida />}>
   <Route path="/onboarding" element={<Onboarding />} />

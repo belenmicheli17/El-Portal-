@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { signInWithCustomToken } from 'firebase/auth';
 import { httpsCallable } from 'firebase/functions';
 import { FlaskConical, Loader2, ClipboardList } from 'lucide-react';
@@ -8,27 +8,37 @@ import { useAuth } from '../../context/AuthContext';
 
 // Cuentas de prueba a las que se puede saltar
 const CUENTAS = [
-  { rol: 'profesional', etiqueta: 'Profesional' },
-  { rol: 'clinica', etiqueta: 'Clínica' },
-  { rol: 'proveedor', etiqueta: 'Proveedor' },
-  { rol: 'alumnx', etiqueta: 'Estudiante' },
+  { rol: 'profesional', etiqueta: 'Profesional', onboarding: '/onboarding' },
+  { rol: 'clinica', etiqueta: 'Clínica', onboarding: '/onboarding-clinica' },
+  { rol: 'proveedor', etiqueta: 'Proveedor' }, // los proveedores no tienen cuestionario de alta
+  { rol: 'alumnx', etiqueta: 'Estudiante', onboarding: '/onboarding-alumnx' },
 ];
+
+// Para abrir el cuestionario de otra cuenta: primero se entra a esa cuenta (la página se recarga)
+// y después se abre el cuestionario. Esto guarda adónde ir mientras tanto.
+const CLAVE_IR_A = 'modoPruebaIrA';
+// Altura donde dejaste la pestañita (se recuerda en este navegador)
+const CLAVE_ALTURA = 'modoPruebaAltura';
 
 // Barra fina fija abajo: aparece cuando estás en tu cuenta de admin o dentro de una cuenta de prueba
 export default function BannerModoPrueba() {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
   const [enModoPrueba, setEnModoPrueba] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [abierto, setAbierto] = useState(false);
   const panelRef = useRef(null);
+  // Altura de la pestañita en la pantalla (en píxeles desde arriba). Se puede arrastrar.
+  const [altura, setAltura] = useState(() => {
+    try { const g = Number(localStorage.getItem(CLAVE_ALTURA)); if (g > 0) return g; } catch { /* sin memoria */ }
+    return Math.round(window.innerHeight / 2);
+  });
+  const gesto = useRef(null); // datos del dedo/mouse mientras se arrastra la pestañita
 
   const esAdmin = currentUser?.rol === 'admin';
-  const enPanelAdmin = location.pathname.startsWith('/admin');
-  // Dentro del panel admin se esconde (ahí ya tenés el botón del Dashboard y el menú lateral)
-  const mostrar = (esAdmin || enModoPrueba) && !enPanelAdmin;
+  // Es el único botón de modo prueba: se ve en todo el sitio, también dentro del panel admin
+  const mostrar = esAdmin || enModoPrueba;
 
   // Cada vez que cambia la cuenta, revisamos si la sesión trae la marca del servidor
   useEffect(() => {
@@ -65,9 +75,61 @@ export default function BannerModoPrueba() {
     };
   }, [abierto]);
 
+  // Si veníamos de tocar "cuestionario" de otra cuenta, al llegar lo abrimos
+  useEffect(() => {
+    if (!enModoPrueba || !currentUser?.rol) return;
+    let destino = null;
+    try { destino = JSON.parse(sessionStorage.getItem(CLAVE_IR_A) || 'null'); } catch { destino = null; }
+    if (destino && destino.rol === currentUser.rol) {
+      sessionStorage.removeItem(CLAVE_IR_A);
+      navigate(destino.ruta, { state: { correccion: true, vistaPrueba: true } });
+    }
+  }, [enModoPrueba, currentUser?.rol, navigate]);
+
+  // Abre el cuestionario de alta de un rol (si no estás en esa cuenta, primero entra a ella)
+  const irAlOnboarding = (rol, ruta) => {
+    if (currentUser?.rol === rol && enModoPrueba) {
+      navigate(ruta, { state: { correccion: true, vistaPrueba: true } });
+      setAbierto(false);
+      return;
+    }
+    try { sessionStorage.setItem(CLAVE_IR_A, JSON.stringify({ rol, ruta })); } catch { /* sin memoria */ }
+    handleSaltar(rol, true);
+  };
+
+  // ----- Pestañita: tocar abre/cierra; arrastrar arriba/abajo la mueve; deslizar hacia el borde la cierra -----
+  const alApretar = (e) => {
+    gesto.current = { x: e.clientX, y: e.clientY, alturaInicial: altura, movio: false };
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+  };
+  const alMover = (e) => {
+    const g = gesto.current;
+    if (!g) return;
+    const dx = e.clientX - g.x;
+    const dy = e.clientY - g.y;
+    if (!g.movio && Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+    g.movio = true;
+    if (Math.abs(dy) >= Math.abs(dx)) {
+      const minimo = 60;
+      const maximo = window.innerHeight - 60;
+      setAltura(Math.min(maximo, Math.max(minimo, g.alturaInicial + dy)));
+    } else if (dx > 30 && abierto) {
+      setAbierto(false); // deslizó hacia el borde
+    }
+  };
+  const alSoltar = () => {
+    const g = gesto.current;
+    gesto.current = null;
+    if (!g) return;
+    if (!g.movio) { setAbierto((v) => !v); return; }
+    try { localStorage.setItem(CLAVE_ALTURA, String(Math.round(altura))); } catch { /* sin memoria */ }
+  };
+  // En la cajita: deslizar el dedo hacia el borde derecho la cierra
+  const toqueCajita = useRef(null);
+
   // Salta directo a la cuenta de prueba de otro rol
-  const handleSaltar = async (rol) => {
-    if (currentUser?.rol === rol) return; // ya estás en esa cuenta
+  const handleSaltar = async (rol, aunqueSeaLaMisma = false) => {
+    if (currentUser?.rol === rol && !aunqueSeaLaMisma) return; // ya estás en esa cuenta
     setIsLoading(true);
     setError('');
     try {
@@ -106,31 +168,24 @@ export default function BannerModoPrueba() {
 
     if (!mostrar) return null;
 
-  const claseCuenta = (activo) => `flex-1 min-w-0 px-4 py-2.5 rounded-xl text-[13px] font-bold text-left transition-all duration-300 ease-in-out disabled:opacity-60 ${
-    activo ? 'bg-yellow-400 text-yellow-950 shadow-sm cursor-default' : 'bg-white text-yellow-950 hover:bg-yellow-100'
-  }`;
-  // Mini botón para volver a ver el cuestionario de alta de la cuenta de prueba en la que estás
-  const puedeVerOnboarding = enModoPrueba && ['profesional', 'clinica', 'alumnx'].includes(currentUser?.rol);
-  const irAlOnboarding = () => navigate(
-    currentUser.rol === 'clinica' ? '/onboarding-clinica' : currentUser.rol === 'alumnx' ? '/onboarding-alumnx' : '/onboarding',
-    { state: { correccion: true, vistaPrueba: true } }
-  );
-
   return (
     // Solapa pegada al borde derecho: la pestañita y la cajita se deslizan juntas.
     // Cerrada, solo asoma la pestañita; abierta, entra la cajita detrás de ella.
     <div
       ref={panelRef}
-      className="fixed right-0 top-1/2 z-[9999] flex items-center transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
-      style={{ transform: `translateY(-50%) translateX(${abierto ? '0' : '13rem'})` }}
+      className="fixed right-0 z-[9999] flex items-center transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
+      style={{ top: `${altura}px`, transform: `translateY(-50%) translateX(${abierto ? '0' : '13rem'})` }}
     >
-      {/* Pestañita: es la manija de la solapa */}
+      {/* Pestañita: es la manija de la solapa (también se arrastra para moverla) */}
       <button
         type="button"
-        onClick={() => setAbierto((v) => !v)}
-        aria-label="Cambiar de cuenta de prueba"
+        onPointerDown={alApretar}
+        onPointerMove={alMover}
+        onPointerUp={alSoltar}
+        onPointerCancel={() => { gesto.current = null; }}
+        aria-label="Cambiar de cuenta de prueba (arrastrá para moverla)"
         aria-expanded={abierto}
-        className={`h-14 w-8 rounded-l-xl flex items-center justify-center shadow-lg transition-colors duration-300 ${
+        className={`h-14 w-8 rounded-l-xl flex items-center justify-center shadow-lg transition-colors duration-300 touch-none cursor-grab active:cursor-grabbing ${
           enModoPrueba ? 'bg-yellow-400 text-yellow-950' : 'bg-[#1A3D3D] text-white'
         }`}
       >
@@ -138,27 +193,47 @@ export default function BannerModoPrueba() {
       </button>
 
       {/* Cajita con las cuentas */}
-      <div className={`w-52 bg-yellow-50 border-y border-l-4 border-yellow-400 rounded-l-2xl p-3 flex flex-col gap-2 transition-shadow duration-500 ${abierto ? 'shadow-[0_8px_30px_rgba(120,53,15,0.18)]' : 'shadow-none'}`} aria-hidden={!abierto}>
+      <div
+        className={`w-52 bg-yellow-50 border-y border-l-4 border-yellow-400 rounded-l-2xl p-3 flex flex-col gap-2 transition-shadow duration-500 ${abierto ? 'shadow-[0_8px_30px_rgba(120,53,15,0.18)]' : 'shadow-none'}`}
+        aria-hidden={!abierto}
+        onTouchStart={(e) => { toqueCajita.current = e.touches[0].clientX; }}
+        onTouchEnd={(e) => {
+          const inicio = toqueCajita.current;
+          toqueCajita.current = null;
+          if (inicio != null && e.changedTouches[0].clientX - inicio > 50) setAbierto(false);
+        }}
+      >
         <p className="text-[11px] font-bold uppercase tracking-widest text-yellow-900 px-1 flex items-center gap-1.5">
           {isLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FlaskConical className="w-3.5 h-3.5" strokeWidth={2} />}
           {enModoPrueba ? 'Modo prueba' : 'Cuentas de prueba'}
         </p>
-        {CUENTAS.map(({ rol, etiqueta }) => {
+        {CUENTAS.map(({ rol, etiqueta, onboarding }) => {
           const activo = currentUser?.rol === rol;
           return (
-            <div key={rol} className="flex items-stretch gap-1.5">
-              <button onClick={() => handleSaltar(rol)} disabled={isLoading} tabIndex={abierto ? 0 : -1} className={claseCuenta(activo)}>
+            // Un solo botón por cuenta, partido en dos: el nombre (entrar) | el ícono (cuestionario de alta)
+            <div
+              key={rol}
+              className={`flex items-stretch rounded-xl overflow-hidden transition-all duration-300 ${
+                activo ? 'bg-yellow-400 text-yellow-950 shadow-sm' : 'bg-white text-yellow-950'
+              }`}
+            >
+              <button
+                onClick={() => handleSaltar(rol)}
+                disabled={isLoading}
+                tabIndex={abierto ? 0 : -1}
+                className={`flex-1 min-w-0 px-4 py-2.5 text-[13px] font-bold text-left disabled:opacity-60 transition-colors ${activo ? 'cursor-default' : 'hover:bg-yellow-100'}`}
+              >
                 {etiqueta}
               </button>
-              {activo && puedeVerOnboarding && (
+              {onboarding && (
                 <button
                   type="button"
-                  onClick={irAlOnboarding}
+                  onClick={() => irAlOnboarding(rol, onboarding)}
                   disabled={isLoading}
                   tabIndex={abierto ? 0 : -1}
-                  title="Ver el cuestionario de alta"
-                  aria-label="Ver el cuestionario de alta"
-                  className="w-10 shrink-0 rounded-xl bg-white border border-yellow-300 text-yellow-900 hover:bg-yellow-100 flex items-center justify-center transition-colors disabled:opacity-60"
+                  title={`Ver el cuestionario de alta de ${etiqueta}`}
+                  aria-label={`Ver el cuestionario de alta de ${etiqueta}`}
+                  className={`w-10 shrink-0 flex items-center justify-center border-l transition-colors disabled:opacity-60 ${activo ? 'border-yellow-600/40 hover:bg-yellow-500' : 'border-yellow-200 hover:bg-yellow-100'}`}
                 >
                   <ClipboardList className="w-4 h-4" strokeWidth={2} />
                 </button>

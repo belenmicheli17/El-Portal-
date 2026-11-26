@@ -4,7 +4,7 @@ import { db } from '../../firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { useAuth } from '../../context/AuthContext';
 import { BotonCompartirLink, armarLinkPerfil } from '../../components/CompartirPerfil';
-import { GraduationCap, MapPin, Instagram, Linkedin, Pencil, Clock, Briefcase } from 'lucide-react';
+import { GraduationCap, MapPin, Instagram, Linkedin, Pencil, Clock, Briefcase, ChevronLeft } from 'lucide-react';
 
 // Perfil público de alumno/a. Se abre solo con el link: no está en la Cartilla, ni en el sitemap, ni en Google.
 export default function PerfilAlumnx() {
@@ -87,11 +87,20 @@ export default function PerfilAlumnx() {
   return (
     <div className="min-h-screen bg-[#F4F7F7] font-['Inter'] text-[#333333] px-4 pt-10 pb-20">
       <div className="max-w-[720px] mx-auto flex flex-col gap-5">
+        {/* Volver: a la página anterior; si entraron directo por el link, al Ecosistema o al inicio */}
+        <button
+          type="button"
+          onClick={() => (window.history.length > 1 ? navigate(-1) : navigate(currentUser ? '/ecosistema' : '/'))}
+          className="self-start inline-flex items-center gap-1 text-[14px] font-bold text-[#2D6A6A] hover:text-[#1A3D3D] -mt-4"
+        >
+          <ChevronLeft className="w-4 h-4" /> Volver
+        </button>
+
         {/* Aviso para la dueña mientras espera la verificación */}
         {esDuena && data.visible === false && (
           <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 rounded-2xl px-4 py-3 text-[14px] font-medium leading-snug flex gap-2">
             <Clock className="w-4 h-4 shrink-0 mt-0.5" />
-            <span>Estamos verificando tu certificado. Cuando te aprobemos vas a poder postularte en la Bolsa.</span>
+            <span>Estamos verificando tu comprobante. Cuando te aprobemos vas a poder postularte en la Bolsa.</span>
           </div>
         )}
 

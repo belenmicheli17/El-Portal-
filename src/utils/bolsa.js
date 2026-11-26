@@ -249,8 +249,27 @@ const ajustarEspecialidad = (ctx, texto) => {
   return ajustarTexto(ctx, texto, 700, FUENTE_TITULO, [64], 600, 2);
 };
 
-// Dibuja la imagen de una oferta y devuelve un PNG
-export const generarImagenOferta = async (oferta) => {
+// Link a la pestaña de profesionales disponibles de la Bolsa
+export const linkDisponibles = () => `${SITIO}/bolsa-de-trabajo?tab=disponibles`;
+
+// Imagen para difundir a un profesional (o estudiante) disponible: usa el mismo diseño que las ofertas,
+// con su foto y nombre en la tarjeta y "está disponible" en vez de "está en búsqueda".
+export const generarImagenDisponible = (disponible) => {
+  const zona = Array.isArray(disponible?.zonas) && disponible.zonas[0] ? disponible.zonas[0] : {};
+  return generarImagenOferta({
+    rol: disponible?.puesto === 'asistente' ? 'asistente' : 'veterinario',
+    areas: disponible?.areas || [],
+    provincia: zona.provincia || disponible?.provincia || '',
+    localidad: zona.localidad || '',
+    barrio: zona.barrio || '',
+    clinicaNombre: disponible?.nombre || 'Un colega del Portal',
+    clinicaFoto: disponible?.foto || ''
+  }, 'disponible');
+};
+
+// Dibuja la imagen de una oferta (o de un profesional disponible) y devuelve un PNG
+export const generarImagenOferta = async (oferta, modo = 'oferta') => {
+  const esDisponible = modo === 'disponible';
   const NARANJA = '#F29B24';
 
   await Promise.all(['700 84px Montserrat', '700 32px Inter', '500 36px Inter', '600 36px Inter', '700 40px Inter'].map((f) => document.fonts.load(f, '¿Tenés algún búsqueda·…?')));
@@ -306,7 +325,10 @@ export const generarImagenOferta = async (oferta) => {
   ctx.fillText(textoPildora, 112, 254);
 
   // Pregunta fija (si no entra en 920 px, se achica)
-  const pregunta = ['¿Tenés algún colega', 'que esté buscando', 'trabajo como'];
+  const conAreas = oferta?.rol === 'veterinario' && Array.isArray(oferta?.areas) && oferta.areas.length > 0;
+  const pregunta = !esDisponible
+    ? ['¿Tenés algún colega', 'que esté buscando', 'trabajo como']
+    : conAreas ? ['¿Tu clínica busca', 'veterinario/a con', 'experiencia en'] : ['¿Tu clínica', 'está buscando', 'un/a'];
   ctx.font = `700 84px ${FUENTE_TITULO}`;
   const masAncho = Math.max(...pregunta.map((l) => ctx.measureText(l).width));
   const tamPregunta = Math.min(84, Math.floor((84 * 920) / masAncho));
@@ -357,7 +379,7 @@ export const generarImagenOferta = async (oferta) => {
   const ANCHO_TARJETA = 600;
   const xTexto = 80 + 36 + FOTO + 28;
   const anchoTexto = 80 + ANCHO_TARJETA - 36 - xTexto;
-  const nombre = String(oferta?.clinicaNombre || 'Una clínica del Portal').trim();
+  const nombre = String(oferta?.clinicaNombre || (esDisponible ? 'Un colega del Portal' : 'Una clínica del Portal')).trim();
   let ajuste = ajustarTexto(ctx, nombre, 700, FUENTE_TITULO, [44], anchoTexto, 2);
   if (!ajuste.entra) ajuste = ajustarTexto(ctx, nombre, 700, FUENTE_TITULO, [38], anchoTexto, 3);
   const altoNombre = ajuste.tam * 1.2;
@@ -405,10 +427,11 @@ export const generarImagenOferta = async (oferta) => {
   const ySub = arribaTexto + altoNombre * ajuste.renglones.length + 12 + (36 * 1.2) / 2;
   ctx.font = `500 36px ${FUENTE_TEXTO}`;
   ctx.fillStyle = '#284847';
-  ctx.fillText('está en ', xTexto, ySub);
-  const anchoEsta = ctx.measureText('está en ').width;
+  const [antes, resaltado] = esDisponible ? ['está ', 'disponible'] : ['está en ', 'búsqueda'];
+  ctx.fillText(antes, xTexto, ySub);
+  const anchoEsta = ctx.measureText(antes).width;
   ctx.font = `600 36px ${FUENTE_TEXTO}`;
-  ctx.fillText('búsqueda', xTexto + anchoEsta, ySub);
+  ctx.fillText(resaltado, xTexto + anchoEsta, ySub);
 
   // Firma con flecha naranja hacia abajo
   ctx.strokeStyle = NARANJA;
@@ -421,8 +444,11 @@ export const generarImagenOferta = async (oferta) => {
   ctx.stroke();
   ctx.font = `700 40px ${FUENTE_TEXTO}`;
   ctx.fillStyle = '#284847';
-  ctx.fillText('Postulate desde el enlace y mirá todas', 134, 1780);
-  ctx.fillText('las ofertas desde el link en la descripción', 134, 1836);
+  const firma = esDisponible
+    ? ['Contactalo desde el enlace y mirá más', 'colegas disponibles en la Bolsa de Trabajo']
+    : ['Postulate desde el enlace y mirá todas', 'las ofertas desde el link en la descripción'];
+  ctx.fillText(firma[0], 134, 1780);
+  ctx.fillText(firma[1], 134, 1836);
 
   return new Promise((resolver) => canvas.toBlob(resolver, 'image/png'));
 };

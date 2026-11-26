@@ -9,7 +9,7 @@ import { tituloPuesto, estaVigente, aMilisegundos, provinciaCorta } from '../../
 import { BotonImagenOferta } from '../../components/bolsa/ElementosBolsa';
 
 export default function GestionBolsa() {
-  const [tabActiva, setTabActiva] = useState('ofertas');
+  const [tabActiva, setTabActiva] = useState('metricas'); // abre primero en Métricas
   const [ofertas, setOfertas] = useState([]);
   const [profesionales, setProfesionales] = useState([]);
   const [postulaciones, setPostulaciones] = useState([]);
@@ -100,7 +100,10 @@ export default function GestionBolsa() {
             <div className="flex items-center gap-4 text-[#666666] text-[12px] font-medium">
               <span className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" /> {item.provincia}</span>
             </div>
-            {coleccion === 'ofertasEmpleo' && <div className="mt-3"><BotonImagenOferta oferta={item} /></div>}
+            {/* Compartir: arma la imagen para historias (de la oferta o del profesional disponible) */}
+            <div className="mt-3">
+              {coleccion === 'ofertasEmpleo' ? <BotonImagenOferta oferta={item} /> : <BotonImagenOferta disponible={item} />}
+            </div>
           </div>
         </div>
 
@@ -172,6 +175,12 @@ export default function GestionBolsa() {
 
       <div className="bg-white p-1.5 sm:p-2 rounded-[24px] border border-gray-100 shadow-sm flex w-full sm:w-auto sm:inline-flex gap-1 mb-8 max-w-full">
         <button 
+          onClick={() => setTabActiva('metricas')}
+          className={`flex-1 sm:flex-none min-w-0 flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-6 py-3 sm:py-3.5 rounded-[18px] text-[10px] sm:text-[13px] leading-tight text-center font-bold uppercase tracking-normal sm:tracking-widest sm:whitespace-nowrap transition-all ${tabActiva === 'metricas' ? 'bg-[#1A3D3D] text-white shadow-md' : 'text-[#666666] hover:bg-[#F4F7F7]'}`}
+        >
+          <Activity className="w-4 h-4 hidden sm:block shrink-0" /> Métricas
+        </button>
+        <button 
           onClick={() => setTabActiva('ofertas')}
           className={`flex-1 sm:flex-none min-w-0 flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-6 py-3 sm:py-3.5 rounded-[18px] text-[10px] sm:text-[13px] leading-tight text-center font-bold uppercase tracking-normal sm:tracking-widest sm:whitespace-nowrap transition-all ${tabActiva === 'ofertas' ? 'bg-[#1A3D3D] text-white shadow-md' : 'text-[#666666] hover:bg-[#F4F7F7]'}`}
         >
@@ -182,12 +191,6 @@ export default function GestionBolsa() {
           className={`flex-1 sm:flex-none min-w-0 flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-6 py-3 sm:py-3.5 rounded-[18px] text-[10px] sm:text-[13px] leading-tight text-center font-bold uppercase tracking-normal sm:tracking-widest sm:whitespace-nowrap transition-all ${tabActiva === 'profesionales' ? 'bg-[#1A3D3D] text-white shadow-md' : 'text-[#666666] hover:bg-[#F4F7F7]'}`}
         >
           <UserCheck className="w-4 h-4 hidden sm:block shrink-0" /> Profesionales ({profesionales.length})
-        </button>
-        <button 
-          onClick={() => setTabActiva('metricas')}
-          className={`flex-1 sm:flex-none min-w-0 flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-6 py-3 sm:py-3.5 rounded-[18px] text-[10px] sm:text-[13px] leading-tight text-center font-bold uppercase tracking-normal sm:tracking-widest sm:whitespace-nowrap transition-all ${tabActiva === 'metricas' ? 'bg-[#1A3D3D] text-white shadow-md' : 'text-[#666666] hover:bg-[#F4F7F7]'}`}
-        >
-          <Activity className="w-4 h-4 hidden sm:block shrink-0" /> Métricas
         </button>
       </div>
 

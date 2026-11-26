@@ -83,11 +83,12 @@ const TarjetaProximamente = ({ id, titulo, descripcion, icon: Icon, onClick }) =
 // ── Tarjeta de avance del perfil (va en el encabezado) ─────────────────────
 // avance: { porcentaje, faltantes } o null si ese tipo de cuenta no tiene cálculo
 function TarjetaAvance({ avance, cargando, onEditar, onVerPerfil, onIrA, compartir = null }) {
-  
+  // En el celu, lo que falta completar queda plegado para que la tarjeta ocupe menos lugar
+  const [verPendientes, setVerPendientes] = useState(false);
 
   return (
-    <div id="tour-avance" className="w-full bg-white/80 backdrop-blur-md border border-white/60 rounded-[24px] md:rounded-[32px] shadow-[0_8px_32px_rgba(0,0,0,0.04)] p-5 md:p-6">
-      <div className="flex justify-between items-baseline mb-3">
+    <div id="tour-avance" className="w-full bg-white/80 backdrop-blur-md border border-white/60 rounded-[24px] md:rounded-[32px] shadow-[0_8px_32px_rgba(0,0,0,0.04)] p-4 md:p-6">
+      <div className="flex justify-between items-baseline mb-2 md:mb-3">
         <h2 className="text-[16px] md:text-[18px] font-black text-[#1A3D3D] font-['Montserrat']">Tu perfil</h2>
         {avance && !cargando && (
           <span className="text-[22px] md:text-[26px] font-black text-[#1A3D3D] font-['Montserrat'] leading-none">{avance.porcentaje}%</span>
@@ -104,9 +105,14 @@ function TarjetaAvance({ avance, cargando, onEditar, onVerPerfil, onIrA, compart
             <div className="h-full bg-[#4DB6AC] rounded-full transition-all duration-1000 ease-in-out" style={{ width: `${avance.porcentaje}%` }} />
           </div>
           {avance.pendientes?.length > 0 ? (
-            <div className="mb-4">
-              <p className="text-[13px] md:text-[14px] text-[#666666] font-medium mb-2">Te falta completar:</p>
-              <div className="flex flex-wrap gap-2">
+            <div className="mb-3 md:mb-4">
+              {/* Celu: renglón que despliega lo que falta */}
+              <button type="button" onClick={() => setVerPendientes(!verPendientes)} className="md:hidden flex items-center gap-1 text-[13px] text-[#666666] font-medium">
+                Te falta completar {avance.pendientes.length} {avance.pendientes.length === 1 ? 'cosa' : 'cosas'}
+                <ChevronRight className={`w-4 h-4 transition-transform duration-300 ${verPendientes ? 'rotate-90' : ''}`} />
+              </button>
+              <p className="hidden md:block text-[14px] text-[#666666] font-medium mb-2">Te falta completar:</p>
+              <div className={`${verPendientes ? 'flex' : 'hidden'} md:flex flex-wrap gap-2 mt-2 md:mt-0`}>
                 {avance.pendientes.map((p) => (
                   <button
                     key={p.clave}
@@ -120,11 +126,11 @@ function TarjetaAvance({ avance, cargando, onEditar, onVerPerfil, onIrA, compart
               </div>
             </div>
           ) : (
-            <p className="text-[13px] md:text-[14px] text-[#666666] font-medium leading-snug mb-4">Tu perfil está completo. ¡Muy bien!</p>
+            <p className="text-[13px] md:text-[14px] text-[#666666] font-medium leading-snug mb-3 md:mb-4">Tu perfil está completo. ¡Muy bien!</p>
           )}
         </>
       ) : (
-        <p className="text-[13px] md:text-[14px] text-[#666666] font-medium leading-snug mb-4">
+        <p className="hidden md:block text-[14px] text-[#666666] font-medium leading-snug mb-4">
           Mantené tus datos al día para que te encuentren más fácil.
         </p>
       )}
@@ -413,20 +419,19 @@ const PantallaEstado = ({ tipo, currentUser, handleLogout }) => {
 };
 
 // ── Estudiantes: perfiles de otros estudiantes ("tus futuros colegas") ─────────
-// Solo se ve en el Ecosistema de estudiantes. Muestra los perfiles visibles (verificados), sin el propio.
-const CANTIDAD_INICIAL_COLEGAS = 6;
-const FuturosColegas = ({ uidPropio, navigate }) => {
+// Solo los ven estudiantes. Muestra los perfiles visibles (verificados), sin el propio.
+// limite = cuántos trae como máximo (el carrusel pide pocos; la página, más)
+function useEstudiantes(uidPropio, limite = 200) {
   const [estudiantes, setEstudiantes] = useState(null); // null = cargando
-  const [verTodos, setVerTodos] = useState(false);
   useEffect(() => {
     let activo = true;
-    getDocs(query(collection(db, 'alumnos'), where('visible', '==', true), limit(60)))
+    getDocs(query(collection(db, 'alumnos'), where('visible', '==', true), limit(limite)))
       .then((snap) => {
         if (!activo) return;
         const lista = snap.docs
           .map((d) => ({ id: d.id, ...d.data() }))
           .filter((a) => a.id !== uidPropio && a.slug && a.nombreCompleto);
-        // Primero los que tienen foto, después el resto, mezclados para que no salgan siempre los mismos
+        // Mezclados para que no salgan siempre los mismos primero, y los que tienen foto adelante
         for (let i = lista.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
           [lista[i], lista[j]] = [lista[j], lista[i]];
@@ -436,47 +441,113 @@ const FuturosColegas = ({ uidPropio, navigate }) => {
       })
       .catch((e) => { console.error('No se pudieron cargar los estudiantes:', e); if (activo) setEstudiantes([]); });
     return () => { activo = false; };
-  }, [uidPropio]);
+  }, [uidPropio, limite]);
+  return estudiantes;
+}
 
+// Tarjetita de un estudiante (foto, nombre y facultad)
+const TarjetaEstudiante = ({ estudiante: a, onClick, className = '' }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className={`bg-white/70 backdrop-blur-md border border-white/60 rounded-[20px] shadow-sm hover:bg-white hover:shadow-md transition-all p-4 flex flex-col items-center text-center gap-2 ${className}`}
+  >
+    {a.foto ? (
+      <img src={a.foto} alt="" loading="lazy" className="w-16 h-16 rounded-full object-cover border-2 border-white shadow-sm" />
+    ) : (
+      <span className="w-16 h-16 rounded-full bg-[#E8EFEF] text-[#2D6A6A] flex items-center justify-center"><GraduationCap className="w-7 h-7" /></span>
+    )}
+    <span className="text-[14px] font-bold text-[#1A3D3D] leading-tight line-clamp-2">{a.nombreCompleto}</span>
+    {a.universidad && <span className="text-[12px] font-medium text-[#666666] leading-snug line-clamp-2">{a.universidad}</span>}
+  </button>
+);
+
+// Carrusel en el Ecosistema: se desliza de costado (en la compu además tiene flechitas)
+const CANTIDAD_CARRUSEL = 12;
+const FuturosColegas = ({ uidPropio, navigate }) => {
+  const estudiantes = useEstudiantes(uidPropio, 30);
+  const fila = React.useRef(null);
   if (estudiantes !== null && estudiantes.length === 0) return null;
-  const visibles = (estudiantes || []).slice(0, verTodos ? undefined : CANTIDAD_INICIAL_COLEGAS);
+  const mover = (sentido) => fila.current?.scrollBy({ left: sentido * 340, behavior: 'smooth' });
 
   return (
     <section className="mb-10 md:mb-12">
-      <h2 className="text-[#2D6A6A] font-bold text-[12px] md:text-[13px] uppercase tracking-[0.2em] mb-1">Estudiantes del Portal</h2>
-      <p className="text-[#666666] text-[15px] font-medium mb-4">Mirá los perfiles de tus futuros colegas.</p>
+      <div className="flex items-end justify-between gap-3 mb-4">
+        <div>
+          <h2 className="text-[#2D6A6A] font-bold text-[12px] md:text-[13px] uppercase tracking-[0.2em] mb-1">Estudiantes del Portal</h2>
+          <p className="text-[#666666] text-[15px] font-medium">Mirá los perfiles de tus futuros colegas.</p>
+        </div>
+        {/* Flechitas solo en la compu (en el celu se desliza con el dedo) */}
+        <div className="hidden md:flex gap-2 shrink-0">
+          <button type="button" onClick={() => mover(-1)} aria-label="Ver anteriores" className="w-9 h-9 rounded-full bg-white/80 border border-white shadow-sm flex items-center justify-center text-[#2D6A6A] hover:bg-white"><ChevronRight className="w-4 h-4 rotate-180" /></button>
+          <button type="button" onClick={() => mover(1)} aria-label="Ver siguientes" className="w-9 h-9 rounded-full bg-white/80 border border-white shadow-sm flex items-center justify-center text-[#2D6A6A] hover:bg-white"><ChevronRight className="w-4 h-4" /></button>
+        </div>
+      </div>
       {estudiantes === null ? (
         <p className="flex items-center gap-2 text-[14px] text-[#666666]"><Loader2 className="w-4 h-4 animate-spin" /> Cargando…</p>
       ) : (
         <>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-            {visibles.map((a) => (
-              <button
-                key={a.id}
-                type="button"
-                onClick={() => navigate(`/alumno/${a.slug}`)}
-                className="bg-white/70 backdrop-blur-md border border-white/60 rounded-[20px] shadow-sm hover:bg-white hover:shadow-md transition-all p-4 flex flex-col items-center text-center gap-2"
-              >
-                {a.foto ? (
-                  <img src={a.foto} alt="" loading="lazy" className="w-16 h-16 rounded-full object-cover border-2 border-white shadow-sm" />
-                ) : (
-                  <span className="w-16 h-16 rounded-full bg-[#E8EFEF] text-[#2D6A6A] flex items-center justify-center"><GraduationCap className="w-7 h-7" /></span>
-                )}
-                <span className="text-[14px] font-bold text-[#1A3D3D] leading-tight line-clamp-2">{a.nombreCompleto}</span>
-                {a.universidad && <span className="text-[12px] font-medium text-[#666666] leading-snug line-clamp-2">{a.universidad}</span>}
-              </button>
+          <div ref={fila} className="flex gap-3 overflow-x-auto snap-x snap-mandatory scroll-px-4 md:scroll-px-0 pb-2 -mx-4 px-4 md:mx-0 md:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {estudiantes.slice(0, CANTIDAD_CARRUSEL).map((a) => (
+              <TarjetaEstudiante key={a.id} estudiante={a} onClick={() => navigate(`/alumno/${a.slug}`)} className="w-[150px] md:w-[180px] shrink-0 snap-start" />
             ))}
           </div>
-          {!verTodos && estudiantes.length > CANTIDAD_INICIAL_COLEGAS && (
-            <button type="button" onClick={() => setVerTodos(true)} className="mt-4 text-[14px] font-bold text-[#2D6A6A] hover:text-[#1A3D3D] inline-flex items-center gap-1">
-              Ver todos ({estudiantes.length}) <ChevronRight className="w-4 h-4" />
+          {/* En el celu va a la derecha */}
+          <div className="flex justify-end md:justify-start mt-3">
+            <button type="button" onClick={() => navigate('/estudiantes')} className="text-[14px] font-bold text-[#2D6A6A] hover:text-[#1A3D3D] inline-flex items-center gap-1">
+              Ver más <ChevronRight className="w-4 h-4" />
             </button>
-          )}
+          </div>
         </>
       )}
     </section>
   );
 };
+
+// Página con todos los estudiantes (/estudiantes). Vive en este archivo para no sumar uno nuevo.
+export function PaginaEstudiantes() {
+  const { currentUser } = useAuth();
+  const navigate = useNavigate();
+  const estudiantes = useEstudiantes(currentUser?.uid);
+  const [busqueda, setBusqueda] = useState('');
+  if (!currentUser) return <Navigate to="/login" replace />;
+  if (currentUser.rol !== 'alumnx' && currentUser.rol !== 'admin') return <Navigate to="/ecosistema" replace />;
+  const limpiar = (t) => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  const filtrados = (estudiantes || []).filter((a) => !busqueda.trim() || limpiar(`${a.nombreCompleto} ${a.universidad}`).includes(limpiar(busqueda.trim())));
+
+  return (
+    <div className="min-h-screen bg-[#F4F7F7] font-['Inter'] text-[#333333] flex flex-col">
+      <div className="flex-1 p-4 md:p-10 lg:p-12">
+        <div className="max-w-[1200px] mx-auto">
+          <button type="button" onClick={() => navigate('/ecosistema')} className="inline-flex items-center gap-1.5 text-[14px] font-bold text-[#2D6A6A] hover:text-[#1A3D3D] mb-6">
+            <ChevronRight className="w-4 h-4 rotate-180" /> Volver
+          </button>
+          <h1 className="text-3xl md:text-4xl font-black text-[#1A3D3D] font-['Montserrat'] tracking-tight">Estudiantes del Portal</h1>
+          <p className="text-[#666666] text-[16px] font-medium mt-2 mb-6">Mirá los perfiles de tus futuros colegas.</p>
+          <input
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+            placeholder="Buscar por nombre o facultad"
+            aria-label="Buscar estudiantes"
+            className="w-full md:max-w-md bg-white border border-gray-200 rounded-2xl px-4 py-3 text-[15px] outline-none focus:border-[#2D6A6A] mb-6"
+          />
+          {estudiantes === null ? (
+            <p className="flex items-center gap-2 text-[14px] text-[#666666]"><Loader2 className="w-4 h-4 animate-spin" /> Cargando…</p>
+          ) : filtrados.length === 0 ? (
+            <p className="text-[15px] text-[#666666]">{busqueda ? 'No encontramos estudiantes con esa búsqueda.' : 'Todavía no hay otros estudiantes verificados.'}</p>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+              {filtrados.map((a) => (
+                <TarjetaEstudiante key={a.id} estudiante={a} onClick={() => navigate(`/alumno/${a.slug}`)} />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+      <FooterSimple seccion="Estudiantes" />
+    </div>
+  );
+}
 
 // ── "Ya me recibí": el alumno/a pide pasar su cuenta a profesional ─────────
 // Queda anotado en su usuario y la admin hace el cambio desde Gestión de usuarios
@@ -925,13 +996,16 @@ export default function Ecosistema() {
           </h2>
           <div className={`grid grid-cols-1 ${esAlumnx ? 'md:grid-cols-2' : 'md:grid-cols-3'} gap-3 md:gap-6 mb-10 md:mb-12`}>
 
-            <TarjetaDisponible
-              id="tour-editar-perfil"
-              titulo="Editar mi información"
-              descripcion="Actualizá tus datos para que el público conozca tus servicios y tu formación."
-              icon={User}
-              onClick={() => navigate(rutaEditor)}
-            />
+            {/* En el celu se saca: la tarjeta "Tu perfil" de arriba ya tiene el botón para editar */}
+            <div className="hidden md:block h-full">
+              <TarjetaDisponible
+                id="tour-editar-perfil"
+                titulo="Editar mi información"
+                descripcion="Actualizá tus datos para que el público conozca tus servicios y tu formación."
+                icon={User}
+                onClick={() => navigate(rutaEditor)}
+              />
+            </div>
 
             {esProveedor ? (
               <TarjetaDisponible
@@ -967,6 +1041,9 @@ export default function Ecosistema() {
             )}
           </div>
 
+          {/* Alumnos/as: aviso de que ya se recibieron (va justo debajo de las tarjetas, arriba de Publicaciones) */}
+          {esAlumnx && <AvisoMeRecibi currentUser={currentUser} />}
+
           {/* Publicaciones científicas: renglón finito debajo, para que no le saque lugar a la Bolsa */}
           {!esProveedor && (
             <button
@@ -986,9 +1063,6 @@ export default function Ecosistema() {
 
           {/* Estudiantes: perfiles de otros estudiantes */}
           {esAlumnx && <FuturosColegas uidPropio={currentUser.uid} navigate={navigate} />}
-
-          {/* Alumnos/as: aviso de que ya se recibieron, para pasar la cuenta a profesional */}
-          {esAlumnx && <AvisoMeRecibi currentUser={currentUser} />}
 
           {/* BLOQUE 2: PRÓXIMAMENTE (se activa con más usuarios) */}
           <div id="tour-proximamente">
@@ -1024,7 +1098,8 @@ export default function Ecosistema() {
       {/* TOUR */}
       {mostrarTour && PASOS_TOUR[activeRole] && (
         <TourGuia
-          pasos={PASOS_TOUR[activeRole]}
+          // En el celu no está la tarjeta "Editar mi información", así que ese paso del tour se saltea
+          pasos={PASOS_TOUR[activeRole].filter((p) => p.targetId !== 'tour-editar-perfil' || window.innerWidth >= 768)}
           userId={currentUser?.uid}
           claveStorage="ecosistema"
           onFin={async () => {
