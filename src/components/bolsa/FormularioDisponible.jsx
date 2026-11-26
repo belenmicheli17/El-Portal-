@@ -206,7 +206,7 @@ export default function FormularioDisponible({ currentUser, onVolver, onGuardada
 
       {enEspera && (
         <div className="bg-amber-50 border border-amber-200 text-amber-900 rounded-2xl px-4 py-3 text-[14px] mb-6">
-          <strong>Tu cuenta todavía está en revisión.</strong> Podés completar todo ahora: queda guardado y figurás como disponible apenas verifiquemos tu {esAlumnx ? 'certificado de alumno regular' : 'matrícula'}.
+          <strong>Tu cuenta todavía está en revisión.</strong> Podés completar todo ahora: queda guardado y figurás como disponible apenas verifiquemos tu {esAlumnx ? 'comprobante de cursada' : 'matrícula'}.
         </div>
       )}
       {hayErrores && (

@@ -21,6 +21,9 @@ const ID_PLANTILLA_RECORDATORIO = 6;
 // A partir de cuántos días sin terminar se manda el recordatorio
 const DIAS_PARA_RECORDAR = 5;
 
+// Estudiantes: el recordatorio les llega a la semana (el mail está escrito acá abajo, no en Brevo)
+const DIAS_PARA_RECORDAR_ESTUDIANTES = 7;
+
 // Cuentas más viejas que esto no reciben nada (evita mandarle mails
 // a cuentas de prueba o abandonadas hace mucho tiempo)
 const DIAS_MAXIMOS = 30;
@@ -35,6 +38,64 @@ function obtenerFirestore() {
     });
   }
   return getFirestore();
+}
+
+// Arma el HTML de un mail con el estilo del Portal (colores y letra de la marca).
+// Se usa para los mails que no tienen plantilla en Brevo (Brevo igual es el que los manda).
+const escaparHtml = (t) => String(t || '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+function armarMailHtml({ titulo, parrafos, boton, enlace, posdata }) {
+  return `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escaparHtml(titulo)}</title></head>
+<body style="margin:0;padding:0;background:#F4F7F7;font-family:Arial,Helvetica,sans-serif;color:#333333;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F4F7F7;padding:32px 12px;">
+    <tr><td align="center">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#FFFFFF;border-radius:24px;overflow:hidden;">
+        <tr><td style="background:#1A3D3D;padding:22px 32px;">
+          <span style="font-size:18px;font-weight:bold;color:#FFFFFF;letter-spacing:0.5px;">El Portal Veterinario</span>
+        </td></tr>
+        <tr><td style="padding:32px 32px 8px 32px;">
+          <h1 style="margin:0 0 18px 0;font-size:24px;line-height:1.25;color:#1A3D3D;">${escaparHtml(titulo)}</h1>
+          ${parrafos.map((p) => `<p style="margin:0 0 14px 0;font-size:16px;line-height:1.6;color:#333333;">${p}</p>`).join('')}
+        </td></tr>
+        <tr><td style="padding:12px 32px 28px 32px;">
+          <a href="${enlace}" style="display:inline-block;background:#2D6A6A;color:#FFFFFF;text-decoration:none;font-size:16px;font-weight:bold;padding:14px 28px;border-radius:14px;">${escaparHtml(boton)}</a>
+        </td></tr>
+        ${posdata ? `<tr><td style="padding:0 32px 28px 32px;"><p style="margin:0;font-size:14px;line-height:1.6;color:#666666;">${posdata}</p></td></tr>` : ''}
+        <tr><td style="background:#FFFFFF;border-top:1px solid #E8EFEF;padding:18px 32px;">
+          <p style="margin:0;font-size:12px;line-height:1.5;color:#666666;">Portal Veterinario · <a href="https://www.portalveterinario.ar" style="color:#2D6A6A;">portalveterinario.ar</a></p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>`;
+}
+
+// Mail "terminá tu perfil" para estudiantes (Brevo lo manda, el diseño está acá)
+async function enviarRecordatorioEstudiante(email, nombre) {
+  const primerNombre = String(nombre || '').trim().split(/\s+/)[0];
+  const html = armarMailHtml({
+    titulo: 'Te falta poco para terminar tu perfil',
+    parrafos: [
+      `Hola${primerNombre ? ' ' + escaparHtml(primerNombre) : ''}! Empezaste tu perfil de estudiante en El Portal Veterinario y quedó a mitad de camino.`,
+      'Son unos minutos: completás tus datos, subís un comprobante de que estás cursando y listo. Con tu cuenta verificada vas a poder postularte a búsquedas de asistente en clínicas y mostrarte disponible en la Bolsa de Trabajo.'
+    ],
+    boton: 'Terminar mi perfil',
+    enlace: 'https://www.portalveterinario.ar/onboarding-alumnx',
+    posdata: 'Sirve cualquiera de estos: certificado de alumno regular, inscripción a materias o condición de cursos vigentes (foto, captura o PDF).'
+  });
+  const respuesta = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: { accept: 'application/json', 'content-type': 'application/json', 'api-key': process.env.BREVO_API_KEY },
+    body: JSON.stringify({
+      sender: { name: 'Portal Veterinario', email: 'hola@portalveterinario.ar' },
+      to: [{ email }],
+      subject: 'Te falta poco para terminar tu perfil de estudiante',
+      htmlContent: html
+    })
+  });
+  if (!respuesta.ok) {
+    const detalle = await respuesta.text();
+    throw new Error(`Brevo respondió ${respuesta.status}: ${detalle}`);
+  }
 }
 
 // Manda la plantilla por Brevo. Si Brevo responde con error, lanza una excepción.
@@ -71,6 +132,7 @@ export default async function handler(req, res) {
     const ahora = Date.now();
     // fechaRegistro se guarda como texto ISO, que se puede comparar como texto
     const limiteReciente = new Date(ahora - DIAS_PARA_RECORDAR * UN_DIA).toISOString();
+    const limiteRecienteEstudiantes = new Date(ahora - DIAS_PARA_RECORDAR_ESTUDIANTES * UN_DIA).toISOString();
     const limiteAntiguo = new Date(ahora - DIAS_MAXIMOS * UN_DIA).toISOString();
 
     // 2) Traemos las cuentas con el cuestionario sin terminar y filtramos el resto acá
@@ -84,12 +146,16 @@ export default async function handler(req, res) {
 
       if (usuario.recordatorioEnviado === true) continue; // ya se le mandó
       if (!usuario.email || !usuario.fechaRegistro) continue;
-      if (usuario.rol !== 'profesional' && usuario.rol !== 'clinica') continue;
-      if (usuario.fechaRegistro > limiteReciente) continue; // todavía no pasaron 5 días
+      const esEstudiante = usuario.rol === 'alumnx';
+      if (usuario.rol !== 'profesional' && usuario.rol !== 'clinica' && !esEstudiante) continue;
+      if (usuario.esPrueba === true) continue; // cuentas de prueba de la admin
+      // todavía no pasaron los días (5 para profesionales y clínicas, 7 para estudiantes)
+      if (usuario.fechaRegistro > (esEstudiante ? limiteRecienteEstudiantes : limiteReciente)) continue;
       if (usuario.fechaRegistro < limiteAntiguo) continue; // demasiado vieja
 
       try {
-        await enviarRecordatorio(usuario.email);
+        if (esEstudiante) await enviarRecordatorioEstudiante(usuario.email, usuario.nombre);
+        else await enviarRecordatorio(usuario.email);
         // 3) Marcamos la cuenta para no volver a mandarle el mail
         await documento.ref.update({
           recordatorioEnviado: true,

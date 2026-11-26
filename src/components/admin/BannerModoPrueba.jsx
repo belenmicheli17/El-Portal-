@@ -106,58 +106,76 @@ export default function BannerModoPrueba() {
 
     if (!mostrar) return null;
 
-  const claseCuenta = (activo) => `w-full px-4 py-2.5 rounded-xl text-[13px] font-bold text-left transition-all duration-300 ease-in-out disabled:opacity-60 ${
-    activo ? 'bg-[#2D6A6A] text-white shadow-md cursor-default' : 'bg-[#F4F7F7] text-[#1A3D3D] hover:bg-gray-200'
+  const claseCuenta = (activo) => `flex-1 min-w-0 px-4 py-2.5 rounded-xl text-[13px] font-bold text-left transition-all duration-300 ease-in-out disabled:opacity-60 ${
+    activo ? 'bg-yellow-400 text-yellow-950 shadow-sm cursor-default' : 'bg-white text-yellow-950 hover:bg-yellow-100'
   }`;
+  // Mini botón para volver a ver el cuestionario de alta de la cuenta de prueba en la que estás
+  const puedeVerOnboarding = enModoPrueba && ['profesional', 'clinica', 'alumnx'].includes(currentUser?.rol);
+  const irAlOnboarding = () => navigate(
+    currentUser.rol === 'clinica' ? '/onboarding-clinica' : currentUser.rol === 'alumnx' ? '/onboarding-alumnx' : '/onboarding',
+    { state: { correccion: true, vistaPrueba: true } }
+  );
 
   return (
-    <div ref={panelRef} className="fixed right-0 top-1/2 -translate-y-1/2 z-[9999] flex items-center">
-      {/* Ventanita con los botones, uno arriba del otro */}
-      {abierto && (
-        <div className="mr-2 w-48 bg-white rounded-2xl border border-gray-100 shadow-[0_8px_30px_rgba(26,61,61,0.18)] p-3 flex flex-col gap-2 animate-in fade-in slide-in-from-right-2 duration-200">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-[#2D6A6A] px-1 flex items-center gap-1.5">
-            {isLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FlaskConical className="w-3.5 h-3.5" strokeWidth={2} />}
-            {enModoPrueba ? 'Modo prueba' : 'Cuentas de prueba'}
-          </p>
-          {CUENTAS.map(({ rol, etiqueta }) => (
-            <button key={rol} onClick={() => handleSaltar(rol)} disabled={isLoading} className={claseCuenta(currentUser?.rol === rol)}>
-              {etiqueta}
-            </button>
-          ))}
-          {enModoPrueba && ['profesional', 'clinica', 'alumnx'].includes(currentUser?.rol) && (
-            <button
-              onClick={() => navigate(
-                currentUser.rol === 'clinica' ? '/onboarding-clinica' : currentUser.rol === 'alumnx' ? '/onboarding-alumnx' : '/onboarding',
-                { state: { correccion: true, vistaPrueba: true } }
-              )}
-              disabled={isLoading}
-              className="w-full px-4 py-2.5 rounded-xl text-[13px] font-bold bg-white border border-gray-200 text-[#1A3D3D] hover:bg-gray-100 transition-all duration-300 ease-in-out disabled:opacity-60 flex items-center gap-1.5"
-            >
-              <ClipboardList className="w-3.5 h-3.5" strokeWidth={2} /> Onboarding
-            </button>
-          )}
-          <button
-            onClick={handleAdmin}
-            disabled={isLoading}
-            className={`w-full px-4 py-2.5 rounded-xl text-[13px] font-bold text-left bg-[#1A3D3D] text-white hover:bg-[#2D6A6A] transition-all duration-300 ease-in-out disabled:opacity-60 ${esAdmin ? 'ring-2 ring-[#4DB6AC]' : ''}`}
-          >
-            Admin
-          </button>
-          {error && <p className="text-[11px] font-medium text-red-500 px-1">{error}</p>}
-        </div>
-      )}
-
-      {/* Pestañita semioculta en el borde: se agranda al pasar el mouse */}
+    // Solapa pegada al borde derecho: la pestañita y la cajita se deslizan juntas.
+    // Cerrada, solo asoma la pestañita; abierta, entra la cajita detrás de ella.
+    <div
+      ref={panelRef}
+      className="fixed right-0 top-1/2 z-[9999] flex items-center transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
+      style={{ transform: `translateY(-50%) translateX(${abierto ? '0' : '13rem'})` }}
+    >
+      {/* Pestañita: es la manija de la solapa */}
       <button
         type="button"
         onClick={() => setAbierto((v) => !v)}
         aria-label="Cambiar de cuenta de prueba"
-        className={`h-14 rounded-l-xl flex items-center justify-center shadow-lg transition-all duration-300 ease-in-out ${abierto ? 'w-9' : 'w-6 hover:w-9'} ${
-          enModoPrueba ? 'bg-yellow-400 text-yellow-900' : 'bg-[#1A3D3D] text-white'
+        aria-expanded={abierto}
+        className={`h-14 w-8 rounded-l-xl flex items-center justify-center shadow-lg transition-colors duration-300 ${
+          enModoPrueba ? 'bg-yellow-400 text-yellow-950' : 'bg-[#1A3D3D] text-white'
         }`}
       >
         <FlaskConical className="w-4 h-4" strokeWidth={2} />
       </button>
+
+      {/* Cajita con las cuentas */}
+      <div className={`w-52 bg-yellow-50 border-y border-l-4 border-yellow-400 rounded-l-2xl p-3 flex flex-col gap-2 transition-shadow duration-500 ${abierto ? 'shadow-[0_8px_30px_rgba(120,53,15,0.18)]' : 'shadow-none'}`} aria-hidden={!abierto}>
+        <p className="text-[11px] font-bold uppercase tracking-widest text-yellow-900 px-1 flex items-center gap-1.5">
+          {isLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FlaskConical className="w-3.5 h-3.5" strokeWidth={2} />}
+          {enModoPrueba ? 'Modo prueba' : 'Cuentas de prueba'}
+        </p>
+        {CUENTAS.map(({ rol, etiqueta }) => {
+          const activo = currentUser?.rol === rol;
+          return (
+            <div key={rol} className="flex items-stretch gap-1.5">
+              <button onClick={() => handleSaltar(rol)} disabled={isLoading} tabIndex={abierto ? 0 : -1} className={claseCuenta(activo)}>
+                {etiqueta}
+              </button>
+              {activo && puedeVerOnboarding && (
+                <button
+                  type="button"
+                  onClick={irAlOnboarding}
+                  disabled={isLoading}
+                  tabIndex={abierto ? 0 : -1}
+                  title="Ver el cuestionario de alta"
+                  aria-label="Ver el cuestionario de alta"
+                  className="w-10 shrink-0 rounded-xl bg-white border border-yellow-300 text-yellow-900 hover:bg-yellow-100 flex items-center justify-center transition-colors disabled:opacity-60"
+                >
+                  <ClipboardList className="w-4 h-4" strokeWidth={2} />
+                </button>
+              )}
+            </div>
+          );
+        })}
+        <button
+          onClick={handleAdmin}
+          disabled={isLoading}
+          tabIndex={abierto ? 0 : -1}
+          className={`w-full px-4 py-2.5 rounded-xl text-[13px] font-bold text-left bg-yellow-900 text-white hover:bg-yellow-950 transition-all duration-300 ease-in-out disabled:opacity-60 ${esAdmin ? 'ring-2 ring-yellow-400' : ''}`}
+        >
+          Admin
+        </button>
+        {error && <p className="text-[11px] font-medium text-red-600 px-1">{error}</p>}
+      </div>
     </div>
   );
 }

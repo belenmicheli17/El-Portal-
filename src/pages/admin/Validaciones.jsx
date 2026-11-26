@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   CheckCircle, XCircle, User, Calendar, Mail, AlertTriangle, Loader2,
   Hash, MapPin, FileText, ExternalLink, X, Megaphone, MessageCircle, Image as ImageIcon, GraduationCap
@@ -9,6 +9,55 @@ import PiezaBienvenida, { cargarDatosPieza } from '../../components/PiezaBienven
 import { db, storage, auth } from '../../firebase';
 import { collection, getDocs, getDoc, getCountFromServer, doc, query, where, writeBatch, serverTimestamp } from 'firebase/firestore';
 import { ref, getDownloadURL } from 'firebase/storage';
+// Dirección del archivo que hace el trabajo pesado de pdf.js (es solo un link, no carga nada)
+import urlTrabajadorPdf from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+
+// Visor de PDF dentro de la página: dibuja cada hoja como imagen.
+// Hace falta porque el navegador del celu no muestra PDFs adentro de la página (los manda a abrir aparte).
+// pdf.js se carga recién cuando se abre un PDF, así no pesa en el resto del panel.
+function VisorPdf({ url }) {
+  const contenedor = useRef(null);
+  const [estado, setEstado] = useState('cargando'); // cargando | listo | error
+  useEffect(() => {
+    let cancelado = false;
+    (async () => {
+      try {
+        const pdfjs = await import('pdfjs-dist');
+        pdfjs.GlobalWorkerOptions.workerSrc = urlTrabajadorPdf;
+        const pdf = await pdfjs.getDocument({ url }).promise;
+        const caja = contenedor.current;
+        if (!caja || cancelado) return;
+        caja.innerHTML = '';
+        const ancho = caja.clientWidth || 600;
+        for (let n = 1; n <= pdf.numPages && !cancelado; n++) {
+          const hoja = await pdf.getPage(n);
+          const base = hoja.getViewport({ scale: 1 });
+          const nitidez = window.devicePixelRatio || 1;
+          const vista = hoja.getViewport({ scale: (ancho / base.width) * nitidez });
+          const lienzo = document.createElement('canvas');
+          lienzo.width = vista.width;
+          lienzo.height = vista.height;
+          lienzo.style.width = '100%';
+          lienzo.className = 'block rounded-xl bg-white shadow-sm mb-3';
+          caja.appendChild(lienzo);
+          await hoja.render({ canvasContext: lienzo.getContext('2d'), viewport: vista }).promise;
+        }
+        if (!cancelado) setEstado('listo');
+      } catch (e) {
+        console.error('No se pudo mostrar el PDF:', e);
+        if (!cancelado) setEstado('error');
+      }
+    })();
+    return () => { cancelado = true; };
+  }, [url]);
+  return (
+    <div className="w-full self-start">
+      {estado === 'cargando' && <p className="flex items-center justify-center gap-2 text-[14px] font-medium text-[#666666] py-10"><Loader2 className="w-5 h-5 animate-spin" /> Cargando el PDF…</p>}
+      {estado === 'error' && <p className="text-center text-[14px] font-medium text-[#666666] py-10">No pudimos mostrar el PDF acá. Usá «Abrir aparte».</p>}
+      <div ref={contenedor} className="w-full" />
+    </div>
+  );
+}
 
 
 // Motivos frecuentes: al tocarlos se completan solos en el cuadro de texto (después se pueden editar)
@@ -96,7 +145,7 @@ export default function Validaciones() {
     setAbriendoTitulo(req.uid);
     try {
       const url = await getDownloadURL(ref(storage, req.tituloPath));
-      setTituloVisor({ url, nombre: req.nombre, esPdf: /\.pdf$/i.test(req.tituloPath) });
+      setTituloVisor({ url, nombre: req.nombre, esPdf: /\.pdf$/i.test(req.tituloPath), esAlumnx: req.tipo === 'alumnx' });
     } catch (error) {
       console.error('Error abriendo el título:', error);
       alert('No pudimos abrir el archivo del título.');
@@ -210,7 +259,7 @@ export default function Validaciones() {
         const numero = snapUsuario.exists() ? snapUsuario.data().whatsapp : '';
         if (numero && req.slug) {
           const primerNombre = (req.nombrePila || req.nombre || '').split(' ')[0];
-          const texto = `Hola ${primerNombre}! Soy Belén, del Portal Veterinario 🐾 Ya revisé tu certificado y tu cuenta de estudiante está verificada. Desde ahora podés postularte a las búsquedas de asistente en la Bolsa de Trabajo y mostrarte disponible. Tu perfil: ${armarLinkPerfil('alumnx', req.slug)}. Gracias por sumarte!`;
+          const texto = `Hola ${primerNombre}! Soy Belén, del Portal Veterinario 🐾 Ya revisé tu comprobante y tu cuenta de estudiante está verificada. Desde ahora podés postularte a las búsquedas de asistente en la Bolsa de Trabajo y mostrarte disponible. Tu perfil: ${armarLinkPerfil('alumnx', req.slug)}. Gracias por sumarte!`;
           setAvisosWp((prev) => [...prev, { uid: req.uid, nombre: req.nombre, url: armarLinkWhatsapp(numero, texto) }]);
         }
       }
@@ -345,7 +394,7 @@ export default function Validaciones() {
         <div className="fixed inset-0 bg-[#1A3D3D]/40 backdrop-blur-md z-[200] flex items-center justify-center p-4" onClick={() => setTituloVisor(null)}>
           <div className="bg-white rounded-[32px] w-full max-w-3xl max-h-[90vh] shadow-2xl overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
             <div className="p-5 border-b border-gray-100 flex justify-between items-center gap-4">
-              <h3 className="font-['Montserrat'] font-black text-lg text-[#1A3D3D] truncate">Título de {tituloVisor.nombre}</h3>
+              <h3 className="font-['Montserrat'] font-black text-lg text-[#1A3D3D] truncate">{tituloVisor.esAlumnx ? 'Comprobante de' : 'Título de'} {tituloVisor.nombre}</h3>
               <div className="flex items-center gap-2 shrink-0">
                 <a href={tituloVisor.url} target="_blank" rel="noreferrer" className="px-4 py-2 rounded-xl bg-[#F4F7F7] text-[#1A3D3D] text-[12px] font-bold hover:bg-gray-200 transition-colors flex items-center gap-1.5">
                   <ExternalLink className="w-4 h-4" /> Abrir aparte
@@ -357,7 +406,7 @@ export default function Validaciones() {
             </div>
             <div className="bg-[#F4F7F7] p-4 overflow-auto flex-1 flex items-center justify-center">
               {tituloVisor.esPdf ? (
-                <iframe src={tituloVisor.url} title="Título" className="w-full h-[70vh] rounded-2xl bg-white" />
+                <VisorPdf url={tituloVisor.url} />
               ) : (
                 <img src={tituloVisor.url} alt="Título o carnet" className="max-w-full max-h-[70vh] object-contain rounded-2xl" />
               )}
@@ -630,12 +679,12 @@ export default function Validaciones() {
                         {abriendoTitulo === req.uid
                           ? <Loader2 className="w-4 h-4 animate-spin text-[#2D6A6A]" />
                           : <FileText className="w-4 h-4 text-[#2D6A6A]" />}
-                        {req.tipo === 'alumnx' ? 'Ver certificado de alumno regular' : 'Ver título o carnet'}
+                        {req.tipo === 'alumnx' ? 'Ver comprobante de cursada' : 'Ver título o carnet'}
                       </button>
                     ) : (
                       <div className="bg-[#FF9800]/10 border border-[#FF9800]/30 rounded-xl p-3 flex items-center gap-3">
                         <AlertTriangle className="w-5 h-5 text-[#FF9800] shrink-0" />
-                        <p className="text-[#e68900] text-[13px] font-medium">{req.tipo === 'alumnx' ? 'No subió el certificado de alumno regular.' : 'No subió el título o carnet.'}</p>
+                        <p className="text-[#e68900] text-[13px] font-medium">{req.tipo === 'alumnx' ? 'No subió el comprobante de cursada.' : 'No subió el título o carnet.'}</p>
                       </div>
                     )}
 

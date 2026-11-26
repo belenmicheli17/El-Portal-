@@ -16,13 +16,13 @@ import { RecortadorImagen, generarSlug, usuarioDeInstagram, instagramAURL, leerA
 const TOTAL_PASOS = 4;
 const MAX_FOTOS = 4; // fotos de galería por estudiante
 const MAX_LUGARES = 5; // lugares donde trabajó o trabaja
-const NOMBRES_PASOS = ['Tus datos', 'Tu facultad', 'Sobre vos', 'Certificado'];
+const NOMBRES_PASOS = ['Tus datos', 'Tu facultad', 'Sobre vos', 'Comprobante'];
 const TITULOS = ['Contanos quién sos', 'Tu facultad', 'Sobre vos', 'Último paso'];
 const SUBTITULOS = [
   'Con tu perfil de estudiante te podés postular a las búsquedas de asistente de la Bolsa de Trabajo y mostrarte disponible para las clínicas.',
   'Así las clínicas saben dónde estudiás.',
   'Es lo que leen las clínicas cuando te postulás en la Bolsa de Trabajo.',
-  'Tus redes y tu WhatsApp son opcionales. Al final, subí tu certificado de alumno regular para que verifiquemos que estás cursando.'
+  'Tus redes y tu WhatsApp son opcionales. Al final, subí un comprobante de que estás cursando para que te verifiquemos.'
 ];
 
 // Facultades con Veterinaria (sugerencias: también se puede escribir otra)
@@ -163,7 +163,7 @@ function TarjetaViva({ datos, verificado }) {
       {!verificado && (
         <div className="mt-6 bg-yellow-50 border border-yellow-200 text-yellow-700 rounded-xl px-3 py-2.5 text-[13px] font-medium leading-snug flex gap-2">
           <Clock className="w-4 h-4 shrink-0 mt-0.5" />
-          <span>Podés postularte en la Bolsa cuando verifiquemos tu certificado.</span>
+          <span>Podés postularte en la Bolsa cuando verifiquemos tu comprobante.</span>
         </div>
       )}
     </div>
@@ -394,7 +394,7 @@ export default function OnboardingAlumnx() {
     try { deleteObject(ref(storage, url)).catch(() => {}); } catch { /* sin acción */ }
   };
 
-  // ----- Certificado de alumno regular (carpeta privada, solo lo ve el equipo) -----
+  // ----- Comprobante de cursada: certificado de alumno regular, inscripción a materias o condición de cursos (carpeta privada, solo lo ve el equipo) -----
   const subirCertificado = (evento) => {
     const archivo = evento.target.files[0];
     evento.target.value = null;
@@ -471,7 +471,7 @@ export default function OnboardingAlumnx() {
       const digitos = d.wa.replace(/\D/g, '').length;
       if (digitos > 0 && digitos < 8) return 'Revisá el WhatsApp: le faltan números.';
       // El certificado va al final para que nadie abandone a mitad del cuestionario
-      if (!d.certificadoPath && !verificado) return 'Subí tu certificado de alumno regular.';
+      if (!d.certificadoPath && !verificado) return 'Subí un comprobante de que estás cursando.';
     }
     return '';
   };
@@ -763,10 +763,11 @@ export default function OnboardingAlumnx() {
 
         <label className={CLASE_LABEL} htmlFor="al-linkedin">LinkedIn</label>
         <input id="al-linkedin" value={datos.linkedin} maxLength={200} onChange={(e) => cambiar('linkedin', e.target.value)} placeholder="Link a tu perfil (opcional)" autoComplete="off" className={CLASE_INPUT} />
-        <span className={`${CLASE_LABEL} mt-8`}>Certificado de alumno regular<Obligatorio /></span>
+        <span className={`${CLASE_LABEL} mt-8`}>Comprobante de que estás cursando<Obligatorio /></span>
+        <p className={`${CLASE_AYUDA} !mt-0 mb-3`}>Cualquiera de estos sirve: certificado de alumno regular, inscripción a materias o condición de cursos vigentes. Puede ser foto, captura de pantalla o PDF.</p>
         {verificado ? (
           <div className="flex items-center gap-3 bg-[#F4F7F7] rounded-2xl px-4 py-3.5 text-[15px] font-medium text-[#1A3D3D]">
-            <CheckCircle2 className="w-5 h-5 text-[#2D6A6A] shrink-0" /> Certificado verificado
+            <CheckCircle2 className="w-5 h-5 text-[#2D6A6A] shrink-0" /> Comprobante verificado
           </div>
         ) : (
           <>
@@ -775,11 +776,11 @@ export default function OnboardingAlumnx() {
                 : datos.certificadoPath ? <FileCheck className="w-5 h-5 text-[#2D6A6A] shrink-0" />
                 : <Upload className="w-5 h-5 text-[#2D6A6A] shrink-0" />}
               <span className="text-[15px] font-semibold text-[#2D6A6A] min-w-0 truncate">
-                {subiendoCertificado ? `Subiendo… ${progresoCertificado}%` : datos.certificadoPath ? (datos.certificadoNombre || 'Certificado subido') : 'Subir certificado (foto o PDF)'}
+                {subiendoCertificado ? `Subiendo… ${progresoCertificado}%` : datos.certificadoPath ? (datos.certificadoNombre || 'Comprobante subido') : 'Subir comprobante (foto, captura o PDF)'}
               </span>
               <input type="file" accept="image/*,application/pdf" className="hidden" onChange={subirCertificado} disabled={subiendoCertificado} />
             </label>
-            <p className={CLASE_AYUDA}>Lo pedís en tu facultad. Es privado: lo vemos solo nosotros para verificarte.</p>
+            <p className={CLASE_AYUDA}>Es privado: lo vemos solo nosotros para verificarte.</p>
           </>
         )}
       </>
@@ -912,7 +913,7 @@ export default function OnboardingAlumnx() {
                 ¡Listo{datos.nombre.trim() ? `, ${datos.nombre.trim()}` : ''}!
               </h1>
               <p className="text-[16px] md:text-[17px] leading-relaxed text-[#666666] max-w-sm mx-auto">
-                Recibimos tu certificado de alumno regular. Lo revisamos en 24 a 48 horas y te avisamos por mail.
+                Recibimos tu comprobante de cursada. Lo revisamos en 24 a 48 horas y te avisamos por mail.
               </p>
               <div className="bg-[#F4F7F7] rounded-2xl px-4 py-3.5 my-6 text-left text-[15px] font-medium text-[#1A3D3D] leading-relaxed">
                 Cuando te verifiquemos vas a poder postularte a las búsquedas de asistente de la Bolsa de Trabajo.

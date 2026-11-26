@@ -279,7 +279,7 @@ export function CartelVerificacion({ abierto, onCerrar }) {
     <VentanaBolsa abierta={abierto} onCerrar={onCerrar} ancho="max-w-md">
       <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[22px] leading-tight mb-2 pr-10">Tu cuenta está en revisión</h3>
       <p className="text-[14px] text-[#666666] leading-relaxed mb-6">
-        Apenas verifiquemos tu cuenta (la matrícula, o el certificado de alumno regular si sos estudiante) vas a poder publicar y postularte en la Bolsa de Trabajo. Mientras tanto podés seguir armando tu perfil.
+        Apenas verifiquemos tu cuenta (la matrícula, o el comprobante de cursada si sos estudiante) vas a poder publicar y postularte en la Bolsa de Trabajo. Mientras tanto podés seguir armando tu perfil.
       </p>
       <button type="button" onClick={() => navigate('/ecosistema')} className="w-full bg-[#2D6A6A] hover:bg-[#1A3D3D] text-white py-3.5 rounded-2xl text-[14px] font-semibold transition-colors">
         Ir a mi cuenta

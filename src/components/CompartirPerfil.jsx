@@ -429,9 +429,12 @@ export default function CompartirPerfil({ abierto, onCerrar, tipo = 'profesional
                     </>
                   )}
 
-                  <button type="button" onClick={descargar} disabled={generando || !imagenUrl} className={armarClaseBoton(puedeCompartirArchivo ? 'secundario' : 'principal', false, 'w-full')}>
-                    <Download className="w-4 h-4" /> Descargar imagen
-                  </button>
+                  {/* "Descargar" solo donde no se puede compartir directo (en la compu) */}
+                  {!puedeCompartirArchivo && (
+                    <button type="button" onClick={descargar} disabled={generando || !imagenUrl} className={armarClaseBoton('principal', false, 'w-full')}>
+                      <Download className="w-4 h-4" /> Descargar imagen
+                    </button>
+                  )}
 
                   {linkCopiado && (
                     <p className="flex items-center gap-1.5 text-[13px] font-bold text-[#2D6A6A]">

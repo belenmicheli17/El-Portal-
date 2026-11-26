@@ -601,9 +601,12 @@ export default function PiezaBienvenida({ abierto, onCerrar, uid, tipo = 'profes
                   <Share2 className="w-4 h-4" /> Compartir imagen
                 </button>
               )}
-              <button type="button" onClick={descargar} disabled={generando || !imagenUrl} className={armarClaseBoton(puedeCompartir ? 'secundario' : 'principal', false, 'w-full')}>
-                <Download className="w-4 h-4" /> Descargar imagen
-              </button>
+              {/* "Descargar" solo donde no se puede compartir directo (en la compu) */}
+              {!puedeCompartir && (
+                <button type="button" onClick={descargar} disabled={generando || !imagenUrl} className={armarClaseBoton('principal', false, 'w-full')}>
+                  <Download className="w-4 h-4" /> Descargar imagen
+                </button>
+              )}
               {puedeCompartir && (
                 <p className="text-[15px] text-[#666666] leading-snug">Se abre el menú de tu celular: elegí Instagram → Historias.</p>
               )}

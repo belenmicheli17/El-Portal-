@@ -22,6 +22,7 @@
     "firebase": "^12.13.0",
     "firebase-admin": "^14.5.0",
     "lucide-react": "^0.575.0",
+    "pdfjs-dist": "^6.5.438",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-helmet-async": "^3.0.0",

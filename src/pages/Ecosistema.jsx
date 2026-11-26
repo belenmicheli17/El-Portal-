@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { db } from '../firebase';
-import { doc, updateDoc, getDoc } from 'firebase/firestore';
+import { doc, updateDoc, getDoc, collection, query, where, getDocs, limit } from 'firebase/firestore';
 import {
   User, BookOpen, Package, Newspaper, ChevronRight,
   Briefcase, Users, LogOut, Eye, Store, PawPrint, Clock,
@@ -412,6 +412,72 @@ const PantallaEstado = ({ tipo, currentUser, handleLogout }) => {
   );
 };
 
+// ── Estudiantes: perfiles de otros estudiantes ("tus futuros colegas") ─────────
+// Solo se ve en el Ecosistema de estudiantes. Muestra los perfiles visibles (verificados), sin el propio.
+const CANTIDAD_INICIAL_COLEGAS = 6;
+const FuturosColegas = ({ uidPropio, navigate }) => {
+  const [estudiantes, setEstudiantes] = useState(null); // null = cargando
+  const [verTodos, setVerTodos] = useState(false);
+  useEffect(() => {
+    let activo = true;
+    getDocs(query(collection(db, 'alumnos'), where('visible', '==', true), limit(60)))
+      .then((snap) => {
+        if (!activo) return;
+        const lista = snap.docs
+          .map((d) => ({ id: d.id, ...d.data() }))
+          .filter((a) => a.id !== uidPropio && a.slug && a.nombreCompleto);
+        // Primero los que tienen foto, después el resto, mezclados para que no salgan siempre los mismos
+        for (let i = lista.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [lista[i], lista[j]] = [lista[j], lista[i]];
+        }
+        lista.sort((a, b) => (b.foto ? 1 : 0) - (a.foto ? 1 : 0));
+        setEstudiantes(lista);
+      })
+      .catch((e) => { console.error('No se pudieron cargar los estudiantes:', e); if (activo) setEstudiantes([]); });
+    return () => { activo = false; };
+  }, [uidPropio]);
+
+  if (estudiantes !== null && estudiantes.length === 0) return null;
+  const visibles = (estudiantes || []).slice(0, verTodos ? undefined : CANTIDAD_INICIAL_COLEGAS);
+
+  return (
+    <section className="mb-10 md:mb-12">
+      <h2 className="text-[#2D6A6A] font-bold text-[12px] md:text-[13px] uppercase tracking-[0.2em] mb-1">Estudiantes del Portal</h2>
+      <p className="text-[#666666] text-[15px] font-medium mb-4">Mirá los perfiles de tus futuros colegas.</p>
+      {estudiantes === null ? (
+        <p className="flex items-center gap-2 text-[14px] text-[#666666]"><Loader2 className="w-4 h-4 animate-spin" /> Cargando…</p>
+      ) : (
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            {visibles.map((a) => (
+              <button
+                key={a.id}
+                type="button"
+                onClick={() => navigate(`/alumno/${a.slug}`)}
+                className="bg-white/70 backdrop-blur-md border border-white/60 rounded-[20px] shadow-sm hover:bg-white hover:shadow-md transition-all p-4 flex flex-col items-center text-center gap-2"
+              >
+                {a.foto ? (
+                  <img src={a.foto} alt="" loading="lazy" className="w-16 h-16 rounded-full object-cover border-2 border-white shadow-sm" />
+                ) : (
+                  <span className="w-16 h-16 rounded-full bg-[#E8EFEF] text-[#2D6A6A] flex items-center justify-center"><GraduationCap className="w-7 h-7" /></span>
+                )}
+                <span className="text-[14px] font-bold text-[#1A3D3D] leading-tight line-clamp-2">{a.nombreCompleto}</span>
+                {a.universidad && <span className="text-[12px] font-medium text-[#666666] leading-snug line-clamp-2">{a.universidad}</span>}
+              </button>
+            ))}
+          </div>
+          {!verTodos && estudiantes.length > CANTIDAD_INICIAL_COLEGAS && (
+            <button type="button" onClick={() => setVerTodos(true)} className="mt-4 text-[14px] font-bold text-[#2D6A6A] hover:text-[#1A3D3D] inline-flex items-center gap-1">
+              Ver todos ({estudiantes.length}) <ChevronRight className="w-4 h-4" />
+            </button>
+          )}
+        </>
+      )}
+    </section>
+  );
+};
+
 // ── "Ya me recibí": el alumno/a pide pasar su cuenta a profesional ─────────
 // Queda anotado en su usuario y la admin hace el cambio desde Gestión de usuarios
 function AvisoMeRecibi({ currentUser }) {
@@ -500,7 +566,7 @@ const PantallaEspera = ({ verificacion, handleLogout, rol }) => {
 
         <p className="text-[#666666] text-[16px] md:text-[17px] font-medium mb-6 leading-relaxed">
           {rol === 'alumnx'
-            ? 'Estamos revisando tu certificado de alumno regular. Tarda menos de 48 horas hábiles y te avisamos apenas esté listo.'
+            ? 'Estamos revisando tu comprobante de cursada. Tarda menos de 48 horas hábiles y te avisamos apenas esté listo.'
             : 'Estamos revisando tu matrícula y tu título. Tarda menos de 48 horas hábiles y te avisamos por mail apenas esté listo.'}
         </p>
 
@@ -917,6 +983,9 @@ export default function Ecosistema() {
               <ChevronRight className="w-4 h-4 shrink-0 text-[#2D6A6A] transition-transform group-hover:translate-x-0.5" />
             </button>
           )}
+
+          {/* Estudiantes: perfiles de otros estudiantes */}
+          {esAlumnx && <FuturosColegas uidPropio={currentUser.uid} navigate={navigate} />}
 
           {/* Alumnos/as: aviso de que ya se recibieron, para pasar la cuenta a profesional */}
           {esAlumnx && <AvisoMeRecibi currentUser={currentUser} />}

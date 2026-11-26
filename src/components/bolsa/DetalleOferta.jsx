@@ -109,7 +109,7 @@ export default function DetalleOferta({ oferta, permisos, currentUser, onVolver,
     if (!permisos.puedePostularse) {
       return (
         <>
-          <p className="text-white/70 text-[14px] leading-relaxed mb-5">Vas a poder postularte apenas verifiquemos tu {currentUser?.rol === 'alumnx' ? 'certificado de alumno regular' : 'matrícula'}.</p>
+          <p className="text-white/70 text-[14px] leading-relaxed mb-5">Vas a poder postularte apenas verifiquemos tu {currentUser?.rol === 'alumnx' ? 'comprobante de cursada' : 'matrícula'}.</p>
           <button type="button" onClick={onPedirVerificacion} className={claseSecundario}>Ver estado de mi cuenta</button>
         </>
       );
