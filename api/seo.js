@@ -1,10 +1,18 @@
 // Versión simple de cada perfil, solo para buscadores y vistas previas de links
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
-import { createRequire } from 'module';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 
-// Lista de especialidades del sitio (la misma que usan los perfiles), con sus textos explicativos
-const especialidadesData = createRequire(import.meta.url)('../src/data/especialidades.json');
+// Lista de especialidades del sitio (la misma que usan los perfiles), con sus textos explicativos.
+// Se lee recién cuando hace falta y, si fallara, solo fallan las páginas por especialidad (nunca los perfiles).
+let especialidadesCache = null;
+function especialidadesData() {
+  if (!especialidadesCache) {
+    especialidadesCache = JSON.parse(readFileSync(join(process.cwd(), 'src', 'data', 'especialidades.json'), 'utf8'));
+  }
+  return especialidadesCache;
+}
 
 const DOMINIO = 'https://www.portalveterinario.ar';
 
@@ -378,8 +386,8 @@ export const slugDe = (texto) => String(texto || '')
   .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 
 // Todas las especialidades "oficiales" (las de la lista, no las que escribe cada uno a mano)
-const OPCIONES = especialidadesData.flatMap((g) => g.opciones);
-const DESCRIPCIONES = especialidadesData.reduce((todas, g) => ({ ...todas, ...(g.descripciones || {}) }), {});
+const opcionesOficiales = () => especialidadesData().flatMap((g) => g.opciones);
+const descripciones = () => especialidadesData().reduce((todas, g) => ({ ...todas, ...(g.descripciones || {}) }), {});
 
 // --- Zonas: misma lógica que la Cartilla (src/pages/Cartilla.jsx) para que CABA no aparezca de mil formas ---
 const limpiarTexto = (t) => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
@@ -421,7 +429,8 @@ function especialidadesDePerfil(d) {
   const lista = Array.isArray(serv)
     ? serv.map((s) => s?.titulo)
     : Object.values(serv).filter((s) => s?.activo).flatMap((s) => s.subOpcionesSeleccionadas || []);
-  return [...new Set(lista.filter((o) => OPCIONES.includes(o)))];
+  const oficiales = opcionesOficiales();
+  return [...new Set(lista.filter((o) => oficiales.includes(o)))];
 }
 
 // Arma todas las combinaciones especialidad + zona con sus perfiles
@@ -455,7 +464,7 @@ async function armarEspecialidadZona(db, espSlug, lugarSlug) {
   const combo = combos.get(`${espSlug}/${lugarSlug}`);
   if (!combo || combo.perfiles.length < MINIMO_PERFILES) return null;
   const { especialidad, lugar, perfiles } = combo;
-  const texto = DESCRIPCIONES[especialidad] || '';
+  const texto = descripciones()[especialidad] || '';
   const items = perfiles.map((p) => `<li><a href="${p.url}">${esc(p.nombre)}</a></li>`).join('\n');
   const cuerpo = `<h1>${esc(especialidad)} en ${esc(lugar)}</h1>
 ${texto ? `<p>${esc(texto)}</p>` : ''}

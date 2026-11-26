@@ -1,43 +1,107 @@
 {
   "rewrites": [
-    { "source": "/sitemap.xml", "destination": "/api/sitemap" },
+    {
+      "source": "/sitemap.xml",
+      "destination": "/api/sitemap"
+    },
     {
       "source": "/bolsa-de-trabajo",
-      "has": [{ "type": "header", "key": "user-agent", "value": "(?i).*(googlebot|google-inspectiontool|googleother|bingbot|duckduckbot|yandex|baiduspider|facebookexternalhit|twitterbot|linkedinbot|slackbot|telegrambot|whatsapp).*" }],
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(googlebot|google-inspectiontool|googleother|bingbot|duckduckbot|yandex|baiduspider|facebookexternalhit|twitterbot|linkedinbot|slackbot|telegrambot|whatsapp).*"
+        }
+      ],
       "destination": "/api/seo?tipo=bolsa"
     },
     {
       "source": "/bolsa-de-trabajo/oferta/:id",
-      "has": [{ "type": "header", "key": "user-agent", "value": "(?i).*(googlebot|google-inspectiontool|googleother|bingbot|duckduckbot|yandex|baiduspider|facebookexternalhit|twitterbot|linkedinbot|slackbot|telegrambot|whatsapp).*" }],
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(googlebot|google-inspectiontool|googleother|bingbot|duckduckbot|yandex|baiduspider|facebookexternalhit|twitterbot|linkedinbot|slackbot|telegrambot|whatsapp).*"
+        }
+      ],
       "destination": "/api/seo?tipo=oferta&id=:id"
     },
     {
       "source": "/cartilla/:esp/:lugar",
-      "has": [{ "type": "header", "key": "user-agent", "value": "(?i).*(googlebot|google-inspectiontool|googleother|bingbot|duckduckbot|yandex|baiduspider|facebookexternalhit|twitterbot|linkedinbot|slackbot|telegrambot|whatsapp).*" }],
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(googlebot|google-inspectiontool|googleother|bingbot|duckduckbot|yandex|baiduspider|facebookexternalhit|twitterbot|linkedinbot|slackbot|telegrambot|whatsapp).*"
+        }
+      ],
       "destination": "/api/seo?tipo=especialidad-zona&esp=:esp&lugar=:lugar"
     },
     {
       "source": "/:ruta(cartilla|Cartilla)",
-      "has": [{ "type": "header", "key": "user-agent", "value": "(?i).*(googlebot|google-inspectiontool|googleother|bingbot|duckduckbot|yandex|baiduspider|facebookexternalhit|twitterbot|linkedinbot|slackbot|telegrambot|whatsapp).*" }],
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(googlebot|google-inspectiontool|googleother|bingbot|duckduckbot|yandex|baiduspider|facebookexternalhit|twitterbot|linkedinbot|slackbot|telegrambot|whatsapp).*"
+        }
+      ],
       "destination": "/api/seo?tipo=cartilla"
     },
     {
       "source": "/profesional/:slug",
-      "has": [{ "type": "header", "key": "user-agent", "value": "(?i).*(googlebot|google-inspectiontool|googleother|bingbot|duckduckbot|yandex|baiduspider|facebookexternalhit|twitterbot|linkedinbot|slackbot|telegrambot|whatsapp).*" }],
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(googlebot|google-inspectiontool|googleother|bingbot|duckduckbot|yandex|baiduspider|facebookexternalhit|twitterbot|linkedinbot|slackbot|telegrambot|whatsapp).*"
+        }
+      ],
       "destination": "/api/seo?tipo=profesional&slug=:slug"
     },
     {
       "source": "/clinica/:slug",
-      "has": [{ "type": "header", "key": "user-agent", "value": "(?i).*(googlebot|google-inspectiontool|googleother|bingbot|duckduckbot|yandex|baiduspider|facebookexternalhit|twitterbot|linkedinbot|slackbot|telegrambot|whatsapp).*" }],
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*(googlebot|google-inspectiontool|googleother|bingbot|duckduckbot|yandex|baiduspider|facebookexternalhit|twitterbot|linkedinbot|slackbot|telegrambot|whatsapp).*"
+        }
+      ],
       "destination": "/api/seo?tipo=clinica&slug=:slug"
     },
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ],
   "headers": [
-    { "source": "/alumno/(.*)", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] }
+    {
+      "source": "/alumno/(.*)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    }
   ],
   "crons": [
-    { "path": "/api/recordatorio-onboarding", "schedule": "0 13 * * *" },
-    { "path": "/api/recordatorio-perfil", "schedule": "30 13 * * *" }
-  ]
+    {
+      "path": "/api/recordatorio-onboarding",
+      "schedule": "0 13 * * *"
+    },
+    {
+      "path": "/api/recordatorio-perfil",
+      "schedule": "30 13 * * *"
+    }
+  ],
+  "functions": {
+    "api/seo.js": {
+      "includeFiles": "src/data/especialidades.json"
+    },
+    "api/sitemap.js": {
+      "includeFiles": "src/data/especialidades.json"
+    }
+  }
 }

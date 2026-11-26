@@ -88,10 +88,15 @@ export default async function handler(req, res) {
     });
 
     // 4) Páginas por especialidad y zona (solo las que tienen al menos MINIMO_PERFILES perfiles)
-    const combos = await combinacionesCartilla(db);
-    combos.forEach((combo, clave) => {
-      if (combo.perfiles.length >= MINIMO_PERFILES) bloques.push(armarUrl(`/cartilla/${clave}`, '0.7', 'weekly'));
-    });
+    // (si algo falla acá, el sitemap sale igual con el resto de las páginas)
+    try {
+      const combos = await combinacionesCartilla(db);
+      combos.forEach((combo, clave) => {
+        if (combo.perfiles.length >= MINIMO_PERFILES) bloques.push(armarUrl(`/cartilla/${clave}`, '0.7', 'weekly'));
+      });
+    } catch (e) {
+      console.error('Sitemap: no se pudieron armar las páginas por especialidad', e);
+    }
 
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
