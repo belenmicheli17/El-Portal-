@@ -11,6 +11,7 @@
 // ============================================================
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
+import { combinacionesCartilla, MINIMO_PERFILES } from './seo.js';
 
 const DOMINIO = 'https://www.portalveterinario.ar';
 
@@ -84,6 +85,12 @@ export default async function handler(req, res) {
     snapOfertas.forEach((doc) => {
       if (aMs(doc.data().vencimientoMillis) <= Date.now()) return;
       bloques.push(armarUrl(`/bolsa-de-trabajo/oferta/${encodeURIComponent(doc.id)}`, '0.6', 'daily'));
+    });
+
+    // 4) Páginas por especialidad y zona (solo las que tienen al menos MINIMO_PERFILES perfiles)
+    const combos = await combinacionesCartilla(db);
+    combos.forEach((combo, clave) => {
+      if (combo.perfiles.length >= MINIMO_PERFILES) bloques.push(armarUrl(`/cartilla/${clave}`, '0.7', 'weekly'));
     });
 
     const xml = `<?xml version="1.0" encoding="UTF-8"?>

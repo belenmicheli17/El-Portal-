@@ -40,6 +40,13 @@ import RutaProtegidaAdmin from './components/admin/RutaProtegidaAdmin';
 
 // Link propio de cada oferta (/bolsa-de-trabajo/oferta/ID): la abre dentro de la Bolsa.
 // Google ve una versión aparte de esta misma dirección (api/seo.js).
+// Páginas por especialidad y zona (/cartilla/cardiologia/caba): abren la Cartilla con esos filtros.
+// Google ve una versión aparte de esta misma dirección (api/seo.js). La Cartilla traduce los nombres.
+function IrAEspecialidadZona() {
+  const { esp, lugar } = useParams();
+  return <Navigate to={`/cartilla?espSlug=${encodeURIComponent(esp || '')}&zonaSlug=${encodeURIComponent(lugar || '')}`} replace />;
+}
+
 function IrAOferta() {
   const { id } = useParams();
   return <Navigate to={`/bolsa-de-trabajo?oferta=${encodeURIComponent(id || '')}`} replace />;
@@ -168,6 +175,7 @@ export default function App() {
           <Route element={<MainLayout />}>
             <Route path="/landing" element={<LandingPage />} />
             <Route path="/Cartilla" element={<Cartilla />} />
+            <Route path="/cartilla/:esp/:lugar" element={<IrAEspecialidadZona />} />
 
             {/* Perfiles públicos */}
             <Route path="/perfil-profesional" element={<Perfil />} />

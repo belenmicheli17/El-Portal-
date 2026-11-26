@@ -1,6 +1,10 @@
 // Versión simple de cada perfil, solo para buscadores y vistas previas de links
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
+import { createRequire } from 'module';
+
+// Lista de especialidades del sitio (la misma que usan los perfiles), con sus textos explicativos
+const especialidadesData = createRequire(import.meta.url)('../src/data/especialidades.json');
 
 const DOMINIO = 'https://www.portalveterinario.ar';
 
@@ -363,6 +367,111 @@ ${lista(o.equipo) ? `<h2>La clínica cuenta con</h2>\n${lista(o.equipo)}` : ''}
   });
 }
 
+// ===================== PÁGINAS POR ESPECIALIDAD Y ZONA =====================
+// Ej: /cartilla/cardiologia/caba → "Cardiología en CABA" con los perfiles que la atienden ahí.
+// Una página existe solo si hay al menos MINIMO_PERFILES perfiles visibles (así no hay páginas vacías).
+export const MINIMO_PERFILES = 2;
+
+// "Traumatología y Ortopedia" → "traumatologia-y-ortopedia"
+export const slugDe = (texto) => String(texto || '')
+  .normalize('NFD').replace(/[̀-ͯ]/g, '')
+  .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+
+// Todas las especialidades "oficiales" (las de la lista, no las que escribe cada uno a mano)
+const OPCIONES = especialidadesData.flatMap((g) => g.opciones);
+const DESCRIPCIONES = especialidadesData.reduce((todas, g) => ({ ...todas, ...(g.descripciones || {}) }), {});
+
+// --- Zonas: misma lógica que la Cartilla (src/pages/Cartilla.jsx) para que CABA no aparezca de mil formas ---
+const limpiarTexto = (t) => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+const BARRIOS_CABA = ['agronomia', 'almagro', 'balvanera', 'barracas', 'belgrano', 'boedo', 'caballito', 'chacarita', 'coghlan', 'colegiales', 'constitucion', 'flores', 'floresta', 'la boca', 'la paternal', 'liniers', 'mataderos', 'monte castro', 'montserrat', 'nueva pompeya', 'nunez', 'palermo', 'parque avellaneda', 'parque chacabuco', 'parque chas', 'parque patricios', 'puerto madero', 'recoleta', 'retiro', 'saavedra', 'san cristobal', 'san nicolas', 'san telmo', 'velez sarsfield', 'versalles', 'villa crespo', 'villa del parque', 'villa devoto', 'villa general mitre', 'villa lugano', 'villa luro', 'villa ortuzar', 'villa pueyrredon', 'villa real', 'villa riachuelo', 'villa santa rita', 'villa soldati', 'villa urquiza'];
+function normalizarLugar(nombre, { direccion = '', provincia = '', barrio = '' } = {}) {
+  const original = String(nombre || '').trim();
+  if (!original) return '';
+  const t = limpiarTexto(original);
+  if (/autonoma|capital federal|^c\.?a\.?b\.?a\.?$/.test(t)) return 'CABA';
+  if (t === 'buenos aires' && (/\bC\d{4}/.test(direccion) || limpiarTexto(provincia) === 'caba' || BARRIOS_CABA.includes(limpiarTexto(barrio)))) return 'CABA';
+  return original;
+}
+const localidadDeDireccion = (direccion) => {
+  const partes = String(direccion || '').split(',').map((p) => p.trim()).filter(Boolean);
+  return (partes[1] || '').replace(/^[A-Z]?\d{4}(?:\s?[A-Z]{3}(?![a-zA-Z]))?\s*/, '');
+};
+
+// Provincias y ciudades donde atiende un perfil (sin barrios: serían páginas demasiado chicas)
+function lugaresDePerfil(d, esProfesional) {
+  const lugares = new Map(); // slug → nombre
+  const sumar = (provincia, localidad, barrio, direccion) => {
+    const prov = normalizarLugar(provincia || d.provincia, { direccion, barrio });
+    const loc = normalizarLugar(localidad || localidadDeDireccion(direccion), { direccion, provincia: prov, barrio });
+    [prov, loc].forEach((n) => { if (n && slugDe(n)) lugares.set(slugDe(n), n); });
+  };
+  sumar(d.provincia, '', '', '');
+  if (esProfesional) (d.zonas || []).forEach((z) => (z.clinicas || []).forEach((c) => sumar(c.provincia, c.localidad, c.barrio, c.direccion)));
+  else {
+    sumar(d.provincia, d.localidad, d.barrio, d.direccion);
+    (d.sedes || []).forEach((s) => sumar(s.provincia, s.localidad, s.barrio, s.direccion));
+  }
+  return lugares;
+}
+
+// Especialidades oficiales que ofrece un perfil
+function especialidadesDePerfil(d) {
+  const serv = d.servicios;
+  if (!serv) return [];
+  const lista = Array.isArray(serv)
+    ? serv.map((s) => s?.titulo)
+    : Object.values(serv).filter((s) => s?.activo).flatMap((s) => s.subOpcionesSeleccionadas || []);
+  return [...new Set(lista.filter((o) => OPCIONES.includes(o)))];
+}
+
+// Arma todas las combinaciones especialidad + zona con sus perfiles
+export async function combinacionesCartilla(db) {
+  const [snapProf, snapCli] = await Promise.all([db.collection('profesionales').get(), db.collection('clinicas').get()]);
+  const combos = new Map(); // "esp/lugar" → { especialidad, lugar, perfiles: [] }
+  const procesar = (doc, esProfesional) => {
+    const d = doc.data();
+    if (d.visible === false) return;
+    const nombre = esProfesional ? `${d.nombre || ''} ${d.apellido || ''}`.trim() : String(d.nombre || '').trim();
+    const id = d.slug || (esProfesional ? '' : doc.id);
+    if (!nombre || !id) return;
+    const perfil = {
+      nombre: esProfesional ? nombre : (/veterinari/i.test(nombre) ? nombre : `Veterinaria ${nombre}`),
+      url: `${DOMINIO}/${esProfesional ? 'profesional' : 'clinica'}/${encodeURIComponent(id)}`
+    };
+    const lugares = lugaresDePerfil(d, esProfesional);
+    especialidadesDePerfil(d).forEach((esp) => lugares.forEach((lugar, lugarSlug) => {
+      const clave = `${slugDe(esp)}/${lugarSlug}`;
+      if (!combos.has(clave)) combos.set(clave, { especialidad: esp, lugar, perfiles: [] });
+      combos.get(clave).perfiles.push(perfil);
+    }));
+  };
+  snapProf.forEach((doc) => procesar(doc, true));
+  snapCli.forEach((doc) => procesar(doc, false));
+  return combos;
+}
+
+async function armarEspecialidadZona(db, espSlug, lugarSlug) {
+  const combos = await combinacionesCartilla(db);
+  const combo = combos.get(`${espSlug}/${lugarSlug}`);
+  if (!combo || combo.perfiles.length < MINIMO_PERFILES) return null;
+  const { especialidad, lugar, perfiles } = combo;
+  const texto = DESCRIPCIONES[especialidad] || '';
+  const items = perfiles.map((p) => `<li><a href="${p.url}">${esc(p.nombre)}</a></li>`).join('\n');
+  const cuerpo = `<h1>${esc(especialidad)} en ${esc(lugar)}</h1>
+${texto ? `<p>${esc(texto)}</p>` : ''}
+<h2>Veterinarios y clínicas con ${esc(especialidad)} en ${esc(lugar)} (${perfiles.length})</h2>
+<ul>
+${items}
+</ul>
+<p><a href="${DOMINIO}/cartilla">Ver toda la Cartilla Veterinaria</a></p>`;
+  return pagina({
+    titulo: `${especialidad} en ${lugar} | Veterinarios y clínicas | Cartilla Veterinaria`,
+    descripcion: recortar(`${especialidad} veterinaria en ${lugar}: ${perfiles.length} profesionales y clínicas verificados. ${texto}`, 155),
+    ruta: `/cartilla/${espSlug}/${lugarSlug}`,
+    cuerpo
+  });
+}
+
 export default async function handler(req, res) {
   const { tipo, slug } = req.query;
   try {
@@ -373,6 +482,13 @@ export default async function handler(req, res) {
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       // Las ofertas cambian más seguido: se guardan 30 minutos
       res.setHeader('Cache-Control', 'public, s-maxage=1800, stale-while-revalidate=3600');
+      return res.status(200).send(html);
+    }
+    if (tipo === 'especialidad-zona') {
+      const html = await armarEspecialidadZona(obtenerFirestore(), slugDe(req.query.esp), slugDe(req.query.lugar));
+      if (!html) return res.status(404).send('No encontrado');
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
       return res.status(200).send(html);
     }
     if (tipo === 'cartilla') {

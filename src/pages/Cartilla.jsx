@@ -595,6 +595,30 @@ const Cartilla = () => {
     return mapa;
   }, [veterinarios]);
 
+  // Si llegaste desde una página de Google tipo /cartilla/cardiologia/caba,
+  // traducimos esos nombres cortos a los filtros de la Cartilla (cuando ya cargaron los perfiles)
+  useEffect(() => {
+    const espSlug = searchParams.get('espSlug');
+    const zonaSlug = searchParams.get('zonaSlug');
+    if (!espSlug && !zonaSlug) return;
+    if (zonaSlug && veterinarios.length === 0) return; // esperamos a tener los lugares
+    const aSlug = (t) => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    const params = new URLSearchParams(searchParams);
+    params.delete('espSlug');
+    params.delete('zonaSlug');
+    const especialidad = especialidadesData.flatMap(g => g.opciones).find(o => aSlug(o) === espSlug);
+    if (especialidad) params.set('especialidades', especialidad);
+    if (zonaSlug) {
+      let zona = '';
+      veterinarios.forEach(v => {
+        if (!zona && aSlug(v.provincia) === zonaSlug) zona = v.provincia;
+        (lugaresPorPerfil.get(`${v.tipo}-${v.id}`) || new Set()).forEach(l => { if (!zona && aSlug(l) === zonaSlug) zona = l; });
+      });
+      if (zona) params.set('zonas', zona);
+    }
+    setSearchParams(params, { replace: true });
+  }, [searchParams, veterinarios, lugaresPorPerfil, setSearchParams]);
+
   // Lista de sugerencias de zona: solo lugares que tienen al menos 1 perfil, con su cantidad
   const lugaresDisponibles = useMemo(() => {
     const conteo = new Map();

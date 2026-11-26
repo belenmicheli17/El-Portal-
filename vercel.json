@@ -12,6 +12,11 @@
       "destination": "/api/seo?tipo=oferta&id=:id"
     },
     {
+      "source": "/cartilla/:esp/:lugar",
+      "has": [{ "type": "header", "key": "user-agent", "value": "(?i).*(googlebot|google-inspectiontool|googleother|bingbot|duckduckbot|yandex|baiduspider|facebookexternalhit|twitterbot|linkedinbot|slackbot|telegrambot|whatsapp).*" }],
+      "destination": "/api/seo?tipo=especialidad-zona&esp=:esp&lugar=:lugar"
+    },
+    {
       "source": "/:ruta(cartilla|Cartilla)",
       "has": [{ "type": "header", "key": "user-agent", "value": "(?i).*(googlebot|google-inspectiontool|googleother|bingbot|duckduckbot|yandex|baiduspider|facebookexternalhit|twitterbot|linkedinbot|slackbot|telegrambot|whatsapp).*" }],
       "destination": "/api/seo?tipo=cartilla"
