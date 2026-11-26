@@ -55,7 +55,7 @@ export default function Cookies({ isFooterVisible = false }) {
   };
 
 
-  // Si no acepta, no se prende la medición (y no le volvemos a preguntar)
+  // «Solo las esenciales»: no se prende la medición (y no le volvemos a preguntar)
   const handleReject = () => {
     localStorage.setItem('cookieConsent', 'false');
     setShowCookieBanner(false);
@@ -67,37 +67,35 @@ export default function Cookies({ isFooterVisible = false }) {
 
   return (
     <div
-      className={`fixed left-0 w-full bg-[#0a1e1e]/95 backdrop-blur-md border-t border-white/10 z-[100] py-4 px-8 flex flex-col md:flex-row items-center justify-between gap-4 shadow-2xl transition-transform duration-500 ease-in-out
+      className={`fixed left-0 bottom-0 w-full bg-[#0a1e1e]/95 backdrop-blur-md border-t border-white/10 z-[100] px-4 py-3 md:px-8 md:py-2.5 flex flex-col md:flex-row md:items-center justify-between gap-2 md:gap-6 shadow-2xl font-['Inter'] transition-transform duration-500 ease-in-out
         ${isRendered && !isFooterVisible ? 'translate-y-0' : 'translate-y-full'}
-        bottom-0
       `}
     >
-      <div className="flex items-center gap-3 text-white/60 text-[11px] font-medium text-center md:text-left">
+      <p className="flex items-center gap-2 text-white/70 text-[12px] md:text-[13px] font-medium">
         <Info size={14} className="text-[#2D6A6A] shrink-0" />
-        <p>
-          Usamos cookies propias y las de Google Analytics y Microsoft Clarity para entender cómo se usa el sitio y mejorarlo. Más info en la{' '}
+        <span>
+          Usamos cookies para mejorar tu experiencia.{' '}
           <button
             onClick={() => navigate('/politica-de-privacidad')}
-            className="underline hover:text-white text-white/80 font-bold transition-colors outline-none"
+            className="underline hover:text-white text-white/90 font-semibold transition-colors outline-none"
           >
-            Política de Privacidad
+            Más info
           </button>
-          .
-        </p>
-      </div>
-      <div className="flex items-center gap-4 shrink-0">
-      <button
-        onClick={handleReject}
-        className="text-white/60 hover:text-white text-[13px] font-semibold transition-colors"
-      >
-        No, gracias
-      </button>
-      <button
-        onClick={handleAccept}
-        className="bg-[#2D6A6A] hover:bg-white text-white hover:text-[#1A3D3D] px-6 py-2 rounded-xl text-[11px] font-black  tracking-widest transition-all shadow-lg shrink-0"
-      >
-        Aceptar
-      </button>
+        </span>
+      </p>
+      <div className="flex items-center justify-end gap-4 shrink-0">
+        <button
+          onClick={handleReject}
+          className="text-white/70 hover:text-white text-[12px] md:text-[13px] font-semibold transition-colors"
+        >
+          Solo las esenciales
+        </button>
+        <button
+          onClick={handleAccept}
+          className="bg-[#2D6A6A] hover:bg-white text-white hover:text-[#1A3D3D] px-5 py-1.5 rounded-xl text-[12px] md:text-[13px] font-semibold transition-all shrink-0"
+        >
+          Aceptar
+        </button>
       </div>
     </div>
   );
