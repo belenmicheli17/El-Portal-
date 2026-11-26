@@ -271,22 +271,46 @@ const dibujarFotoRedonda = (ctx, foto, nombre, cx, cy, diametro, colorFondo = VE
   }
 };
 
-// Pregunta con una flecha naranja que apunta hacia ARRIBA, al lugar libre donde se pega el sticker del enlace
-const dibujarPregunta = (ctx, y, pregunta, bajada) => {
+// Pregunta con una flecha naranja que apunta hacia ARRIBA, al lugar libre donde se pega el sticker del enlace.
+// Con dibujar=false solo mide (devuelve el alto). anchoMax: hasta dónde puede llegar el texto.
+const medidasPregunta = (ctx, pregunta, bajada, anchoMax) => {
+  // Preferimos un solo renglón (aunque sea un poco más chico); si no entra, se parte
+  const enUno = ajustarTexto(ctx, pregunta, 700, FUENTE_TITULO, [60, 56, 52], anchoMax, 1);
+  const ajustePreg = enUno.entra ? enUno : ajustarTexto(ctx, pregunta, 700, FUENTE_TITULO, [56, 52, 48], anchoMax, 3);
+  const bajUno = ajustarTexto(ctx, bajada, 600, FUENTE_TEXTO, [46, 42, 40], anchoMax, 1);
+  const ajusteBaj = bajUno.entra ? bajUno : ajustarTexto(ctx, bajada, 600, FUENTE_TEXTO, [42, 40], anchoMax, 2);
+  const alto = ajustePreg.renglones.length * ajustePreg.tam * 1.12 + 10 + ajusteBaj.renglones.length * ajusteBaj.tam * 1.25;
+  return { ajustePreg, ajusteBaj, alto };
+};
+const dibujarPregunta = (ctx, y, pregunta, bajada, anchoMax = 855) => {
+  const { ajustePreg, ajusteBaj, alto } = medidasPregunta(ctx, pregunta, bajada, anchoMax);
   ctx.strokeStyle = NARANJA;
-  ctx.lineWidth = 6;
+  ctx.lineWidth = 10;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   ctx.beginPath();
-  ctx.moveTo(100, y + 100); ctx.lineTo(100, y);
-  ctx.moveTo(80, y + 20); ctx.lineTo(100, y); ctx.lineTo(120, y + 20);
+  ctx.moveTo(100, y + alto - 6); ctx.lineTo(100, y + 6);
+  ctx.moveTo(76, y + 30); ctx.lineTo(100, y + 6); ctx.lineTo(124, y + 30);
   ctx.stroke();
-  ctx.font = `700 52px ${FUENTE_TITULO}`;
+  let yTexto = y;
+  ctx.font = `700 ${ajustePreg.tam}px ${FUENTE_TITULO}`;
   ctx.fillStyle = VERDE_OSCURO;
-  ctx.fillText(pregunta, 145, y + 28);
-  ctx.font = `600 42px ${FUENTE_TEXTO}`;
+  ajustePreg.renglones.forEach((r) => { ctx.fillText(r, 150, yTexto + ajustePreg.tam * 0.56); yTexto += ajustePreg.tam * 1.12; });
+  yTexto += 10;
+  ctx.font = `600 ${ajusteBaj.tam}px ${FUENTE_TEXTO}`;
   ctx.fillStyle = '#284847';
-  ctx.fillText(bajada, 145, y + 90);
+  ajusteBaj.renglones.forEach((r) => { ctx.fillText(r, 150, yTexto + ajusteBaj.tam * 0.6); yTexto += ajusteBaj.tam * 1.25; });
+  return alto;
+};
+
+// Textos de jornada, horario y experiencia, armados como frases que se entiendan solas
+const JORNADA_TEXTO = { 'Guardia en clínica general (diurna)': 'guardias diurnas', 'Guardia 24 h (nocturna)': 'guardias 24 h', 'Reemplazo': 'reemplazos' };
+const unirConY = (lista) => (lista.length > 1 ? `${lista.slice(0, -1).join(', ')} y ${lista[lista.length - 1]}` : (lista[0] || ''));
+const textoJornada = (jornada, horario) => {
+  const jornadas = (Array.isArray(jornada) ? jornada : []).map((j) => JORNADA_TEXTO[j]).filter(Boolean);
+  const horarios = (Array.isArray(horario) ? horario : []).filter((h) => h && h !== 'A convenir').map((h) => h.toLowerCase());
+  // Devuelve [jornada, turno] por separado, cada uno va en su renglón
+  return [jornadas.length ? unirConY(jornadas) : '', horarios.length ? `turno ${unirConY(horarios)}` : ''];
 };
 
 // Logo + píldora de arriba
@@ -349,8 +373,9 @@ const dibujarPastillas = (ctx, textos, { y, centroX = null, izquierda = 80, anch
 };
 
 // Textos cortos de jornada y experiencia para la imagen
-const JORNADA_CORTA = { 'Guardia en clínica general (diurna)': 'Guardias diurnas', 'Guardia 24 h (nocturna)': 'Guardias 24 h', 'Reemplazo': 'Reemplazos', 'A convenir': 'Jornada a convenir' };
-const EXPERIENCIA_CORTA = { 'Sin experiencia (junior)': 'Junior', '1 a 3 años': '1 a 3 años de experiencia', 'Más de 3 años': 'Más de 3 años de experiencia', 'Especialista': 'Especialista' };
+const EXPERIENCIA_PERSONA = { 'Sin experiencia (junior)': 'Junior, sin experiencia todavía', '1 a 3 años': 'Tiene 1 a 3 años de experiencia', 'Más de 3 años': 'Tiene más de 3 años de experiencia', 'Especialista': 'Es especialista' };
+const EXPERIENCIA_OFERTA = { 'Sin experiencia (junior)': 'Sin experiencia', '1 a 3 años': '1 a 3 años de experiencia', 'Más de 3 años': '+3 años de experiencia', 'Especialista': 'Especialista' };
+const JORNADA_PASTILLA = { 'Guardia en clínica general (diurna)': 'guardia diurna', 'Guardia 24 h (nocturna)': 'guardia 24 h', 'Reemplazo': 'reemplazos' };
 
 // Imagen para difundir a un profesional (o estudiante) disponible.
 // Misma estructura que la de clínicas pero en naranja: título, tarjeta de la persona (la protagonista),
@@ -367,9 +392,10 @@ export const generarImagenDisponible = async (disponible, { instagram = '' } = {
   const areas = Array.isArray(disponible?.areas) ? disponible.areas.filter(Boolean).slice(0, 4) : [];
   const nombre = String(disponible?.nombre || 'Un colega del Portal').trim();
   const rol = esAsistente ? 'Asistente veterinario/a' : 'Veterinario/a';
-  const jornadas = (Array.isArray(disponible?.jornada) ? disponible.jornada : []).map((j) => JORNADA_CORTA[j] || j).slice(0, 2);
+  const [jornadaDisp, turnoDisp] = textoJornada(disponible?.jornada, disponible?.horario);
+  const busca = [jornadaDisp, turnoDisp].filter(Boolean).join(', ');
   // Un renglón para la experiencia y otro para la jornada
-  const detalles = [EXPERIENCIA_CORTA[disponible?.experiencia] || '', jornadas.join(' · ')].filter(Boolean);
+  const detalles = [busca ? `Busca ${busca}` : 'Jornada a convenir', EXPERIENCIA_PERSONA[disponible?.experiencia] || ''].filter(Boolean);
 
   const canvas = document.createElement('canvas');
   canvas.width = 1080;
@@ -386,10 +412,11 @@ export const generarImagenDisponible = async (disponible, { instagram = '' } = {
   ctx.fillStyle = degradado;
   ctx.fillRect(0, 0, 1080, 1920);
 
-  dibujarEncabezado(ctx, logo, esAsistente ? 'ESTUDIANTE DISPONIBLE' : 'PROFESIONAL DISPONIBLE', NARANJA, '#FFFFFF', instagram);
+  dibujarEncabezado(ctx, logo, esAsistente ? 'ESTUDIANTE' : 'PROFESIONAL', NARANJA, '#FFFFFF', instagram);
 
   // Abajo (igual que en las de clínica): pregunta con flecha, y arriba el lugar del sticker del enlace
-  const yPregunta = 1660;
+  const preguntaDisp = ['¿Tu clínica busca a alguien así?', 'Contactalo desde el enlace'];
+  const yPregunta = 1790 - medidasPregunta(ctx, ...preguntaDisp, 855).alto;
   const arribaSticker = yPregunta - 30 - 150;
 
   // Título
@@ -399,18 +426,19 @@ export const generarImagenDisponible = async (disponible, { instagram = '' } = {
 
   // Contenido de la tarjeta (se mide primero y se dibuja después)
   const cx = 540;
-  const FOTO = 260;
+  const FOTO = 290;
   const ajusteNombre = ajustarTexto(ctx, nombre, 700, FUENTE_TITULO, [72, 64, 56], 800, 2);
-  const ajustesDetalle = detalles.map((d) => ajustarTexto(ctx, d, 500, FUENTE_TEXTO, [38, 34, 30], 800, 2));
-  const contenido = (yInicio, dibujar) => {
-    let y = yInicio + 50;
+  const ajustesDetalle = detalles.map((d) => ajustarTexto(ctx, d, 500, FUENTE_TEXTO, [42, 38, 34], 800, 2));
+  // "aire": espacio extra que se reparte entre los bloques para que la tarjeta llene el lugar disponible
+  const contenido = (yInicio, dibujar, aire = 0) => {
+    let y = yInicio + 50 + aire;
     if (dibujar) {
       dibujarFotoRedonda(ctx, foto, nombre, cx, y + FOTO / 2, FOTO);
       ctx.strokeStyle = '#FFE0B2';
       ctx.lineWidth = 10;
       ctx.beginPath(); ctx.arc(cx, y + FOTO / 2, FOTO / 2 + 5, 0, Math.PI * 2); ctx.stroke();
     }
-    y += FOTO + 46;
+    y += FOTO + 46 + aire;
     ctx.textAlign = 'center';
     // Nombre
     ctx.font = `700 ${ajusteNombre.tam}px ${FUENTE_TITULO}`;
@@ -421,7 +449,7 @@ export const generarImagenDisponible = async (disponible, { instagram = '' } = {
     ctx.font = `700 46px ${FUENTE_TITULO}`;
     ctx.fillStyle = VERDE;
     if (dibujar) ctx.fillText(rol, cx, y + 26);
-    y += 66;
+    y += 66 + aire;
     // Zona con pin (centrada)
     if (zona) {
       ctx.font = `600 48px ${FUENTE_TITULO}`;
@@ -436,7 +464,7 @@ export const generarImagenDisponible = async (disponible, { instagram = '' } = {
         ctx.fillText(zona, inicio + anchoPin + 16, y + 32);
         ctx.textAlign = 'center';
       }
-      y += 76;
+      y += 76 + aire;
     }
     // Experiencia y jornada
     ajustesDetalle.forEach((ajusteDetalle) => {
@@ -444,21 +472,22 @@ export const generarImagenDisponible = async (disponible, { instagram = '' } = {
       ctx.fillStyle = '#5A5A5A';
       ajusteDetalle.renglones.forEach((r) => { if (dibujar) ctx.fillText(r, cx, y + ajusteDetalle.tam * 0.55); y += ajusteDetalle.tam * 1.3; });
     });
-    if (ajustesDetalle.length) y += 10;
+    if (ajustesDetalle.length) y += 10 + aire;
     ctx.textAlign = 'left';
     // Especialidades en pastillas
     if (areas.length) {
       y += 20;
       y = dibujarPastillas(ctx, areas, { y, centroX: cx, anchoMax: 820, dibujar, fondo: '#FFF1DC', color: '#8A4B00' });
     }
-    return y + 56;
+    return y + 56 + aire;
   };
 
   // La tarjeta se centra en el espacio entre el título y el lugar del sticker
-  const altoTarjeta = contenido(0, false);
-  const libreArriba = 450;
-  const libreAbajo = arribaSticker - 40;
-  const arribaTarjeta = Math.max(libreArriba, libreArriba + (libreAbajo - libreArriba - altoTarjeta) / 2);
+  // La tarjeta arranca abajo del título y se estira (con más aire entre bloques) hasta cerca del lugar del sticker
+  const arribaTarjeta = 450;
+  const espacio = arribaSticker - 30 - arribaTarjeta;
+  const aire = Math.max(0, Math.min(40, (espacio - contenido(0, false)) / 6));
+  const altoTarjeta = contenido(0, false, aire);
   ctx.save();
   ctx.shadowColor = 'rgba(120,70,20,0.14)';
   ctx.shadowBlur = 40;
@@ -466,9 +495,9 @@ export const generarImagenDisponible = async (disponible, { instagram = '' } = {
   ctx.fillStyle = '#FFFFFF';
   ctx.beginPath(); ctx.roundRect(80, arribaTarjeta, 920, altoTarjeta, 48); ctx.fill();
   ctx.restore();
-  contenido(arribaTarjeta, true);
+  contenido(arribaTarjeta, true, aire);
 
-  dibujarPregunta(ctx, yPregunta, '¿Tu clínica busca a alguien así?', 'Contactalo desde el enlace');
+  dibujarPregunta(ctx, yPregunta, ...preguntaDisp, 855);
 
   return new Promise((resolver) => canvas.toBlob(resolver, 'image/png'));
 };
@@ -523,7 +552,8 @@ export const generarImagenOferta = async (oferta, { instagram = '' } = {}) => {
   const propio = String(oferta?.puestoTexto || '').trim();
   const antetitulo = propio ? `Se busca ${rolTexto}` : 'Se busca';
   const principal = propio || (rolTexto.charAt(0).toUpperCase() + rolTexto.slice(1));
-  const resto = areas.slice(0, 4);
+  // Una sola especialidad y, si hay más, una pastilla «+N»
+  const resto = areas.length ? [areas[0], ...(areas.length > 1 ? [`+${areas.length - 1}`] : [])] : [];
   const etiquetaPastillas = resto.length ? 'Con experiencia en' : '';
   let zona = zonaParaImagen(oferta);
 
@@ -543,12 +573,21 @@ export const generarImagenOferta = async (oferta, { instagram = '' } = {}) => {
   const altoTarjeta = 44 + altoCuerpo + 44;
   const arribaTarjeta = 1800 - altoTarjeta;
   // Pregunta con flecha justo arriba de la tarjeta, y arriba de la pregunta el lugar del sticker del enlace
-  const yPregunta = arribaTarjeta - 40 - 116;
+  const preguntaOferta = ['¿Conocés algún colega interesado?', 'Postulate o pasale el enlace'];
+  const ANCHO_PREGUNTA = 570; // a la derecha está el muñeco
+  const yPregunta = arribaTarjeta - 40 - medidasPregunta(ctx, ...preguntaOferta, ANCHO_PREGUNTA).alto;
   const arribaSticker = yPregunta - 30 - 150;
 
   // Bloque de textos de arriba. Se llama dos veces: primero solo para medir y después para dibujar.
   const ajusteAnte = ajustarTexto(ctx, antetitulo, 600, FUENTE_TITULO, [56, 50], 920, 2);
   const ajustePuesto = ajustarTexto(ctx, principal, 700, FUENTE_TITULO, [124, 110, 96, 84], 920, 3);
+  // Condiciones en pastillas: para qué es (la primera jornada, +N si hay más) y la experiencia (sin el turno)
+  const jornadasOferta = (Array.isArray(oferta?.jornada) ? oferta.jornada : []).map((j) => JORNADA_PASTILLA[j]).filter(Boolean);
+  const condiciones = [
+    ...(jornadasOferta.length ? [`Para ${jornadasOferta[0]}`] : []),
+    ...(jornadasOferta.length > 1 ? [`+${jornadasOferta.length - 1}`] : []),
+    ...(EXPERIENCIA_OFERTA[oferta?.experiencia] ? [EXPERIENCIA_OFERTA[oferta.experiencia]] : [])
+  ];
   const bloque = (y, dibujar) => {
     ctx.font = `600 ${ajusteAnte.tam}px ${FUENTE_TITULO}`;
     ctx.fillStyle = VERDE;
@@ -586,6 +625,9 @@ export const generarImagenOferta = async (oferta, { instagram = '' } = {}) => {
       }
       y += 72;
     }
+
+    // Para qué es y la experiencia que buscan
+    if (condiciones.length) y = dibujarPastillas(ctx, condiciones, { y: y + 24, dibujar, fondo: VERDE, color: '#FFFFFF' });
     return y;
   };
 
@@ -612,7 +654,12 @@ export const generarImagenOferta = async (oferta, { instagram = '' } = {}) => {
     const escala = Math.min(320 / ancho0, altoMax / alto0);
     const anchoDib = ancho0 * escala;
     const altoDib = alto0 * escala;
-    ctx.drawImage(personaje, 80 + ANCHO_TARJETA - 30 - anchoDib, arribaTarjeta + altoTarjeta - 24 - altoDib, anchoDib, altoDib);
+    // Espejado, para que mire hacia los textos
+    ctx.save();
+    ctx.translate(80 + ANCHO_TARJETA - 30, arribaTarjeta + altoTarjeta - 24 - altoDib);
+    ctx.scale(-1, 1);
+    ctx.drawImage(personaje, 0, 0, anchoDib, altoDib);
+    ctx.restore();
   }
 
   const cy = arribaTarjeta + 44 + altoCuerpo / 2;
@@ -626,7 +673,7 @@ export const generarImagenOferta = async (oferta, { instagram = '' } = {}) => {
   ajuste.renglones.forEach((r, i) => ctx.fillText(r, xTexto, arribaTexto + altoEtiqueta + altoNombre * (i + 0.5)));
 
   // Pregunta corta con la flecha que apunta al sticker del enlace (queda a la izquierda, al lado del muñeco)
-  dibujarPregunta(ctx, yPregunta, '¿Conocés a alguien?', 'Postulate o pasale el enlace');
+  dibujarPregunta(ctx, yPregunta, ...preguntaOferta, ANCHO_PREGUNTA);
 
   return new Promise((resolver) => canvas.toBlob(resolver, 'image/png'));
 };
