@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../../firebase';
 import { doc, collection, query, where, getDocs, getDoc } from 'firebase/firestore';
 import { useAuth } from '../../context/AuthContext';
-import { BotonCompartirPerfil, BotonCompartirLink, armarLinkPerfil } from '../../components/CompartirPerfil';
+import CompartirPerfil, { BotonCompartirPerfil, BotonCompartirLink, armarLinkPerfil } from '../../components/CompartirPerfil';
 import especialidadesData from '../../data/especialidades.json';
 import { ServicioExplicable, AvisoPresionar } from '../../components/editor/EditorComponents';
 import { direccionCorta } from '../../utils/bolsa';
@@ -121,6 +121,16 @@ const ContactoEmail = ({ email, nombre, whatsappActivo, whatsappNum, mostrarWhat
 function PerfilPublico() {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
+  // Si llega desde el mail "tu perfil ya está listo" (link con ?compartir=1), abrimos la ventana de compartir,
+  // que tiene el botón para copiar el link de la página
+  const [compartirDesdeMail, setCompartirDesdeMail] = useState(() => new URLSearchParams(window.location.search).get('compartir') === '1');
+  const cerrarCompartirDesdeMail = () => {
+    setCompartirDesdeMail(false);
+    const parametros = new URLSearchParams(window.location.search);
+    parametros.delete('compartir');
+    const busqueda = parametros.toString();
+    window.history.replaceState(null, '', `${window.location.pathname}${busqueda ? `?${busqueda}` : ''}`);
+  };
   
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -445,6 +455,15 @@ const mobileTabs = [
  
   return (
     <div className="font-['Inter'] antialiased min-h-screen flex justify-center bg-gray-200 md:bg-[#F4F7F7] overflow-x-hidden w-full relative">
+      <CompartirPerfil
+        abierto={compartirDesdeMail}
+        onCerrar={cerrarCompartirDesdeMail}
+        tipo="profesional"
+        slug={slug}
+        nombre={`${data.nombre || ''} ${data.apellido || ''}`.trim()}
+        subtitulo={data.especialidad || ''}
+        foto={data.foto || ''}
+      />
       {/* ========================================== */}
       {/* MODAL: LIGHTBOX GALERÍA                    */}
       {/* ========================================== */}

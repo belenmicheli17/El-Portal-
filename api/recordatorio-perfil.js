@@ -1,8 +1,16 @@
-// Alarma diaria: manda UN mail "terminá de completar tu perfil" a quien
-// terminó el cuestionario hace 7 días o más y tiene el perfil por debajo del 70%.
+// Alarma diaria con dos mails (cada uno sale UNA sola vez por persona):
+// 1) "terminá de completar tu perfil": a quien terminó el cuestionario hace 7 días o más y tiene el perfil por debajo del 50%.
+// 2) "tu perfil ya está listo": a quien llega al 80% (con el link de su página y cómo usarlo).
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { calcularAvance } from './_progreso.js';
+import { armarMailPerfilListo } from './_mailPerfilListo.js';
+
+// Mail "perfil listo": desde qué porcentaje sale
+const AVANCE_PERFIL_LISTO = 80;
+// La primera vez que corre, a quien YA está en ese porcentaje no se le manda (se anota como "ya visto")
+// y a vos te llega una copia de cómo se ve. Desde ahí, sale a cada persona cuando llega al 80%.
+const REF_LINEA_BASE = ['settings', 'mailPerfilListo'];
 
 const ID_PLANTILLA_PERFIL = 7;
 const DIAS_PARA_AVISAR = 7;
@@ -59,6 +67,82 @@ async function enviarResumen(revisadas, sinPerfil, lista) {
     })
   });
   if (!respuesta.ok) console.error('No se pudo mandar el resumen', await respuesta.text());
+}
+
+// Manda el mail "perfil listo" con el diseño del Portal (sin plantilla de Brevo)
+async function enviarMailHtml(email, asunto, html) {
+  const respuesta = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: { accept: 'application/json', 'content-type': 'application/json', 'api-key': process.env.BREVO_API_KEY },
+    body: JSON.stringify({ sender: { name: 'Portal Veterinario', email: 'hola@portalveterinario.ar' }, to: [{ email }], subject: asunto, htmlContent: html })
+  });
+  if (!respuesta.ok) throw new Error(`Brevo respondió ${respuesta.status}: ${await respuesta.text()}`);
+}
+
+// Recorre las cuentas con cuestionario terminado y manda "tu perfil ya está listo" a quien llegó al 80%
+async function mandarPerfilListo(db, cuentas, simular) {
+  const refBase = db.collection(REF_LINEA_BASE[0]).doc(REF_LINEA_BASE[1]);
+  const lineaBaseHecha = (await refBase.get()).data()?.lineaBaseFecha;
+  const resultado = { enviados: 0, omitidosPrimeraVez: 0, errores: 0, lista: [] };
+  let ejemplo = null; // para mandarte una copia la primera vez
+
+  for (const documento of cuentas) {
+    const usuario = documento.data();
+    if (usuario.perfilListoMailEnviado === true) continue;
+    if (usuario.esPrueba === true || !usuario.email || usuario.estado === 'suspendido') continue;
+    const coleccion = COLECCIONES[usuario.rol];
+    if (!coleccion) continue;
+
+    const perfilSnap = await db.collection(coleccion).doc(documento.id).get();
+    if (!perfilSnap.exists) continue;
+    const perfil = perfilSnap.data();
+    // Si el perfil no se ve todavía (sin verificar), el link no le serviría
+    if (perfil.visible === false) continue;
+    const slug = perfil.slug || usuario.slug || '';
+    if (!slug) continue;
+
+    const esPro = perfil.planActual === 'pro' || perfil.socioVitalicio === true || usuario.socioVitalicio === true;
+    const avance = calcularAvance(usuario.rol, perfil, esPro);
+    if (avance.porcentaje < AVANCE_PERFIL_LISTO) continue;
+
+    const esClinica = usuario.rol === 'clinica';
+    const mail = armarMailPerfilListo({ esClinica, nombre: perfil.nombre || usuario.nombre || '', slug, placeId: perfil.placeId || '' });
+    resultado.lista.push(`${usuario.email} (${avance.porcentaje}%)`);
+    if (simular) continue;
+
+    if (!lineaBaseHecha) {
+      // Primera vez: ya estaban en el 80% antes de activar el mail, así que no se les manda
+      if (!ejemplo) ejemplo = mail;
+      await documento.ref.update({ perfilListoMailEnviado: true, perfilListoMailOmitido: true });
+      resultado.omitidosPrimeraVez++;
+      continue;
+    }
+
+    try {
+      await enviarMailHtml(usuario.email, mail.asunto, mail.html);
+      await documento.ref.update({ perfilListoMailEnviado: true, perfilListoMailFecha: new Date().toISOString() });
+      resultado.enviados++;
+    } catch (error) {
+      console.error('No se pudo mandar el mail de perfil listo a', documento.id, error);
+      resultado.errores++;
+    }
+  }
+
+  if (!simular && !lineaBaseHecha) {
+    await refBase.set({ lineaBaseFecha: new Date().toISOString(), omitidosPrimeraVez: resultado.omitidosPrimeraVez });
+    // Copia para vos: así ves el mail real, con los datos de una de las cuentas
+    const muestra = ejemplo || armarMailPerfilListo({ esClinica: false, nombre: 'Lucía Fernández', slug: 'ejemplo' });
+    try {
+      await enviarMailHtml(MAIL_ADMIN, `Prueba: ${muestra.asunto}`, muestra.html);
+      await enviarMailHtml(MAIL_ADMIN, 'Mail "perfil listo" activado',
+        `<p>Ya quedó activado el mail "tu perfil ya está listo" (desde el ${AVANCE_PERFIL_LISTO}%).</p>
+        <p>Hoy no se le mandó a nadie: ${resultado.omitidosPrimeraVez} cuentas ya estaban en ese porcentaje y quedaron anotadas para no recibirlo.</p>
+        <p>Desde mañana, le llega a cada persona cuando su perfil llegue al ${AVANCE_PERFIL_LISTO}%. En el otro mail tenés una copia de cómo se ve.</p>`);
+    } catch (error) {
+      console.error('No se pudo mandar la copia del mail de perfil listo', error);
+    }
+  }
+  return resultado;
 }
 
 export default async function handler(req, res) {
@@ -146,7 +230,16 @@ export default async function handler(req, res) {
     }
 
     if (MODO_PRUEBA) await enviarResumen(snap.size, sinPerfil, lista);
-    return res.status(200).json({ ok: true, simular, revisadas: snap.size, enviados, errores, sinPerfil, lista });
+
+    // Segundo mail: "tu perfil ya está listo". Si falla, no frena la respuesta del primero.
+    let perfilListo = null;
+    try {
+      perfilListo = await mandarPerfilListo(db, snap.docs, simular);
+    } catch (error) {
+      console.error('Error en el mail de perfil listo:', error);
+    }
+
+    return res.status(200).json({ ok: true, simular, revisadas: snap.size, enviados, errores, sinPerfil, lista, perfilListo });
   } catch (error) {
     console.error('Error en el recordatorio de perfil:', error);
     return res.status(500).json({ error: 'Error inesperado' });

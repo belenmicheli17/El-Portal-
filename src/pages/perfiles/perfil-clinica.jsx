@@ -5,7 +5,7 @@ import { opcionesConAnimales } from '../../utils/animales';
 import { db } from '../../firebase';
 import { useAuth } from '../../context/AuthContext';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
-import { BotonCompartirPerfil, BotonCompartirLink, armarLinkPerfil } from '../../components/CompartirPerfil';
+import CompartirPerfil, { BotonCompartirPerfil, BotonCompartirLink, armarLinkPerfil } from '../../components/CompartirPerfil';
 import { ServicioExplicable, AvisoPresionar } from '../../components/editor/EditorComponents';
 import {
   ChevronLeft, ChevronRight, ChevronDown, MapPin, Phone, Mail, Globe,
@@ -271,6 +271,16 @@ function CasoModal({ caso, casos, onCambiar, onCerrar }) {
 // PÁGINA
 // ==========================================
 export default function PerfilClinica() {
+  // Si llega desde el mail "tu perfil ya está listo" (link con ?compartir=1), abrimos la ventana de compartir,
+  // que tiene el botón para copiar el link de la página
+  const [compartirDesdeMail, setCompartirDesdeMail] = useState(() => new URLSearchParams(window.location.search).get('compartir') === '1');
+  const cerrarCompartirDesdeMail = () => {
+    setCompartirDesdeMail(false);
+    const parametros = new URLSearchParams(window.location.search);
+    parametros.delete('compartir');
+    const busqueda = parametros.toString();
+    window.history.replaceState(null, '', `${window.location.pathname}${busqueda ? `?${busqueda}` : ''}`);
+  };
   const navigate = useNavigate();
   const { slug } = useParams();
   const { currentUser } = useAuth();
@@ -532,6 +542,15 @@ export default function PerfilClinica() {
     <div className="font-['Inter'] bg-white min-h-screen pb-28 lg:pb-0 text-[#333]">
 
       <VisorFotos visor={visor} setVisor={setVisor} />
+      <CompartirPerfil
+        abierto={compartirDesdeMail}
+        onCerrar={cerrarCompartirDesdeMail}
+        tipo="clinica"
+        slug={slugCompartir}
+        nombre={data.nombre || ''}
+        subtitulo={ubicacionCorta}
+        foto={data.foto || ''}
+      />
       <CasoModal caso={casoAbierto} casos={casos} onCambiar={setCasoAbierto} onCerrar={() => setCasoAbierto(null)} />
 
       {/* ============ PORTADA ============ */}

@@ -27,34 +27,8 @@ const ID_PLANTILLA_RECHAZADA = 4;
 
 // Estudiantes: solo reciben el mail de aprobación, escrito acá abajo (no usa plantilla de Brevo).
 // La bienvenida y el rechazo de estudiantes no se mandan.
-// Arma el HTML de un mail con el estilo del Portal (colores y letra de la marca).
-// Se usa para los mails que no tienen plantilla en Brevo (Brevo igual es el que los manda).
-const escaparHtml = (t) => String(t || '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-function armarMailHtml({ titulo, parrafos, boton, enlace, posdata }) {
-  return `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escaparHtml(titulo)}</title></head>
-<body style="margin:0;padding:0;background:#F4F7F7;font-family:Arial,Helvetica,sans-serif;color:#333333;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F4F7F7;padding:32px 12px;">
-    <tr><td align="center">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#FFFFFF;border-radius:24px;overflow:hidden;">
-        <tr><td style="background:#1A3D3D;padding:22px 32px;">
-          <span style="font-size:18px;font-weight:bold;color:#FFFFFF;letter-spacing:0.5px;">El Portal Veterinario</span>
-        </td></tr>
-        <tr><td style="padding:32px 32px 8px 32px;">
-          <h1 style="margin:0 0 18px 0;font-size:24px;line-height:1.25;color:#1A3D3D;">${escaparHtml(titulo)}</h1>
-          ${parrafos.map((p) => `<p style="margin:0 0 14px 0;font-size:16px;line-height:1.6;color:#333333;">${p}</p>`).join('')}
-        </td></tr>
-        <tr><td style="padding:12px 32px 28px 32px;">
-          <a href="${enlace}" style="display:inline-block;background:#2D6A6A;color:#FFFFFF;text-decoration:none;font-size:16px;font-weight:bold;padding:14px 28px;border-radius:14px;">${escaparHtml(boton)}</a>
-        </td></tr>
-        ${posdata ? `<tr><td style="padding:0 32px 28px 32px;"><p style="margin:0;font-size:14px;line-height:1.6;color:#666666;">${posdata}</p></td></tr>` : ''}
-        <tr><td style="background:#FFFFFF;border-top:1px solid #E8EFEF;padding:18px 32px;">
-          <p style="margin:0;font-size:12px;line-height:1.5;color:#666666;">Portal Veterinario · <a href="https://www.portalveterinario.ar" style="color:#2D6A6A;">portalveterinario.ar</a></p>
-        </td></tr>
-      </table>
-    </td></tr>
-  </table>
-</body></html>`;
-}
+// El HTML de los mails sin plantilla en Brevo (estilo del Portal) está en _mailHtml.js
+import { escaparHtml, armarMailHtml } from './_mailHtml.js';
 
 function mailAprobacionEstudiante(nombre) {
   const primerNombre = String(nombre || '').trim().split(/\s+/)[0];
