@@ -3,8 +3,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { db, storage, registrarEvento } from '../firebase';
 import { doc, getDoc, setDoc, getDocs, collection, query, where, serverTimestamp } from 'firebase/firestore';
-import { BotonCompartirPerfil } from '../components/CompartirPerfil';
-import { direccionCorta } from '../utils/bolsa';
+import { BotonCompartirPerfil, armarClaseBoton } from '../components/CompartirPerfil';
+import { direccionCorta, vieneDeBolsa, olvidarVieneDeBolsa, rutaFormularioBolsa } from '../utils/bolsa';
 import { ref, uploadBytesResumable, uploadString, getDownloadURL, deleteObject } from 'firebase/storage';
 import {
   Camera, Check, Loader2, X, Clock, Building2, FileCheck, Upload,
@@ -415,6 +415,9 @@ function PantallaComoLlegaste({ datos, cambiar, error, guardando, onVolver, onEn
 export default function OnboardingClinica() {
   const navigate = useNavigate();
   const location = useLocation();
+  // Vino desde la Bolsa de Trabajo para publicar: al final le ofrecemos armar su oferta
+  const deBolsa = vieneDeBolsa(location.search);
+  const irALaBolsa = () => { olvidarVieneDeBolsa(); navigate(rutaFormularioBolsa('clinica')); };
   const { currentUser, refreshUser } = useAuth();
 
   // Si viene desde la pantalla de rechazo, es un reenvío para corregir datos
@@ -1769,8 +1772,15 @@ export default function OnboardingClinica() {
                 Recibimos la matrícula del director/a técnico/a. La verificamos en 24 a 48 horas y les avisamos por mail.
               </p>
               <div className="bg-[#F4F7F7] rounded-2xl px-4 py-3.5 my-6 text-left text-[15px] font-medium text-[#1A3D3D] leading-relaxed">
-                Mientras esperan, pueden seguir completando el perfil desde el editor. Apenas verifiquemos, sale publicado.
+                {deBolsa
+                  ? 'Ya podés ir armando tu publicación. Apenas verifiquemos tu cuenta, se publica sola.'
+                  : 'Mientras esperan, pueden seguir completando el perfil desde el editor. Apenas verifiquemos, sale publicado.'}
               </div>
+              {deBolsa && (
+                <button type="button" onClick={irALaBolsa} className={armarClaseBoton('principal', false, 'w-full mb-3')}>
+                  Armar mi publicación en la Bolsa
+                </button>
+              )}
 
                           <BotonCompartirPerfil
                 tipo="clinica"
@@ -1778,7 +1788,7 @@ export default function OnboardingClinica() {
                 nombre={datos.nombre || ''}
                 subtitulo={[datos.localidad, datos.provincia].filter(Boolean).join(', ')}
                 foto={datos.foto || ''}
-                variante="principal"
+                variante={deBolsa ? 'secundario' : 'principal'}
                 texto="Compartir la página de la clínica"
                 className="w-full"
               />

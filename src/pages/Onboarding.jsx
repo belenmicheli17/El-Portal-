@@ -4,8 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import { db, storage, registrarEvento } from '../firebase';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytesResumable, uploadString, getDownloadURL, deleteObject } from 'firebase/storage';
-import { direccionCorta } from '../utils/bolsa';
-import { BotonCompartirPerfil } from '../components/CompartirPerfil';
+import { direccionCorta, vieneDeBolsa, olvidarVieneDeBolsa, rutaFormularioBolsa } from '../utils/bolsa';
+import { BotonCompartirPerfil, armarClaseBoton } from '../components/CompartirPerfil';
 import {
   Camera, Check, Loader2, Search, MapPin, Trash2, X, Plus, Clock,
   Stethoscope, Home, Crop, ChevronRight, FileCheck, Upload, CheckCircle2,
@@ -787,6 +787,9 @@ export default function Onboarding() {
   const esCorreccion = location.state?.correccion === true;
   // La admin abre el cuestionario desde el banner de modo prueba solo para mirarlo
   const esVistaPrueba = location.state?.vistaPrueba === true;
+  // Vino desde la Bolsa de Trabajo para publicar: al final le ofrecemos marcarse como disponible
+  const deBolsa = vieneDeBolsa(location.search);
+  const irALaBolsa = () => { olvidarVieneDeBolsa(); navigate(rutaFormularioBolsa('profesional')); };
 
   const [cargando, setCargando] = useState(true);
   const [paso, setPaso] = useState(0);
@@ -1963,15 +1966,22 @@ export default function Onboarding() {
                 Recibimos tu matrícula. La verificamos en 24 a 48 horas y te avisamos por mail.
               </p>
               <div className="bg-[#F4F7F7] rounded-2xl px-4 py-3.5 my-6 text-left text-[15px] font-medium text-[#1A3D3D] leading-relaxed">
-                Mientras esperás, podés seguir completando tu perfil, por ejemplo con tus investigaciones. Apenas te verifiquemos, sale publicado.
+                {deBolsa
+                  ? 'Ya podés ir armando tu publicación. Apenas verifiquemos tu cuenta, se publica sola.'
+                  : 'Mientras esperás, podés seguir completando tu perfil, por ejemplo con tus investigaciones. Apenas te verifiquemos, sale publicado.'}
               </div>
+              {deBolsa && (
+                <button type="button" onClick={irALaBolsa} className={armarClaseBoton('principal', false, 'w-full mb-3')}>
+                  Marcarme como disponible
+                </button>
+              )}
               <BotonCompartirPerfil
                 tipo="profesional"
                 slug={currentUser?.slug}
                 nombre={`${datos.nombre || ''} ${datos.apellido || ''}`.trim()}
                 subtitulo={datos.esp || ''}
                 foto={datos.foto || ''}
-                variante="principal"
+                variante={deBolsa ? 'secundario' : 'principal'}
                 texto="Compartir mi perfil"
                 className="w-full"
               />

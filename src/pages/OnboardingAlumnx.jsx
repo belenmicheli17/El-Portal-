@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { db, storage, registrarEvento } from '../firebase';
 import { doc, getDoc, setDoc, getDocs, collection, query, where, serverTimestamp } from 'firebase/firestore';
@@ -9,6 +9,7 @@ import {
   CheckCircle2, AlertCircle, Plus, Trash2, ArrowUp, ArrowDown, ChevronLeft
 } from 'lucide-react';
 import provincias from '../data/provincias.js';
+import { vieneDeBolsa, olvidarVieneDeBolsa, rutaFormularioBolsa } from '../utils/bolsa';
 import { RecortadorImagen, generarSlug, usuarioDeInstagram, instagramAURL, leerArchivoComoDataURL, comprimirImagen, BuscadorDireccionGoogle } from '../components/editor/EditorComponents';
 
 // Cuestionario de alta de estudiantes. El mismo archivo sirve después para editar el perfil.
@@ -230,6 +231,10 @@ function BuscadorFacultad({ valor, onCambio }) {
 // ==========================================
 export default function OnboardingAlumnx() {
   const navigate = useNavigate();
+  const location = useLocation();
+  // Vino desde la Bolsa de Trabajo para publicar: al final le ofrecemos marcarse como disponible
+  const deBolsa = vieneDeBolsa(location.search);
+  const irALaBolsa = () => { olvidarVieneDeBolsa(); navigate(rutaFormularioBolsa('alumnx')); };
   const { currentUser, refreshUser } = useAuth();
 
   const [cargando, setCargando] = useState(true);
@@ -917,12 +922,21 @@ export default function OnboardingAlumnx() {
                 Recibimos tu comprobante de cursada. Lo revisamos en 24 a 48 horas y te avisamos por mail.
               </p>
               <div className="bg-[#F4F7F7] rounded-2xl px-4 py-3.5 my-6 text-left text-[15px] font-medium text-[#1A3D3D] leading-relaxed">
-                Cuando te verifiquemos vas a poder postularte a las búsquedas de asistente de la Bolsa de Trabajo.
+                {deBolsa
+                  ? 'Ya podés ir armando tu publicación. Apenas verifiquemos tu cuenta, se publica sola.'
+                  : 'Cuando te verifiquemos vas a poder postularte a las búsquedas de asistente de la Bolsa de Trabajo.'}
               </div>
               <p className="text-[13px] font-medium text-[#666666] leading-relaxed -mt-3 mb-6">
                 Tu perfil es público: lo puede ver cualquiera que tenga tu link. No aparece en la Cartilla hasta que pases a perfil profesional.
               </p>
-              <button type="button" onClick={() => navigate('/ecosistema')} className={`${CLASE_BTN_PRIMARIO} w-full`}>Ir al inicio</button>
+              {deBolsa ? (
+                <>
+                  <button type="button" onClick={irALaBolsa} className={`${CLASE_BTN_PRIMARIO} w-full`}>Marcarme como disponible</button>
+                  <button type="button" onClick={() => { olvidarVieneDeBolsa(); navigate('/ecosistema'); }} className="mt-4 text-[14px] font-semibold text-[#2D6A6A] hover:text-[#1A3D3D] underline underline-offset-4">Ir al inicio</button>
+                </>
+              ) : (
+                <button type="button" onClick={() => navigate('/ecosistema')} className={`${CLASE_BTN_PRIMARIO} w-full`}>Ir al inicio</button>
+              )}
             </div>
           )}
         </main>
