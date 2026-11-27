@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Briefcase, UserCheck, Trash2, PauseCircle, 
   PlayCircle, Clock, MapPin, Building, User, CalendarDays, Loader2, Activity
@@ -9,6 +10,7 @@ import { tituloPuesto, estaVigente, aMilisegundos, provinciaCorta } from '../../
 import { BotonImagenOferta } from '../../components/bolsa/ElementosBolsa';
 
 export default function GestionBolsa() {
+  const navigate = useNavigate();
   const [tabActiva, setTabActiva] = useState('metricas'); // abre primero en Métricas
   const [verTodasPublicaciones, setVerTodasPublicaciones] = useState(false);
   const [ofertas, setOfertas] = useState([]);
@@ -103,7 +105,7 @@ export default function GestionBolsa() {
             </div>
             {/* Compartir: arma la imagen para historias (de la oferta o del profesional disponible) */}
             <div className="mt-3">
-              {coleccion === 'ofertasEmpleo' ? <BotonImagenOferta oferta={item} /> : <BotonImagenOferta disponible={item} />}
+              {coleccion === 'ofertasEmpleo' ? <BotonImagenOferta oferta={item} mostrarArroba /> : <BotonImagenOferta disponible={item} mostrarArroba />}
             </div>
           </div>
         </div>
@@ -200,17 +202,32 @@ export default function GestionBolsa() {
             <div className="space-y-6">
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
-                  { titulo: 'Ofertas activas', valor: ofertasActivas.length, ayuda: 'Clínicas buscando personal hoy' },
-                  { titulo: 'Disponibles', valor: dispActivos.length, ayuda: 'Profesionales buscando trabajo hoy' },
+                  // "irA": al tocar la tarjeta, abre esa pestaña
+                  { titulo: 'Ofertas activas', valor: ofertasActivas.length, ayuda: 'Clínicas buscando personal hoy', irA: 'ofertas' },
+                  { titulo: 'Disponibles', valor: dispActivos.length, ayuda: 'Profesionales buscando trabajo hoy', irA: 'profesionales' },
                   { titulo: 'Postulaciones', valor: postsReales.length, ayuda: `${postsUlt7} en los últimos 7 días` },
                   { titulo: 'Sin postulantes', valor: sinPostulantes.length, ayuda: 'Ofertas activas que nadie pidió' }
-                ].map(t => (
-                  <div key={t.titulo} className="bg-white p-6 rounded-[24px] border border-gray-100 shadow-sm">
-                    <h3 className="text-[#666666] text-[12px] font-bold uppercase tracking-widest mb-2">{t.titulo}</h3>
-                    <p className="text-[#1A3D3D] text-[32px] font-black font-['Montserrat'] leading-none">{t.valor}</p>
-                    <p className="text-[#666666] text-[13px] font-medium mt-2">{t.ayuda}</p>
-                  </div>
-                ))}
+                ].map(t => {
+                  const interior = (
+                    <>
+                      <h3 className="text-[#666666] text-[12px] font-bold uppercase tracking-widest mb-2">{t.titulo}</h3>
+                      <p className="text-[#1A3D3D] text-[32px] font-black font-['Montserrat'] leading-none">{t.valor}</p>
+                      <p className="text-[#666666] text-[13px] font-medium mt-2">{t.ayuda}</p>
+                    </>
+                  );
+                  return t.irA ? (
+                    <button
+                      key={t.titulo}
+                      type="button"
+                      onClick={() => setTabActiva(t.irA)}
+                      className="text-left bg-white p-6 rounded-[24px] border border-gray-100 shadow-sm transition-all hover:shadow-md hover:border-[#2D6A6A]/40"
+                    >
+                      {interior}
+                    </button>
+                  ) : (
+                    <div key={t.titulo} className="bg-white p-6 rounded-[24px] border border-gray-100 shadow-sm">{interior}</div>
+                  );
+                })}
               </div>
 
               {/* Publicaciones activas: ofertas de clínicas y profesionales disponibles, para compartir en redes */}
@@ -223,7 +240,15 @@ export default function GestionBolsa() {
                   <>
                     <div className="space-y-2">
                       {publicacionesActivas.slice(0, verTodasPublicaciones ? undefined : 5).map(({ tipo, item }) => (
-                        <div key={`${tipo}-${item.id}`} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-[#F4F7F7] rounded-2xl border border-gray-100">
+                        <div
+                          key={`${tipo}-${item.id}`}
+                          role="link"
+                          tabIndex={0}
+                          // Toda la caja lleva a esa publicación en la Bolsa (en la misma pestaña, sin abrir otra)
+                          onClick={() => navigate(tipo === 'oferta' ? `/bolsa-de-trabajo?oferta=${item.id}` : `/bolsa-de-trabajo?tab=disponibles&disponible=${item.id}`)}
+                          onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.click(); }}
+                          className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-[#F4F7F7] rounded-2xl border border-gray-100 cursor-pointer transition-colors hover:border-[#2D6A6A]/40 hover:bg-[#E8EFEF]"
+                        >
                           <div className="min-w-0">
                             <span className={`inline-block text-[11px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md mb-1 ${tipo === 'oferta' ? 'bg-[#2D6A6A]/10 text-[#2D6A6A]' : 'bg-[#FF9800]/15 text-[#e68900]'}`}>
                               {tipo === 'oferta' ? 'Clínica busca' : 'Profesional disponible'}
@@ -237,8 +262,9 @@ export default function GestionBolsa() {
                                 : [(item.areas || []).join(' · ') || (item.puesto === 'asistente' ? 'Asistente' : ''), provinciaCorta(item.provincia)].filter(Boolean).join(' · ')}
                             </p>
                           </div>
-                          <div className="shrink-0">
-                            {tipo === 'oferta' ? <BotonImagenOferta oferta={item} /> : <BotonImagenOferta disponible={item} />}
+                          {/* Los botones de acá no llevan a la Bolsa: frenamos el toque para que no llegue a la caja */}
+                          <div className="shrink-0" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
+                            {tipo === 'oferta' ? <BotonImagenOferta oferta={item} mostrarArroba /> : <BotonImagenOferta disponible={item} mostrarArroba />}
                           </div>
                         </div>
                       ))}

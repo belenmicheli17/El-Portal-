@@ -293,7 +293,8 @@ export function CartelVerificacion({ abierto, onCerrar }) {
 // Botón «Compartir» de una oferta: arma la imagen y abre el menú de compartir.
 // Si el navegador no lo permite, muestra la imagen con botones para copiarla.
 // Con "disponible" (en vez de "oferta") arma la imagen de un profesional disponible.
-export function BotonImagenOferta({ oferta, disponible = null }) {
+// Con "mostrarArroba" (panel admin) aparece siempre, al lado, el botón para copiar el @ de Instagram.
+export function BotonImagenOferta({ oferta, disponible = null, mostrarArroba = false }) {
   const generar = (opciones) => (disponible ? generarImagenDisponible(disponible, opciones) : generarImagenOferta(oferta, opciones));
   const linkParaCopiar = () => (disponible ? linkDisponibles() : textoParaCompartir(oferta));
   const [trabajando, setTrabajando] = useState(false);
@@ -301,6 +302,8 @@ export function BotonImagenOferta({ oferta, disponible = null }) {
   const [vista, setVista] = useState(null); // { url, blob }
   const [copiado, setCopiado] = useState('');
   const [instagram, setInstagram] = useState(''); // usuario de Instagram de la clínica o del profesional (para etiquetarlo)
+  // En el panel admin buscamos el @ apenas aparece el botón: 'buscando' | 'listo'
+  const [estadoArroba, setEstadoArroba] = useState(mostrarArroba ? 'buscando' : 'listo');
 
   // Busca el Instagram en el perfil de quien publicó (clínica, profesional o estudiante)
   const buscarInstagram = async () => {
@@ -315,6 +318,20 @@ export function BotonImagenOferta({ oferta, disponible = null }) {
       return '';
     }
   };
+
+  // Panel admin: buscamos el Instagram de entrada, así "Copiar @" está a mano sin tener que compartir antes
+  const uidCreador = disponible ? disponible.creadorId : oferta?.creadorId;
+  useEffect(() => {
+    if (!mostrarArroba) return undefined;
+    let cancelado = false;
+    buscarInstagram().then((usuario) => {
+      if (cancelado) return;
+      setInstagram(usuario);
+      setEstadoArroba('listo');
+    });
+    return () => { cancelado = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mostrarArroba, uidCreador]);
 
   const avisar = (texto) => {
     setMensaje(texto);
@@ -393,10 +410,17 @@ export function BotonImagenOferta({ oferta, disponible = null }) {
       </button>
       {mensaje && <span className="text-[12px] font-semibold text-[#2D6A6A]">{mensaje}</span>}
       {/* En el celu la ventana no se abre: dejamos a mano el botón para copiar el @ de la clínica */}
-      {instagram && !vista && (
+      {instagram && (mostrarArroba || !vista) && (
         <button type="button" onClick={copiarInstagram} className="inline-flex items-center gap-1.5 bg-[#F4F7F7] hover:bg-gray-200 text-[#1A3D3D] rounded-xl px-3.5 py-2 text-[13px] font-semibold transition-colors">
           {copiado === 'instagram' ? <Check className="w-3.5 h-3.5 text-[#2D6A6A]" /> : <Copy className="w-3.5 h-3.5 text-[#2D6A6A]" />} {copiado === 'instagram' ? 'Copiado' : `Copiar @${instagram}`}
         </button>
+      )}
+      {/* Panel admin: si no cargó Instagram, lo decimos en vez de esconder el botón */}
+      {mostrarArroba && !instagram && (
+        <span className="inline-flex items-center gap-1.5 bg-[#F4F7F7] text-gray-400 rounded-xl px-3.5 py-2 text-[13px] font-semibold">
+          {estadoArroba === 'buscando' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Copy className="w-3.5 h-3.5" />}
+          {estadoArroba === 'buscando' ? 'Buscando @' : 'Sin Instagram'}
+        </span>
       )}
 
       <VentanaBolsa abierta={!!vista} onCerrar={cerrarVista} ancho="max-w-md">

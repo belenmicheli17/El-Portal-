@@ -36,6 +36,8 @@ export default function BolsaTrabajo() {
 
   const vista = params.get('v') || 'lista';
   const ofertaId = params.get('oferta');
+  // Link directo a un profesional disponible (ej: desde el panel admin): ?disponible=<id>
+  const disponibleId = params.get('disponible');
   const pestana = params.get('tab') || 'todo';
   const provincia = params.get('prov') || '';
   const jornada = params.get('jornada') || '';
@@ -154,6 +156,23 @@ export default function BolsaTrabajo() {
       .then((snap) => setOfertaSuelta(snap.exists() ? { id: snap.id, ...snap.data() } : 'no-existe'))
       .catch(() => setOfertaSuelta('no-existe'));
   }, [ofertaId, cargando, ofertas, misOfertas]);
+
+  // Si entran con ?disponible=<id>, abrimos su ficha cuando termina de cargar la lista
+  useEffect(() => {
+    if (!disponibleId || cargando) return;
+    const encontrado = disponibles.find((d) => d.id === disponibleId) || (miDisponible?.id === disponibleId ? miDisponible : null);
+    if (encontrado) setDisponibleAbierto(encontrado);
+  }, [disponibleId, cargando, disponibles, miDisponible]);
+
+  // Al cerrar la ficha sacamos el ?disponible= de la dirección (si no, se volvería a abrir)
+  const cerrarDisponible = () => {
+    setDisponibleAbierto(null);
+    if (disponibleId) {
+      const nuevos = new URLSearchParams(params);
+      nuevos.delete('disponible');
+      setParams(nuevos, { replace: true });
+    }
+  };
 
   const ofertaAbierta = ofertaId
     ? ofertas.find((o) => o.id === ofertaId) || misOfertas.find((o) => o.id === ofertaId) || (ofertaSuelta?.id === ofertaId ? ofertaSuelta : null)
@@ -528,7 +547,7 @@ export default function BolsaTrabajo() {
 
 
 
-      <DetalleDisponible disponible={disponibleAbierto} abierto={!!disponibleAbierto} onCerrar={() => setDisponibleAbierto(null)} conSesion={permisos.conSesion} verificada={permisos.verificada} currentUser={currentUser} />
+      <DetalleDisponible disponible={disponibleAbierto} abierto={!!disponibleAbierto} onCerrar={cerrarDisponible} conSesion={permisos.conSesion} verificada={permisos.verificada} currentUser={currentUser} />
 
       <CartelRegistro abierto={cartel === 'registro-publicar'} onCerrar={() => setCartel(null)} motivo="publicar" />
       <CartelVerificacion abierto={cartel === 'verificacion'} onCerrar={() => setCartel(null)} />

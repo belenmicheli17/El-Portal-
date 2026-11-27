@@ -282,15 +282,27 @@ const medidasPregunta = (ctx, pregunta, bajada, anchoMax) => {
   const alto = ajustePreg.renglones.length * ajustePreg.tam * 1.12 + 10 + ajusteBaj.renglones.length * ajusteBaj.tam * 1.25;
   return { ajustePreg, ajusteBaj, alto };
 };
-const dibujarPregunta = (ctx, y, pregunta, bajada, anchoMax = 855) => {
+// Con "puntaDerecha" (un alto en la imagen) la flecha sube hasta ese alto y dobla hacia la DERECHA:
+// el sticker del enlace se pega a la derecha de la punta (lo usa la imagen de "Disponible para trabajar").
+const dibujarPregunta = (ctx, y, pregunta, bajada, anchoMax = 855, puntaDerecha = null) => {
   const { ajustePreg, ajusteBaj, alto } = medidasPregunta(ctx, pregunta, bajada, anchoMax);
   ctx.strokeStyle = NARANJA;
   ctx.lineWidth = 10;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   ctx.beginPath();
-  ctx.moveTo(100, y + alto - 6); ctx.lineTo(100, y + 6);
-  ctx.moveTo(76, y + 30); ctx.lineTo(100, y + 6); ctx.lineTo(124, y + 30);
+  if (puntaDerecha !== null) {
+    const curva = 36; // radio del codo
+    const xPunta = 230;
+    ctx.moveTo(100, y + alto - 6);
+    ctx.lineTo(100, puntaDerecha + curva);
+    ctx.quadraticCurveTo(100, puntaDerecha, 100 + curva, puntaDerecha);
+    ctx.lineTo(xPunta, puntaDerecha);
+    ctx.moveTo(xPunta - 24, puntaDerecha - 24); ctx.lineTo(xPunta, puntaDerecha); ctx.lineTo(xPunta - 24, puntaDerecha + 24);
+  } else {
+    ctx.moveTo(100, y + alto - 6); ctx.lineTo(100, y + 6);
+    ctx.moveTo(76, y + 30); ctx.lineTo(100, y + 6); ctx.lineTo(124, y + 30);
+  }
   ctx.stroke();
   let yTexto = y;
   ctx.font = `700 ${ajustePreg.tam}px ${FUENTE_TITULO}`;
@@ -412,6 +424,18 @@ export const generarImagenDisponible = async (disponible, { instagram = '' } = {
   ctx.fillStyle = degradado;
   ctx.fillRect(0, 0, 1080, 1920);
 
+  // Manchas de color suaves detrás de la tarjeta: hacen que se note el efecto vidrio (glassmorphism)
+  const mancha = (x, y, radio, color) => {
+    const g = ctx.createRadialGradient(x, y, 0, x, y, radio);
+    g.addColorStop(0, color);
+    g.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(x - radio, y - radio, radio * 2, radio * 2);
+  };
+  mancha(880, 640, 420, 'rgba(242,155,36,0.38)');
+  mancha(170, 1180, 380, 'rgba(77,182,172,0.22)');
+  mancha(760, 1330, 300, 'rgba(255,183,120,0.30)');
+
   dibujarEncabezado(ctx, logo, esAsistente ? 'ESTUDIANTE' : 'PROFESIONAL', NARANJA, '#FFFFFF', instagram);
 
   // Abajo (igual que en las de clínica): pregunta con flecha, y arriba el lugar del sticker del enlace
@@ -488,16 +512,28 @@ export const generarImagenDisponible = async (disponible, { instagram = '' } = {
   const espacio = arribaSticker - 30 - arribaTarjeta;
   const aire = Math.max(0, Math.min(40, (espacio - contenido(0, false)) / 6));
   const altoTarjeta = contenido(0, false, aire);
+  // Tarjeta tipo vidrio: blanco semitransparente, un brillo arriba y borde blanco.
+  // Así el sticker del enlace (que es blanco) se distingue de la tarjeta.
   ctx.save();
-  ctx.shadowColor = 'rgba(120,70,20,0.14)';
+  ctx.shadowColor = 'rgba(120,70,20,0.10)';
   ctx.shadowBlur = 40;
   ctx.shadowOffsetY = 20;
-  ctx.fillStyle = '#FFFFFF';
+  ctx.fillStyle = 'rgba(255,255,255,0.40)';
   ctx.beginPath(); ctx.roundRect(80, arribaTarjeta, 920, altoTarjeta, 48); ctx.fill();
   ctx.restore();
+  const brillo = ctx.createLinearGradient(80, arribaTarjeta, 1000, arribaTarjeta + altoTarjeta);
+  brillo.addColorStop(0, 'rgba(255,255,255,0.45)');
+  brillo.addColorStop(0.5, 'rgba(255,255,255,0.10)');
+  brillo.addColorStop(1, 'rgba(255,255,255,0.25)');
+  ctx.fillStyle = brillo;
+  ctx.beginPath(); ctx.roundRect(80, arribaTarjeta, 920, altoTarjeta, 48); ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.95)';
+  ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.roundRect(81.5, arribaTarjeta + 1.5, 917, altoTarjeta - 3, 47); ctx.stroke();
   contenido(arribaTarjeta, true, aire);
 
-  dibujarPregunta(ctx, yPregunta, ...preguntaDisp, 855);
+  // La flecha sube hasta la mitad del lugar libre y apunta a la derecha, donde se pega el enlace
+  dibujarPregunta(ctx, yPregunta, ...preguntaDisp, 855, arribaSticker + 75);
 
   return new Promise((resolver) => canvas.toBlob(resolver, 'image/png'));
 };
