@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Mail, RefreshCw, Copy, Check, Loader2, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { RefreshCw, Copy, Check, Loader2, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { auth } from '../../firebase';
 
 // Lista de cuentas que existen en Authentication pero no tienen documento en "usuarios"
@@ -17,6 +17,18 @@ export default function CuentasSinCompletar() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
   const [copiado, setCopiado] = useState(false);
+  // Mail copiado de una fila (para mostrar el tilde un ratito)
+  const [mailCopiado, setMailCopiado] = useState('');
+
+  const copiarUno = async (email) => {
+    try {
+      await navigator.clipboard.writeText(email);
+      setMailCopiado(email);
+      setTimeout(() => setMailCopiado((actual) => (actual === email ? '' : actual)), 2000);
+    } catch (e) {
+      console.error('No se pudo copiar el mail:', e);
+    }
+  };
 
   const cargar = useCallback(async () => {
     setCargando(true);
@@ -119,7 +131,7 @@ export default function CuentasSinCompletar() {
               <tr className="border-b border-gray-100">
                 <th className="py-3 pr-4 text-[11px] font-bold text-[#666666] uppercase tracking-widest">Mail</th>
                 <th className="py-3 pr-4 text-[11px] font-bold text-[#666666] uppercase tracking-widest whitespace-nowrap">Cuenta creada</th>
-                <th className="py-3 text-[11px] font-bold text-[#666666] uppercase tracking-widest text-right">Escribirle</th>
+                <th className="py-3 text-[11px] font-bold text-[#666666] uppercase tracking-widest text-right">Copiar</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -129,13 +141,15 @@ export default function CuentasSinCompletar() {
                   <td className="py-3 pr-4 text-[13px] text-[#666666] whitespace-nowrap">{formatearFechaHora(c.creada)}</td>
                   <td className="py-3 text-right">
                     {c.email ? (
-                      <a
-                        href={`mailto:${c.email}`}
-                        aria-label={`Escribirle a ${c.email}`}
-                        className="inline-flex p-2 rounded-lg text-[#2D6A6A] hover:bg-[#2D6A6A]/10 transition-colors"
+                      <button
+                        type="button"
+                        onClick={() => copiarUno(c.email)}
+                        aria-label={`Copiar ${c.email}`}
+                        className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-[12px] font-bold text-[#2D6A6A] bg-[#F4F7F7] hover:bg-[#E8EFEF] transition-colors"
                       >
-                        <Mail className="w-4 h-4" />
-                      </a>
+                        {mailCopiado === c.email ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                        {mailCopiado === c.email ? 'Copiado' : 'Copiar'}
+                      </button>
                     ) : '—'}
                   </td>
                 </tr>
