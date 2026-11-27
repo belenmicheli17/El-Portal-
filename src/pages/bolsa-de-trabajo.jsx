@@ -577,7 +577,7 @@ function ErrorCarga({ codigo, onReintentar }) {
         <AlertCircle className="w-10 h-10 text-red-500" />
       </div>
       <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[20px] md:text-[24px] mb-2">No pudimos cargar las publicaciones</h3>
-      <p className="text-[#666666] text-[15px] max-w-md mb-6">No es que no haya: hubo un problema al traerlas. Probá de nuevo y, si sigue pasando, avisanos.</p>
+      <p className="text-[#666666] text-[15px] max-w-md mb-6">Hubo un problema al traerlas. Probá de nuevo y, si sigue pasando, avisanos.</p>
       <div className="flex flex-wrap gap-3 justify-center items-center">
         <button type="button" onClick={onReintentar} className="inline-flex items-center gap-2 bg-[#2D6A6A] hover:bg-[#1A3D3D] text-white px-6 py-3 rounded-2xl text-[14px] font-semibold transition-colors">
           <RotateCcw className="w-4 h-4" /> Reintentar
