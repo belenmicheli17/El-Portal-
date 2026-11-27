@@ -26,6 +26,7 @@ const Papers = lazy(() => import('./pages/Papers'));
 const BolsaDeTrabajo = lazy(() => import('./pages/bolsa-de-trabajo'));
 const LegalPage = lazy(() => import('./pages/legales/privacidad'));
 const Login = lazy(() => import('./pages/Login'));
+const Nosotros = lazy(() => import('./pages/Nosotros'));
 const CompletarCuenta = lazy(() => import('./pages/CompletarCuenta'));
 const Capacitaciones = lazy(() => import('./pages/Capacitaciones'));
 const CartillaProveedores = lazy(() => import('./pages/CartillaProveedores'));
@@ -204,6 +205,10 @@ export default function App() {
             {/* Currículum de un postulante (la propia página pide sesión) */}
             <Route path="/cv/:uid/:archivo" element={<VerCV />} />
             <Route path="/postulacion/:postId" element={<VerPostulacion />} />
+
+            {/* Quiénes somos y cómo funciona (una sola página; /como-funciona baja a "Cómo verificamos") */}
+            <Route path="/nosotros" element={<Nosotros />} />
+            <Route path="/como-funciona" element={<Nosotros />} />
 
             {/* Legales */}
             <Route path="/terminos-y-condiciones" element={<LegalPage />} />
