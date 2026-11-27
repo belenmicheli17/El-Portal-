@@ -57,6 +57,9 @@ export default function BolsaTrabajo() {
   // Así mostramos "no pudimos cargar" en vez de "no hay ofertas", que no sería verdad.
   const [errorCarga, setErrorCarga] = useState('');
   const [ofertaSuelta, setOfertaSuelta] = useState(null);
+  // Si falla la lectura de una oferta abierta por link, guardamos el código del error.
+  // Así decimos "no pudimos cargarla" en vez de "ya no está disponible", que no sería verdad.
+  const [errorOferta, setErrorOferta] = useState('');
   const [ofertaEditando, setOfertaEditando] = useState(null);
   const [disponibleAbierto, setDisponibleAbierto] = useState(null);
   const [cartel, setCartel] = useState(null); // 'registro-publicar' | 'registro-contacto' | 'verificacion' | 'solo-clinicas' | 'solo-profesionales'
@@ -152,9 +155,15 @@ export default function BolsaTrabajo() {
   useEffect(() => {
     if (!ofertaId || cargando) return;
     if (ofertas.some((o) => o.id === ofertaId) || misOfertas.some((o) => o.id === ofertaId)) return;
+    setErrorOferta('');
     getDoc(doc(db, 'ofertasEmpleo', ofertaId))
-      .then((snap) => setOfertaSuelta(snap.exists() ? { id: snap.id, ...snap.data() } : 'no-existe'))
-      .catch(() => setOfertaSuelta('no-existe'));
+      .then((snap) => {
+        if (snap.exists()) { setOfertaSuelta({ id: snap.id, ...snap.data() }); return; }
+        // Sin conexión, Firebase contesta "no existe" con lo que tiene guardado en el navegador: no es seguro
+        if (snap.metadata.fromCache) { setErrorOferta('sin-conexion'); return; }
+        setOfertaSuelta('no-existe');
+      })
+      .catch((e) => setErrorOferta(e?.code || e?.message || 'desconocido'));
   }, [ofertaId, cargando, ofertas, misOfertas]);
 
   // Si entran con ?disponible=<id>, abrimos su ficha cuando termina de cargar la lista
@@ -286,7 +295,23 @@ export default function BolsaTrabajo() {
     if (!ofertaAbierta) {
       return fondo(
         <div className="max-w-xl mx-auto px-4 pt-24 text-center relative z-10 font-['Inter']">
-          {ofertaSuelta === 'no-existe' || (!cargando && ofertaSuelta && !ofertaSuelta.id) ? (
+          {errorOferta ? (
+            <>
+              <h1 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[24px] mb-2">No pudimos cargar la oferta</h1>
+              <p className="text-[#666666] mb-6">Hubo un problema al traerla. Probá de nuevo y, si sigue pasando, avisanos.</p>
+              <div className="flex flex-wrap gap-3 justify-center items-center">
+                <button
+                  type="button"
+                  // Volvemos a pedir todo: la lista y, si no está ahí, la oferta suelta
+                  onClick={() => { setErrorOferta(''); setOfertaSuelta(null); setCargando(true); recargar(); }}
+                  className="inline-flex items-center gap-2 bg-[#2D6A6A] hover:bg-[#1A3D3D] text-white px-6 py-3 rounded-2xl font-semibold"
+                >
+                  <RotateCcw className="w-4 h-4" /> Reintentar
+                </button>
+                <BotonAvisarProblema lugar="bolsa" detalle={`oferta ${ofertaId}: ${errorOferta}`} />
+              </div>
+            </>
+          ) : ofertaSuelta === 'no-existe' || (!cargando && ofertaSuelta && !ofertaSuelta.id) ? (
             <>
               <h1 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[24px] mb-2">Esta oferta ya no está disponible</h1>
               <p className="text-[#666666] mb-6">Puede que haya vencido o que la clínica la haya cerrado.</p>
