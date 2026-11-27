@@ -432,9 +432,9 @@ export const generarImagenDisponible = async (disponible, { instagram = '' } = {
     ctx.fillStyle = g;
     ctx.fillRect(x - radio, y - radio, radio * 2, radio * 2);
   };
-  mancha(880, 640, 420, 'rgba(242,155,36,0.38)');
+  mancha(880, 640, 420, 'rgba(242,155,36,0.28)');
   mancha(170, 1180, 380, 'rgba(77,182,172,0.22)');
-  mancha(760, 1330, 300, 'rgba(255,183,120,0.30)');
+  mancha(760, 1330, 300, 'rgba(255,183,120,0.22)');
 
   dibujarEncabezado(ctx, logo, esAsistente ? 'ESTUDIANTE' : 'PROFESIONAL', NARANJA, '#FFFFFF', instagram);
 
@@ -518,11 +518,11 @@ export const generarImagenDisponible = async (disponible, { instagram = '' } = {
   ctx.shadowColor = 'rgba(120,70,20,0.10)';
   ctx.shadowBlur = 40;
   ctx.shadowOffsetY = 20;
-  ctx.fillStyle = 'rgba(255,255,255,0.40)';
+  ctx.fillStyle = 'rgba(255,255,255,0.72)';
   ctx.beginPath(); ctx.roundRect(80, arribaTarjeta, 920, altoTarjeta, 48); ctx.fill();
   ctx.restore();
   const brillo = ctx.createLinearGradient(80, arribaTarjeta, 1000, arribaTarjeta + altoTarjeta);
-  brillo.addColorStop(0, 'rgba(255,255,255,0.45)');
+  brillo.addColorStop(0, 'rgba(255,255,255,0.35)');
   brillo.addColorStop(0.5, 'rgba(255,255,255,0.10)');
   brillo.addColorStop(1, 'rgba(255,255,255,0.25)');
   ctx.fillStyle = brillo;
