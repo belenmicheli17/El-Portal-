@@ -5,6 +5,7 @@ import { pedirRecuperacionClave } from '../utils/recuperarClave';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { AlertCircle, CheckCircle, Eye, EyeOff, Loader } from 'lucide-react';
+import { traducirErrorFirebase, MENSAJE_FALLA_DATOS, ATRIBUTOS_CAMPO_LOGIN } from '../utils/erroresLogin';
 
 // Cartelito de inicio de sesión (el mismo que usa la Sala de Espera).
 // Se muestra pegado debajo del botón que lo abre. El cierre al hacer clic afuera lo maneja quien lo usa.
@@ -24,7 +25,8 @@ export default function LoginDropdown({ onClose }) {
   const loginPasswordRef = useRef(null);
 
   const handleLogin = async () => {
-    const emailVal = loginEmailRef.current?.value || loginEmail;
+    // El teclado del celular a veces deja un espacio al final del mail: lo sacamos
+    const emailVal = (loginEmailRef.current?.value || loginEmail).trim();
     const passVal = loginPasswordRef.current?.value || loginPassword;
 
     if (!emailVal || !passVal) {
@@ -37,17 +39,30 @@ export default function LoginDropdown({ onClose }) {
       const auth = getAuth();
       const userCredential = await signInWithEmailAndPassword(auth, emailVal, passVal);
       const uid = userCredential.user.uid;
-      const snap = await getDoc(doc(db, 'usuarios', uid));
-      const rol = snap.data()?.rol;
+
+      // A partir de acá la contraseña ya estaba bien. Si falla la lectura de sus datos,
+      // lo decimos aparte para que no parezca un problema de contraseña.
+      let snap;
+      try {
+        snap = await getDoc(doc(db, 'usuarios', uid));
+      } catch (errorLectura) {
+        console.error('Ingresó bien pero no se pudo leer usuarios:', errorLectura);
+        setLoginError(MENSAJE_FALLA_DATOS);
+        return;
+      }
+
       onClose();
-      if (rol === 'admin') {
+      if (!snap.exists()) {
+        // Cuenta creada en Authentication pero sin documento en "usuarios": elige su tipo de cuenta y lo crea
+        navigate('/completar-cuenta');
+      } else if (snap.data()?.rol === 'admin') {
         navigate('/admin');
       } else {
         navigate('/ecosistema');
       }
     } catch (error) {
       console.error(error.code);
-      setLoginError('Email o contraseña incorrectos. Intentá de nuevo.');
+      setLoginError(traducirErrorFirebase(error.code));
     } finally {
       setLoginLoading(false);
     }
@@ -122,6 +137,7 @@ export default function LoginDropdown({ onClose }) {
                 onKeyDown={(e) => e.key === 'Enter' && (loginView === 'forgot' ? handleForgotPassword() : handleLogin())}
                 placeholder="tu@email.com"
                 autoComplete="username"
+                {...ATRIBUTOS_CAMPO_LOGIN}
                 name="login-email"
                 className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-[14px] font-medium text-[#1A3D3D] focus:outline-none focus:border-[#2D6A6A] focus:bg-white transition-colors"
               />
@@ -138,6 +154,7 @@ export default function LoginDropdown({ onClose }) {
                     onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
                     placeholder="••••••••"
                     autoComplete="current-password"
+                    {...ATRIBUTOS_CAMPO_LOGIN}
                     name="login-password"
                     className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 pr-11 text-[14px] font-medium text-[#1A3D3D] focus:outline-none focus:border-[#2D6A6A] focus:bg-white transition-colors"
                   />

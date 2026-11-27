@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { db } from '../../firebase';
 import PiezaBienvenida, { extraerInstagram } from '../../components/PiezaBienvenida';
+import CuentasSinCompletar from '../../components/admin/CuentasSinCompletar';
 import { collection, getDocs, doc, updateDoc, deleteDoc, writeBatch } from 'firebase/firestore';
 
 // La fecha puede venir como Timestamp, texto o número: la pasamos a fecha común
@@ -200,6 +201,9 @@ export default function GestionUsuarios() {
           Buscá, editá roles o gestioná cuentas de la plataforma.
         </p>
       </div>
+
+      {/* Cuentas de Authentication que quedaron sin documento en "usuarios" (para escribirles) */}
+      <CuentasSinCompletar />
 
       <div className="bg-white rounded-[24px] p-4 border border-gray-100 shadow-sm flex flex-col md:flex-row gap-4 mb-8">
         <div className="flex-1 relative flex items-center bg-[#F4F7F7] rounded-2xl px-4 py-3">

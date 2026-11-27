@@ -27,7 +27,9 @@ export function AuthProvider({ children, loadingFallback = null }) {
             // Unimos el UID con los datos de Firestore (nombre, rol, slug, etc)
             setCurrentUser({ uid: user.uid, ...docSnap.data() });
           } else {
-            setCurrentUser({ uid: user.uid }); 
+            // Tiene cuenta en Authentication pero no documento en "usuarios": lo marcamos
+            // para llevarlo a elegir su tipo de cuenta (ver pages/CompletarCuenta.jsx)
+            setCurrentUser({ uid: user.uid, sinDocumento: true });
           }
         } catch (error) {
           console.error("Error obteniendo datos del usuario:", error);

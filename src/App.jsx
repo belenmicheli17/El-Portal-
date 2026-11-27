@@ -26,6 +26,7 @@ const Papers = lazy(() => import('./pages/Papers'));
 const BolsaDeTrabajo = lazy(() => import('./pages/bolsa-de-trabajo'));
 const LegalPage = lazy(() => import('./pages/legales/privacidad'));
 const Login = lazy(() => import('./pages/Login'));
+const CompletarCuenta = lazy(() => import('./pages/CompletarCuenta'));
 const Capacitaciones = lazy(() => import('./pages/Capacitaciones'));
 const CartillaProveedores = lazy(() => import('./pages/CartillaProveedores'));
 const Ecosistema = lazy(() => import('./pages/Ecosistema'));
@@ -214,6 +215,7 @@ export default function App() {
           {/* ================================================ */}
           <Route path="/Login" element={<Login />} />
           <Route path="/restablecer-clave" element={<RestablecerClave />} />
+          <Route path="/completar-cuenta" element={<CompletarCuenta />} />
           <Route element={<RutaProtegida useLayout />}>
   <Route path="/ecosistema" element={<Ecosistema />} />
 </Route>

@@ -11,21 +11,7 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db, registrarEvento } from '../firebase';
 import { useAuth } from '../context/AuthContext';
 import BarraCupos from '../components/BarraCupos';
-
-const traducirErrorFirebase = (errorCode) => {
-  switch (errorCode) {
-    case 'auth/email-already-in-use': return 'Este correo ya está registrado. ¿Intentaste iniciar sesión?';
-    case 'auth/invalid-email': return 'El formato del correo no es válido. Revisá que no haya espacios al final.';
-    case 'auth/weak-password': return 'La contraseña es muy débil. Debe tener al menos 6 caracteres.';
-    case 'auth/user-not-found': return 'No encontramos ninguna cuenta con este correo.';
-    case 'auth/wrong-password': return 'La contraseña es incorrecta.';
-    case 'auth/invalid-credential': return 'El correo o la contraseña son incorrectos.';
-    case 'auth/too-many-requests': return 'Demasiados intentos. Por seguridad, intentá de nuevo más tarde.';
-    case 'auth/network-request-failed': return 'Error de conexión. Revisá tu internet y volvé a intentar.';
-    case 'recuperacion/fallo': return 'No pudimos enviar el correo. Intentá de nuevo en unos minutos.';
-    default: return `Ocurrió un error inesperado (${errorCode || 'Desconocido'}). Intentá de nuevo.`;
-  }
-};
+import { traducirErrorFirebase, MENSAJE_FALLA_DATOS, ATRIBUTOS_CAMPO_LOGIN } from '../utils/erroresLogin';
 
 export default function Login() {
   const [view, setView] = useState('login');
@@ -94,15 +80,28 @@ export default function Login() {
       setErrorMsg('');
       try {
         const auth = getAuth();
-        const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password);
+        // El teclado del celular a veces deja un espacio al final del mail: lo sacamos
+        const userCredential = await signInWithEmailAndPassword(auth, formData.email.trim(), formData.password);
         const user = userCredential.user;
         const userDocRef = doc(db, 'usuarios', user.uid);
-        const userDoc = await getDoc(userDocRef);
+
+        // A partir de acá la contraseña ya estaba bien. Si falla la lectura de sus datos,
+        // lo decimos aparte para que no parezca un problema de contraseña.
+        let userDoc;
+        try {
+          userDoc = await getDoc(userDocRef);
+        } catch (errorLectura) {
+          console.error('Ingresó bien pero no se pudo leer usuarios:', errorLectura);
+          setErrorMsg(MENSAJE_FALLA_DATOS);
+          return;
+        }
+
         if (userDoc.exists()) {
           const userData = userDoc.data();
           navigate(userData.rol === 'admin' ? '/admin' : '/ecosistema');
         } else {
-          navigate('/ecosistema');
+          // Cuenta creada en Authentication pero sin documento en "usuarios": elige su tipo de cuenta y lo crea
+          navigate('/completar-cuenta');
         }
       } catch (error) {
         setErrorMsg(traducirErrorFirebase(error.code));
@@ -120,13 +119,15 @@ export default function Login() {
       setErrorMsg('');
       try {
         const auth = getAuth();
-        const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+        const emailLimpio = formData.email.trim();
+        const userCredential = await createUserWithEmailAndPassword(auth, emailLimpio, formData.password);
         const user = userCredential.user;
         const userDocRef = doc(db, 'usuarios', user.uid);
         // El nombre y el resto de los datos se piden después, en el cuestionario de alta de cada tipo de cuenta.
+        // OJO: si cambiás estos campos, cambialos también en src/utils/completarCuenta.js (recuperación de cuentas sin datos).
         await setDoc(userDocRef, {
           nombre: '',
-          email: formData.email,
+          email: emailLimpio,
           rol: ['clinica', 'alumnx'].includes(accountType) ? accountType : 'profesional',
           slug: '',
           fechaRegistro: new Date().toISOString(),
@@ -363,13 +364,13 @@ export default function Login() {
 
                     <div className="relative group">
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-[#2D6A6A] transition-colors"><Mail size={18} /></div>
-                      <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="Correo electrónico"
+                      <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="Correo electrónico" {...ATRIBUTOS_CAMPO_LOGIN}
                         className="w-full pl-11 pr-4 py-3.5 md:py-3 bg-[#F4F7F7] border border-transparent rounded-xl text-[13px] text-[#1A3D3D] placeholder-gray-400 focus:bg-white focus:border-[#2D6A6A] focus:ring-4 focus:ring-[#2D6A6A]/10 transition-all outline-none" required />
                     </div>
                     {(view === 'login' || view === 'register') && (
                       <div className="relative group">
                         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-[#2D6A6A] transition-colors"><Lock size={18} /></div>
-                        <input type={showPassword ? 'text' : 'password'} name="password" value={formData.password} onChange={handleChange} placeholder="Contraseña"
+                        <input type={showPassword ? 'text' : 'password'} name="password" value={formData.password} onChange={handleChange} placeholder="Contraseña" {...ATRIBUTOS_CAMPO_LOGIN}
                           className="w-full pl-11 pr-12 py-3.5 md:py-3 bg-[#F4F7F7] border border-transparent rounded-xl text-[13px] text-[#1A3D3D] placeholder-gray-400 focus:bg-white focus:border-[#2D6A6A] focus:ring-4 focus:ring-[#2D6A6A]/10 transition-all outline-none" required />
                         <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-[#2D6A6A] transition-colors">
                           {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}

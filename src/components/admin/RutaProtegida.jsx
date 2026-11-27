@@ -20,6 +20,11 @@ export default function RutaProtegida({ useLayout = false }) {
     return <Navigate to="/Login" replace />;
   }
 
+  // Cuenta sin documento en "usuarios": primero tiene que elegir su tipo de cuenta
+  if (currentUser.sinDocumento) {
+    return <Navigate to="/completar-cuenta" replace />;
+  }
+
   if (useLayout) {
     return (
       <div className="flex flex-col min-h-screen">
