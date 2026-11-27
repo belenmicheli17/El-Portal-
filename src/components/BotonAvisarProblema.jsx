@@ -1,8 +1,31 @@
 import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { BellRing, CheckCircle2, Loader2 } from 'lucide-react';
+import { BellRing, CheckCircle2, Loader2, Mail } from 'lucide-react';
 import { auth, db } from '../firebase';
+
+// Plan B: si no se puede guardar el aviso (justo cuando fallan las reglas o no hay conexión), se manda por mail
+const MAIL_AVISOS = 'portalveterinario.ar@gmail.com';
+const ASUNTO_MAIL = 'Algo no funciona en El Portal';
+// Sin conexión, Firebase deja el aviso "en espera" y no avisa que falló: después de este tiempo pasamos al plan B
+const ESPERA_MAXIMA_MS = 8000;
+
+// Arma el link que abre la app de mail con el asunto y el cuerpo ya escritos
+const armarLinkMail = ({ lugar, detalle, pagina }) => {
+  const fecha = new Date().toLocaleString('es-AR');
+  const cuerpo = [
+    'Hola, algo no funciona en El Portal.',
+    '',
+    `Lugar: ${lugar || 'otro'}`,
+    `Código del error: ${detalle || 'sin código'}`,
+    `Página: ${pagina}`,
+    `Fecha: ${fecha}`,
+    '',
+    'Si querés, contanos acá qué estabas haciendo:',
+    ''
+  ].join('\n');
+  return `mailto:${MAIL_AVISOS}?subject=${encodeURIComponent(ASUNTO_MAIL)}&body=${encodeURIComponent(cuerpo)}`;
+};
 
 // Botón "Avisar que no funciona": guarda un aviso en la colección "reportes" de Firestore
 // y le llega a la admin al panel (Avisos de problemas), sin que la persona tenga que escribirle a nadie.
@@ -20,7 +43,7 @@ export default function BotonAvisarProblema({ lugar, detalle = '', className = '
     setEstado('enviando');
     try {
       const usuario = auth.currentUser;
-      await addDoc(collection(db, 'reportes'), {
+      const guardado = addDoc(collection(db, 'reportes'), {
         lugar: String(lugar || 'otro').slice(0, 60),
         detalle: String(detalle || '').slice(0, 300),
         ruta: `${location.pathname}${location.search}`.slice(0, 200),
@@ -31,6 +54,9 @@ export default function BotonAvisarProblema({ lugar, detalle = '', className = '
         fecha: serverTimestamp(),
         estado: 'nuevo'
       });
+      // Si tarda demasiado (sin conexión), lo damos por fallado y ofrecemos el mail
+      const limite = new Promise((_, rechazar) => setTimeout(() => rechazar(new Error('sin respuesta')), ESPERA_MAXIMA_MS));
+      await Promise.race([guardado, limite]);
       setEstado('enviado');
     } catch (error) {
       console.error('No se pudo mandar el aviso:', error);
@@ -58,7 +84,15 @@ export default function BotonAvisarProblema({ lugar, detalle = '', className = '
         Avisar que no funciona
       </button>
       {estado === 'fallo' && (
-        <p className="mt-2 text-[12px] font-medium text-red-600" role="alert">No pudimos mandar el aviso. Probá de nuevo en un rato.</p>
+        <div className="mt-2 flex flex-col items-start gap-2" role="alert">
+          <p className="text-[12px] font-medium text-red-600">No pudimos mandar el aviso. Mandalo por mail, ya va escrito:</p>
+          <a
+            href={armarLinkMail({ lugar, detalle, pagina: `${location.pathname}${location.search}` })}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[12px] font-bold bg-[#2D6A6A] text-white hover:bg-[#1A3D3D] transition-colors"
+          >
+            <Mail className="w-4 h-4" /> Mandar por mail
+          </a>
+        </div>
       )}
     </div>
   );

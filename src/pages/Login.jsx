@@ -14,9 +14,32 @@ import BarraCupos from '../components/BarraCupos';
 import { traducirErrorFirebase, MENSAJE_FALLA_DATOS, ATRIBUTOS_CAMPO_LOGIN } from '../utils/erroresLogin';
 import BotonAvisarProblema from '../components/BotonAvisarProblema';
 
+// Tipos de cuenta que se pueden abrir directo desde la dirección (?registro=profesional).
+// Proveedor queda afuera porque todavía figura como "Próximamente".
+const TIPOS_REGISTRO = ['profesional', 'clinica', 'alumnx'];
+// Lo que la persona ya escribió en el registro, para no perderlo si sale a leer los Términos y vuelve.
+// La contraseña NO se guarda (por seguridad): solo el mail.
+const CLAVE_BORRADOR = 'registroBorrador';
+const leerBorrador = () => {
+  try { return JSON.parse(sessionStorage.getItem(CLAVE_BORRADOR) || '{}'); } catch { return {}; }
+};
+const guardarBorrador = (datos) => {
+  try { sessionStorage.setItem(CLAVE_BORRADOR, JSON.stringify(datos)); } catch { /* sin almacenamiento: no pasa nada */ }
+};
+const borrarBorrador = () => {
+  try { sessionStorage.removeItem(CLAVE_BORRADOR); } catch { /* sin almacenamiento: no pasa nada */ }
+};
+// Lee de la dirección (o del aviso interno de la navbar) si hay que abrir el registro y con qué tipo
+const registroPedido = (location) => new URLSearchParams(location.search).get('registro') || location.state?.registro || null;
+
 export default function Login() {
-  const [view, setView] = useState('login');
-  const [accountType, setAccountType] = useState(null);
+  const location = useLocation();
+  // Arrancamos ya en la pestaña correcta: así, al volver de los Términos (botón atrás), sigue en el registro
+  const [view, setView] = useState(() => (registroPedido(location) ? 'register' : 'login'));
+  const [accountType, setAccountType] = useState(() => {
+    const registro = registroPedido(location);
+    return TIPOS_REGISTRO.includes(registro) ? registro : null;
+  });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -27,9 +50,13 @@ export default function Login() {
   // ── Transición de entrada ──────────────────────────────────────────────────
   const [visible, setVisible] = useState(false);
 
-  const [formData, setFormData] = useState({ nombre: '', email: '', password: '' });
+  // Si estaba registrándose y salió de la página, recuperamos el mail que ya había escrito
+  const [formData, setFormData] = useState(() => ({
+    nombre: '',
+    email: registroPedido(location) ? (leerBorrador().email || '') : '',
+    password: ''
+  }));
   const navigate = useNavigate();
-  const location = useLocation();
   const { refreshUser } = useAuth();
 
   // Si llegan desde el botón "¿Sos veterinario? Registrate" de la navbar, abrimos el registro mostrando las opciones de tipo de cuenta
@@ -50,11 +77,27 @@ export default function Login() {
       setView('register');
       // Si el link trae un tipo de cuenta válido, saltamos directo al formulario.
       // Si no trae ninguno (o no es válido), mostramos las opciones para elegir.
-      // Proveedor queda afuera porque todavía figura como "Próximamente".
-      const tiposValidos = ['profesional', 'clinica', 'alumnx'];
-      setAccountType(tiposValidos.includes(registro) ? registro : null);
+      setAccountType(TIPOS_REGISTRO.includes(registro) ? registro : null);
     }
   }, [location.state, location.search]);
+
+  // La pestaña en la que está queda escrita en la dirección (igual que los filtros de la Cartilla).
+  // Ejemplo: /Login?registro=profesional. Así, si toca "Términos" y vuelve atrás, aparece donde estaba.
+  useEffect(() => {
+    const parametros = new URLSearchParams(location.search);
+    const actual = parametros.get('registro');
+    const deseado = view === 'register' ? (accountType || 'elegir') : null;
+    if (actual === deseado) return;
+    if (deseado) parametros.set('registro', deseado); else parametros.delete('registro');
+    const busqueda = parametros.toString();
+    // replace: no suma pasos al botón "atrás" del navegador
+    navigate({ pathname: location.pathname, search: busqueda ? `?${busqueda}` : '' }, { replace: true });
+  }, [view, accountType, location.pathname, location.search, navigate]);
+
+  // Mientras se registra, guardamos el mail escrito (se borra al crear la cuenta)
+  useEffect(() => {
+    if (view === 'register') guardarBorrador({ email: formData.email });
+  }, [view, formData.email]);
 
   useEffect(() => {
     const link = document.createElement('link');
@@ -153,6 +196,7 @@ export default function Login() {
 
         // Releemos los datos del usuario para que la app sepa que es profesional y debe pasar por el cuestionario
         registrarEvento('registro_completado', { tipo_cuenta: accountType || 'profesional' });
+        borrarBorrador();
         await refreshUser();
         navigate(accountType === 'clinica' ? '/onboarding-clinica' : accountType === 'alumnx' ? '/onboarding-alumnx' : '/onboarding');
       } catch (error) {

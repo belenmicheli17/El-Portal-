@@ -311,6 +311,28 @@ service cloud.firestore {
       allow write: if esAdmin();
     }
 
+    // ─── Avisos de "no funciona" (botón "Avisar que no funciona") ───
+    // Cualquiera puede mandar uno, también sin sesión (la Bolsa de trabajo es pública).
+    // Solo con los campos esperados, textos cortos, estado "nuevo" y la fecha puesta por el servidor.
+    // Si el aviso trae uid o mail, tienen que ser los de la propia sesión (nadie avisa en nombre de otra persona).
+    // Solo la admin los lee, los marca como resueltos o los borra.
+    match /reportes/{docId} {
+      allow create: if request.resource.data.keys().hasOnly(['lugar', 'detalle', 'ruta', 'uid', 'email', 'navegador', 'fecha', 'estado'])
+        && request.resource.data.keys().hasAll(['lugar', 'fecha', 'estado'])
+        && request.resource.data.estado == 'nuevo'
+        && request.resource.data.fecha == request.time
+        && request.resource.data.lugar is string && request.resource.data.lugar.size() <= 60
+        && request.resource.data.get('detalle', '') is string && request.resource.data.get('detalle', '').size() <= 300
+        && request.resource.data.get('ruta', '') is string && request.resource.data.get('ruta', '').size() <= 200
+        && request.resource.data.get('navegador', '') is string && request.resource.data.get('navegador', '').size() <= 200
+        && (request.resource.data.get('uid', '') == ''
+            || (request.auth != null && request.resource.data.uid == request.auth.uid))
+        && (request.resource.data.get('email', '') == ''
+            || (request.auth != null && request.resource.data.email == request.auth.token.email));
+
+      allow read, update, delete: if esAdmin();
+    }
+
     // ─── Verificación de matrícula: el estado vive acá, fuera del perfil que edita la persona ───
     match /verificaciones/{userId} {
       allow read: if request.auth != null && (request.auth.uid == userId || esAdmin());

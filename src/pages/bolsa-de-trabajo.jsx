@@ -104,6 +104,16 @@ export default function BolsaTrabajo() {
       getDocs(query(collection(db, 'ofertasEmpleo'), where('estado', '==', 'activo'))),
       getDocs(query(collection(db, 'profesionalesDisponibles'), where('estado', '==', 'activo')))
     ]);
+    // Sin conexión, Firebase no da error: devuelve lo que tenga guardado en el navegador (fromCache),
+    // que puede ser una lista vacía. Si las dos vienen vacías y de ahí, no sabemos si de verdad no hay
+    // publicaciones: lo tratamos como un error para mostrar "No pudimos cargar" (con Reintentar).
+    const vacias = snapOfertas.empty && snapDisp.empty;
+    const desdeMemoria = snapOfertas.metadata.fromCache || snapDisp.metadata.fromCache;
+    if (vacias && desdeMemoria) {
+      const sinConexion = new Error('Sin conexión con la base: listas vacías desde la memoria del navegador');
+      sinConexion.code = 'sin-conexion';
+      throw sinConexion;
+    }
     setOfertas(snapOfertas.docs.map((d) => ({ id: d.id, ...d.data() })).filter(estaVigente).sort(masNuevasPrimero));
     setDisponibles(snapDisp.docs.map((d) => ({ id: d.id, ...d.data() })).filter(estaVigente).sort(masNuevasPrimero));
   }, []);
