@@ -3,10 +3,12 @@ import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getAuth, signOut } from 'firebase/auth';
 import BotonAvisosPush from '../../components/admin/BotonAvisosPush';
-import { 
-  LayoutDashboard, Users, CheckSquare, Briefcase, 
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { db } from '../../firebase';
+import {
+  LayoutDashboard, Users, CheckSquare, Briefcase,
   Settings, LogOut, Menu, X, ShieldAlert, BookOpen, MessageCircle,
-  Home, MapPin, Store, FileText, Globe, ChevronDown
+  Home, MapPin, Store, FileText, Globe, ChevronDown, BellRing
 } from 'lucide-react';
 
 export default function AdminLayout() {
@@ -14,6 +16,19 @@ export default function AdminLayout() {
   const [portalAbierto, setPortalAbierto] = useState(false); // desplegable "Ir al portal"
   const navigate = useNavigate();
   const { currentUser } = useAuth();
+  // Cuántos avisos de "no funciona" hay sin resolver (se actualiza solo, sin recargar)
+  const [avisosNuevos, setAvisosNuevos] = useState(0);
+
+  useEffect(() => {
+    const consulta = query(collection(db, 'reportes'), where('estado', '==', 'nuevo'));
+    const dejarDeEscuchar = onSnapshot(
+      consulta,
+      (snap) => setAvisosNuevos(snap.size),
+      // Si las reglas nuevas todavía no están pegadas, no se puede leer: el contador queda en 0 sin romper el panel
+      (e) => console.error('No se pudieron contar los avisos:', e)
+    );
+    return () => dejarDeEscuchar();
+  }, []);
 
   // Inyección de la fuente de Google (si no está global)
   useEffect(() => {
@@ -29,6 +44,7 @@ export default function AdminLayout() {
     { path: '/admin', icon: <LayoutDashboard className="w-5 h-5" />, label: 'Dashboard', exact: true },
        { path: '/admin/validaciones', icon: <CheckSquare className="w-5 h-5" />, label: 'Validaciones' },
     { path: '/admin/usuarios', icon: <Users className="w-5 h-5" />, label: 'Gestión Usuarios' },
+    { path: '/admin/avisos', icon: <BellRing className="w-5 h-5" />, label: 'Avisos de problemas', contador: avisosNuevos },
     { path: '/admin/bolsa', icon: <Briefcase className="w-5 h-5" />, label: 'Gestión Bolsa' },
 
     { path: '/admin/capacitaciones', icon: <BookOpen className="w-5 h-5" />, label: 'Capacitaciones' },
@@ -104,6 +120,12 @@ export default function AdminLayout() {
             >
               {item.icon}
               {item.label}
+              {/* Contador de pendientes (por ahora solo lo usa "Avisos de problemas") */}
+              {item.contador > 0 && (
+                <span className="ml-auto min-w-[22px] h-[22px] px-1.5 rounded-full bg-red-500 text-white text-[11px] font-black flex items-center justify-center">
+                  {item.contador > 99 ? '99+' : item.contador}
+                </span>
+              )}
             </NavLink>
           ))}
 
@@ -148,11 +170,16 @@ export default function AdminLayout() {
         {/* Header Superior */}
         <header className="h-20 bg-white border-b border-gray-200 px-6 flex items-center justify-between shrink-0 shadow-sm z-10">
           <div className="flex items-center gap-4">
-            <button 
+            <button
               onClick={() => setIsMobileMenuOpen(true)}
-              className="lg:hidden text-[#1A3D3D] hover:bg-gray-100 p-2 rounded-xl transition-colors"
+              aria-label={avisosNuevos > 0 ? `Abrir menú (${avisosNuevos} avisos nuevos)` : 'Abrir menú'}
+              className="lg:hidden relative text-[#1A3D3D] hover:bg-gray-100 p-2 rounded-xl transition-colors"
             >
               <Menu className="w-6 h-6" />
+              {/* En el celu el menú está escondido: el puntito rojo avisa que hay avisos nuevos adentro */}
+              {avisosNuevos > 0 && (
+                <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-white" />
+              )}
             </button>
             <h2 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[18px] md:text-[22px] hidden sm:block">
               Centro de Control

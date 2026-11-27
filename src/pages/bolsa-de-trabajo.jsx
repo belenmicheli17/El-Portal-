@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { collection, doc, getDoc, getDocs, query, where, getCountFromServer } from 'firebase/firestore';
-import { Search, X, Briefcase, Layers, MapPin, ChevronRight, ClipboardList, Plus, CheckCircle2, SlidersHorizontal, Stethoscope, GraduationCap, Hospital } from 'lucide-react';
+import { Search, X, Briefcase, Layers, MapPin, ChevronRight, ClipboardList, Plus, CheckCircle2, SlidersHorizontal, Stethoscope, GraduationCap, Hospital, AlertCircle, RotateCcw } from 'lucide-react';
+import BotonAvisarProblema from '../components/BotonAvisarProblema';
 import { db } from '../firebase';
 import { useAuth } from '../context/AuthContext';
 import { ROLES, ROLES_VISIBLES, JORNADAS, GRUPOS_AREAS } from '../data/bolsaOpciones';
@@ -50,6 +51,9 @@ export default function BolsaTrabajo() {
   const [misOfertas, setMisOfertas] = useState([]);
   const [miDisponible, setMiDisponible] = useState(null);
   const [cargando, setCargando] = useState(true);
+  // Si falla la lectura de publicaciones guardamos el código del error (ej: permission-denied).
+  // Así mostramos "no pudimos cargar" en vez de "no hay ofertas", que no sería verdad.
+  const [errorCarga, setErrorCarga] = useState('');
   const [ofertaSuelta, setOfertaSuelta] = useState(null);
   const [ofertaEditando, setOfertaEditando] = useState(null);
   const [disponibleAbierto, setDisponibleAbierto] = useState(null);
@@ -118,8 +122,10 @@ export default function BolsaTrabajo() {
   const recargar = useCallback(async () => {
     try {
       await Promise.all([cargarPublico(), cargarMias()]);
+      setErrorCarga('');
     } catch (e) {
       console.error('Error cargando la Bolsa:', e);
+      setErrorCarga(e?.code || e?.message || 'desconocido');
     } finally {
       setCargando(false);
     }
@@ -472,6 +478,11 @@ export default function BolsaTrabajo() {
       <div className="max-w-6xl mx-auto w-full px-4 mt-2 min-h-[50vh]">
         {cargando ? (
           <div className="flex justify-center items-center py-20"><div className="w-12 h-12 border-4 border-[#2D6A6A]/20 border-t-[#2D6A6A] rounded-full animate-spin" /></div>
+        ) : errorCarga && ofertas.length === 0 && disponibles.length === 0 ? (
+          <ErrorCarga
+            codigo={errorCarga}
+            onReintentar={() => { setErrorCarga(''); setCargando(true); recargar(); }}
+          />
         ) : ofertas.length === 0 && disponibles.length === 0 ? (
           <EstadoVacio onPublicar={pedirPublicarBusqueda} />
         ) : (
@@ -553,6 +564,26 @@ function AvisoExito({ texto }) {
   return (
     <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[90] bg-[#1A3D3D] text-white px-5 py-3 rounded-2xl shadow-xl text-[14px] font-semibold flex items-center gap-2 animate-in fade-in slide-in-from-top-2 font-['Inter']">
       <CheckCircle2 className="w-5 h-5 text-[#4DB6AC]" /> {texto}
+    </div>
+  );
+}
+
+// Cuando no se pudieron leer las publicaciones (ej: un problema de permisos o de conexión).
+// Antes en este caso se mostraba "Estamos sumando las primeras ofertas", como si la bolsa estuviera vacía.
+function ErrorCarga({ codigo, onReintentar }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-16 text-center bg-white rounded-[32px] border border-red-100 shadow-sm px-6">
+      <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mb-5">
+        <AlertCircle className="w-10 h-10 text-red-500" />
+      </div>
+      <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[20px] md:text-[24px] mb-2">No pudimos cargar las publicaciones</h3>
+      <p className="text-[#666666] text-[15px] max-w-md mb-6">No es que no haya: hubo un problema al traerlas. Probá de nuevo y, si sigue pasando, avisanos.</p>
+      <div className="flex flex-wrap gap-3 justify-center items-center">
+        <button type="button" onClick={onReintentar} className="inline-flex items-center gap-2 bg-[#2D6A6A] hover:bg-[#1A3D3D] text-white px-6 py-3 rounded-2xl text-[14px] font-semibold transition-colors">
+          <RotateCcw className="w-4 h-4" /> Reintentar
+        </button>
+        <BotonAvisarProblema lugar="bolsa" detalle={codigo} />
+      </div>
     </div>
   );
 }

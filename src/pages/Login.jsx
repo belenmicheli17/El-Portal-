@@ -12,6 +12,7 @@ import { db, registrarEvento } from '../firebase';
 import { useAuth } from '../context/AuthContext';
 import BarraCupos from '../components/BarraCupos';
 import { traducirErrorFirebase, MENSAJE_FALLA_DATOS, ATRIBUTOS_CAMPO_LOGIN } from '../utils/erroresLogin';
+import BotonAvisarProblema from '../components/BotonAvisarProblema';
 
 export default function Login() {
   const [view, setView] = useState('login');
@@ -19,6 +20,8 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  // Código técnico del error de lectura de "usuarios" (va en el aviso de "no funciona")
+  const [detalleError, setDetalleError] = useState('');
   // Casilla de "Acepto los Términos y la Política de Privacidad" (obligatoria para registrarse)
   const [aceptaTerminos, setAceptaTerminos] = useState(false);
   // ── Transición de entrada ──────────────────────────────────────────────────
@@ -92,6 +95,7 @@ export default function Login() {
           userDoc = await getDoc(userDocRef);
         } catch (errorLectura) {
           console.error('Ingresó bien pero no se pudo leer usuarios:', errorLectura);
+          setDetalleError(`lectura usuarios: ${errorLectura?.code || errorLectura?.message || 'desconocido'}`);
           setErrorMsg(MENSAJE_FALLA_DATOS);
           return;
         }
@@ -358,6 +362,10 @@ export default function Login() {
                       <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
                       <p className="text-red-600 text-[11px] font-semibold">{errorMsg}</p>
                     </div>
+                  )}
+                  {/* Si la contraseña estaba bien pero no cargaron sus datos, puede avisarnos con un toque */}
+                  {errorMsg === MENSAJE_FALLA_DATOS && (
+                    <BotonAvisarProblema lugar="ingreso" detalle={detalleError} className="mb-4" />
                   )}
 
                   <form onSubmit={handleSubmit} className="space-y-4 md:space-y-3">

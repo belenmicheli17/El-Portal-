@@ -6,6 +6,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { AlertCircle, CheckCircle, Eye, EyeOff, Loader } from 'lucide-react';
 import { traducirErrorFirebase, MENSAJE_FALLA_DATOS, ATRIBUTOS_CAMPO_LOGIN } from '../utils/erroresLogin';
+import BotonAvisarProblema from './BotonAvisarProblema';
 
 // Cartelito de inicio de sesión (el mismo que usa la Sala de Espera).
 // Se muestra pegado debajo del botón que lo abre. El cierre al hacer clic afuera lo maneja quien lo usa.
@@ -16,6 +17,8 @@ export default function LoginDropdown({ onClose }) {
   const [loginPassword, setLoginPassword] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState('');
+  // Código técnico del error de lectura de "usuarios" (va en el aviso de "no funciona")
+  const [detalleError, setDetalleError] = useState('');
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [loginView, setLoginView] = useState('login'); // 'login' | 'forgot' | 'sent'
   const [recuperando, setRecuperando] = useState(false);
@@ -47,6 +50,7 @@ export default function LoginDropdown({ onClose }) {
         snap = await getDoc(doc(db, 'usuarios', uid));
       } catch (errorLectura) {
         console.error('Ingresó bien pero no se pudo leer usuarios:', errorLectura);
+        setDetalleError(`lectura usuarios: ${errorLectura?.code || errorLectura?.message || 'desconocido'}`);
         setLoginError(MENSAJE_FALLA_DATOS);
         return;
       }
@@ -107,6 +111,10 @@ export default function LoginDropdown({ onClose }) {
           <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
           <p className="text-red-600 text-[12px] font-medium">{loginError}</p>
         </div>
+      )}
+      {/* Si la contraseña estaba bien pero no cargaron sus datos, puede avisarnos con un toque */}
+      {loginError === MENSAJE_FALLA_DATOS && (
+        <BotonAvisarProblema lugar="ingreso" detalle={detalleError} />
       )}
 
       {loginView === 'sent' ? (

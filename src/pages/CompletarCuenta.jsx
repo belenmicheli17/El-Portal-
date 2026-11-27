@@ -6,6 +6,7 @@ import { auth, db, registrarEvento } from '../firebase';
 import { useAuth } from '../context/AuthContext';
 import { MENSAJE_FALLA_DATOS } from '../utils/erroresLogin';
 import { crearDocumentoUsuario, rutaCuestionario } from '../utils/completarCuenta';
+import BotonAvisarProblema from '../components/BotonAvisarProblema';
 
 // Pantalla para cuentas que existen en Authentication pero no tienen documento en "usuarios"
 // (pasó cuando las reglas de Firestore estuvieron incompletas). La persona elige su tipo de cuenta,
@@ -26,6 +27,8 @@ export default function CompletarCuenta() {
   const [aceptaTerminos, setAceptaTerminos] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  // Código técnico del error (va en el aviso de "no funciona"). Vacío = no hubo error técnico.
+  const [detalleError, setDetalleError] = useState('');
 
   useEffect(() => {
     const link = document.createElement('link');
@@ -59,6 +62,7 @@ export default function CompletarCuenta() {
       } catch (error) {
         console.error('No se pudo revisar la cuenta:', error);
         if (!cancelado) {
+          setDetalleError(`lectura usuarios: ${error?.code || error?.message || 'desconocido'}`);
           setErrorMsg(MENSAJE_FALLA_DATOS);
           setEstado('error');
         }
@@ -69,6 +73,8 @@ export default function CompletarCuenta() {
   }, []);
 
   const handleContinuar = async () => {
+    // Borramos el error técnico anterior: si ahora falta elegir algo, no corresponde el botón de avisar
+    setDetalleError('');
     if (!tipo) {
       setErrorMsg('Elegí qué tipo de cuenta sos para continuar.');
       return;
@@ -92,7 +98,8 @@ export default function CompletarCuenta() {
       navigate(rutaCuestionario(tipo), { replace: true });
     } catch (error) {
       console.error('No se pudo crear el documento de la cuenta:', error);
-      setErrorMsg('No pudimos guardar tus datos. Intentá de nuevo y, si sigue pasando, escribinos.');
+      setDetalleError(`crear usuarios: ${error?.code || error?.message || 'desconocido'}`);
+      setErrorMsg('No pudimos guardar tus datos. Intentá de nuevo y, si sigue pasando, avisanos.');
     } finally {
       setGuardando(false);
     }
@@ -129,6 +136,7 @@ export default function CompletarCuenta() {
               <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
               <p className="text-red-600 text-[12px] font-semibold">{errorMsg}</p>
             </div>
+            <BotonAvisarProblema lugar="completar-cuenta" detalle={detalleError} />
             <button
               type="button"
               onClick={handleSalir}
@@ -151,6 +159,10 @@ export default function CompletarCuenta() {
                 <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
                 <p className="text-red-600 text-[12px] font-semibold">{errorMsg}</p>
               </div>
+            )}
+            {/* Solo cuando falló el guardado (no cuando falta elegir una opción o tildar la casilla) */}
+            {errorMsg && detalleError && (
+              <BotonAvisarProblema lugar="completar-cuenta" detalle={detalleError} className="mb-4" />
             )}
 
             <div className="space-y-3">

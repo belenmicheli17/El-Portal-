@@ -60,6 +60,7 @@ import Cookies from './components/Cookies';
 const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'));
 const DashboardAdmin = lazy(() => import('./pages/admin/DashboardAdmin'));
 const GestionUsuarios = lazy(() => import('./pages/admin/GestionUsuarios'));
+const AvisosProblemas = lazy(() => import('./pages/admin/AvisosProblemas'));
 const Validaciones = lazy(() => import('./pages/admin/Validaciones'));
 const GestionBolsa = lazy(() => import('./pages/admin/GestionBolsa'));
 
@@ -239,6 +240,7 @@ export default function App() {
             <Route index element={<DashboardAdmin />} />
                        <Route path="validaciones" element={<Validaciones />} />
             <Route path="usuarios" element={<GestionUsuarios />} />
+            <Route path="avisos" element={<AvisosProblemas />} />
             <Route path="bolsa" element={<GestionBolsa />} />
 
             <Route path="capacitaciones" element={<GestionCapacitaciones />} />
