@@ -68,6 +68,26 @@ export const estaVigente = (item) => item?.estado === 'activo' && !estaVencida(i
 
 export const nuevoVencimiento = () => Date.now() + DIAS_DE_VIGENCIA * UN_DIA;
 
+// ---------- "Vino a publicar en la Bolsa" ----------
+// Si alguien se registra o inicia sesión desde la Bolsa para publicar, lo recordamos en la dirección
+// (?despues=bolsa) y en sessionStorage (por si pasa por el Ecosistema y la dirección se pierde).
+const CLAVE_DESPUES = 'despuesDeRegistro';
+export const PARAM_DESPUES_BOLSA = 'despues=bolsa';
+export const marcarVieneDeBolsa = () => {
+  try { sessionStorage.setItem(CLAVE_DESPUES, 'bolsa'); } catch { /* sin almacenamiento: queda la dirección */ }
+};
+export const olvidarVieneDeBolsa = () => {
+  try { sessionStorage.removeItem(CLAVE_DESPUES); } catch { /* nada */ }
+};
+export const vieneDeBolsa = (search = '') => {
+  if (new URLSearchParams(search).get('despues') === 'bolsa') return true;
+  try { return sessionStorage.getItem(CLAVE_DESPUES) === 'bolsa'; } catch { return false; }
+};
+// Cuestionario de alta de cada tipo de cuenta
+export const rutaCuestionario = (rol) => (rol === 'clinica' ? '/onboarding-clinica' : rol === 'alumnx' ? '/onboarding-alumnx' : '/onboarding');
+// Formulario de la Bolsa que le toca: oferta (clínicas) o disponible (profesionales y estudiantes)
+export const rutaFormularioBolsa = (rol) => (rol === 'clinica' ? '/bolsa-de-trabajo?v=publicar' : '/bolsa-de-trabajo?v=disponible');
+
 // Qué puede hacer la persona en la Bolsa según su cuenta
 export const permisosBolsa = (currentUser) => {
   const esAdmin = currentUser?.uid === ADMIN_UID || currentUser?.rol === 'admin';

@@ -5,7 +5,7 @@ import { X, Check, Lock, Search, ChevronDown, Loader2, AlertTriangle, Info, Shar
 import { GRUPOS_AREAS } from '../../data/bolsaOpciones';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
-import { generarImagenOferta, generarImagenDisponible, textoParaCompartir, linkDisponibles } from '../../utils/bolsa';
+import { generarImagenOferta, generarImagenDisponible, textoParaCompartir, linkDisponibles, marcarVieneDeBolsa, PARAM_DESPUES_BOLSA, rutaCuestionario } from '../../utils/bolsa';
 import { usuarioDeInstagram } from '../editor/EditorComponents';
 
 
@@ -258,6 +258,12 @@ export function CartelRegistro({ abierto, onCerrar, motivo = 'publicar' }) {
     contacto: 'El contacto de cada publicación lo ven solo los profesionales, estudiantes y clínicas registrados.',
     postular: 'Para postularte necesitás tu perfil en el Portal. Lo usás también como currículum.'
   };
+  // Si vino a publicar, lo recordamos: al terminar el registro (o al iniciar sesión) vuelve a la Bolsa
+  const irALogin = (registro) => {
+    const vieneAPublicar = motivo === 'publicar';
+    if (vieneAPublicar) marcarVieneDeBolsa();
+    navigate(vieneAPublicar ? `/login?${PARAM_DESPUES_BOLSA}` : '/login', registro ? { state: { registro: true } } : undefined);
+  };
   return (
     <VentanaBolsa abierta={abierto} onCerrar={onCerrar} ancho="max-w-md">
       <div className="w-12 h-12 rounded-2xl bg-[#2D6A6A]/10 text-[#2D6A6A] flex items-center justify-center mb-4">
@@ -265,10 +271,10 @@ export function CartelRegistro({ abierto, onCerrar, motivo = 'publicar' }) {
       </div>
       <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[22px] leading-tight mb-2">Creá tu perfil en 5 minutos</h3>
       <p className="text-[14px] text-[#666666] leading-relaxed mb-6">{textos[motivo] || textos.publicar} Es gratis.</p>
-      <button type="button" onClick={() => navigate('/login', { state: { registro: true } })} className="w-full bg-[#2D6A6A] hover:bg-[#1A3D3D] text-white py-3.5 rounded-2xl text-[14px] font-semibold transition-colors mb-2">
+      <button type="button" onClick={() => irALogin(true)} className="w-full bg-[#2D6A6A] hover:bg-[#1A3D3D] text-white py-3.5 rounded-2xl text-[14px] font-semibold transition-colors mb-2">
         Crear mi perfil
       </button>
-      <button type="button" onClick={() => navigate('/login')} className="w-full bg-[#F4F7F7] hover:bg-gray-200 text-[#1A3D3D] py-3.5 rounded-2xl text-[14px] font-semibold transition-colors">
+      <button type="button" onClick={() => irALogin(false)} className="w-full bg-[#F4F7F7] hover:bg-gray-200 text-[#1A3D3D] py-3.5 rounded-2xl text-[14px] font-semibold transition-colors">
         Ya tengo cuenta
       </button>
     </VentanaBolsa>
@@ -282,7 +288,7 @@ export function CartelVerificacion({ abierto, onCerrar }) {
     <VentanaBolsa abierta={abierto} onCerrar={onCerrar} ancho="max-w-md">
       <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[22px] leading-tight mb-2 pr-10">Tu cuenta está en revisión</h3>
       <p className="text-[14px] text-[#666666] leading-relaxed mb-6">
-        Apenas verifiquemos tu cuenta (la matrícula, o el comprobante de cursada si sos estudiante) vas a poder publicar y postularte en la Bolsa de Trabajo. Mientras tanto podés seguir armando tu perfil.
+        Publicar en la Bolsa de Trabajo ya podés: tu publicación queda en espera y sale sola apenas verifiquemos tu cuenta (la matrícula, o el comprobante de cursada si sos estudiante). Lo que sí espera la verificación es postularte a las ofertas. Mientras tanto podés seguir armando tu perfil.
       </p>
       <button type="button" onClick={() => navigate('/ecosistema')} className="w-full bg-[#2D6A6A] hover:bg-[#1A3D3D] text-white py-3.5 rounded-2xl text-[14px] font-semibold transition-colors">
         Ir a mi cuenta
@@ -290,6 +296,27 @@ export function CartelVerificacion({ abierto, onCerrar }) {
     </VentanaBolsa>
   );
 }
+// Cartel para quien tiene sesión pero todavía no terminó su cuestionario de alta.
+// El botón lo lleva al cuestionario (retoma donde quedó) y, al terminar, vuelve a la Bolsa.
+export function CartelTerminarPerfil({ abierto, onCerrar, rol }) {
+  const navigate = useNavigate();
+  const irAlCuestionario = () => {
+    marcarVieneDeBolsa();
+    navigate(`${rutaCuestionario(rol)}?${PARAM_DESPUES_BOLSA}`);
+  };
+  return (
+    <VentanaBolsa abierta={abierto} onCerrar={onCerrar} ancho="max-w-md">
+      <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[22px] leading-tight mb-2 pr-10">Primero terminá tu perfil</h3>
+      <p className="text-[14px] text-[#666666] leading-relaxed mb-6">
+        Con eso verificamos tu cuenta y tu publicación sale sola. Seguís desde donde quedaste.
+      </p>
+      <button type="button" onClick={irAlCuestionario} className="w-full bg-[#2D6A6A] hover:bg-[#1A3D3D] text-white py-3.5 rounded-2xl text-[14px] font-semibold transition-colors">
+        Terminar mi perfil
+      </button>
+    </VentanaBolsa>
+  );
+}
+
 // Botón «Compartir» de una oferta: arma la imagen y abre el menú de compartir.
 // Si el navegador no lo permite, muestra la imagen con botones para copiarla.
 // Con "disponible" (en vez de "oferta") arma la imagen de un profesional disponible.

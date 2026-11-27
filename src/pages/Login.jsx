@@ -13,6 +13,7 @@ import { useAuth } from '../context/AuthContext';
 import BarraCupos from '../components/BarraCupos';
 import { traducirErrorFirebase, MENSAJE_FALLA_DATOS, ATRIBUTOS_CAMPO_LOGIN } from '../utils/erroresLogin';
 import BotonAvisarProblema from '../components/BotonAvisarProblema';
+import { vieneDeBolsa, olvidarVieneDeBolsa, rutaCuestionario, PARAM_DESPUES_BOLSA } from '../utils/bolsa';
 
 // Tipos de cuenta que se pueden abrir directo desde la dirección (?registro=profesional).
 // Proveedor queda afuera porque todavía figura como "Próximamente".
@@ -58,6 +59,13 @@ export default function Login() {
   }));
   const navigate = useNavigate();
   const { refreshUser } = useAuth();
+
+  // ¿Llegó desde la Bolsa de Trabajo para publicar? (?despues=bolsa en la dirección)
+  // Si entró al login por otro lado, olvidamos una marca vieja que haya quedado guardada.
+  const deBolsa = new URLSearchParams(location.search).get('despues') === 'bolsa';
+  useEffect(() => {
+    if (!deBolsa) olvidarVieneDeBolsa();
+  }, [deBolsa]);
 
   // Si llegan desde el botón "¿Sos veterinario? Registrate" de la navbar, abrimos el registro mostrando las opciones de tipo de cuenta
   // Medición: cuando elige el tipo de cuenta y ve el formulario, empezó el registro
@@ -145,6 +153,18 @@ export default function Login() {
 
         if (userDoc.exists()) {
           const userData = userDoc.data();
+          const rolesBolsa = ['profesional', 'clinica', 'alumnx'];
+          if (userData.rol !== 'admin' && rolesBolsa.includes(userData.rol) && vieneDeBolsa(location.search)) {
+            if (userData.onboardingCompleto === false) {
+              // Todavía no terminó el cuestionario: lo retoma y, al final, vuelve a la Bolsa
+              navigate(`${rutaCuestionario(userData.rol)}?${PARAM_DESPUES_BOLSA}`);
+            } else {
+              // Ya tenía el perfil hecho: vuelve a la Bolsa en vez de ir al Ecosistema
+              olvidarVieneDeBolsa();
+              navigate('/bolsa-de-trabajo');
+            }
+            return;
+          }
           navigate(userData.rol === 'admin' ? '/admin' : '/ecosistema');
         } else {
           // Cuenta creada en Authentication pero sin documento en "usuarios": elige su tipo de cuenta y lo crea
@@ -198,7 +218,8 @@ export default function Login() {
         registrarEvento('registro_completado', { tipo_cuenta: accountType || 'profesional' });
         borrarBorrador();
         await refreshUser();
-        navigate(accountType === 'clinica' ? '/onboarding-clinica' : accountType === 'alumnx' ? '/onboarding-alumnx' : '/onboarding');
+        // Si vino desde la Bolsa, el cuestionario lo sabe (?despues=bolsa) y al final le ofrece publicar
+        navigate(`${rutaCuestionario(accountType)}${deBolsa ? `?${PARAM_DESPUES_BOLSA}` : ''}`);
       } catch (error) {
         setErrorMsg(traducirErrorFirebase(error.code));
       } finally {

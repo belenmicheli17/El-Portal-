@@ -14,7 +14,7 @@ import DetalleDisponible from '../components/bolsa/DetalleDisponible';
 import FormularioOferta from '../components/bolsa/FormularioOferta';
 import FormularioDisponible from '../components/bolsa/FormularioDisponible';
 import MisPublicaciones from '../components/bolsa/MisPublicaciones';
-import { CartelRegistro, CartelVerificacion, VentanaBolsa } from '../components/bolsa/ElementosBolsa';
+import { CartelRegistro, CartelVerificacion, CartelTerminarPerfil, VentanaBolsa } from '../components/bolsa/ElementosBolsa';
 
 const PESTANAS = [
   { id: 'todo', label: 'Todo', icon: Layers },
@@ -62,7 +62,7 @@ export default function BolsaTrabajo() {
   const [errorOferta, setErrorOferta] = useState('');
   const [ofertaEditando, setOfertaEditando] = useState(null);
   const [disponibleAbierto, setDisponibleAbierto] = useState(null);
-  const [cartel, setCartel] = useState(null); // 'registro-publicar' | 'registro-contacto' | 'verificacion' | 'solo-clinicas' | 'solo-profesionales'
+  const [cartel, setCartel] = useState(null); // 'registro-publicar' | 'registro-contacto' | 'verificacion' | 'terminar-perfil' | 'solo-clinicas' | 'solo-profesionales'
   const [aviso, setAviso] = useState('');
   const [miProvincia, setMiProvincia] = useState('');
   // Estudiantes verificados: el contador se muestra recién desde MINIMO_ALUMNOS
@@ -187,10 +187,19 @@ export default function BolsaTrabajo() {
     ? ofertas.find((o) => o.id === ofertaId) || misOfertas.find((o) => o.id === ofertaId) || (ofertaSuelta?.id === ofertaId ? ofertaSuelta : null)
     : null;
 
+  // Tiene sesión pero no terminó su cuestionario de alta: antes de publicar tiene que terminarlo
+  const faltaPerfil = permisos.conSesion && !permisos.esAdmin && currentUser?.onboardingCompleto === false;
+
+  // Si entra directo al formulario (?v=publicar o ?v=disponible) sin haber terminado el perfil, mostramos el cartel
+  useEffect(() => {
+    if (faltaPerfil && (vista === 'publicar' || vista === 'disponible')) setCartel('terminar-perfil');
+  }, [faltaPerfil, vista]);
+
   // Botones de publicar: según quién sea, abre el formulario o un cartel
   const pedirPublicarOferta = () => {
     if (!permisos.conSesion) return setCartel('registro-publicar');
     if (currentUser.rol !== 'clinica' && !permisos.esAdmin) return setCartel('solo-clinicas');
+    if (faltaPerfil) return setCartel('terminar-perfil');
     if (!permisos.puedePublicarOferta) return setCartel('verificacion');
     setOfertaEditando(null);
     irA('publicar');
@@ -198,6 +207,7 @@ export default function BolsaTrabajo() {
   const pedirDisponible = () => {
     if (!permisos.conSesion) return setCartel('registro-publicar');
     if (!['profesional', 'alumnx'].includes(currentUser.rol)) return setCartel('solo-profesionales');
+    if (faltaPerfil) return setCartel('terminar-perfil');
     if (!permisos.puedeMarcarseDisponible) return setCartel('verificacion');
     irA('disponible');
   };
@@ -331,11 +341,11 @@ export default function BolsaTrabajo() {
     );
   }
 
-  if (vista === 'publicar' && permisos.puedePublicarOferta) {
+  if (vista === 'publicar' && permisos.puedePublicarOferta && !faltaPerfil) {
     return fondo(<FormularioOferta currentUser={currentUser} ofertaExistente={ofertaEditando} onVolver={() => irA(ofertaEditando ? 'mis' : 'lista')} onGuardada={alGuardar} />);
   }
 
-  if (vista === 'disponible' && permisos.puedeMarcarseDisponible) {
+  if (vista === 'disponible' && permisos.puedeMarcarseDisponible && !faltaPerfil) {
     return fondo(<FormularioDisponible currentUser={currentUser} onVolver={() => irA(miDisponible ? 'mis' : 'lista')} onGuardada={alGuardar} />);
   }
 
@@ -576,6 +586,7 @@ export default function BolsaTrabajo() {
 
       <CartelRegistro abierto={cartel === 'registro-publicar'} onCerrar={() => setCartel(null)} motivo="publicar" />
       <CartelVerificacion abierto={cartel === 'verificacion'} onCerrar={() => setCartel(null)} />
+      <CartelTerminarPerfil abierto={cartel === 'terminar-perfil'} onCerrar={() => { setCartel(null); if (vista === 'publicar' || vista === 'disponible') irA('lista'); }} rol={currentUser?.rol} />
       <VentanaBolsa abierta={cartel === 'solo-clinicas' || cartel === 'solo-profesionales'} onCerrar={() => setCartel(null)} ancho="max-w-md">
         <h3 className="font-['Montserrat'] font-black text-[#1A3D3D] text-[20px] leading-tight mb-2 pr-10">
           {cartel === 'solo-clinicas' ? 'Publicar ofertas es para clínicas' : 'Marcarse como disponible es para profesionales y estudiantes'}
