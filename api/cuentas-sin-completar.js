@@ -1,6 +1,9 @@
 // Lista las cuentas que existen en Authentication pero NO tienen documento en "usuarios"
 // (se crearon cuando las reglas de Firestore estuvieron incompletas y quedaron sin datos).
 // Solo la admin puede pedirla. Se usa en el panel admin > Gestión de usuarios.
+// GET: la lista (cada cuenta trae "avisada" con la fecha, si ya se le escribió).
+// POST { uids: [...] }: marca esas cuentas como avisadas (se guarda en la colección "cuentasAvisadas",
+// que solo se usa desde acá: las reglas no la abren al navegador).
 // Vive en el servidor porque listar las cuentas de Authentication solo se puede con firebase-admin.
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
@@ -29,7 +32,7 @@ export default async function handler(req, res) {
   // Es una lista que cambia todo el tiempo: que no se guarde en ningún caché
   res.setHeader('Cache-Control', 'no-store');
 
-  if (req.method !== 'GET') return res.status(405).json({ error: 'Método no permitido' });
+  if (req.method !== 'GET' && req.method !== 'POST') return res.status(405).json({ error: 'Método no permitido' });
 
   try {
     const { db, auth } = iniciarFirebase();
@@ -44,6 +47,17 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: 'Sesión inválida' });
     }
     if (uid !== ADMIN_UID) return res.status(403).json({ error: 'No autorizado' });
+
+    // Marcar como avisadas
+    if (req.method === 'POST') {
+      const uids = Array.isArray(req.body?.uids) ? req.body.uids.filter((u) => typeof u === 'string' && u.length <= 128).slice(0, 500) : [];
+      if (!uids.length) return res.status(400).json({ error: 'Faltan las cuentas' });
+      const fecha = new Date().toISOString();
+      const lote = db.batch();
+      uids.forEach((u) => lote.set(db.collection('cuentasAvisadas').doc(u), { fecha }));
+      await lote.commit();
+      return res.status(200).json({ ok: true, marcadas: uids.length });
+    }
 
     // 2) Todas las cuentas de Authentication (Firebase las entrega de a 1000)
     const cuentas = [];
@@ -60,14 +74,17 @@ export default async function handler(req, res) {
       const lote = cuentas.slice(i, i + TAMANO_LOTE);
       const referencias = lote.map((c) => db.collection('usuarios').doc(c.uid));
       const documentos = await db.getAll(...referencias, { fieldMask: ['rol'] });
-      documentos.forEach((documento, indice) => {
-        if (documento.exists) return;
-        const cuenta = lote[indice];
+      const faltan = lote.filter((_, indice) => !documentos[indice].exists);
+      if (!faltan.length) continue;
+      // ¿A cuáles ya les escribiste?
+      const avisos = await db.getAll(...faltan.map((c) => db.collection('cuentasAvisadas').doc(c.uid)));
+      faltan.forEach((cuenta, indice) => {
         sinCompletar.push({
           uid: cuenta.uid,
           email: cuenta.email || '',
           creada: aIso(cuenta.metadata?.creationTime),
-          ultimoIngreso: aIso(cuenta.metadata?.lastSignInTime)
+          ultimoIngreso: aIso(cuenta.metadata?.lastSignInTime),
+          avisada: avisos[indice].exists ? (avisos[indice].data().fecha || '') : ''
         });
       });
     }

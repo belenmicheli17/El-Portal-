@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { RefreshCw, Copy, Check, Loader2, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { RefreshCw, Copy, Check, Loader2, AlertTriangle, CheckCircle2, MailCheck } from 'lucide-react';
 import { auth } from '../../firebase';
 
 // Lista de cuentas que existen en Authentication pero no tienen documento en "usuarios"
@@ -17,6 +17,12 @@ export default function CuentasSinCompletar() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
   const [copiado, setCopiado] = useState(false);
+  // Las que ya avisaste se esconden; con este interruptor se pueden volver a ver
+  const [verAvisadas, setVerAvisadas] = useState(false);
+  const [marcando, setMarcando] = useState(false);
+  const pendientes = cuentas.filter((c) => !c.avisada);
+  const avisadas = cuentas.length - pendientes.length;
+  const visibles = verAvisadas ? cuentas : pendientes;
   // Mail copiado de una fila (para mostrar el tilde un ratito)
   const [mailCopiado, setMailCopiado] = useState('');
 
@@ -53,13 +59,37 @@ export default function CuentasSinCompletar() {
 
   // Copia todos los mails juntos, listos para pegar en el "Para" o "CCO" de un mail
   const copiarMails = async () => {
-    const mails = cuentas.map((c) => c.email).filter(Boolean).join(', ');
+    const mails = pendientes.map((c) => c.email).filter(Boolean).join(', ');
     try {
       await navigator.clipboard.writeText(mails);
       setCopiado(true);
       setTimeout(() => setCopiado(false), 2000);
     } catch (e) {
       console.error('No se pudo copiar:', e);
+    }
+  };
+
+  // Marca como avisadas todas las que están pendientes (después de escribirles)
+  const marcarAvisadas = async () => {
+    if (!pendientes.length) return;
+    if (!window.confirm(`¿Marcar ${pendientes.length} cuenta(s) como avisadas? Se esconden de la lista; si alguna completa su cuenta, sale sola.`)) return;
+    setMarcando(true);
+    try {
+      const token = await auth.currentUser?.getIdToken();
+      const respuesta = await fetch('/api/cuentas-sin-completar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ uids: pendientes.map((c) => c.uid) })
+      });
+      if (!respuesta.ok) throw new Error(`Respondió ${respuesta.status}`);
+      const fecha = new Date().toISOString();
+      const marcadas = new Set(pendientes.map((c) => c.uid));
+      setCuentas((prev) => prev.map((c) => (marcadas.has(c.uid) ? { ...c, avisada: fecha } : c)));
+    } catch (e) {
+      console.error('No se pudieron marcar como avisadas:', e);
+      alert('No se pudieron marcar. Probá de nuevo.');
+    } finally {
+      setMarcando(false);
     }
   };
 
@@ -73,8 +103,8 @@ export default function CuentasSinCompletar() {
           <div>
             <h2 className="text-[#1A3D3D] font-bold text-[16px] font-['Montserrat']">
               Cuentas sin completar
-              {!cargando && !error && cuentas.length > 0 && (
-                <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-lg text-[11px] font-bold bg-amber-50 text-amber-600">{cuentas.length}</span>
+              {!cargando && !error && pendientes.length > 0 && (
+                <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-lg text-[11px] font-bold bg-amber-50 text-amber-600">{pendientes.length}</span>
               )}
             </h2>
             <p className="text-[#666666] text-[13px] font-medium">
@@ -83,8 +113,19 @@ export default function CuentasSinCompletar() {
           </div>
         </div>
 
-        <div className="flex gap-2 shrink-0">
-          {cuentas.length > 0 && (
+        <div className="flex flex-wrap gap-2 shrink-0">
+          {pendientes.length > 0 && (
+            <button
+              type="button"
+              onClick={marcarAvisadas}
+              disabled={marcando}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-widest bg-[#2D6A6A] text-white hover:bg-[#1A3D3D] transition-colors disabled:opacity-60"
+            >
+              {marcando ? <Loader2 className="w-4 h-4 animate-spin" /> : <MailCheck className="w-4 h-4" />}
+              Marcar como avisadas
+            </button>
+          )}
+          {pendientes.length > 0 && (
             <button
               type="button"
               onClick={copiarMails}
@@ -118,13 +159,24 @@ export default function CuentasSinCompletar() {
         <p className="mt-4 text-[13px] font-medium text-red-600" role="alert">{error}</p>
       )}
 
-      {!cargando && !error && cuentas.length === 0 && (
+      {!cargando && !error && pendientes.length === 0 && (
         <p className="mt-4 flex items-center gap-2 text-[13px] font-medium text-[#2D6A6A]">
-          <CheckCircle2 className="w-4 h-4" /> No hay cuentas sin completar.
+          <CheckCircle2 className="w-4 h-4" /> {avisadas > 0 ? 'No hay cuentas nuevas sin completar. A las demás ya les escribiste.' : 'No hay cuentas sin completar.'}
         </p>
       )}
 
-      {cuentas.length > 0 && (
+      {/* Ver u ocultar las que ya avisaste (siguen sin completar, pero ya les escribiste) */}
+      {!error && avisadas > 0 && (
+        <button
+          type="button"
+          onClick={() => setVerAvisadas((v) => !v)}
+          className="mt-3 text-[12px] font-bold text-[#2D6A6A] hover:text-[#1A3D3D] underline underline-offset-2"
+        >
+          {verAvisadas ? 'Ocultar las avisadas' : `Ver las avisadas (${avisadas})`}
+        </button>
+      )}
+
+      {visibles.length > 0 && (
         <div className="mt-4 overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -135,9 +187,12 @@ export default function CuentasSinCompletar() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {cuentas.map((c) => (
-                <tr key={c.uid}>
-                  <td className="py-3 pr-4 text-[14px] font-medium text-[#1A3D3D] break-all">{c.email || '—'}</td>
+              {visibles.map((c) => (
+                <tr key={c.uid} className={c.avisada ? 'opacity-60' : ''}>
+                  <td className="py-3 pr-4 text-[14px] font-medium text-[#1A3D3D] break-all">
+                    {c.email || '—'}
+                    {c.avisada && <span className="ml-2 inline-flex px-2 py-0.5 rounded-md text-[11px] font-bold bg-[#2D6A6A]/10 text-[#2D6A6A]">Avisada {new Date(c.avisada).toLocaleDateString('es-AR')}</span>}
+                  </td>
                   <td className="py-3 pr-4 text-[13px] text-[#666666] whitespace-nowrap">{formatearFechaHora(c.creada)}</td>
                   <td className="py-3 text-right">
                     {c.email ? (
