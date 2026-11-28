@@ -333,6 +333,41 @@ service cloud.firestore {
       allow read, update, delete: if esAdmin();
     }
 
+    // ─── Medición anónima: contactos a los perfiles (src/utils/medicion.js) ───
+    // Cualquiera puede sumar uno, también sin sesión (los tutores no se registran).
+    // Solo con los campos esperados, valores de una lista cerrada y la fecha puesta por el servidor.
+    // No guarda quién fue. Solo la admin los lee (panel > Actividad de la Cartilla); nadie los edita.
+    match /contactos/{docId} {
+      allow create: if request.resource.data.keys().hasOnly(['perfilId', 'tipoPerfil', 'canal', 'conSesion', 'desde', 'fecha'])
+        && request.resource.data.keys().hasAll(['perfilId', 'tipoPerfil', 'canal', 'conSesion', 'desde', 'fecha'])
+        && request.resource.data.perfilId is string && request.resource.data.perfilId.size() > 0 && request.resource.data.perfilId.size() <= 128
+        && request.resource.data.tipoPerfil in ['profesional', 'clinica']
+        && request.resource.data.canal in ['whatsapp', 'mail', 'telefono', 'instagram', 'mapa', 'web']
+        && request.resource.data.conSesion == (request.auth != null)
+        && request.resource.data.desde in ['cartilla', 'directo', 'sitio', 'google', 'instagram', 'facebook', 'whatsapp', 'otro']
+        && request.resource.data.fecha == request.time;
+
+      allow read, delete: if esAdmin();
+    }
+
+    // ─── Medición anónima: búsquedas de la Cartilla (src/utils/medicion.js) ───
+    // Qué filtró y cuántos resultados vio. Sin datos de la persona. Solo la admin las lee.
+    match /busquedasCartilla/{docId} {
+      allow create: if request.resource.data.keys().hasOnly(['texto', 'pestana', 'grupo', 'especialidades', 'zonas', 'extras', 'resultados', 'conSesion', 'fecha'])
+        && request.resource.data.keys().hasAll(['texto', 'pestana', 'grupo', 'especialidades', 'zonas', 'extras', 'resultados', 'conSesion', 'fecha'])
+        && request.resource.data.texto is string && request.resource.data.texto.size() <= 80
+        && request.resource.data.pestana in ['todos', 'especialistas', 'clinicas']
+        && request.resource.data.grupo is string && request.resource.data.grupo.size() <= 60
+        && request.resource.data.especialidades is list && request.resource.data.especialidades.size() <= 10
+        && request.resource.data.zonas is list && request.resource.data.zonas.size() <= 10
+        && request.resource.data.extras is list && request.resource.data.extras.size() <= 10
+        && request.resource.data.resultados is int && request.resource.data.resultados >= 0 && request.resource.data.resultados <= 9999
+        && request.resource.data.conSesion == (request.auth != null)
+        && request.resource.data.fecha == request.time;
+
+      allow read, delete: if esAdmin();
+    }
+
     // ─── Verificación de matrícula: el estado vive acá, fuera del perfil que edita la persona ───
     match /verificaciones/{userId} {
       allow read: if request.auth != null && (request.auth.uid == userId || esAdmin());

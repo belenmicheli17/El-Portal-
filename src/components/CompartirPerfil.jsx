@@ -375,7 +375,8 @@ export default function CompartirPerfil({ abierto, onCerrar, tipo = 'profesional
   };
 
   return createPortal(
-    <div className="fixed inset-0 bg-[#1A3D3D]/40 backdrop-blur-md z-[1000] overflow-y-auto overscroll-contain" onClick={onCerrar}>
+    // data-no-medir: los links de esta ventana (compartir por WhatsApp, abrir Instagram) no son contactos al perfil
+    <div data-no-medir className="fixed inset-0 bg-[#1A3D3D]/40 backdrop-blur-md z-[1000] overflow-y-auto overscroll-contain" onClick={onCerrar}>
       <div className="flex min-h-full items-center justify-center p-4 sm:p-6">
         <div className="bg-white rounded-[32px] w-full max-w-3xl shadow-2xl overflow-hidden text-left" onClick={(e) => e.stopPropagation()}>
 

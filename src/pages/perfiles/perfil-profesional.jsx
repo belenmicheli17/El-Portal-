@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../../firebase';
 import { doc, collection, query, where, getDocs, getDoc } from 'firebase/firestore';
 import { useAuth } from '../../context/AuthContext';
+import { useMedirContactos, registrarContacto } from '../../utils/medicion';
 import CompartirPerfil, { BotonCompartirPerfil, BotonCompartirLink, armarLinkPerfil } from '../../components/CompartirPerfil';
 import especialidadesData from '../../data/especialidades.json';
 import { ServicioExplicable, AvisoPresionar } from '../../components/editor/EditorComponents';
@@ -133,6 +134,10 @@ function PerfilPublico() {
   };
   
   const [data, setData] = useState(null);
+  
+  // Medición anónima: cuenta los toques en WhatsApp, mail, teléfono y redes de este perfil
+  
+  useMedirContactos(data?._id, 'profesional');
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('perfil');
   const [mostrarTodosLogros, setMostrarTodosLogros] = useState(false);
@@ -223,6 +228,7 @@ const [verTodosCasos, setVerTodosCasos] = useState(false);
         
 setData({
   ...datosProfesional,
+  _id: docProfesional.id, // para la medición de contactos
   papers: papersDelProfesional
 });
          
@@ -397,6 +403,7 @@ const mobileTabs = [
   const consultarDomicilio = (e) => {
     const wpVisible = data.whatsappActivo && data.whatsappNum && (data.whatsappVisibilidad === 'todos' || !data.whatsappVisibilidad || currentUser);
     if (wpVisible) {
+      registrarContacto({ perfilId: data._id, tipoPerfil: 'profesional', canal: 'whatsapp' });
       window.open(armarLinkWhatsapp(data.whatsappNum, `Hola ${data.nombre}, vi tu perfil en El Portal Veterinario y quería consultarte por una visita a domicilio.`), '_blank', 'noopener');
     } else {
       scrollToContacto(e);
@@ -407,6 +414,7 @@ const mobileTabs = [
   const consultarUrgencia = (e) => {
     const wpVisible = data.whatsappActivo && data.whatsappNum && (data.whatsappVisibilidad === 'todos' || !data.whatsappVisibilidad || currentUser);
     if (wpVisible) {
+      registrarContacto({ perfilId: data._id, tipoPerfil: 'profesional', canal: 'whatsapp' });
       window.open(armarLinkWhatsapp(data.whatsappNum, `Hola ${data.nombre}, vi tu perfil en El Portal Veterinario y necesito una consulta de urgencia a domicilio.`), '_blank', 'noopener');
     } else {
       scrollToContacto(e);
@@ -419,8 +427,10 @@ const mobileTabs = [
     const link = (data.turnoVirtualLink || '').trim();
     if (data.turnoVirtualTipo === 'link' && link) {
       const url = /^https?:\/\//i.test(link) ? link : `https://${link}`;
+      registrarContacto({ perfilId: data._id, tipoPerfil: 'profesional', canal: 'web' });
       window.open(url, '_blank', 'noopener');
     } else if (wpVisible) {
+      registrarContacto({ perfilId: data._id, tipoPerfil: 'profesional', canal: 'whatsapp' });
       window.open(armarLinkWhatsapp(data.whatsappNum, `Hola ${data.nombre}, vi tu perfil en El Portal Veterinario y quería coordinar una consulta virtual.`), '_blank', 'noopener');
     } else {
       scrollToContacto(e);
@@ -449,6 +459,7 @@ const mobileTabs = [
   };
 
   const handleSendMail = () => {
+    registrarContacto({ perfilId: data._id, tipoPerfil: 'profesional', canal: 'mail' });
     window.location.href = `mailto:${data.emailContacto}?subject=Consulta desde Portal Veterinario`;
   };
 

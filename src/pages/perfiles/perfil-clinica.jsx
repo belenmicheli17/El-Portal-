@@ -5,6 +5,7 @@ import { opcionesConAnimales } from '../../utils/animales';
 import { db } from '../../firebase';
 import { useAuth } from '../../context/AuthContext';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { useMedirContactos } from '../../utils/medicion';
 import CompartirPerfil, { BotonCompartirPerfil, BotonCompartirLink, armarLinkPerfil } from '../../components/CompartirPerfil';
 import { ServicioExplicable, AvisoPresionar } from '../../components/editor/EditorComponents';
 import {
@@ -286,6 +287,10 @@ export default function PerfilClinica() {
   const { currentUser } = useAuth();
 
   const [data, setData] = useState(null);
+
+  // Medición anónima: cuenta los toques en WhatsApp, mail, teléfono, mapa y redes de esta clínica
+
+  useMedirContactos(data?._id, 'clinica');
   const [loading, setLoading] = useState(true);
   const [openFaq, setOpenFaq] = useState(null);
   const [visor, setVisor] = useState(null);
@@ -325,6 +330,7 @@ export default function PerfilClinica() {
           const planFinal = firebaseData.socioVitalicio === true || firebaseData.planActual === 'pro' ? 'pro' : 'gratis';
           setData({
             ...firebaseData,
+            _id: docSnap.id, // para la medición de contactos
             planActual: planFinal,
             urgencias: (firebaseData.urgencias && firebaseData.urgencias.length > 0) ? firebaseData.urgencias : URGENCIAS_FALLBACK
           });

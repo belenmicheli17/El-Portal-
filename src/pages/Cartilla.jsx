@@ -12,6 +12,7 @@ import TourGuia from '../components/TourGuia';
 import BarraFiltros from '../components/BarraFiltros';
 import { coincideBusqueda } from '../utils/busquedaTolerante';
 import especialidadesData from '../data/especialidades.json';
+import { marcarVisitaCartilla, registrarBusqueda } from '../utils/medicion';
 
 // Íconos de cada grupo de especialidades (para las pastillas de "Explorá por especialidad")
 const ICONOS_GRUPO = {
@@ -747,6 +748,38 @@ const Cartilla = () => {
   const claseGrilla = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4";
 
   const hayFiltrosActivos = terminoBuscado.trim() || filtros.zonas.length > 0 || filtros.especialidades.length > 0 || grupoElegido || filtros.domicilio || filtros.virtual || filtros.urgenciaDomicilio || filtros.guardia24hs;
+
+  // Medición anónima: anotamos que pasó por la Cartilla (así sabemos que un contacto vino de acá)
+  useEffect(() => { marcarVisitaCartilla(); }, []);
+
+  // Medición anónima de búsquedas: cuando deja quietos los filtros 2,5 segundos, guardamos qué buscó
+  // y cuántos resultados vio. Cada búsqueda distinta se guarda una sola vez por visita.
+  const busquedasGuardadas = useRef(new Set());
+  const cantidadResultados = veterinariosFiltrados.length;
+  const claveBusqueda = JSON.stringify([
+    terminoBuscado.trim().toLowerCase(), activeTab, filtros.grupo, filtros.especialidades, filtros.zonas,
+    filtros.domicilio, filtros.virtual, filtros.urgenciaDomicilio, filtros.guardia24hs
+  ]);
+  useEffect(() => {
+    if (loading || !hayFiltrosActivos || busquedasGuardadas.current.has(claveBusqueda)) return undefined;
+    const espera = setTimeout(() => {
+      busquedasGuardadas.current.add(claveBusqueda);
+      registrarBusqueda({
+        texto: terminoBuscado,
+        pestana: activeTab,
+        grupo: filtros.grupo,
+        especialidades: filtros.especialidades,
+        zonas: filtros.zonas,
+        extras: [
+          filtros.domicilio && 'domicilio', filtros.virtual && 'virtual',
+          filtros.urgenciaDomicilio && 'urgencia a domicilio', filtros.guardia24hs && 'guardia 24 hs'
+        ].filter(Boolean),
+        resultados: cantidadResultados
+      });
+    }, 2500);
+    return () => clearTimeout(espera);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [claveBusqueda, loading, cantidadResultados]);
 
   return (
     <>

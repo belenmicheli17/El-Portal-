@@ -8,7 +8,7 @@ import { db } from '../../firebase';
 import {
   LayoutDashboard, Users, CheckSquare, Briefcase,
   Settings, LogOut, Menu, X, ShieldAlert, BookOpen, MessageCircle,
-  Home, MapPin, Store, FileText, Globe, ChevronDown, BellRing
+  Home, MapPin, Store, FileText, Globe, ChevronDown, BellRing, Activity
 } from 'lucide-react';
 
 export default function AdminLayout() {
@@ -45,6 +45,7 @@ export default function AdminLayout() {
        { path: '/admin/validaciones', icon: <CheckSquare className="w-5 h-5" />, label: 'Validaciones' },
     { path: '/admin/usuarios', icon: <Users className="w-5 h-5" />, label: 'Gestión Usuarios' },
     { path: '/admin/avisos', icon: <BellRing className="w-5 h-5" />, label: 'Avisos de problemas', contador: avisosNuevos },
+    { path: '/admin/actividad', icon: <Activity className="w-5 h-5" />, label: 'Actividad de la Cartilla' },
     { path: '/admin/bolsa', icon: <Briefcase className="w-5 h-5" />, label: 'Gestión Bolsa' },
 
     { path: '/admin/capacitaciones', icon: <BookOpen className="w-5 h-5" />, label: 'Capacitaciones' },
