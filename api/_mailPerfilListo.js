@@ -20,11 +20,11 @@ export function armarMailPerfilListo({ esClinica, nombre, slug, placeId = '' }) 
       ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(nombreLimpio || 'Veterinaria')}&query_place_id=${encodeURIComponent(placeId)}`
       : '';
     return {
-      asunto: '¡El perfil de tu clínica en El Portal ya está listo!',
+      asunto: '¡El perfil de tu clínica en Portal Veterinario ya está listo!',
       html: armarMailHtml({
         titulo: `¡El perfil de ${nombreLimpio || 'tu clínica'} ya está listo!`,
         parrafos: [
-          'Ya está listo para que tutores y profesionales los encuentren en El Portal Veterinario.',
+          'Ya está listo para que tutores y profesionales los encuentren en Portal Veterinario.',
           `Este es el link de su página:${cajaLink(linkPagina)}`,
           '<strong>¿Cómo sacarle provecho?</strong> Copien el link y pónganlo como sitio web en la ficha de Google de la clínica: así quien los busca en Google Maps llega directo a su página. También súmenlo a la bio de Instagram y a la descripción de WhatsApp.'
         ],
@@ -39,11 +39,11 @@ export function armarMailPerfilListo({ esClinica, nombre, slug, placeId = '' }) 
 
   const primerNombre = nombreLimpio.split(/\s+/)[0] || '';
   return {
-    asunto: '¡Tu perfil en El Portal ya está listo!',
+    asunto: '¡Tu perfil en Portal Veterinario ya está listo!',
     html: armarMailHtml({
       titulo: primerNombre ? `¡Tu perfil ya está listo, ${primerNombre}!` : '¡Tu perfil ya está listo!',
       parrafos: [
-        'Ya está listo para que tutores y colegas te encuentren en El Portal Veterinario.',
+        'Ya está listo para que tutores y colegas te encuentren en Portal Veterinario.',
         `Este es el link de tu página:${cajaLink(linkPagina)}`,
         '<strong>¿Cómo sacarle provecho?</strong> Ponelo en la bio de tu Instagram y en tu info de WhatsApp. Así quien te busca llega directo a tus servicios, tu trayectoria y cómo contactarte.'
       ],

@@ -6,7 +6,7 @@ import { auth, db } from '../firebase';
 
 // Plan B: si no se puede guardar el aviso (justo cuando fallan las reglas o no hay conexión), se manda por mail
 const MAIL_AVISOS = 'portalveterinario.ar@gmail.com';
-const ASUNTO_MAIL = 'Algo no funciona en El Portal';
+const ASUNTO_MAIL = 'Algo no funciona en Portal Veterinario';
 // Sin conexión, Firebase deja el aviso "en espera" y no avisa que falló: después de este tiempo pasamos al plan B
 const ESPERA_MAXIMA_MS = 8000;
 
@@ -14,7 +14,7 @@ const ESPERA_MAXIMA_MS = 8000;
 const armarLinkMail = ({ lugar, detalle, pagina }) => {
   const fecha = new Date().toLocaleString('es-AR');
   const cuerpo = [
-    'Hola, algo no funciona en El Portal.',
+    'Hola, algo no funciona en Portal Veterinario.',
     '',
     `Lugar: ${lugar || 'otro'}`,
     `Código del error: ${detalle || 'sin código'}`,
